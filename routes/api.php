@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\OrganizationController;
 use App\Http\Controllers\Api\SchoolController;
 use App\Http\Controllers\Api\AcademicSessionController;
 use App\Http\Controllers\Api\TermController;
+use App\Http\Controllers\Api\DivisionController;
 
 Route::prefix('v1')->group(function () {
 
@@ -20,35 +21,19 @@ Route::prefix('v1')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Organization Module
+    | ERP Modules
     |--------------------------------------------------------------------------
     */
 
     Route::apiResource('organizations', OrganizationController::class);
 
-    /*
-    |--------------------------------------------------------------------------
-    | School Module
-    |--------------------------------------------------------------------------
-    */
-
     Route::apiResource('schools', SchoolController::class);
-
-    /*
-    |--------------------------------------------------------------------------
-    | Academic Session Module
-    |--------------------------------------------------------------------------
-    */
 
     Route::apiResource('academic-sessions', AcademicSessionController::class);
 
-    /*
-    |--------------------------------------------------------------------------
-    | Term Module
-    |--------------------------------------------------------------------------
-    */
-
     Route::apiResource('terms', TermController::class);
+
+    Route::apiResource('divisions', DivisionController::class);
 
     /*
     |--------------------------------------------------------------------------
