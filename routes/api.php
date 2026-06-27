@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ClassController;
 use App\Http\Controllers\Api\StreamController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\ParentController;
+use App\Http\Controllers\Api\SubjectController;
 
 Route::prefix('v1')->group(function () {
 
@@ -31,22 +32,15 @@ Route::prefix('v1')->group(function () {
     */
 
     Route::apiResource('organizations', OrganizationController::class);
-
     Route::apiResource('schools', SchoolController::class);
-
     Route::apiResource('academic-sessions', AcademicSessionController::class);
-
     Route::apiResource('terms', TermController::class);
-
     Route::apiResource('divisions', DivisionController::class);
-
     Route::apiResource('classes', ClassController::class);
-
     Route::apiResource('streams', StreamController::class);
-
     Route::apiResource('students', StudentController::class);
-
     Route::apiResource('parents', ParentController::class);
+    Route::apiResource('subjects', SubjectController::class);
 
     /*
     |--------------------------------------------------------------------------
@@ -57,7 +51,6 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/me', [AuthController::class, 'me']);
-
         Route::post('/logout', [AuthController::class, 'logout']);
 
     });
