@@ -5,12 +5,13 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OrganizationController;
 use App\Http\Controllers\Api\SchoolController;
 use App\Http\Controllers\Api\AcademicSessionController;
+use App\Http\Controllers\Api\TermController;
 
 Route::prefix('v1')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Public Routes
+    | Public Authentication
     |--------------------------------------------------------------------------
     */
 
@@ -43,13 +44,24 @@ Route::prefix('v1')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | Term Module
+    |--------------------------------------------------------------------------
+    */
+
+    Route::apiResource('terms', TermController::class);
+
+    /*
+    |--------------------------------------------------------------------------
     | Protected Routes
     |--------------------------------------------------------------------------
     */
 
     Route::middleware('auth:sanctum')->group(function () {
+
         Route::get('/me', [AuthController::class, 'me']);
+
         Route::post('/logout', [AuthController::class, 'logout']);
+
     });
 
 });
