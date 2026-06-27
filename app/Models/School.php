@@ -34,6 +34,11 @@ class School extends Model
         return $this->hasMany(AcademicSession::class);
     }
 
+    public function divisions(): HasMany
+    {
+        return $this->hasMany(Division::class);
+    }
+
     public function students(): HasMany
     {
         return $this->hasMany(Student::class);
@@ -42,6 +47,11 @@ class School extends Model
     public function staff(): HasMany
     {
         return $this->hasMany(Staff::class);
+    }
+
+    public function subjects(): HasMany
+    {
+        return $this->hasMany(Subject::class);
     }
 
     public function feeCategories(): HasMany

@@ -12,8 +12,12 @@ class Stream extends Model
         'class_id',
         'name',
         'code',
-        'capacity',
+        'display_order',
         'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function class(): BelongsTo
@@ -23,6 +27,6 @@ class Stream extends Model
 
     public function students(): HasMany
     {
-        return $this->hasMany(Student::class, 'stream_id');
+        return $this->hasMany(Student::class);
     }
 }

@@ -17,6 +17,12 @@ class AcademicSession extends Model
         'status',
     ];
 
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'is_current' => 'boolean',
+    ];
+
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
@@ -27,18 +33,8 @@ class AcademicSession extends Model
         return $this->hasMany(Term::class);
     }
 
-    public function studentEnrollments(): HasMany
+    public function students(): HasMany
     {
-        return $this->hasMany(StudentEnrollment::class);
-    }
-
-    public function studentFees(): HasMany
-    {
-        return $this->hasMany(StudentFee::class);
-    }
-
-    public function examinations(): HasMany
-    {
-        return $this->hasMany(Examination::class);
+        return $this->hasMany(Student::class);
     }
 }

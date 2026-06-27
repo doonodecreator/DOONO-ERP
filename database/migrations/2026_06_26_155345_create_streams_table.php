@@ -6,20 +6,30 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('streams', function (Blueprint $table) {
+
             $table->id();
+
+            $table->foreignId('class_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            $table->string('name');
+
+            $table->string('code', 20)->nullable();
+
+            $table->integer('display_order')->default(1);
+
+            $table->boolean('is_active')->default(true);
+
             $table->timestamps();
+
+            $table->unique(['class_id', 'name']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('streams');

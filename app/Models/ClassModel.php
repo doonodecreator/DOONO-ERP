@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ClassModel extends Model
@@ -16,6 +17,10 @@ class ClassModel extends Model
         'code',
         'display_order',
         'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function division(): BelongsTo
@@ -33,8 +38,13 @@ class ClassModel extends Model
         return $this->hasMany(Student::class, 'class_id');
     }
 
-    public function enrollments(): HasMany
+    public function subjects(): BelongsToMany
     {
-        return $this->hasMany(StudentEnrollment::class, 'class_id');
+        return $this->belongsToMany(
+            Subject::class,
+            'class_subject',
+            'class_id',
+            'subject_id'
+        );
     }
 }

@@ -9,11 +9,17 @@ class Organization extends Model
 {
     protected $fillable = [
         'name',
+        'short_name',
+        'registration_number',
         'email',
         'phone',
-        'address',
+        'alternative_phone',
         'website',
         'logo',
+        'country',
+        'state',
+        'lga',
+        'address',
         'status',
     ];
 
