@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\TermController;
 use App\Http\Controllers\Api\DivisionController;
 use App\Http\Controllers\Api\ClassController;
 use App\Http\Controllers\Api\StreamController;
+use App\Http\Controllers\Api\StudentController;
 
 Route::prefix('v1')->group(function () {
 
@@ -34,6 +35,7 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('divisions', DivisionController::class);
     Route::apiResource('classes', ClassController::class);
     Route::apiResource('streams', StreamController::class);
+    Route::apiResource('students', StudentController::class);
 
     /*
     |--------------------------------------------------------------------------
