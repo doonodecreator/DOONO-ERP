@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\SchoolController;
 use App\Http\Controllers\Api\AcademicSessionController;
 use App\Http\Controllers\Api\TermController;
 use App\Http\Controllers\Api\DivisionController;
+use App\Http\Controllers\Api\ClassController;
 
 Route::prefix('v1')->group(function () {
 
@@ -35,9 +36,11 @@ Route::prefix('v1')->group(function () {
 
     Route::apiResource('divisions', DivisionController::class);
 
+    Route::apiResource('classes', ClassController::class);
+
     /*
     |--------------------------------------------------------------------------
-    | Protected Routes
+    | Protected Authentication
     |--------------------------------------------------------------------------
     */
 
