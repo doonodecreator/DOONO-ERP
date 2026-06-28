@@ -18,23 +18,12 @@ use App\Http\Controllers\Api\ExaminationController;
 use App\Http\Controllers\Api\ExamScoreController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\FeeCategoryController;
+use App\Http\Controllers\Api\StudentFeeController;
 
 Route::prefix('v1')->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | Public Authentication
-    |--------------------------------------------------------------------------
-    */
-
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
-
-    /*
-    |--------------------------------------------------------------------------
-    | ERP Modules
-    |--------------------------------------------------------------------------
-    */
 
     Route::apiResource('organizations', OrganizationController::class);
     Route::apiResource('schools', SchoolController::class);
@@ -51,18 +40,11 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('exam-scores', ExamScoreController::class);
     Route::apiResource('attendances', AttendanceController::class);
     Route::apiResource('fee-categories', FeeCategoryController::class);
-
-    /*
-    |--------------------------------------------------------------------------
-    | Protected Authentication
-    |--------------------------------------------------------------------------
-    */
+    Route::apiResource('student-fees', StudentFeeController::class);
 
     Route::middleware('auth:sanctum')->group(function () {
-
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
-
     });
 
 });
