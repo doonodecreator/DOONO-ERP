@@ -8,14 +8,36 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Attendance extends Model
 {
     protected $fillable = [
-        'student_id',
+        'student_enrollment_id',
+        'academic_session_id',
+        'term_id',
         'attendance_date',
         'status',
         'remarks',
+        'staff_id',
     ];
 
-    public function student(): BelongsTo
+    protected $casts = [
+        'attendance_date' => 'date',
+    ];
+
+    public function studentEnrollment(): BelongsTo
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(StudentEnrollment::class);
+    }
+
+    public function academicSession(): BelongsTo
+    {
+        return $this->belongsTo(AcademicSession::class);
+    }
+
+    public function term(): BelongsTo
+    {
+        return $this->belongsTo(Term::class);
+    }
+
+    public function staff(): BelongsTo
+    {
+        return $this->belongsTo(Staff::class);
     }
 }
