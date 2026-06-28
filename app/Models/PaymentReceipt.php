@@ -10,8 +10,23 @@ class PaymentReceipt extends Model
     protected $fillable = [
         'fee_payment_id',
         'receipt_number',
+        'issued_by',
         'issued_at',
-        'printed_by',
+        'printed',
+        'printed_at',
+        'emailed',
+        'emailed_at',
+        'cancelled',
+        'cancellation_reason',
+    ];
+
+    protected $casts = [
+        'issued_at' => 'datetime',
+        'printed_at' => 'datetime',
+        'emailed_at' => 'datetime',
+        'printed' => 'boolean',
+        'emailed' => 'boolean',
+        'cancelled' => 'boolean',
     ];
 
     public function feePayment(): BelongsTo
