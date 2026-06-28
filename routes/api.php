@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\FeeCategoryController;
 use App\Http\Controllers\Api\StudentFeeController;
 use App\Http\Controllers\Api\FeePaymentController;
 use App\Http\Controllers\Api\PaymentReceiptController;
+use App\Http\Controllers\Api\StudentEnrollmentController;
 
 Route::prefix('v1')->group(function () {
 
@@ -57,6 +58,7 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('student-fees', StudentFeeController::class);
     Route::apiResource('fee-payments', FeePaymentController::class);
     Route::apiResource('payment-receipts', PaymentReceiptController::class);
+    Route::apiResource('student-enrollments', StudentEnrollmentController::class);
     /*
     |--------------------------------------------------------------------------
     | Protected Authentication
