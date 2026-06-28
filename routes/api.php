@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\StudentFeeController;
 use App\Http\Controllers\Api\FeePaymentController;
 use App\Http\Controllers\Api\PaymentReceiptController;
 use App\Http\Controllers\Api\StudentEnrollmentController;
+use App\Http\Controllers\Api\ParentStudentController;
 
 Route::prefix('v1')->group(function () {
 
@@ -59,6 +60,7 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('fee-payments', FeePaymentController::class);
     Route::apiResource('payment-receipts', PaymentReceiptController::class);
     Route::apiResource('student-enrollments', StudentEnrollmentController::class);
+    Route::apiResource('parent-students', ParentStudentController::class);
     /*
     |--------------------------------------------------------------------------
     | Protected Authentication
