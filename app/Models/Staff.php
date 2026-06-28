@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Staff extends Model
 {
+    protected $table = 'staff';
+
     protected $fillable = [
         'school_id',
         'staff_number',
@@ -15,16 +17,22 @@ class Staff extends Model
         'last_name',
         'gender',
         'date_of_birth',
-        'email',
         'phone',
+        'email',
         'address',
         'designation',
         'department',
         'employment_date',
+        'basic_salary',
         'qualification',
-        'salary',
         'photo',
-        'status',
+        'employment_status',
+    ];
+
+    protected $casts = [
+        'date_of_birth' => 'date',
+        'employment_date' => 'date',
+        'basic_salary' => 'decimal:2',
     ];
 
     public function school(): BelongsTo

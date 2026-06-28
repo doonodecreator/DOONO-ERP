@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\StreamController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\ParentController;
 use App\Http\Controllers\Api\SubjectController;
+use App\Http\Controllers\Api\StaffController;
 
 Route::prefix('v1')->group(function () {
 
@@ -41,6 +42,7 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('students', StudentController::class);
     Route::apiResource('parents', ParentController::class);
     Route::apiResource('subjects', SubjectController::class);
+    Route::apiResource('staff', StaffController::class);
 
     /*
     |--------------------------------------------------------------------------
