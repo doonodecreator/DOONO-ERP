@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\ExaminationController;
 use App\Http\Controllers\Api\ExamScoreController;
 use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\FeeCategoryController;
 
 Route::prefix('v1')->group(function () {
 
@@ -49,6 +50,7 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('examinations', ExaminationController::class);
     Route::apiResource('exam-scores', ExamScoreController::class);
     Route::apiResource('attendances', AttendanceController::class);
+    Route::apiResource('fee-categories', FeeCategoryController::class);
 
     /*
     |--------------------------------------------------------------------------
