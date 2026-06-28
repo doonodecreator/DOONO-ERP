@@ -14,9 +14,15 @@ class Examination extends Model
         'term_id',
         'name',
         'exam_type',
+        'total_marks',
         'start_date',
         'end_date',
         'status',
+    ];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     public function school(): BelongsTo
