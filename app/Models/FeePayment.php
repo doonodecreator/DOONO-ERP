@@ -10,17 +10,28 @@ class FeePayment extends Model
 {
     protected $fillable = [
         'student_fee_id',
+        'staff_id',
+        'receipt_number',
         'amount_paid',
-        'payment_method',
         'payment_date',
+        'payment_method',
         'transaction_reference',
-        'received_by',
+        'bank_name',
         'remarks',
+    ];
+
+    protected $casts = [
+        'payment_date' => 'date',
     ];
 
     public function studentFee(): BelongsTo
     {
         return $this->belongsTo(StudentFee::class);
+    }
+
+    public function staff(): BelongsTo
+    {
+        return $this->belongsTo(Staff::class);
     }
 
     public function receipt(): HasOne

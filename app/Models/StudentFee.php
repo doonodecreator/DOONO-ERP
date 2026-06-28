@@ -21,6 +21,10 @@ class StudentFee extends Model
         'remarks',
     ];
 
+    protected $casts = [
+        'due_date' => 'date',
+    ];
+
     public function studentEnrollment(): BelongsTo
     {
         return $this->belongsTo(StudentEnrollment::class);
@@ -44,5 +48,15 @@ class StudentFee extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(FeePayment::class);
+    }
+
+    public function getTotalPaidAttribute()
+    {
+        return $this->payments()->sum('amount_paid');
+    }
+
+    public function getBalanceAttribute()
+    {
+        return $this->amount_due - $this->total_paid;
     }
 }
