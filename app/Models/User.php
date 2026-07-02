@@ -11,31 +11,98 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
         'name',
         'email',
         'password',
+        'role',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_roles');
+    }
+
+    public function schools()
+    {
+        return $this->hasMany(School::class, 'owner_id');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Current School Helpers
+    |--------------------------------------------------------------------------
+    */
+
+    public function currentSchool()
+    {
+        if ($this->role === 'super_admin') {
+            return null;
+        }
+
+        return $this->schools()->first();
+    }
+
+    public function currentSchoolId()
+    {
+        return optional($this->currentSchool())->id;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Role & Permission Helpers
+    |--------------------------------------------------------------------------
+    */
+
+    public function hasRole($role)
+    {
+        return $this->role === $role
+            || $this->roles()->where('slug', $role)->exists();
+    }
+
+    public function hasPermission($permission)
+    {
+        return $this->roles()
+            ->whereHas('permissions', function ($query) use ($permission) {
+                $query->where('slug', $permission);
+            })
+            ->exists();
+    }
+
+    public function permissions()
+    {
+        return $this->roles
+            ->flatMap(fn ($role) => $role->permissions)
+            ->unique('id');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Super Admin Helper
+    |--------------------------------------------------------------------------
+    */
+
+    public function isSuperAdmin()
+    {
+        return $this->role === 'super_admin';
     }
 }

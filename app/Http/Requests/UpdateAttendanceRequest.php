@@ -13,7 +13,7 @@ class UpdateAttendanceRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $rules = [
 
             'student_enrollment_id' => 'sometimes|required|exists:student_enrollments,id',
 
@@ -30,15 +30,18 @@ class UpdateAttendanceRequest extends FormRequest
             'staff_id' => 'nullable|exists:staff,id',
 
         ];
+
+        if ($this->user()->isSuperAdmin()) {
+            $rules['school_id'] = 'sometimes|required|exists:schools,id';
+        }
+
+        return $rules;
     }
 
     public function messages(): array
     {
         return [
-            'student_enrollment_id.exists' => 'Selected student enrollment does not exist.',
-            'academic_session_id.exists' => 'Selected academic session does not exist.',
-            'term_id.exists' => 'Selected term does not exist.',
-            'staff_id.exists' => 'Selected staff member does not exist.',
+            'school_id.exists' => 'Selected school does not exist.',
         ];
     }
 }

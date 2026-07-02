@@ -13,7 +13,6 @@ class ParentResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-
             'id' => $this->id,
 
             'school_id' => $this->school_id,
@@ -42,4 +41,4 @@ class ParentResource extends JsonResource
             'updated_at' => $this->updated_at,
         ];
     }
-}}
+}

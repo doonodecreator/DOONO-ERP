@@ -7,54 +7,57 @@ use App\Http\Requests\StoreParentRequest;
 use App\Http\Requests\UpdateParentRequest;
 use App\Http\Resources\ParentResource;
 use App\Models\ParentModel;
+use Illuminate\Http\Request;
 
 class ParentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
+        $query = ParentModel::with([
+            'school',
+            'students',
+        ]);
+
+        if (! $request->user()->isSuperAdmin()) {
+            $query->where(
+                'school_id',
+                $request->user()->currentSchoolId()
+            );
+        }
+
         return ParentResource::collection(
-            ParentModel::with('school')
-                ->latest()
-                ->paginate(10)
+            $query->latest()->paginate(10)
         );
     }
 
-    /**
-     * Store a newly created resource.
-     */
     public function store(StoreParentRequest $request)
     {
-        $parent = ParentModel::create($request->validated());
+        $data = $request->validated();
+
+        if (! $request->user()->isSuperAdmin()) {
+            $data['school_id'] = $request->user()->currentSchoolId();
+        }
+
+        $parent = ParentModel::create($data);
 
         return (new ParentResource(
-            $parent->load('school')
+            $parent->load([
+                'school',
+                'students',
+            ])
         ))
-            ->response()
-            ->setStatusCode(201);
+        ->response()
+        ->setStatusCode(201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(ParentModel $parent)
+    public function show(Request $request, ParentModel $parent)
     {
-        return new ParentResource(
-            $parent->load([
-                'school',
-                'students',
-            ])
-        );
-    }
-
-    /**
-     * Update the specified resource.
-     */
-    public function update(UpdateParentRequest $request, ParentModel $parent)
-    {
-        $parent->update($request->validated());
+        if (
+            ! $request->user()->isSuperAdmin()
+            && $parent->school_id != $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
 
         return new ParentResource(
             $parent->load([
@@ -64,11 +67,42 @@ class ParentController extends Controller
         );
     }
 
-    /**
-     * Remove the specified resource.
-     */
-    public function destroy(ParentModel $parent)
+    public function update(
+        UpdateParentRequest $request,
+        ParentModel $parent
+    ) {
+        if (
+            ! $request->user()->isSuperAdmin()
+            && $parent->school_id != $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $data = $request->validated();
+
+        if (! $request->user()->isSuperAdmin()) {
+            unset($data['school_id']);
+        }
+
+        $parent->update($data);
+
+        return new ParentResource(
+            $parent->load([
+                'school',
+                'students',
+            ])
+        );
+    }
+
+    public function destroy(Request $request, ParentModel $parent)
     {
+        if (
+            ! $request->user()->isSuperAdmin()
+            && $parent->school_id != $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
         $parent->delete();
 
         return response()->json([

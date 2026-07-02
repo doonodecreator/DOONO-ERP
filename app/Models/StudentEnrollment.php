@@ -4,17 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class StudentEnrollment extends Model
 {
     protected $fillable = [
         'student_id',
+        'school_id',
         'academic_session_id',
+        'term_id',
+        'division_id',
         'class_id',
         'stream_id',
-        'admission_number',
-        'roll_number',
+        'enrollment_date',
         'status',
     ];
 
@@ -23,9 +24,24 @@ class StudentEnrollment extends Model
         return $this->belongsTo(Student::class);
     }
 
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
+
     public function academicSession(): BelongsTo
     {
         return $this->belongsTo(AcademicSession::class);
+    }
+
+    public function term(): BelongsTo
+    {
+        return $this->belongsTo(Term::class);
+    }
+
+    public function division(): BelongsTo
+    {
+        return $this->belongsTo(Division::class);
     }
 
     public function class(): BelongsTo
@@ -36,15 +52,5 @@ class StudentEnrollment extends Model
     public function stream(): BelongsTo
     {
         return $this->belongsTo(Stream::class);
-    }
-
-    public function attendances(): HasMany
-    {
-        return $this->hasMany(Attendance::class);
-    }
-
-    public function studentFees(): HasMany
-    {
-        return $this->hasMany(StudentFee::class);
     }
 }

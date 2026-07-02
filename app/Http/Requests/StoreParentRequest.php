@@ -6,22 +6,14 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreParentRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Validation rules.
-     */
     public function rules(): array
     {
-        return [
-
-            'school_id' => 'required|exists:schools,id',
+        $rules = [
 
             'father_name' => 'nullable|string|max:100',
             'father_phone' => 'nullable|string|max:20',
@@ -41,11 +33,14 @@ class StoreParentRequest extends FormRequest
 
             'address' => 'nullable|string',
         ];
+
+        if ($this->user()->isSuperAdmin()) {
+            $rules['school_id'] = 'required|exists:schools,id';
+        }
+
+        return $rules;
     }
 
-    /**
-     * Custom validation messages.
-     */
     public function messages(): array
     {
         return [

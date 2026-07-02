@@ -7,33 +7,38 @@ use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Http\Resources\StudentResource;
 use App\Models\Student;
+use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
+        $query = Student::with([
+            'school',
+            'division',
+            'class',
+            'stream',
+            'academicSession',
+        ]);
+
+        if (! $request->user()->isSuperAdmin()) {
+            $query->where('school_id', $request->user()->currentSchoolId());
+        }
+
         return StudentResource::collection(
-            Student::with([
-                'school',
-                'division',
-                'class',
-                'stream',
-                'academicSession',
-            ])
-            ->orderBy('admission_number')
-            ->paginate(10)
+            $query->orderBy('admission_number')->paginate(10)
         );
     }
 
-    /**
-     * Store a newly created resource.
-     */
     public function store(StoreStudentRequest $request)
     {
-        $student = Student::create($request->validated());
+        $data = $request->validated();
+
+        if (! $request->user()->isSuperAdmin()) {
+            $data['school_id'] = $request->user()->currentSchoolId();
+        }
+
+        $student = Student::create($data);
 
         return (new StudentResource(
             $student->load([
@@ -48,11 +53,15 @@ class StudentController extends Controller
         ->setStatusCode(201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Student $student)
+    public function show(Request $request, Student $student)
     {
+        if (
+            ! $request->user()->isSuperAdmin()
+            && $student->school_id != $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
         return new StudentResource(
             $student->load([
                 'school',
@@ -64,11 +73,15 @@ class StudentController extends Controller
         );
     }
 
-    /**
-     * Update the specified resource.
-     */
     public function update(UpdateStudentRequest $request, Student $student)
     {
+        if (
+            ! $request->user()->isSuperAdmin()
+            && $student->school_id != $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
         $student->update($request->validated());
 
         return new StudentResource(
@@ -82,11 +95,15 @@ class StudentController extends Controller
         );
     }
 
-    /**
-     * Remove the specified resource.
-     */
-    public function destroy(Student $student)
+    public function destroy(Request $request, Student $student)
     {
+        if (
+            ! $request->user()->isSuperAdmin()
+            && $student->school_id != $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
         $student->delete();
 
         return response()->json([

@@ -7,14 +7,15 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class AttendanceResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     */
     public function toArray(Request $request): array
     {
         return [
 
             'id' => $this->id,
+
+            'school_id' => $this->school_id,
+
+            'school' => $this->whenLoaded('school'),
 
             'student_enrollment_id' => $this->student_enrollment_id,
 

@@ -7,6 +7,10 @@ use App\Http\Requests\StoreSchoolRequest;
 use App\Http\Requests\UpdateSchoolRequest;
 use App\Http\Resources\SchoolResource;
 use App\Models\School;
+use App\Models\SubscriptionPlan;
+use App\Models\SchoolSubscription;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class SchoolController extends Controller
 {
@@ -16,7 +20,11 @@ class SchoolController extends Controller
     public function index()
     {
         return SchoolResource::collection(
-            School::with('organization')
+            School::with([
+                'organization',
+                'country.currency',
+                'subscription.subscriptionPlan',
+            ])
                 ->latest()
                 ->paginate(10)
         );
@@ -27,13 +35,66 @@ class SchoolController extends Controller
      */
     public function store(StoreSchoolRequest $request)
     {
-        $school = School::create($request->validated());
+        $school = DB::transaction(function () use ($request) {
+
+            $school = School::create(
+                $request->validated()
+            );
+
+            $premiumPlan = SubscriptionPlan::where(
+                'slug',
+                'premium'
+            )->firstOrFail();
+
+            $today = Carbon::today();
+
+            SchoolSubscription::create([
+
+                'school_id' => $school->id,
+
+                'subscription_plan_id' => $premiumPlan->id,
+
+                'start_date' => $today,
+
+                'expiry_date' => $today->copy()->addDays(
+                    $premiumPlan->trial_days
+                ),
+
+                'trial_ends_at' => $today->copy()->addDays(
+                    $premiumPlan->trial_days
+                ),
+
+                'next_billing_date' => $today->copy()->addDays(
+                    $premiumPlan->trial_days
+                ),
+
+                'billing_cycle' => 'yearly',
+
+                'status' => 'trial',
+
+                'amount_paid' => 0,
+
+                'currency' => $premiumPlan->currency,
+
+                'payment_reference' => null,
+
+                'auto_renew' => false,
+
+                'is_current' => true,
+            ]);
+
+            return $school;
+        });
 
         return (new SchoolResource(
-            $school->load('organization')
+            $school->load([
+                'organization',
+                'country.currency',
+                'subscription.subscriptionPlan',
+            ])
         ))
-        ->response()
-        ->setStatusCode(201);
+            ->response()
+            ->setStatusCode(201);
     }
 
     /**
@@ -42,7 +103,11 @@ class SchoolController extends Controller
     public function show(School $school)
     {
         return new SchoolResource(
-            $school->load('organization')
+            $school->load([
+                'organization',
+                'country.currency',
+                'subscription.subscriptionPlan',
+            ])
         );
     }
 
@@ -54,7 +119,11 @@ class SchoolController extends Controller
         $school->update($request->validated());
 
         return new SchoolResource(
-            $school->load('organization')
+            $school->load([
+                'organization',
+                'country.currency',
+                'subscription.subscriptionPlan',
+            ])
         );
     }
 

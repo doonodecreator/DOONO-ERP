@@ -13,14 +13,29 @@ class StoreStudentEnrollmentRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
-            'student_id' => ['required', 'exists:students,id'],
-            'academic_session_id' => ['required', 'exists:academic_sessions,id'],
-            'class_id' => ['required', 'exists:classes,id'],
-            'stream_id' => ['nullable', 'exists:streams,id'],
-            'admission_number' => ['required', 'string', 'max:100'],
-            'roll_number' => ['nullable', 'string', 'max:100'],
-            'status' => ['required', 'in:Active,Graduated,Transferred,Withdrawn'],
+        $rules = [
+
+            'student_id' => 'required|exists:students,id',
+
+            'academic_session_id' => 'required|exists:academic_sessions,id',
+
+            'term_id' => 'required|exists:terms,id',
+
+            'division_id' => 'required|exists:divisions,id',
+
+            'class_id' => 'required|exists:classes,id',
+
+            'stream_id' => 'nullable|exists:streams,id',
+
+            'enrollment_date' => 'required|date',
+
+            'status' => 'required|in:Active,Promoted,Repeated,Graduated,Transferred,Withdrawn',
         ];
+
+        if ($this->user()->isSuperAdmin()) {
+            $rules['school_id'] = 'required|exists:schools,id';
+        }
+
+        return $rules;
     }
 }

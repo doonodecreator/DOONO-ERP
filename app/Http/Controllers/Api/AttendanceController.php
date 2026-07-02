@@ -7,27 +7,45 @@ use App\Http\Requests\StoreAttendanceRequest;
 use App\Http\Requests\UpdateAttendanceRequest;
 use App\Http\Resources\AttendanceResource;
 use App\Models\Attendance;
+use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $query = Attendance::with([
+            'school',
+            'studentEnrollment',
+            'academicSession',
+            'term',
+            'staff',
+        ]);
+
+        if (! $request->user()->isSuperAdmin()) {
+            $query->where(
+                'school_id',
+                $request->user()->currentSchoolId()
+            );
+        }
+
         return AttendanceResource::collection(
-            Attendance::with([
-                'studentEnrollment',
-                'academicSession',
-                'term',
-                'staff',
-            ])->latest()->paginate(10)
+            $query->latest()->paginate(10)
         );
     }
 
     public function store(StoreAttendanceRequest $request)
     {
-        $attendance = Attendance::create($request->validated());
+        $data = $request->validated();
+
+        if (! $request->user()->isSuperAdmin()) {
+            $data['school_id'] = $request->user()->currentSchoolId();
+        }
+
+        $attendance = Attendance::create($data);
 
         return (new AttendanceResource(
             $attendance->load([
+                'school',
                 'studentEnrollment',
                 'academicSession',
                 'term',
@@ -38,10 +56,18 @@ class AttendanceController extends Controller
         ->setStatusCode(201);
     }
 
-    public function show(Attendance $attendance)
+    public function show(Request $request, Attendance $attendance)
     {
+        if (
+            ! $request->user()->isSuperAdmin()
+            && $attendance->school_id != $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
         return new AttendanceResource(
             $attendance->load([
+                'school',
                 'studentEnrollment',
                 'academicSession',
                 'term',
@@ -50,12 +76,28 @@ class AttendanceController extends Controller
         );
     }
 
-    public function update(UpdateAttendanceRequest $request, Attendance $attendance)
-    {
-        $attendance->update($request->validated());
+    public function update(
+        UpdateAttendanceRequest $request,
+        Attendance $attendance
+    ) {
+        if (
+            ! $request->user()->isSuperAdmin()
+            && $attendance->school_id != $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $data = $request->validated();
+
+        if (! $request->user()->isSuperAdmin()) {
+            unset($data['school_id']);
+        }
+
+        $attendance->update($data);
 
         return new AttendanceResource(
             $attendance->load([
+                'school',
                 'studentEnrollment',
                 'academicSession',
                 'term',
@@ -64,12 +106,21 @@ class AttendanceController extends Controller
         );
     }
 
-    public function destroy(Attendance $attendance)
-    {
+    public function destroy(
+        Request $request,
+        Attendance $attendance
+    ) {
+        if (
+            ! $request->user()->isSuperAdmin()
+            && $attendance->school_id != $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
         $attendance->delete();
 
         return response()->json([
-            'message' => 'Attendance record deleted successfully.',
+            'message' => 'Attendance record deleted successfully.'
         ]);
     }
 }
