@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Console\Commands;
+
+use App\Models\SchoolSubscription;
+use Illuminate\Console\Attributes\Description;
+use Illuminate\Console\Attributes\Signature;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
+use App\Mail\SubscriptionReminderMail;
+use Illuminate\Support\Facades\Mail;
+
+#[Signature('subscriptions:reminders')]
+#[Description('Send subscription renewal reminders')]
+class SendSubscriptionReminders extends Command
+{
+    /**
+     * Execute the console command.
+     */
+    public function handle(): int
+    {
+        $subscriptions = SchoolSubscription::with([
+            'school',
+            'subscriptionPlan'
+        ]) ->where('status', 'active') ->where('is_current', true) ->get(); 
+        foreach ($subscriptions as $subscription) {
+            $daysRemaining = $subscription->daysRemaining(); /*
+            |-------------------------------------------------------------------------- 
+            | 7 Days Reminder
+            |--------------------------------------------------------------------------
+            */Mail::to($subscription->school->email)
+    ->send(
+        new SubscriptionReminderMail(
+            $subscription,
+            $daysRemaining
+        )
+    );
+
+Log::info(
+    "7-day reminder sent to {$subscription->school->email}"
+);
+
+$subscription->update([
+    'first_reminder_sent_at' => now(),
+]);
+
+            /*
+            |-------------------------------------------------------------------------- 
+            | 3 Days Reminder
+            |--------------------------------------------------------------------------
+            */ Mail::to($subscription->school->email)
+    ->send(
+        new SubscriptionReminderMail(
+            $subscription,
+            $daysRemaining
+        )
+    );
+
+Log::info(
+    "3-day reminder sent to {$subscription->school->email}"
+);
+
+$subscription->update([
+    'second_reminder_sent_at' => now(),
+]);   
+
+         /*
+            |-------------------------------------------------------------------------- 
+            | Final Reminder
+            |--------------------------------------------------------------------------
+            */ Mail::to($subscription->school->email)
+    ->send(
+        new SubscriptionReminderMail(
+            $subscription,
+            $daysRemaining
+        )
+    );
+
+Log::info(
+    "Final reminder sent to {$subscription->school->email}"
+);
+
+$subscription->update([
+    'final_reminder_sent_at' => now(),
+]);
+~/.../backend/dono-api $
