@@ -93,10 +93,10 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->unique([
-                'promo_campaign_id',
-                'subscription_plan_id'
-            ]);
+            $table->unique(
+                ['promo_campaign_id', 'subscription_plan_id'],
+                'promo_sub_plan_unique'
+            );
         });
     }
 
