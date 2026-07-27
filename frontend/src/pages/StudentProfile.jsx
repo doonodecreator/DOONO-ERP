@@ -88,7 +88,7 @@ export default function StudentProfile({
 
               try {
                 await fetch(
-                  `http://127.0.0.1:8000/api/v1/students/${student.id}`,
+                  `${import.meta.env.VITE_API_URL}/students/${student.id}`,
                   {
                     method: "DELETE",
                     headers: {
