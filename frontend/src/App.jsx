@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "./context/AuthContext";
-import Login from "./pages/Login";
 
 import DashboardLayout from "./layouts/DashboardLayout";
+import Login from "./pages/Login";
 
 import Dashboard from "./pages/Dashboard";
-
 import Students from "./pages/Students";
 import AddStudent from "./pages/AddStudent";
 import StudentProfile from "./pages/StudentProfile";
@@ -50,35 +49,26 @@ import Subscriptions from "./pages/Subscriptions";
 import Settings from "./pages/Settings";
 
 export default function App() {
-  const { loading, isAuthenticated } = useAuth();
-
-  const [page, setPage] = useState("dashboard");
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [selectedParent, setSelectedParent] = useState(null);
-  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <h2 style={{ padding: 40 }}>Loading...</h2>;
   }
 
   if (!isAuthenticated) {
     return <Login />;
   }
 
-  let content = null;
+  const [page, setPage] = useState("dashboard");
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedParent, setSelectedParent] = useState(null);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
+
+  let content = <Dashboard />;
 
   switch (page) {
-    case "dashboard":
-      content = <Dashboard />;
-      break;
-
     case "students":
-      content = (
-        <Students
-          setPage={setPage}
-          setSelectedStudent={setSelectedStudent}
-        />
-      );
+      content = <Students setPage={setPage} setSelectedStudent={setSelectedStudent} />;
       break;
 
     case "add-student":
@@ -86,31 +76,15 @@ export default function App() {
       break;
 
     case "student-profile":
-      content = (
-        <StudentProfile
-          student={selectedStudent}
-          setPage={setPage}
-        />
-      );
+      content = <StudentProfile student={selectedStudent} setPage={setPage} />;
       break;
 
     case "edit-student":
-      content = (
-        <EditStudent
-          student={selectedStudent}
-          setSelectedStudent={setSelectedStudent}
-          setPage={setPage}
-        />
-      );
+      content = <EditStudent student={selectedStudent} setSelectedStudent={setSelectedStudent} setPage={setPage} />;
       break;
 
     case "parents":
-      content = (
-        <Parents
-          setPage={setPage}
-          setSelectedParent={setSelectedParent}
-        />
-      );
+      content = <Parents setPage={setPage} setSelectedParent={setSelectedParent} />;
       break;
 
     case "add-parent":
@@ -118,40 +92,19 @@ export default function App() {
       break;
 
     case "parent-profile":
-      content = (
-        <ParentProfile
-          parent={selectedParent}
-          setPage={setPage}
-        />
-      );
+      content = <ParentProfile parent={selectedParent} setPage={setPage} />;
       break;
 
     case "edit-parent":
-      content = (
-        <EditParent
-          parent={selectedParent}
-          setSelectedParent={setSelectedParent}
-          setPage={setPage}
-        />
-      );
+      content = <EditParent parent={selectedParent} setSelectedParent={setSelectedParent} setPage={setPage} />;
       break;
 
     case "link-student-parent":
-      content = (
-        <LinkStudentToParent
-          parent={selectedParent}
-          setPage={setPage}
-        />
-      );
+      content = <LinkStudentToParent parent={selectedParent} setPage={setPage} />;
       break;
 
     case "teachers":
-      content = (
-        <Teachers
-          setPage={setPage}
-          setSelectedTeacher={setSelectedTeacher}
-        />
-      );
+      content = <Teachers setPage={setPage} setSelectedTeacher={setSelectedTeacher} />;
       break;
 
     case "add-teacher":
@@ -159,22 +112,11 @@ export default function App() {
       break;
 
     case "teacher-profile":
-      content = (
-        <TeacherProfile
-          teacher={selectedTeacher}
-          setPage={setPage}
-        />
-      );
+      content = <TeacherProfile teacher={selectedTeacher} setPage={setPage} />;
       break;
 
     case "edit-teacher":
-      content = (
-        <EditTeacher
-          teacher={selectedTeacher}
-          setSelectedTeacher={setSelectedTeacher}
-          setPage={setPage}
-        />
-      );
+      content = <EditTeacher teacher={selectedTeacher} setSelectedTeacher={setSelectedTeacher} setPage={setPage} />;
       break;
 
     case "subjects":
