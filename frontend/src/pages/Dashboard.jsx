@@ -16,7 +16,6 @@ export default function Dashboard() {
   });
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     loadDashboard();
@@ -24,10 +23,9 @@ export default function Dashboard() {
 
   async function loadDashboard() {
     try {
-      setLoading(true);
-      setError("");
+      const response = await api.get("/dashboard");
 
-      const data = await api.get("/dashboard");
+      const data = response.data;
 
       setStats({
         students: data.students ?? 0,
@@ -37,15 +35,6 @@ export default function Dashboard() {
       });
     } catch (err) {
       console.log("Dashboard Error:", err);
-
-      const message =
-        err?.message ||
-        err?.error ||
-        JSON.stringify(err);
-
-      alert(message);
-
-      setError(message);
     } finally {
       setLoading(false);
     }
@@ -78,62 +67,38 @@ export default function Dashboard() {
     },
   ];
 
-  if (loading) {
-    return (
-      <div style={{ padding: 40 }}>
-        <h2>Loading dashboard...</h2>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{ padding: 40 }}>
-        <h2 style={{ color: "red" }}>Dashboard Error</h2>
-
-        <pre
-          style={{
-            background: "#fff",
-            padding: 20,
-            borderRadius: 10,
-            whiteSpace: "pre-wrap",
-            color: "#b91c1c",
-          }}
-        >
-          {error}
-        </pre>
-      </div>
-    );
-  }
-
   return (
     <div>
       <h1>Welcome to DONO ERP</h1>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))",
-          gap: 20,
-        }}
-      >
-        {cards.map((card) => (
-          <div
-            key={card.title}
-            style={{
-              background: "#fff",
-              padding: 25,
-              borderRadius: 20,
-            }}
-          >
-            <div style={{ color: card.color }}>{card.icon}</div>
+      {loading ? (
+        <p>Loading dashboard...</p>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))",
+            gap: 20,
+          }}
+        >
+          {cards.map((card) => (
+            <div
+              key={card.title}
+              style={{
+                background: "#fff",
+                padding: 25,
+                borderRadius: 20,
+              }}
+            >
+              <div style={{ color: card.color }}>{card.icon}</div>
 
-            <h3>{card.title}</h3>
+              <h3>{card.title}</h3>
 
-            <h1>{card.value}</h1>
-          </div>
-        ))}
-      </div>
+              <h1>{card.value}</h1>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
