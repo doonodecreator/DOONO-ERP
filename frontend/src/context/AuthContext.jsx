@@ -1,25 +1,32 @@
-useEffect(() => {
-  const token = localStorage.getItem("token");
-  const storedUser = localStorage.getItem("user");
+import { createContext, useContext, useEffect, useState } from "react";
 
-  if (
-    token &&
-    token !== "undefined" &&
-    storedUser &&
-    storedUser !== "undefined"
-  ) {
-    try {
-      setUser(JSON.parse(storedUser));
-    } catch (e) {
-      console.error("Failed to parse stored user", e);
+const AuthContext = createContext();
 
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+
+    if (
+      token &&
+      token !== "undefined" &&
+      storedUser &&
+      storedUser !== "undefined"
+    ) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Failed to parse stored user", e);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
     }
-  }
 
-  setLoading(false);
-}, []);
+    setLoading(false);
+  }, []);
 
   const login = (token, userData) => {
     localStorage.setItem("token", token);
