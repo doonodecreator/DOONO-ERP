@@ -38,6 +38,8 @@ use App\Http\Controllers\Api\ParentDashboardController;
 use App\Http\Controllers\Api\TeacherDashboardController;
 use App\Http\Controllers\Api\ResultEntryController;
 use App\Http\Controllers\Api\PromoCampaignController;
+use App\Http\Controllers\Api\CurrencyController;
+use App\Http\Controllers\Api\CouponController;
 
 Route::prefix('v1')->group(function () {
 
@@ -108,6 +110,7 @@ Route::apiResource(
     'promo-campaigns',
     PromoCampaignController::class
 );
+
 
 /*
 |--------------------------------------------------------------------------
@@ -206,6 +209,10 @@ Route::apiResource(
     'payments/paystack/initialize',
     [PaymentController::class, 'initialize']
 );
+
+        Route::apiResource('currencies', CurrencyController::class);
+
+        Route::apiResource('coupons', CouponController::class);
 
         Route::get(
     'parent-dashboard/{parent}',

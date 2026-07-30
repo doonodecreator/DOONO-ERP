@@ -22,7 +22,7 @@ export default function Login() {
         password,
       });
 
-      login(response.token, response.user);
+      login(response.data.token, response.data.user);
 
       window.location.reload();
     } catch (err) {
