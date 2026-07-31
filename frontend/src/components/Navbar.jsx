@@ -1,4 +1,13 @@
+import { useAuth } from "../context/AuthContext";
+
 export default function Navbar() {
+  const { user } = useAuth();
+
+  const role =
+    user?.role
+      ?.replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase()) || "Guest";
+
   return (
     <div
       style={{
@@ -14,13 +23,14 @@ export default function Navbar() {
         <h2 style={{ margin: 0 }}>
           Dashboard
         </h2>
+
         <p
           style={{
             margin: 0,
             color: "#666",
           }}
         >
-          Welcome to DOONO School ERP
+          Welcome to DONO School ERP
         </p>
       </div>
 
@@ -30,9 +40,10 @@ export default function Navbar() {
           color: "white",
           padding: "12px 18px",
           borderRadius: "50px",
+          fontWeight: "bold",
         }}
       >
-        Proprietor
+        {role}
       </div>
     </div>
   );
