@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
@@ -6,6 +7,8 @@ export default function DashboardLayout({
   page,
   setPage,
 }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div
       style={{
@@ -17,18 +20,31 @@ export default function DashboardLayout({
       <Sidebar
         page={page}
         setPage={setPage}
+        open={sidebarOpen}
+        closeSidebar={() => setSidebarOpen(false)}
       />
 
-      <div style={{ flex: 1 }}>
-        <Navbar />
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Navbar
+          onMenuClick={() =>
+            setSidebarOpen(!sidebarOpen)
+          }
+        />
 
-        <div
+        <main
           style={{
-            padding: "30px",
+            padding: "20px",
+            flex: 1,
           }}
         >
           {children}
-        </div>
+        </main>
       </div>
     </div>
   );
