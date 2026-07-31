@@ -17,9 +17,9 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required','string','max:255'],
-            'email' => ['required','email','unique:users,email'],
-            'password' => ['required','confirmed','min:8'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'unique:users,email'],
+            'password' => ['required', 'confirmed', 'min:8'],
             'role' => [
                 'required',
                 'in:super_admin,proprietor,principal,vice_principal,bursar,head_teacher,teacher,class_teacher,librarian,hostel_master,nurse,parent,student'
@@ -52,7 +52,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => ['required','email'],
+            'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
@@ -71,19 +71,17 @@ class AuthController extends Controller
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
-    'message' => 'Login successful.',
-    'token' => $token,
-
-    'user' => $user,
-
-    'roles' => $user->roles,
-
-    'permissions' => $user->roles
-        ->flatMap(fn ($role) => $role->permissions)
-        ->pluck('slug')
-        ->unique()
-        ->values(),
-]);
+            'message' => 'Login successful.',
+            'token' => $token,
+            'user' => $user,
+            'roles' => $user->roles,
+            'permissions' => $user->roles
+                ->flatMap(fn ($role) => $role->permissions)
+                ->pluck('slug')
+                ->unique()
+                ->values(),
+        ]);
+    }
 
     /**
      * Logout
