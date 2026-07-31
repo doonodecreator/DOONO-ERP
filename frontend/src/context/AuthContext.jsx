@@ -29,10 +29,12 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = (token, userData) => {
+    console.log("LOGGED USER:", userData);
+
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(userData));
     setUser(userData);
-  };
+};
 
   const logout = () => {
     localStorage.removeItem("token");

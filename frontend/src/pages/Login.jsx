@@ -22,9 +22,15 @@ export default function Login() {
         password,
       });
 
-      login(response.data.token, response.data.user);
+      const loggedUser = {
+  ...response.data.user,
+  roles: response.data.roles,
+  permissions: response.data.permissions,
+};
 
-      window.location.reload();
+login(response.data.token, loggedUser);
+
+window.location.reload();
     } catch (err) {
       console.log(err);
 
