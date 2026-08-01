@@ -7,61 +7,116 @@ use App\Http\Requests\StoreExaminationRequest;
 use App\Http\Requests\UpdateExaminationRequest;
 use App\Http\Resources\ExaminationResource;
 use App\Models\Examination;
+use Illuminate\Http\Request;
 
 class ExaminationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $query = Examination::with([
+            'school',
+            'academicSession',
+            'term',
+        ]);
+
+        if (! $request->user()->isSuperAdmin()) {
+            $query->where(
+                'school_id',
+                $request->user()->currentSchoolId()
+            );
+        }
+
         return ExaminationResource::collection(
-            Examination::with([
-                'school',
-                'academicSession',
-                'term'
-            ])->latest()->paginate(10)
+            $query->latest()->paginate(10)
         );
     }
 
     public function store(StoreExaminationRequest $request)
     {
-        $examination = Examination::create($request->validated());
+        $data = $request->validated();
 
-        return (new ExaminationResource(
-            $examination->load([
-                'school',
-                'academicSession',
-                'term'
-            ])
-        ))
-            ->response()
-            ->setStatusCode(201);
+        if (! $request->user()->isSuperAdmin()) {
+            $data['school_id'] =
+                $request->user()->currentSchoolId();
+        }
+
+        $examination = Examination::create($data);
+
+        return (
+            new ExaminationResource(
+                $examination->load([
+                    'school',
+                    'academicSession',
+                    'term',
+                ])
+            )
+        )
+        ->response()
+        ->setStatusCode(201);
     }
 
-    public function show(Examination $examination)
-    {
+    public function show(
+        Request $request,
+        Examination $examination
+    ) {
+        if (
+            ! $request->user()->isSuperAdmin() &&
+            $examination->school_id !=
+            $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
         return new ExaminationResource(
             $examination->load([
                 'school',
                 'academicSession',
-                'term'
+                'term',
             ])
         );
     }
 
-    public function update(UpdateExaminationRequest $request, Examination $examination)
-    {
-        $examination->update($request->validated());
+    public function update(
+        UpdateExaminationRequest $request,
+        Examination $examination
+    ) {
+        if (
+            ! $request->user()->isSuperAdmin() &&
+            $examination->school_id !=
+            $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $data = $request->validated();
+
+        if (! $request->user()->isSuperAdmin()) {
+            unset($data['school_id']);
+        }
+
+        $examination->update($data);
 
         return new ExaminationResource(
             $examination->load([
                 'school',
                 'academicSession',
-                'term'
+                'term',
             ])
         );
     }
 
-    public function destroy(Examination $examination)
-    {
+    public function destroy(
+        Request $request,
+        Examination $examination
+    ) {
+        if (
+            ! $request->user()->isSuperAdmin() &&
+            $examination->school_id !=
+            $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
         $examination->delete();
 
         return response()->json([

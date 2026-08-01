@@ -6,24 +6,18 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateStudentRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Validation rules.
-     */
     public function rules(): array
     {
         $student = $this->route('student');
 
         return [
 
-            'school_id' => 'sometimes|required|exists:schools,id',
+            'school_id' => 'sometimes|exists:schools,id',
 
             'division_id' => 'sometimes|required|exists:divisions,id',
 
@@ -33,7 +27,9 @@ class UpdateStudentRequest extends FormRequest
 
             'academic_session_id' => 'sometimes|required|exists:academic_sessions,id',
 
-            'admission_number' => 'sometimes|required|string|max:50|unique:students,admission_number,' . $student->id,
+            'admission_number' =>
+                'sometimes|required|string|max:50|unique:students,admission_number,' .
+                $student->id,
 
             'first_name' => 'sometimes|required|string|max:100',
 
@@ -69,14 +65,10 @@ class UpdateStudentRequest extends FormRequest
         ];
     }
 
-    /**
-     * Custom validation messages.
-     */
     public function messages(): array
     {
         return [
             'admission_number.unique' => 'Admission number already exists.',
-            'school_id.exists' => 'Selected school does not exist.',
             'division_id.exists' => 'Selected division does not exist.',
             'class_id.exists' => 'Selected class does not exist.',
             'stream_id.exists' => 'Selected stream does not exist.',

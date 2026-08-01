@@ -1,21 +1,30 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+
 import {
+  FaBuilding,
+  FaSchool,
   FaUserGraduate,
   FaChalkboardTeacher,
   FaUsers,
+  FaBook,
+  FaLayerGroup,
+  FaProjectDiagram,
   FaMoneyBillWave,
+  FaWallet,
+  FaClock,
+  FaCheckCircle,
+  FaClipboardCheck,
+  FaFileAlt,
+  FaChartLine,
 } from "react-icons/fa";
 
-export default function Dashboard() {
-  const [stats, setStats] = useState({
-    students: 0,
-    teachers: 0,
-    parents: 0,
-    revenue: 0,
-  });
+import "../styles/dashboard.css";
 
+export default function Dashboard() {
+  const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     loadDashboard();
@@ -23,18 +32,14 @@ export default function Dashboard() {
 
   async function loadDashboard() {
     try {
+      setLoading(true);
+
       const response = await api.get("/dashboard");
 
-      const data = response.data;
-
-      setStats({
-        students: data.students ?? 0,
-        teachers: data.staff ?? 0,
-        parents: data.parents ?? 0,
-        revenue: data.payments_received ?? 0,
-      });
+      setStats(response.data);
     } catch (err) {
-      console.log("Dashboard Error:", err);
+      console.log(err);
+      setError("Unable to load dashboard.");
     } finally {
       setLoading(false);
     }
@@ -42,63 +47,222 @@ export default function Dashboard() {
 
   const cards = [
     {
-      title: "Students",
-      value: stats.students,
-      color: "#2563eb",
-      icon: <FaUserGraduate size={35} />,
+      title: "Organizations",
+      value: stats.organizations,
+      icon: <FaBuilding />,
+      color: "#1d4ed8",
+      show: stats.dashboard_type === "super_admin",
     },
     {
-      title: "Teachers",
-      value: stats.teachers,
+      title: "Schools",
+      value: stats.schools,
+      icon: <FaSchool />,
+      color: "#2563eb",
+      show: stats.dashboard_type === "super_admin",
+    },
+    {
+      title: "Students",
+      value: stats.students,
+      icon: <FaUserGraduate />,
+      color: "#0f766e",
+      show: true,
+    },
+    {
+      title: "Staff",
+      value: stats.staff,
+      icon: <FaChalkboardTeacher />,
       color: "#16a34a",
-      icon: <FaChalkboardTeacher size={35} />,
+      show: true,
     },
     {
       title: "Parents",
       value: stats.parents,
+      icon: <FaUsers />,
       color: "#9333ea",
-      icon: <FaUsers size={35} />,
+      show: true,
     },
     {
-      title: "Revenue",
-      value: `₦${Number(stats.revenue).toLocaleString()}`,
+      title: "Subjects",
+      value: stats.subjects,
+      icon: <FaBook />,
       color: "#ea580c",
-      icon: <FaMoneyBillWave size={35} />,
+      show: true,
+    },
+    {
+      title: "Classes",
+      value: stats.classes,
+      icon: <FaLayerGroup />,
+      color: "#0f766e",
+      show: true,
+    },
+    {
+      title: "Streams",
+      value: stats.streams,
+      icon: <FaProjectDiagram />,
+      color: "#475569",
+      show: true,
+    },
+    {
+      title: "Fee Categories",
+      value: stats.fee_categories,
+      icon: <FaMoneyBillWave />,
+      color: "#b45309",
+      show: true,
+    },
+    {
+      title: "Student Fees",
+      value: stats.student_fees,
+      icon: <FaWallet />,
+      color: "#dc2626",
+      show: true,
+    },
+    {
+      title: "Pending Fees",
+      value: stats.pending_fees,
+      icon: <FaClock />,
+      color: "#ca8a04",
+      show: true,
+    },
+    {
+      title: "Partial Fees",
+      value: stats.partial_fees,
+      icon: <FaClipboardCheck />,
+      color: "#0891b2",
+      show: true,
+    },
+    {
+      title: "Paid Fees",
+      value: stats.paid_fees,
+      icon: <FaCheckCircle />,
+      color: "#16a34a",
+      show: true,
+    },
+    {
+      title: "Examinations",
+      value: stats.examinations,
+      icon: <FaFileAlt />,
+      color: "#7c3aed",
+      show: true,
+    },
+    {
+      title: "Attendance",
+      value: stats.attendance_records,
+      icon: <FaChartLine />,
+      color: "#1e40af",
+      show: true,
     },
   ];
 
-  return (
-    <div>
-      <h1>Welcome to DONO ERP</h1>
+  if (loading) {
+    return (
+      <div className="dashboard-loading">
+        Loading dashboard...
+      </div>
+    );
+  }
 
-      {loading ? (
-        <p>Loading dashboard...</p>
-      ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))",
-            gap: 20,
-          }}
-        >
-          {cards.map((card) => (
+  if (error) {
+    return (
+      <div className="dashboard-error">
+        {error}
+      </div>
+    );
+  }
+
+  return (
+    <div className="dashboard-page">
+
+      <div className="dashboard-header">
+        <div className="dashboard-title">
+          <h1>DONO School ERP</h1>
+          <p>
+            {stats.dashboard_type === "super_admin"
+              ? "Super Administrator Dashboard"
+              : "School Dashboard"}
+          </p>
+        </div>
+      </div>
+
+      <div className="dashboard-grid">
+        {cards
+          .filter(card => card.show)
+          .map(card => (
             <div
               key={card.title}
-              style={{
-                background: "#fff",
-                padding: 25,
-                borderRadius: 20,
-              }}
+              className="dashboard-card"
             >
-              <div style={{ color: card.color }}>{card.icon}</div>
+              <div className="dashboard-card-top">
+                <div
+                  className="dashboard-card-icon"
+                  style={{ background: card.color }}
+                >
+                  {card.icon}
+                </div>
+              </div>
 
-              <h3>{card.title}</h3>
+              <div className="dashboard-card-title">
+                {card.title}
+              </div>
 
-              <h1>{card.value}</h1>
+              <div className="dashboard-card-value">
+                {card.title.includes("Fee") ||
+                card.title.includes("Revenue")
+                  ? Number(card.value ?? 0).toLocaleString()
+                  : card.value ?? 0}
+              </div>
             </div>
           ))}
+      </div>
+
+      <div className="dashboard-two-columns">
+
+        <div className="dashboard-section">
+          <h2>Finance Summary</h2>
+
+          <div className="dashboard-list">
+
+            <div className="dashboard-list-item">
+              <span>Payments Received</span>
+              <strong>
+                ₦{Number(stats.payments_received ?? 0).toLocaleString()}
+              </strong>
+            </div>
+
+            <div className="dashboard-list-item">
+              <span>Outstanding Fees</span>
+              <strong>
+                ₦{Number(stats.outstanding_fees ?? 0).toLocaleString()}
+              </strong>
+            </div>
+
+          </div>
         </div>
-      )}
+
+        <div className="dashboard-section">
+          <h2>Status</h2>
+
+          <div className="dashboard-list">
+
+            <div className="dashboard-list-item">
+              <span>Dashboard Type</span>
+              <span className="dashboard-badge">
+                {stats.dashboard_type}
+              </span>
+            </div>
+
+            <div className="dashboard-list-item">
+              <span>System</span>
+              <span className="dashboard-badge">
+                Online
+              </span>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
   );
 }

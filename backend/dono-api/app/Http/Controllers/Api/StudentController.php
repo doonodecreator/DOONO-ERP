@@ -46,7 +46,19 @@ class StudentController extends Controller
         ]);
 
         $students = Student::with('class')
-            ->where('class_id', $request->class_id)
+            ->where('class_id', $request->class_id);
+
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
+            $students->where(
+                'school_id',
+                $request->user()->currentSchoolId()
+            );
+        }
+
+        $students = $students
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();
@@ -78,26 +90,19 @@ class StudentController extends Controller
                 'academicSession',
             ])
         ))
-        ->response()
-        ->setStatusCode(201);
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function show(Request $request, Student $student)
     {
-        return new StudentResource(
-            $student->load([
-                'school',
-                'division',
-                'class',
-                'stream',
-                'academicSession',
-            ])
-        );
-    }
-
-    public function update(UpdateStudentRequest $request, Student $student)
-    {
-        $student->update($request->validated());
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $student->school_id !== $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
 
         return new StudentResource(
             $student->load([
@@ -110,12 +115,56 @@ class StudentController extends Controller
         );
     }
 
-    public function destroy(Request $request, Student $student)
-    {
+    public function update(
+        UpdateStudentRequest $request,
+        Student $student
+    ) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $student->school_id !== $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $data = $request->validated();
+
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
+            $data['school_id'] = $student->school_id;
+        }
+
+        $student->update($data);
+
+        return new StudentResource(
+            $student->load([
+                'school',
+                'division',
+                'class',
+                'stream',
+                'academicSession',
+            ])
+        );
+    }
+
+    public function destroy(
+        Request $request,
+        Student $student
+    ) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $student->school_id !== $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
         $student->delete();
 
         return response()->json([
-            'message' => 'Student deleted successfully.'
+            'message' => 'Student deleted successfully.',
         ]);
     }
 }

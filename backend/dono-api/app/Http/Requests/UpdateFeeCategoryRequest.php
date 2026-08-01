@@ -13,13 +13,15 @@ class UpdateFeeCategoryRequest extends FormRequest
 
     public function rules(): array
     {
+        $feeCategory = $this->route('fee_category');
+
         return [
 
             'school_id' => 'sometimes|required|exists:schools,id',
 
             'name' => 'sometimes|required|string|max:255',
 
-            'code' => 'sometimes|required|string|max:255|unique:fee_categories,code,' . $this->fee_category,
+            'code' => 'sometimes|required|string|max:255|unique:fee_categories,code,' . $feeCategory->id,
 
             'description' => 'nullable|string',
 

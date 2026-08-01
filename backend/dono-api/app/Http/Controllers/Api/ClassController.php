@@ -7,21 +7,34 @@ use App\Http\Requests\StoreClassRequest;
 use App\Http\Requests\UpdateClassRequest;
 use App\Http\Resources\ClassResource;
 use App\Models\ClassModel;
+use Illuminate\Http\Request;
 
 class ClassController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $query = ClassModel::with([
+            'division',
+            'streams',
+        ])->orderBy('display_order');
+
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
+            $query->whereHas('division', function ($q) use ($request) {
+                $q->where(
+                    'school_id',
+                    $request->user()->currentSchoolId()
+                );
+            });
+        }
+
         return ClassResource::collection(
-            ClassModel::with([
-                'division',
-                'streams',
-            ])
-            ->orderBy('display_order')
-            ->paginate(10)
+            $query->paginate(10)
         );
     }
 
@@ -42,15 +55,25 @@ class ClassController extends Controller
                 ])
             )
         )
-        ->response()
-        ->setStatusCode(201);
+            ->response()
+            ->setStatusCode(201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(ClassModel $class)
-    {
+    public function show(
+        Request $request,
+        ClassModel $class
+    ) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $class->division->school_id !== $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
         return new ClassResource(
             $class->load([
                 'division',
@@ -66,6 +89,14 @@ class ClassController extends Controller
         UpdateClassRequest $request,
         ClassModel $class
     ) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $class->division->school_id !== $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
         $class->update(
             $request->validated()
         );
@@ -81,13 +112,22 @@ class ClassController extends Controller
     /**
      * Remove the specified resource.
      */
-    public function destroy(ClassModel $class)
-    {
+    public function destroy(
+        Request $request,
+        ClassModel $class
+    ) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $class->division->school_id !== $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
         $class->delete();
 
         return response()->json([
-            'message' =>
-                'Class deleted successfully.',
+            'message' => 'Class deleted successfully.',
         ]);
     }
 }

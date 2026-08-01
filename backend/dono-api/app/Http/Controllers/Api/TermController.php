@@ -6,35 +6,59 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTermRequest;
 use App\Http\Requests\UpdateTermRequest;
 use App\Http\Resources\TermResource;
+use App\Models\AcademicSession;
 use App\Models\Term;
 use Illuminate\Support\Facades\DB;
 
 class TermController extends Controller
 {
-    /**
-     * Display a listing of terms.
-     */
     public function index()
     {
+        $user = auth()->user();
+
+        $query = Term::with('academicSession');
+
+        if (!$user->isSuperAdmin()) {
+
+            $schoolId = $user->currentSchoolId();
+
+            $query->whereHas('academicSession', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
+        }
+
         return TermResource::collection(
-            Term::with('academicSession')
-                ->latest()
-                ->paginate(10)
+            $query->latest()->paginate(10)
         );
     }
 
-    /**
-     * Store a newly created term.
-     */
     public function store(StoreTermRequest $request)
     {
-        return DB::transaction(function () use ($request) {
+        $user = auth()->user();
+
+        return DB::transaction(function () use ($request, $user) {
+
+            $academicSession = AcademicSession::findOrFail(
+                $request->academic_session_id
+            );
+
+            if (
+                !$user->isSuperAdmin() &&
+                $academicSession->school_id !== $user->currentSchoolId()
+            ) {
+                abort(403, 'You cannot create a term for another school.');
+            }
 
             $data = $request->validated();
 
             if ($data['is_current']) {
-                Term::where('academic_session_id', $data['academic_session_id'])
-                    ->update(['is_current' => false]);
+
+                Term::where(
+                    'academic_session_id',
+                    $academicSession->id
+                )->update([
+                    'is_current' => false,
+                ]);
             }
 
             $term = Term::create($data);
@@ -42,55 +66,86 @@ class TermController extends Controller
             return (new TermResource(
                 $term->load('academicSession')
             ))
-            ->response()
-            ->setStatusCode(201);
-
+                ->response()
+                ->setStatusCode(201);
         });
     }
 
-    /**
-     * Display the specified term.
-     */
     public function show(Term $term)
     {
-        return new TermResource(
-            $term->load('academicSession')
-        );
+        $user = auth()->user();
+
+        $term->load('academicSession');
+
+        if (
+            !$user->isSuperAdmin() &&
+            $term->academicSession->school_id !== $user->currentSchoolId()
+        ) {
+            abort(403);
+        }
+
+        return new TermResource($term);
     }
 
-    /**
-     * Update the specified term.
-     */
-    public function update(UpdateTermRequest $request, Term $term)
-    {
-        return DB::transaction(function () use ($request, $term) {
+    public function update(
+        UpdateTermRequest $request,
+        Term $term
+    ) {
+        $user = auth()->user();
+
+        $term->load('academicSession');
+
+        if (
+            !$user->isSuperAdmin() &&
+            $term->academicSession->school_id !== $user->currentSchoolId()
+        ) {
+            abort(403);
+        }
+
+        return DB::transaction(function () use (
+            $request,
+            $term
+        ) {
 
             $data = $request->validated();
 
             if (($data['is_current'] ?? false) === true) {
-                Term::where('academic_session_id', $term->academic_session_id)
+
+                Term::where(
+                    'academic_session_id',
+                    $term->academic_session_id
+                )
                     ->where('id', '!=', $term->id)
-                    ->update(['is_current' => false]);
+                    ->update([
+                        'is_current' => false,
+                    ]);
             }
 
             $term->update($data);
 
             return new TermResource(
-                $term->load('academicSession')
+                $term->fresh()->load('academicSession')
             );
-
         });
     }
 
-    /**
-     * Remove the specified term.
-     */
     public function destroy(Term $term)
     {
+        $user = auth()->user();
+
+        $term->load('academicSession');
+
+        if (
+            !$user->isSuperAdmin() &&
+            $term->academicSession->school_id !== $user->currentSchoolId()
+        ) {
+            abort(403);
+        }
+
         $term->delete();
 
         return response()->json([
-            'message' => 'Term deleted successfully.'
+            'message' => 'Term deleted successfully.',
         ]);
     }
 }

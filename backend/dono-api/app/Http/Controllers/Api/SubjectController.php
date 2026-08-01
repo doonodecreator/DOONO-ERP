@@ -16,9 +16,13 @@ class SubjectController extends Controller
         $query = Subject::with([
             'school',
             'division',
+            'classes',
         ]);
 
-        if (!$request->user()->isSuperAdmin()) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
             $query->where(
                 'school_id',
                 $request->user()->currentSchoolId()
@@ -34,9 +38,11 @@ class SubjectController extends Controller
     {
         $data = $request->validated();
 
-        if (empty($data['school_id'])) {
-            $data['school_id'] =
-                $request->user()->currentSchoolId();
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
+            $data['school_id'] = $request->user()->currentSchoolId();
         }
 
         $subject = Subject::create($data);
@@ -46,6 +52,7 @@ class SubjectController extends Controller
                 $subject->load([
                     'school',
                     'division',
+                    'classes',
                 ])
             )
         )
@@ -53,10 +60,8 @@ class SubjectController extends Controller
         ->setStatusCode(201);
     }
 
-    public function show(
-        Request $request,
-        Subject $subject
-    ) {
+    public function show(Request $request, Subject $subject)
+    {
         return new SubjectResource(
             $subject->load([
                 'school',
@@ -90,8 +95,7 @@ class SubjectController extends Controller
         $subject->delete();
 
         return response()->json([
-            'message' =>
-                'Subject deleted successfully.'
+            'message' => 'Subject deleted successfully.',
         ]);
     }
 }

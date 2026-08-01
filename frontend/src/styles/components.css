@@ -1,0 +1,393 @@
+/* ==========================================================
+   DONO ERP COMPONENT LIBRARY
+   Version: 1.0
+   ========================================================== */
+
+/* ===========================
+   BUTTONS
+=========================== */
+
+.btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:11px 18px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:14px;
+    font-weight:600;
+    transition:.25s;
+    text-decoration:none;
+}
+
+.btn:hover{
+    transform:translateY(-1px);
+}
+
+.btn:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+}
+
+.btn-primary{
+    background:#2563eb;
+    color:#fff;
+}
+
+.btn-primary:hover{
+    background:#1d4ed8;
+}
+
+.btn-success{
+    background:#16a34a;
+    color:#fff;
+}
+
+.btn-success:hover{
+    background:#15803d;
+}
+
+.btn-danger{
+    background:#dc2626;
+    color:#fff;
+}
+
+.btn-danger:hover{
+    background:#b91c1c;
+}
+
+.btn-warning{
+    background:#d97706;
+    color:#fff;
+}
+
+.btn-warning:hover{
+    background:#b45309;
+}
+
+.btn-dark{
+    background:#1e293b;
+    color:#fff;
+}
+
+.btn-dark:hover{
+    background:#0f172a;
+}
+
+.btn-outline{
+    background:#fff;
+    color:#2563eb;
+    border:1px solid #2563eb;
+}
+
+.btn-outline:hover{
+    background:#eff6ff;
+}
+
+/* ===========================
+   CARDS
+=========================== */
+
+.card{
+    background:#fff;
+    border-radius:14px;
+    padding:20px;
+    box-shadow:0 6px 18px rgba(15,23,42,.06);
+    margin-bottom:20px;
+}
+
+.card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:18px;
+}
+
+.card-title{
+    font-size:18px;
+    font-weight:700;
+    color:#0f172a;
+}
+
+.card-subtitle{
+    font-size:14px;
+    color:#64748b;
+}
+
+/* ===========================
+   STATISTICS CARD
+=========================== */
+
+.stat-card{
+    background:#fff;
+    border-radius:14px;
+    padding:22px;
+    box-shadow:0 6px 18px rgba(0,0,0,.06);
+    transition:.25s;
+}
+
+.stat-card:hover{
+    transform:translateY(-4px);
+}
+
+.stat-label{
+    font-size:14px;
+    color:#64748b;
+}
+
+.stat-value{
+    margin-top:8px;
+    font-size:28px;
+    font-weight:700;
+    color:#0f172a;
+}
+
+/* ===========================
+   TOOLBAR
+=========================== */
+
+.toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+}
+
+/* ===========================
+   SEARCH
+=========================== */
+
+.search-box{
+    width:100%;
+    max-width:360px;
+    padding:11px 15px;
+    border:1px solid #cbd5e1;
+    border-radius:10px;
+    font-size:14px;
+    outline:none;
+}
+
+.search-box:focus{
+    border-color:#2563eb;
+}
+
+/* ===========================
+   FORMS
+=========================== */
+
+.form-group{
+    margin-bottom:18px;
+}
+
+.form-label{
+    display:block;
+    margin-bottom:6px;
+    font-weight:600;
+    color:#334155;
+}
+
+.form-control{
+    width:100%;
+    padding:11px 14px;
+    border:1px solid #cbd5e1;
+    border-radius:10px;
+    font-size:14px;
+    transition:.25s;
+    background:#fff;
+}
+
+.form-control:focus{
+    outline:none;
+    border-color:#2563eb;
+    box-shadow:0 0 0 3px rgba(37,99,235,.12);
+}
+
+textarea.form-control{
+    min-height:110px;
+    resize:vertical;
+}
+
+/* ===========================
+   GRID
+=========================== */
+
+.form-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:18px;
+}
+
+/* ===========================
+   TABLE
+=========================== */
+
+.table-container{
+    overflow:auto;
+    background:#fff;
+    border-radius:14px;
+    box-shadow:0 6px 18px rgba(0,0,0,.05);
+}
+
+.table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.table th{
+    background:#f8fafc;
+    padding:14px;
+    text-align:left;
+    font-size:14px;
+    color:#334155;
+}
+
+.table td{
+    padding:14px;
+    border-top:1px solid #e2e8f0;
+}
+
+.table tbody tr:hover{
+    background:#f8fbff;
+}
+
+/* ===========================
+   BADGES
+=========================== */
+
+.badge{
+    display:inline-block;
+    padding:5px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:600;
+}
+
+.badge-success{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.badge-danger{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.badge-warning{
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.badge-info{
+    background:#dbeafe;
+    color:#1d4ed8;
+}
+
+/* ===========================
+   AVATAR
+=========================== */
+
+.avatar{
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    background:#2563eb;
+    color:#fff;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-weight:bold;
+}
+
+/* ===========================
+   ALERTS
+=========================== */
+
+.alert{
+    padding:14px 18px;
+    border-radius:10px;
+    margin-bottom:20px;
+}
+
+.alert-success{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.alert-danger{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.alert-warning{
+    background:#fef3c7;
+    color:#92400e;
+}
+
+.alert-info{
+    background:#dbeafe;
+    color:#1e40af;
+}
+
+/* ===========================
+   EMPTY STATE
+=========================== */
+
+.empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:#64748b;
+}
+
+.empty-state h3{
+    margin-bottom:10px;
+}
+
+/* ===========================
+   LOADING
+=========================== */
+
+.spinner{
+    width:42px;
+    height:42px;
+    border:4px solid #e2e8f0;
+    border-top-color:#2563eb;
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+    margin:auto;
+}
+
+@keyframes spin{
+    to{
+        transform:rotate(360deg);
+    }
+}
+
+/* ===========================
+   PAGINATION
+=========================== */
+
+.pagination{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:20px;
+}
+
+.page-btn{
+    min-width:38px;
+    height:38px;
+    border:none;
+    background:#fff;
+    border-radius:8px;
+    cursor:pointer;
+    box-shadow:0 2px 6px rgba(0,0,0,.08);
+}
+
+.page-btn.active{
+    background:#2563eb;
+    color:#fff;
+}

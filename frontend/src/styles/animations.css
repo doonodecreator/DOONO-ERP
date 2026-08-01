@@ -1,0 +1,255 @@
+/* ==========================================================
+   DONO ERP ANIMATIONS
+   Version 1.0
+========================================================== */
+
+/* GLOBAL TRANSITIONS */
+
+*{
+    transition:
+        background-color .25s ease,
+        color .25s ease,
+        border-color .25s ease,
+        box-shadow .25s ease;
+}
+
+/* PAGE */
+
+.fade-in{
+    animation:fadeIn .35s ease;
+}
+
+.slide-up{
+    animation:slideUp .35s ease;
+}
+
+.slide-down{
+    animation:slideDown .35s ease;
+}
+
+.zoom-in{
+    animation:zoomIn .3s ease;
+}
+
+/* SIDEBAR */
+
+.sidebar-open{
+    animation:sidebarOpen .25s ease forwards;
+}
+
+.sidebar-close{
+    animation:sidebarClose .25s ease forwards;
+}
+
+/* MODAL */
+
+.modal-enter{
+    animation:modalEnter .25s ease;
+}
+
+.modal-exit{
+    animation:modalExit .2s ease;
+}
+
+/* DROPDOWN */
+
+.dropdown-enter{
+    animation:dropdown .2s ease;
+}
+
+/* NOTIFICATION */
+
+.notification{
+    animation:notificationSlide .35s ease;
+}
+
+/* CARD */
+
+.card-hover:hover{
+    transform:translateY(-4px);
+}
+
+/* BUTTON */
+
+.btn-press:active{
+    transform:scale(.97);
+}
+
+/* SPINNER */
+
+.spin{
+    animation:spin 1s linear infinite;
+}
+
+/* PULSE */
+
+.pulse{
+    animation:pulse 1.4s infinite;
+}
+
+/* BOUNCE */
+
+.bounce{
+    animation:bounce 1s infinite;
+}
+
+/* SKELETON */
+
+.skeleton{
+    position:relative;
+    overflow:hidden;
+    background:#e5e7eb;
+}
+
+.skeleton::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    transform:translateX(-100%);
+    background:linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.6),
+        transparent
+    );
+    animation:skeleton 1.5s infinite;
+}
+
+/* KEYFRAMES */
+
+@keyframes fadeIn{
+    from{
+        opacity:0;
+    }
+    to{
+        opacity:1;
+    }
+}
+
+@keyframes slideUp{
+    from{
+        opacity:0;
+        transform:translateY(20px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+@keyframes slideDown{
+    from{
+        opacity:0;
+        transform:translateY(-20px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+@keyframes zoomIn{
+    from{
+        opacity:0;
+        transform:scale(.95);
+    }
+    to{
+        opacity:1;
+        transform:scale(1);
+    }
+}
+
+@keyframes sidebarOpen{
+    from{
+        transform:translateX(-100%);
+    }
+    to{
+        transform:translateX(0);
+    }
+}
+
+@keyframes sidebarClose{
+    from{
+        transform:translateX(0);
+    }
+    to{
+        transform:translateX(-100%);
+    }
+}
+
+@keyframes modalEnter{
+    from{
+        opacity:0;
+        transform:scale(.92);
+    }
+    to{
+        opacity:1;
+        transform:scale(1);
+    }
+}
+
+@keyframes modalExit{
+    from{
+        opacity:1;
+        transform:scale(1);
+    }
+    to{
+        opacity:0;
+        transform:scale(.92);
+    }
+}
+
+@keyframes dropdown{
+    from{
+        opacity:0;
+        transform:translateY(-8px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+@keyframes notificationSlide{
+    from{
+        opacity:0;
+        transform:translateX(100%);
+    }
+    to{
+        opacity:1;
+        transform:translateX(0);
+    }
+}
+
+@keyframes pulse{
+    0%{
+        transform:scale(1);
+    }
+    50%{
+        transform:scale(1.04);
+    }
+    100%{
+        transform:scale(1);
+    }
+}
+
+@keyframes bounce{
+    0%,100%{
+        transform:translateY(0);
+    }
+    50%{
+        transform:translateY(-8px);
+    }
+}
+
+@keyframes spin{
+    to{
+        transform:rotate(360deg);
+    }
+}
+
+@keyframes skeleton{
+    100%{
+        transform:translateX(100%);
+    }
+}

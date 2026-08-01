@@ -24,6 +24,10 @@ class SubjectResource extends JsonResource
 
             'division' => $this->whenLoaded('division'),
 
+            'classes' => ClassResource::collection(
+                $this->whenLoaded('classes')
+            ),
+
             'name' => $this->name,
 
             'code' => $this->code,

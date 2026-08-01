@@ -6,21 +6,16 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreStudentRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Validation rules.
-     */
     public function rules(): array
     {
         return [
-            'school_id' => 'required|exists:schools,id',
+
+            'school_id' => 'sometimes|exists:schools,id',
 
             'division_id' => 'required|exists:divisions,id',
 
@@ -66,13 +61,9 @@ class StoreStudentRequest extends FormRequest
         ];
     }
 
-    /**
-     * Custom validation messages.
-     */
     public function messages(): array
     {
         return [
-            'school_id.required' => 'School is required.',
             'division_id.required' => 'Division is required.',
             'class_id.required' => 'Class is required.',
             'academic_session_id.required' => 'Academic session is required.',

@@ -16,6 +16,10 @@ class Division extends Model
         'is_active',
     ];
 
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);

@@ -1,0 +1,242 @@
+/* ==========================================================
+   DONO ERP UTILITY CLASSES
+   Version 1.0
+========================================================== */
+
+/* DISPLAY */
+
+.d-none{display:none!important;}
+.d-block{display:block!important;}
+.d-inline{display:inline!important;}
+.d-inline-block{display:inline-block!important;}
+
+.d-flex{
+display:flex!important;
+}
+
+.d-grid{
+display:grid!important;
+}
+
+/* FLEX */
+
+.flex-row{flex-direction:row!important;}
+.flex-column{flex-direction:column!important;}
+
+.flex-wrap{flex-wrap:wrap!important;}
+
+.justify-start{justify-content:flex-start!important;}
+.justify-center{justify-content:center!important;}
+.justify-end{justify-content:flex-end!important;}
+.justify-between{justify-content:space-between!important;}
+.justify-around{justify-content:space-around!important;}
+.justify-evenly{justify-content:space-evenly!important;}
+
+.items-start{align-items:flex-start!important;}
+.items-center{align-items:center!important;}
+.items-end{align-items:flex-end!important;}
+.items-stretch{align-items:stretch!important;}
+
+/* GAP */
+
+.gap-1{gap:4px!important;}
+.gap-2{gap:8px!important;}
+.gap-3{gap:12px!important;}
+.gap-4{gap:16px!important;}
+.gap-5{gap:20px!important;}
+.gap-6{gap:24px!important;}
+.gap-7{gap:30px!important;}
+.gap-8{gap:40px!important;}
+
+/* WIDTH */
+
+.w-25{width:25%!important;}
+.w-50{width:50%!important;}
+.w-75{width:75%!important;}
+.w-100{width:100%!important;}
+
+.max-w-100{
+max-width:100%!important;
+}
+
+/* HEIGHT */
+
+.h-100{
+height:100%!important;
+}
+
+.min-h-screen{
+min-height:100vh!important;
+}
+
+/* MARGIN */
+
+.m-0{margin:0!important;}
+.m-1{margin:4px!important;}
+.m-2{margin:8px!important;}
+.m-3{margin:12px!important;}
+.m-4{margin:16px!important;}
+.m-5{margin:20px!important;}
+.m-6{margin:24px!important;}
+
+.mt-1{margin-top:4px!important;}
+.mt-2{margin-top:8px!important;}
+.mt-3{margin-top:12px!important;}
+.mt-4{margin-top:16px!important;}
+.mt-5{margin-top:20px!important;}
+.mt-6{margin-top:24px!important;}
+.mt-7{margin-top:30px!important;}
+.mt-8{margin-top:40px!important;}
+
+.mb-1{margin-bottom:4px!important;}
+.mb-2{margin-bottom:8px!important;}
+.mb-3{margin-bottom:12px!important;}
+.mb-4{margin-bottom:16px!important;}
+.mb-5{margin-bottom:20px!important;}
+.mb-6{margin-bottom:24px!important;}
+.mb-7{margin-bottom:30px!important;}
+.mb-8{margin-bottom:40px!important;}
+
+.ml-auto{
+margin-left:auto!important;
+}
+
+.mr-auto{
+margin-right:auto!important;
+}
+
+/* PADDING */
+
+.p-0{padding:0!important;}
+.p-1{padding:4px!important;}
+.p-2{padding:8px!important;}
+.p-3{padding:12px!important;}
+.p-4{padding:16px!important;}
+.p-5{padding:20px!important;}
+.p-6{padding:24px!important;}
+.p-7{padding:30px!important;}
+.p-8{padding:40px!important;}
+
+.pt-4{padding-top:16px!important;}
+.pb-4{padding-bottom:16px!important;}
+.pl-4{padding-left:16px!important;}
+.pr-4{padding-right:16px!important;}
+
+/* BORDER RADIUS */
+
+.rounded-sm{border-radius:6px!important;}
+.rounded{border-radius:10px!important;}
+.rounded-lg{border-radius:14px!important;}
+.rounded-xl{border-radius:18px!important;}
+.rounded-full{border-radius:999px!important;}
+
+/* SHADOW */
+
+.shadow-sm{
+box-shadow:0 2px 6px rgba(0,0,0,.08)!important;
+}
+
+.shadow{
+box-shadow:0 6px 18px rgba(0,0,0,.08)!important;
+}
+
+.shadow-lg{
+box-shadow:0 10px 25px rgba(0,0,0,.15)!important;
+}
+
+/* TEXT */
+
+.text-left{text-align:left!important;}
+.text-center{text-align:center!important;}
+.text-right{text-align:right!important;}
+
+.text-xs{font-size:12px!important;}
+.text-sm{font-size:14px!important;}
+.text-md{font-size:16px!important;}
+.text-lg{font-size:20px!important;}
+.text-xl{font-size:24px!important;}
+.text-2xl{font-size:32px!important;}
+
+.fw-normal{font-weight:400!important;}
+.fw-medium{font-weight:500!important;}
+.fw-bold{font-weight:700!important;}
+
+/* COLORS */
+
+.text-primary{color:#2563eb!important;}
+.text-success{color:#16a34a!important;}
+.text-danger{color:#dc2626!important;}
+.text-warning{color:#d97706!important;}
+.text-dark{color:#0f172a!important;}
+.text-muted{color:#64748b!important;}
+.text-white{color:#fff!important;}
+
+/* BACKGROUNDS */
+
+.bg-white{background:#fff!important;}
+.bg-light{background:#f8fafc!important;}
+.bg-primary{background:#2563eb!important;}
+.bg-success{background:#16a34a!important;}
+.bg-danger{background:#dc2626!important;}
+.bg-warning{background:#d97706!important;}
+.bg-dark{background:#1e293b!important;}
+
+/* BORDER */
+
+.border{
+border:1px solid #e2e8f0!important;
+}
+
+.border-top{
+border-top:1px solid #e2e8f0!important;
+}
+
+.border-bottom{
+border-bottom:1px solid #e2e8f0!important;
+}
+
+/* POSITION */
+
+.relative{position:relative!important;}
+.absolute{position:absolute!important;}
+.fixed{position:fixed!important;}
+
+/* OVERFLOW */
+
+.overflow-hidden{
+overflow:hidden!important;
+}
+
+.overflow-auto{
+overflow:auto!important;
+}
+
+/* CURSOR */
+
+.pointer{
+cursor:pointer!important;
+}
+
+/* IMAGE */
+
+.img-fluid{
+max-width:100%;
+height:auto;
+display:block;
+}
+
+/* TRANSITION */
+
+.transition{
+transition:.25s;
+}
+
+/* HOVER */
+
+.hover-lift:hover{
+transform:translateY(-3px);
+}
+
+.hover-shadow:hover{
+box-shadow:0 10px 25px rgba(0,0,0,.12);
+}

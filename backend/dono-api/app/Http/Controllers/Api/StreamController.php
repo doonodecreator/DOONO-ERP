@@ -7,18 +7,32 @@ use App\Http\Requests\StoreStreamRequest;
 use App\Http\Requests\UpdateStreamRequest;
 use App\Http\Resources\StreamResource;
 use App\Models\Stream;
+use Illuminate\Http\Request;
 
 class StreamController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $query = Stream::with('class')
+            ->orderBy('display_order');
+
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
+            $query->whereHas('class.division', function ($q) use ($request) {
+                $q->where(
+                    'school_id',
+                    $request->user()->currentSchoolId()
+                );
+            });
+        }
+
         return StreamResource::collection(
-            Stream::with('class')
-                ->orderBy('display_order')
-                ->paginate(10)
+            $query->paginate(10)
         );
     }
 
@@ -27,7 +41,9 @@ class StreamController extends Controller
      */
     public function store(StoreStreamRequest $request)
     {
-        $stream = Stream::create($request->validated());
+        $stream = Stream::create(
+            $request->validated()
+        );
 
         return (new StreamResource(
             $stream->load('class')
@@ -39,8 +55,18 @@ class StreamController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Stream $stream)
-    {
+    public function show(
+        Request $request,
+        Stream $stream
+    ) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $stream->class->division->school_id !== $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
         return new StreamResource(
             $stream->load('class')
         );
@@ -49,9 +75,21 @@ class StreamController extends Controller
     /**
      * Update the specified resource.
      */
-    public function update(UpdateStreamRequest $request, Stream $stream)
-    {
-        $stream->update($request->validated());
+    public function update(
+        UpdateStreamRequest $request,
+        Stream $stream
+    ) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $stream->class->division->school_id !== $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $stream->update(
+            $request->validated()
+        );
 
         return new StreamResource(
             $stream->load('class')
@@ -61,12 +99,22 @@ class StreamController extends Controller
     /**
      * Remove the specified resource.
      */
-    public function destroy(Stream $stream)
-    {
+    public function destroy(
+        Request $request,
+        Stream $stream
+    ) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $stream->class->division->school_id !== $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
         $stream->delete();
 
         return response()->json([
-            'message' => 'Stream deleted successfully.'
+            'message' => 'Stream deleted successfully.',
         ]);
     }
 }

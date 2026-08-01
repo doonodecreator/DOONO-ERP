@@ -23,7 +23,10 @@ class AttendanceController extends Controller
             'staff',
         ]);
 
-        if (! $request->user()->isSuperAdmin()) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
             $query->where(
                 'school_id',
                 $request->user()->currentSchoolId()
@@ -66,7 +69,10 @@ class AttendanceController extends Controller
     {
         $data = $request->validated();
 
-        if (! $request->user()->isSuperAdmin()) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
             $data['school_id'] = $request->user()->currentSchoolId();
         }
 
@@ -88,8 +94,9 @@ class AttendanceController extends Controller
     public function show(Request $request, Attendance $attendance)
     {
         if (
-            ! $request->user()->isSuperAdmin()
-            && $attendance->school_id != $request->user()->currentSchoolId()
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $attendance->school_id != $request->user()->currentSchoolId()
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -110,15 +117,19 @@ class AttendanceController extends Controller
         Attendance $attendance
     ) {
         if (
-            ! $request->user()->isSuperAdmin()
-            && $attendance->school_id != $request->user()->currentSchoolId()
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $attendance->school_id != $request->user()->currentSchoolId()
         ) {
             abort(403, 'Unauthorized.');
         }
 
         $data = $request->validated();
 
-        if (! $request->user()->isSuperAdmin()) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
             unset($data['school_id']);
         }
 
@@ -140,8 +151,9 @@ class AttendanceController extends Controller
         Attendance $attendance
     ) {
         if (
-            ! $request->user()->isSuperAdmin()
-            && $attendance->school_id != $request->user()->currentSchoolId()
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $attendance->school_id != $request->user()->currentSchoolId()
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -149,7 +161,7 @@ class AttendanceController extends Controller
         $attendance->delete();
 
         return response()->json([
-            'message' => 'Attendance record deleted successfully.'
+            'message' => 'Attendance record deleted successfully.',
         ]);
     }
 }
