@@ -43,21 +43,21 @@ use App\Http\Controllers\Api\CouponController;
 
 Route::prefix('v1')->group(function () {
 
-     /*
-|--------------------------------------------------------------------------
-| Paystack Public Routes
-|--------------------------------------------------------------------------
-*/
+    /*
+    |--------------------------------------------------------------------------
+    | Paystack Public Routes
+    |--------------------------------------------------------------------------
+    */
 
-Route::post(
-    'payments/paystack/webhook',
-    [PaymentController::class, 'webhook']
-);
+    Route::post(
+        'payments/paystack/webhook',
+        [PaymentController::class, 'webhook']
+    );
 
-Route::get(
-    'payments/paystack/verify/{reference}',
-    [PaymentController::class, 'verify']
-);
+    Route::get(
+        'payments/paystack/verify/{reference}',
+        [PaymentController::class, 'verify']
+    );
 
     /*
     |--------------------------------------------------------------------------
@@ -78,45 +78,44 @@ Route::get(
 
         Route::get('/me', [AuthController::class, 'me']);
         Route::get(
-    'admin/revenue-dashboard',
-    [AdminRevenueController::class, 'index']
-)->middleware('role:super_admin');
+            'admin/revenue-dashboard',
+            [AdminRevenueController::class, 'index']
+        )->middleware('role:super_admin');
         Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get(  'payments/receipt/{reference}',
-    [ReceiptController::class, 'download']
-);
+        Route::get(
+            'payments/receipt/{reference}',
+            [ReceiptController::class, 'download']
+        );
 
-Route::prefix('result-entry')->group(function () {
-Route::get(
-    '/students',
-    [ResultEntryController::class, 'students']
-);
+        Route::prefix('result-entry')->group(function () {
+            Route::get(
+                '/students',
+                [ResultEntryController::class, 'students']
+            );
 
-    Route::get(
-        '/form',
-        [ResultEntryController::class, 'form']
-    );
+            Route::get(
+                '/form',
+                [ResultEntryController::class, 'form']
+            );
 
-    Route::post(
-        '/save',
-        [ResultEntryController::class, 'save']
-    );
+            Route::post(
+                '/save',
+                [ResultEntryController::class, 'save']
+            );
 
-    Route::post('/results/{result}/publish', [ResultController::class, 'publish']);
+            Route::post('/results/{result}/publish', [ResultController::class, 'publish']);
+        });
 
-});
+        Route::apiResource(
+            'promo-campaigns',
+            PromoCampaignController::class
+        );
 
-Route::apiResource(
-    'promo-campaigns',
-    PromoCampaignController::class
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| Dashboard
-|--------------------------------------------------------------------------
-*/
+        /*
+        |--------------------------------------------------------------------------
+        | Dashboard
+        |--------------------------------------------------------------------------
+        */
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->middleware('role:super_admin,school_admin,vice_principal,bursar');
 
@@ -144,6 +143,12 @@ Route::apiResource(
         Route::apiResource('schools', SchoolController::class)
             ->middleware('role:super_admin');
 
+        Route::post('schools/{school}/extend-trial', [SchoolController::class, 'extendTrial'])
+            ->middleware('role:super_admin');
+
+        Route::patch('schools/{school}/subscription-status', [SchoolController::class, 'updateSubscriptionStatus'])
+            ->middleware('role:super_admin');
+
         Route::apiResource('academic-sessions', AcademicSessionController::class);
 
         Route::apiResource('terms', TermController::class);
@@ -167,14 +172,14 @@ Route::apiResource(
         Route::apiResource('exam-scores', ExamScoreController::class);
 
         Route::get(
-    'attendance/class-list',
-    [AttendanceController::class, 'classList']
-);
+            'attendance/class-list',
+            [AttendanceController::class, 'classList']
+        );
 
-Route::apiResource(
-    'attendances',
-    AttendanceController::class
-);
+        Route::apiResource(
+            'attendances',
+            AttendanceController::class
+        );
 
         Route::apiResource('fee-categories', FeeCategoryController::class);
 
@@ -201,27 +206,28 @@ Route::apiResource(
         Route::apiResource('subscription-plans', SubscriptionPlanController::class);
 
         Route::get(
-    'payments/history/{school}',
-    [PaymentController::class, 'history']
-);
+            'payments/history/{school}',
+            [PaymentController::class, 'history']
+        );
 
         Route::post(
-    'payments/paystack/initialize',
-    [PaymentController::class, 'initialize']
-);
+            'payments/paystack/initialize',
+            [PaymentController::class, 'initialize']
+        );
 
         Route::apiResource('currencies', CurrencyController::class);
 
         Route::apiResource('coupons', CouponController::class);
 
         Route::get(
-    'parent-dashboard/{parent}',
-    [ParentDashboardController::class, 'index']
-)->middleware('auth:sanctum');
+            'parent-dashboard/{parent}',
+            [ParentDashboardController::class, 'index']
+        )->middleware('auth:sanctum');
 
-Route::get(
-    'teacher-dashboard/{teacher}',
-    [TeacherDashboardController::class, 'index']
-)->middleware('auth:sanctum');
+        Route::get(
+            'teacher-dashboard/{teacher}',
+            [TeacherDashboardController::class, 'index']
+        )->middleware('auth:sanctum');
     });
 });
+

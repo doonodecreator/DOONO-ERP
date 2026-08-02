@@ -10,6 +10,7 @@ use App\Models\School;
 use App\Models\SubscriptionPlan;
 use App\Models\SchoolSubscription;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class SchoolController extends Controller
@@ -37,16 +38,19 @@ class SchoolController extends Controller
     {
         $school = DB::transaction(function () use ($request) {
 
-            $school = School::create(
-                $request->validated()
-            );
+            // Extract school data excluding trial_days parameter
+            $schoolData = $request->safe()->except(['trial_days']);
+            $school = School::create($schoolData);
 
             $premiumPlan = SubscriptionPlan::where(
                 'slug',
                 'premium'
             )->firstOrFail();
 
+            // Use custom trial days if provided, otherwise default to plan days
+            $trialDays = $request->input('trial_days', $premiumPlan->trial_days);
             $today = Carbon::today();
+            $expiryDate = $today->copy()->addDays((int) $trialDays);
 
             SchoolSubscription::create([
 
@@ -56,17 +60,11 @@ class SchoolController extends Controller
 
                 'start_date' => $today,
 
-                'expiry_date' => $today->copy()->addDays(
-                    $premiumPlan->trial_days
-                ),
+                'expiry_date' => $expiryDate,
 
-                'trial_ends_at' => $today->copy()->addDays(
-                    $premiumPlan->trial_days
-                ),
+                'trial_ends_at' => $expiryDate,
 
-                'next_billing_date' => $today->copy()->addDays(
-                    $premiumPlan->trial_days
-                ),
+                'next_billing_date' => $expiryDate,
 
                 'billing_cycle' => 'yearly',
 
@@ -138,4 +136,67 @@ class SchoolController extends Controller
             'message' => 'School deleted successfully.'
         ]);
     }
+
+    /**
+     * Super Admin endpoint to extend or adjust a school's trial days.
+     */
+    public function extendTrial(Request $request, School $school)
+    {
+        $request->validate([
+            'days' => 'required|integer|min:1|max:365',
+        ]);
+
+        $subscription = $school->subscription;
+
+        if (!$subscription) {
+            return response()->json(['message' => 'No active subscription found for this school.'], 404);
+        }
+
+        $extraDays = (int) $request->input('days');
+        
+        // If already expired, extend from today; otherwise extend from existing expiry date
+        $baseDate = ($subscription->expiry_date && $subscription->expiry_date->isFuture()) 
+            ? $subscription->expiry_date 
+            : Carbon::today();
+
+        $newExpiry = $baseDate->copy()->addDays($extraDays);
+
+        $subscription->update([
+            'expiry_date' => $newExpiry,
+            'trial_ends_at' => $newExpiry,
+            'next_billing_date' => $newExpiry,
+            'status' => 'trial',
+        ]);
+
+        return response()->json([
+            'message' => "Trial extended by {$extraDays} days successfully.",
+            'subscription' => $subscription->fresh(['subscriptionPlan']),
+        ]);
+    }
+
+    /**
+     * Super Admin endpoint to manually activate, suspend, or update subscription status.
+     */
+    public function updateSubscriptionStatus(Request $request, School $school)
+    {
+        $request->validate([
+            'status' => 'required|in:active,trial,expired,suspended,cancelled',
+        ]);
+
+        $subscription = $school->subscription;
+
+        if (!$subscription) {
+            return response()->json(['message' => 'No active subscription found for this school.'], 404);
+        }
+
+        $subscription->update([
+            'status' => $request->input('status'),
+        ]);
+
+        return response()->json([
+            'message' => 'Subscription status updated successfully.',
+            'subscription' => $subscription->fresh(['subscriptionPlan']),
+        ]);
+    }
 }
+

@@ -48,6 +48,9 @@ class StoreSchoolRequest extends FormRequest
             'logo' => 'nullable|string|max:255',
 
             'status' => 'required|in:active,inactive',
+
+            // Optional custom trial days
+            'trial_days' => 'nullable|integer|min:1|max:365',
         ];
     }
 
