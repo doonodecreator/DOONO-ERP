@@ -20,8 +20,8 @@ export default function Navbar({ onMenuClick }) {
     <header
       style={{
         background: "#ffffff",
-        height: "70px",
-        padding: "0 20px",
+        height: "65px",
+        padding: "0 16px",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -29,34 +29,50 @@ export default function Navbar({ onMenuClick }) {
         position: "sticky",
         top: 0,
         zIndex: 1000,
+        gap: "10px",
+        boxSizing: "border-box",
+        width: "100%",
       }}
     >
+      {/* Left: Mobile Menu Trigger & Brand Info */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "15px",
+          gap: "12px",
+          minWidth: 0,
+          flexShrink: 1,
         }}
       >
         <button
           onClick={onMenuClick}
           style={{
-            fontSize: "26px",
+            fontSize: "24px",
             border: "none",
             background: "transparent",
             cursor: "pointer",
             color: "#1e3a8a",
+            padding: "4px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
           }}
+          aria-label="Toggle Navigation"
         >
           ☰
         </button>
 
-        <div>
+        <div style={{ minWidth: 0, overflow: "hidden" }}>
           <h2
             style={{
               margin: 0,
-              fontSize: "20px",
+              fontSize: "18px",
+              fontWeight: "700",
               color: "#1e3a8a",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
             DONO ERP
@@ -65,6 +81,12 @@ export default function Navbar({ onMenuClick }) {
           <small
             style={{
               color: "#64748b",
+              fontSize: "11px",
+              display: "block",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              maxWidth: "140px",
             }}
           >
             Welcome, {user?.name || "Guest"}
@@ -72,17 +94,20 @@ export default function Navbar({ onMenuClick }) {
         </div>
       </div>
 
+      {/* Right: Notification, Role Badge, and Profile Icon */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "15px",
+          gap: "10px",
+          flexShrink: 0,
         }}
       >
         <div
           style={{
-            fontSize: "20px",
+            fontSize: "18px",
             cursor: "pointer",
+            padding: "4px",
           }}
         >
           🔔
@@ -92,10 +117,11 @@ export default function Navbar({ onMenuClick }) {
           style={{
             background: "#1e3a8a",
             color: "#fff",
-            padding: "8px 14px",
-            borderRadius: "30px",
+            padding: "6px 10px",
+            borderRadius: "20px",
             fontWeight: "600",
-            fontSize: "13px",
+            fontSize: "12px",
+            whiteSpace: "nowrap",
           }}
         >
           {roleLabel}
@@ -103,8 +129,8 @@ export default function Navbar({ onMenuClick }) {
 
         <div
           style={{
-            width: "40px",
-            height: "40px",
+            width: "36px",
+            height: "36px",
             borderRadius: "50%",
             background: "#2563eb",
             color: "#fff",
@@ -112,7 +138,8 @@ export default function Navbar({ onMenuClick }) {
             justifyContent: "center",
             alignItems: "center",
             fontWeight: "bold",
-            fontSize: "16px",
+            fontSize: "15px",
+            flexShrink: 0,
           }}
         >
           {user?.name?.charAt(0)?.toUpperCase() || "G"}
