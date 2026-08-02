@@ -3,18 +3,12 @@ import api from '../services/api';
 
 export default function PublicRegister() {
     const [formData, setFormData] = useState({
-        organization_id: 1,
-        country_id: 1,
         name: '',
-        short_name: '',
-        school_type: 'Combined',
-        school_code: '',
-        email: '',
-        phone: '',
+        code: '',
         admin_name: '',
-        admin_email: '',
+        email: '',
         password: '',
-        trial_days: 30,
+        phone: '',
     });
 
     const [loading, setLoading] = useState(false);
@@ -32,10 +26,14 @@ export default function PublicRegister() {
         setError('');
 
         try {
-            await api.post('/schools/register', formData);
+            await api.post('/register', formData);
             setSuccess(true);
         } catch (err) {
-            setError(err.response?.data?.message || err.message || 'Registration failed. Please try again.');
+            const errorMsg = err.response?.data?.message || 
+                             (err.response?.data?.errors ? Object.values(err.response.data.errors).flat().join(', ') : null) || 
+                             err.message || 
+                             'Registration failed. Please try again.';
+            setError(errorMsg);
         } finally {
             setLoading(false);
         }
@@ -43,17 +41,17 @@ export default function PublicRegister() {
 
     if (success) {
         return (
-            <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center py-12 px-4">
-                <div className="max-w-md w-full bg-white p-8 rounded-lg shadow text-center">
-                    <h2 className="text-2xl font-bold text-green-600 mb-2">School Registered Successfully! 🎉</h2>
-                    <p className="text-gray-600 mb-6">
-                        Your school has been set up with a free trial. You can now log in using your administrator credentials.
+            <div style={{ minHeight: '100vh', backgroundColor: '#090d16', color: '#ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '24px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                <div style={{ maxWidth: '440px', width: '100%', backgroundColor: '#1e293b', border: '1px solid #334155', padding: '32px', borderRadius: '16px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)' }}>
+                    <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#4ade80', marginBottom: '12px' }}>Organization Created! 🎉</h2>
+                    <p style={{ color: '#94a3b8', marginBottom: '24px', lineHeight: '1.5' }}>
+                        Your institution account is ready. You can now log in to add your schools, choose countries, and set up divisions.
                     </p>
                     <a
                         href="/login"
-                        className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg transition"
+                        style={{ display: 'inline-block', backgroundColor: '#2563eb', color: '#ffffff', fontWeight: 'bold', padding: '12px 24px', borderRadius: '10px', textDecoration: 'none' }}
                     >
-                        Proceed to Login
+                        Proceed to Login Portal
                     </a>
                 </div>
             </div>
@@ -61,108 +59,110 @@ export default function PublicRegister() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-xl mx-auto bg-white p-8 rounded-lg shadow">
-                <div className="text-center mb-6">
-                    <h2 className="text-3xl font-extrabold text-gray-900">Register Your School</h2>
-                    <p className="text-sm text-gray-600 mt-1">Start your automated trial on Dono School ERP instantly</p>
+        <div style={{ minHeight: '100vh', backgroundColor: '#090d16', color: '#ffffff', padding: '40px 16px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+            <div style={{ maxWidth: '540px', margin: '0 auto', backgroundColor: '#1e293b', border: '1px solid #334155', padding: '32px', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)' }}>
+                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                    <h2 style={{ fontSize: '28px', fontWeight: '800', color: '#ffffff', marginBottom: '8px' }}>Create Organization Account</h2>
+                    <p style={{ fontSize: '14px', color: '#94a3b8' }}>Set up your institutional group workspace on Dono ERP</p>
                 </div>
 
-                {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">{error}</div>}
+                {error && <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#fca5a5', borderRadius: '8px', fontSize: '14px', lineHeight: '1.4' }}>{error}</div>}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">School Name</label>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>Organization / Group Name</label>
                         <input
                             type="text"
                             name="name"
                             required
                             value={formData.name}
                             onChange={handleChange}
-                            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                            placeholder="e.g. Apex High School"
+                            style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                            placeholder="e.g. Zenda Educational Group"
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">School Code / Slug</label>
+                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>Organization Code</label>
                             <input
                                 type="text"
-                                name="school_code"
+                                name="code"
                                 required
-                                value={formData.school_code}
+                                value={formData.code}
                                 onChange={handleChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                                placeholder="e.g. APEX-01"
+                                style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                                placeholder="e.g. ZEN"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">School Phone</label>
+                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>Phone Number</label>
                             <input
                                 type="text"
                                 name="phone"
                                 value={formData.phone}
                                 onChange={handleChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                                placeholder="e.g. 07043617971"
                             />
                         </div>
                     </div>
 
-                    <div className="border-t pt-4 mt-4">
-                        <h3 className="text-md font-bold text-gray-900 mb-3">Administrator Account Details</h3>
-                        <div className="space-y-4">
+                    <div style={{ borderTop: '1px solid #334155', paddingTop: '16px', marginTop: '8px' }}>
+                        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#ffffff', marginBottom: '14px' }}>Super Admin Credentials</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Admin Full Name</label>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>Full Name</label>
                                 <input
                                     type="text"
                                     name="admin_name"
                                     required
                                     value={formData.admin_name}
                                     onChange={handleChange}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                                    style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                                    placeholder="e.g. Mvenda Joseph"
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Admin Email</label>
-                                    <input
-                                        type="email"
-                                        name="admin_email"
-                                        required
-                                        value={formData.admin_email}
-                                        onChange={handleChange}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Password</label>
-                                    <input
-                                        type="password"
-                                        name="password"
-                                        required
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                                    />
-                                </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>Email Address</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    required
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                                    placeholder="e.g. mvenda@gmail.com"
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>Password</label>
+                                <input
+                                    type="password"
+                                    name="password"
+                                    required
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                                    placeholder="••••••••"
+                                />
                             </div>
                         </div>
                     </div>
 
-                    <div className="pt-4">
+                    <div style={{ paddingTop: '12px' }}>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition shadow"
+                            style={{ width: '100%', backgroundColor: '#2563eb', color: '#ffffff', fontWeight: 'bold', fontSize: '16px', padding: '14px', borderRadius: '10px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)' }}
                         >
-                            {loading ? 'Setting up your school...' : 'Complete Registration & Start Trial'}
+                            {loading ? 'Creating Organization...' : 'Create Organization Workspace'}
                         </button>
                     </div>
 
-                    <div className="text-center mt-4 text-sm text-gray-600">
+                    <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '14px', color: '#94a3b8' }}>
                         Already have an account?{' '}
-                        <a href="/login" className="text-blue-600 hover:underline font-medium">
+                        <a href="/login" style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: '600' }}>
                             Log in here
                         </a>
                     </div>
