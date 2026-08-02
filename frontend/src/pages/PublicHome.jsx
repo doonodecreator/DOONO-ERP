@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 
 export default function PublicHome() {
     return (
@@ -10,18 +9,18 @@ export default function PublicHome() {
                     <span className="text-2xl font-black tracking-wider">DONO ERP</span>
                 </div>
                 <div className="space-x-4">
-                    <Link
-                        to="/login"
+                    <a
+                        href="/login"
                         className="text-white hover:text-blue-200 font-medium px-4 py-2 transition"
                     >
                         Login
-                    </Link>
-                    <Link
-                        to="/register"
+                    </a>
+                    <a
+                        href="/register"
                         className="bg-white text-blue-900 hover:bg-blue-50 font-bold px-5 py-2 rounded-lg shadow transition"
                     >
                         Register School
-                    </Link>
+                    </a>
                 </div>
             </header>
 
@@ -35,18 +34,18 @@ export default function PublicHome() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                    <Link
-                        to="/register"
-                        className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg px-8 py-3 rounded-lg shadow-lg transition"
+                    <a
+                        href="/register"
+                        className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg px-8 py-3 rounded-lg shadow-lg transition text-center"
                     >
                         Register Your School Free
-                    </Link>
-                    <Link
-                        to="/login"
-                        className="w-full sm:w-auto bg-transparent border-2 border-white hover:bg-white hover:text-blue-900 text-white font-bold text-lg px-8 py-3 rounded-lg transition"
+                    </a>
+                    <a
+                        href="/login"
+                        className="w-full sm:w-auto bg-transparent border-2 border-white hover:bg-white hover:text-blue-900 text-white font-bold text-lg px-8 py-3 rounded-lg transition text-center"
                     >
                         School Login Portal
-                    </Link>
+                    </a>
                 </div>
             </main>
 

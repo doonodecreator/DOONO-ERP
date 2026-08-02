@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 
 export default function PublicRegister() {
-    const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        organization_id: 1, // Default or generic organization ID
-        country_id: 1,      // Default country ID
+        organization_id: 1,
+        country_id: 1,
         name: '',
         short_name: '',
         school_type: 'Combined',
@@ -16,7 +14,7 @@ export default function PublicRegister() {
         admin_name: '',
         admin_email: '',
         password: '',
-        trial_days: 30, // Automatic free trial for self-registers
+        trial_days: 30,
     });
 
     const [loading, setLoading] = useState(false);
@@ -34,7 +32,6 @@ export default function PublicRegister() {
         setError('');
 
         try {
-            // Sends public registration request to backend API
             await api.post('/schools/register', formData);
             setSuccess(true);
         } catch (err) {
@@ -52,12 +49,12 @@ export default function PublicRegister() {
                     <p className="text-gray-600 mb-6">
                         Your school has been set up with a free trial. You can now log in using your administrator credentials.
                     </p>
-                    <Link
-                        to="/login"
+                    <a
+                        href="/login"
                         className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg transition"
                     >
                         Proceed to Login
-                    </Link>
+                    </a>
                 </div>
             </div>
         );
@@ -165,9 +162,9 @@ export default function PublicRegister() {
 
                     <div className="text-center mt-4 text-sm text-gray-600">
                         Already have an account?{' '}
-                        <Link to="/login" className="text-blue-600 hover:underline font-medium">
+                        <a href="/login" className="text-blue-600 hover:underline font-medium">
                             Log in here
-                        </Link>
+                        </a>
                     </div>
                 </form>
             </div>
