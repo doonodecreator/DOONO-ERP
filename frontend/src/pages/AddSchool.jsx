@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 export default function AddSchool({ onSchoolAdded }) {
-    const navigate = useNavigate();
     const [countries, setCountries] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -52,7 +50,7 @@ export default function AddSchool({ onSchoolAdded }) {
             if (typeof onSchoolAdded === 'function') {
                 onSchoolAdded();
             } else {
-                navigate('/dashboard');
+                window.location.reload();
             }
         } catch (err) {
             const errorMsg = err.response?.data?.message || 
