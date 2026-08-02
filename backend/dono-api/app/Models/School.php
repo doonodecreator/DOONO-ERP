@@ -10,35 +10,20 @@ class School extends Model
     use HasFactory;
 
     protected $fillable = [
-
         'organization_id',
-
-        'country_id',
-
+        'country',
         'owner_id',
-
         'name',
-
         'short_name',
-
         'school_type',
-
         'has_primary',
-
         'has_secondary',
-
         'school_code',
-
         'email',
-
         'phone',
-
         'website',
-
         'address',
-
         'logo',
-
         'status',
     ];
 
@@ -54,7 +39,7 @@ class School extends Model
 
     public function country()
     {
-        return $this->belongsTo(Country::class);
+        return $this->getAttribute('country');
     }
 
     public function subscription()
@@ -93,3 +78,4 @@ class School extends Model
         return $this->hasMany(Subject::class);
     }
 }
+
