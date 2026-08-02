@@ -21,6 +21,7 @@ export default function AddSchool({ onSchoolAdded }) {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
+
         setFormData((prev) => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : value,
@@ -29,141 +30,169 @@ export default function AddSchool({ onSchoolAdded }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         setLoading(true);
         setError('');
 
         try {
-            await api.post('/schools', formData);
+
+            const response = await api.post('/schools', formData);
+
+            console.log('SUCCESS');
+            console.log(response.data);
+
             if (typeof onSchoolAdded === 'function') {
                 onSchoolAdded();
             } else {
                 window.location.reload();
             }
+
         } catch (err) {
-            const errorMsg = err.response?.data?.message ||
-                             (err.response?.data?.errors ? Object.values(err.response.data.errors).flat().join(', ') : null) ||
-                             'Failed to create school. Please check your inputs.';
-            setError(errorMsg);
+
+            console.log('FULL ERROR');
+            console.log(err);
+
+            console.log('SERVER RESPONSE');
+            console.log(err.response);
+
+            console.log('SERVER DATA');
+            console.log(err.response?.data);
+
+            setError(
+                JSON.stringify(
+                    err.response?.data ?? err.message,
+                    null,
+                    2
+                )
+            );
+
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#090d16', color: '#ffffff', padding: '40px 16px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-            <div style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: '#1e293b', border: '1px solid #334155', padding: '32px', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)' }}>
-                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                    <h2 style={{ fontSize: '26px', fontWeight: '800', color: '#ffffff', marginBottom: '8px' }}>Setup Your First School 🏫</h2>
-                    <p style={{ fontSize: '14px', color: '#94a3b8' }}>Please register your school institution details to unlock your ERP dashboard.</p>
+        <div
+            style={{
+                minHeight: '100vh',
+                backgroundColor: '#090d16',
+                color: '#ffffff',
+                padding: '40px 16px',
+                fontFamily: 'system-ui, sans-serif',
+            }}
+        >
+            <div
+                style={{
+                    maxWidth: '600px',
+                    margin: '0 auto',
+                    backgroundColor: '#1e293b',
+                    border: '1px solid #334155',
+                    padding: '32px',
+                    borderRadius: '16px',
+                }}
+            >
+                <div
+                    style={{
+                        textAlign: 'center',
+                        marginBottom: '24px',
+                    }}
+                >
+                    <h2>Setup Your First School</h2>
+
+                    <p>
+                        Register your first school to continue.
+                    </p>
                 </div>
 
-                {error && <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: '#fca5a5', borderRadius: '8px', fontSize: '14px' }}>{error}</div>}
+                {error && (
+                    <pre
+                        style={{
+                            whiteSpace: 'pre-wrap',
+                            background: '#450a0a',
+                            color: '#fca5a5',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            overflowX: 'auto',
+                            marginBottom: '20px',
+                        }}
+                    >
+                        {error}
+                    </pre>
+                )}
 
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>School Name</label>
-                            <input
-                                type="text"
-                                name="name"
-                                required
-                                value={formData.name}
-                                onChange={handleChange}
-                                placeholder="e.g. Zenda Model Secondary School"
-                                style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', boxSizing: 'border-box' }}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>School Code</label>
-                            <input
-                                type="text"
-                                name="school_code"
-                                required
-                                value={formData.school_code}
-                                onChange={handleChange}
-                                placeholder="e.g. ZMSS"
-                                style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', boxSizing: 'border-box' }}
-                            />
-                        </div>
-                    </div>
+                <form
+                    onSubmit={handleSubmit}
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '16px',
+                    }}
+                >
+                    <input
+                        name="name"
+                        placeholder="School Name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        required
+                    />
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>School Type</label>
-                            <select
-                                name="school_type"
-                                value={formData.school_type}
-                                onChange={handleChange}
-                                style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', boxSizing: 'border-box' }}
-                            >
-                                <option value="Primary">Primary</option>
-                                <option value="Secondary">Secondary</option>
-                                <option value="Combined">Combined</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>Country</label>
-                            <input
-                                type="text"
-                                name="country"
-                                required
-                                value={formData.country}
-                                onChange={handleChange}
-                                placeholder="e.g. Nigeria"
-                                style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', boxSizing: 'border-box' }}
-                            />
-                        </div>
-                    </div>
+                    <input
+                        name="school_code"
+                        placeholder="School Code"
+                        value={formData.school_code}
+                        onChange={handleChange}
+                        required
+                    />
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>School Email</label>
-                            <input
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                placeholder="school@domain.com"
-                                style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', boxSizing: 'border-box' }}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>Phone Number</label>
-                            <input
-                                type="text"
-                                name="phone"
-                                value={formData.phone}
-                                onChange={handleChange}
-                                placeholder="Phone number"
-                                style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', boxSizing: 'border-box' }}
-                            />
-                        </div>
-                    </div>
+                    <select
+                        name="school_type"
+                        value={formData.school_type}
+                        onChange={handleChange}
+                    >
+                        <option value="Primary">Primary</option>
+                        <option value="Secondary">Secondary</option>
+                        <option value="Combined">Combined</option>
+                    </select>
 
-                    <div>
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>Address</label>
-                        <textarea
-                            name="address"
-                            rows="2"
-                            value={formData.address}
-                            onChange={handleChange}
-                            placeholder="Physical location address..."
-                            style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', boxSizing: 'border-box' }}
-                        />
-                    </div>
+                    <input
+                        name="country"
+                        placeholder="Country"
+                        value={formData.country}
+                        onChange={handleChange}
+                    />
 
-                    <div style={{ paddingTop: '12px' }}>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            style={{ width: '100%', backgroundColor: '#2563eb', color: '#ffffff', fontWeight: 'bold', fontSize: '16px', padding: '14px', borderRadius: '10px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)' }}
-                        >
-                            {loading ? 'Registering School...' : 'Complete Setup & Open Dashboard'}
-                        </button>
-                    </div>
+                    <input
+                        type="email"
+                        name="email"
+                        placeholder="School Email"
+                        value={formData.email}
+                        onChange={handleChange}
+                    />
+
+                    <input
+                        name="phone"
+                        placeholder="Phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                    />
+
+                    <textarea
+                        name="address"
+                        placeholder="Address"
+                        value={formData.address}
+                        onChange={handleChange}
+                    />
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                    >
+                        {loading
+                            ? 'Creating School...'
+                            : 'Complete Setup'}
+                    </button>
                 </form>
             </div>
         </div>
     );
 }
-
