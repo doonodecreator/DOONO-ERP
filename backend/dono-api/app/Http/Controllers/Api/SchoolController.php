@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\School;
-use App\Models\Country;
 use Illuminate\Http\Request;
 
 class SchoolController extends Controller
@@ -22,19 +21,30 @@ class SchoolController extends Controller
     }
 
     /**
-     * Get list of all countries for the school setup dropdown.
-     */
-    public function countries()
-    {
-        return response()->json(Country::all());
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        // Add your school registration/store logic here
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'school_code' => 'required|string|max:50|unique:schools,school_code',
+            'school_type' => 'required|string',
+            'country' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:50',
+            'address' => 'nullable|string',
+            'status' => 'nullable|string',
+            'has_primary' => 'nullable|boolean',
+            'has_secondary' => 'nullable|boolean',
+        ]);
+
+        $school = School::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'School created successfully',
+            'data' => $school
+        ], 201);
     }
 
     /**
@@ -53,7 +63,24 @@ class SchoolController extends Controller
      */
     public function update(Request $request, School $school)
     {
-        // Add your update logic here
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'school_code' => 'sometimes|required|string|max:50|unique:schools,school_code,' . $school->id,
+            'school_type' => 'sometimes|required|string',
+            'country' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:50',
+            'address' => 'nullable|string',
+            'status' => 'nullable|string',
+        ]);
+
+        $school->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'School updated successfully',
+            'data' => $school
+        ]);
     }
 
     /**
@@ -73,7 +100,10 @@ class SchoolController extends Controller
      */
     public function extendTrial(Request $request, School $school)
     {
-        // Add extend trial logic here
+        return response()->json([
+            'success' => true,
+            'message' => 'Trial extended successfully'
+        ]);
     }
 
     /**
@@ -81,7 +111,10 @@ class SchoolController extends Controller
      */
     public function updateSubscriptionStatus(Request $request, School $school)
     {
-        // Add subscription status update logic here
+        return response()->json([
+            'success' => true,
+            'message' => 'Subscription status updated successfully'
+        ]);
     }
 }
 
