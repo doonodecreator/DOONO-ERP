@@ -1,12 +1,13 @@
-import { useState } from "react";
-import { useAuth } from "./context/AuthContext";
-
+import { useState, useEffect } from "react";
+import { useAuth } from "./context/AuthContext";                                                     
 import DashboardLayout from "./layouts/DashboardLayout";
 import Login from "./pages/Login";
 import PublicRegister from "./pages/PublicRegister";
 import PublicHome from "./pages/PublicHome";
+import api from "./services/api";
 
 import Dashboard from "./pages/Dashboard";
+import AddSchool from "./pages/AddSchool";
 
 import Students from "./pages/Students";
 import AddStudent from "./pages/AddStudent";
@@ -55,12 +56,40 @@ export default function App() {
   const { isAuthenticated, loading } = useAuth();
 
   const [page, setPage] = useState("dashboard");
+  const [hasSchool, setHasSchool] = useState(true);
+  const [checkingSchool, setCheckingSchool] = useState(true);
+
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedParent, setSelectedParent] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
 
-  if (loading) {
-    return <h2 style={{ padding: 40 }}>Loading...</h2>;
+  // Check if proprietor has created a school yet
+  useEffect(() => {
+    if (isAuthenticated) {
+      api.get('/schools')
+        .then((res) => {
+          const schools = res.data.data || res.data;
+          if (!schools || schools.length === 0) {
+            setHasSchool(false);
+            setPage("add-school");
+          } else {
+            setHasSchool(true);
+          }
+        })
+        .catch(() => {
+          setHasSchool(false);
+          setPage("add-school");
+        })
+        .finally(() => {
+          setCheckingSchool(false);
+        });
+    } else {
+      setCheckingSchool(false);
+    }
+  }, [isAuthenticated]);
+
+  if (loading || checkingSchool) {
+    return <h2 style={{ padding: 40, color: '#fff', backgroundColor: '#090d16', minHeight: '100vh' }}>Loading...</h2>;
   }
 
   // 🌐 Public routes accessible to everyone without login
@@ -76,9 +105,17 @@ export default function App() {
     return <Login />;
   }
 
+  // Force add-school if no school exists
+  if (!hasSchool) {
+    return <AddSchool onSchoolAdded={() => { setHasSchool(true); setPage("dashboard"); }} />;
+  }
+
   let content = <Dashboard />;
 
   switch (page) {
+    case "add-school":
+      content = <AddSchool onSchoolAdded={() => { setHasSchool(true); setPage("dashboard"); }} />;
+      break;
     case "students":
       content = <Students setPage={setPage} setSelectedStudent={setSelectedStudent} />;
       break;
