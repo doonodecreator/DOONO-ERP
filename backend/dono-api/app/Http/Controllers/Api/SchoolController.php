@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Country;
 use App\Models\Organization;
 use App\Models\School;
 use Illuminate\Http\Request;
@@ -17,10 +18,16 @@ class SchoolController extends Controller
         $user = $request->user();
 
         if ($user->hasRole('super_admin')) {
-            $schools = School::with(['organization', 'owner'])->latest()->get();
+            $schools = School::with([
+                'organization',
+                'owner'
+            ])->latest()->get();
         } else {
             $schools = School::where('owner_id', $user->id)
-                ->with(['organization'])
+                ->with([
+                    'organization',
+                    'owner'
+                ])
                 ->latest()
                 ->get();
         }
@@ -32,7 +39,7 @@ class SchoolController extends Controller
     }
 
     /**
-     * Create a school.
+     * Create school.
      */
     public function store(Request $request)
     {
@@ -51,18 +58,49 @@ class SchoolController extends Controller
 
         $user = $request->user();
 
-        $organization = Organization::where('owner_id', $user->id)->first();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated.'
+            ], 401);
+        }
+
+        $organization = Organization::where(
+            'owner_id',
+            $user->id
+        )->first();
 
         if (!$organization) {
             return response()->json([
                 'success' => false,
-                'message' => 'No organization found for this account.',
+                'message' => 'No organization found for this account.'
             ], 422);
+        }
+
+        $countryName = $validated['country'] ?? 'Nigeria';
+
+        $country = Country::where(
+            'name',
+            $countryName
+        )->first();
+
+        if (!$country) {
+            $country = Country::where('name', 'Nigeria')->first();
+        }
+
+        if (!$country) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nigeria was not found in countries table.'
+            ], 500);
         }
 
         $school = School::create([
             'organization_id' => $organization->id,
             'owner_id' => $user->id,
+
+            'country_id' => $country->id,
+            'country' => $country->name,
 
             'name' => $validated['name'],
             'short_name' => $validated['name'],
@@ -72,8 +110,6 @@ class SchoolController extends Controller
 
             'has_primary' => $validated['has_primary'] ?? true,
             'has_secondary' => $validated['has_secondary'] ?? true,
-
-            'country' => $validated['country'] ?? 'Nigeria',
 
             'email' => $validated['email'] ?? null,
             'phone' => $validated['phone'] ?? null,
@@ -90,13 +126,16 @@ class SchoolController extends Controller
     }
 
     /**
-     * Show one school.
+     * Show school.
      */
     public function show(School $school)
     {
         return response()->json([
             'success' => true,
-            'data' => $school->load(['organization', 'owner']),
+            'data' => $school->load([
+                'organization',
+                'owner'
+            ]),
         ]);
     }
 
@@ -118,12 +157,23 @@ class SchoolController extends Controller
             'has_secondary' => 'boolean',
         ]);
 
+        if (isset($validated['country'])) {
+            $country = Country::where(
+                'name',
+                $validated['country']
+            )->first();
+
+            if ($country) {
+                $validated['country_id'] = $country->id;
+            }
+        }
+
         $school->update($validated);
 
         return response()->json([
             'success' => true,
             'message' => 'School updated successfully.',
-            'data' => $school,
+            'data' => $school->fresh(),
         ]);
     }
 
@@ -141,33 +191,18 @@ class SchoolController extends Controller
     }
 
     /**
-     * Public registration endpoint.
-     */
-    public function register(Request $request)
-    {
-        return $this->store($request);
-    }
-
-    /**
      * Countries.
      */
     public function countries()
     {
         return response()->json([
             'success' => true,
-            'data' => [
-                'Nigeria',
-                'Ghana',
-                'Kenya',
-                'South Africa',
-                'Uganda',
-                'Cameroon',
-            ],
+            'data' => Country::orderBy('name')->get(),
         ]);
     }
 
     /**
-     * Extend subscription trial.
+     * Extend trial.
      */
     public function extendTrial(Request $request, School $school)
     {
