@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import api from '../services/api';
 
 export default function AddSchool({ onSchoolAdded }) {
-    const [countries, setCountries] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -13,24 +12,12 @@ export default function AddSchool({ onSchoolAdded }) {
         has_primary: true,
         has_secondary: true,
         school_code: '',
-        country_id: '',
+        country: '',
         email: '',
         phone: '',
         address: '',
         status: 'active',
     });
-
-    useEffect(() => {
-        api.get('/countries')
-            .then((res) => {
-                const countryList = res.data.data || res.data;
-                setCountries(countryList);
-                if (countryList.length > 0) {
-                    setFormData((prev) => ({ ...prev, country_id: countryList[0].id }));
-                }
-            })
-            .catch(() => setError('Failed to load countries list.'));
-    }, []);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -53,8 +40,8 @@ export default function AddSchool({ onSchoolAdded }) {
                 window.location.reload();
             }
         } catch (err) {
-            const errorMsg = err.response?.data?.message || 
-                             (err.response?.data?.errors ? Object.values(err.response.data.errors).flat().join(', ') : null) || 
+            const errorMsg = err.response?.data?.message ||
+                             (err.response?.data?.errors ? Object.values(err.response.data.errors).flat().join(', ') : null) ||
                              'Failed to create school. Please check your inputs.';
             setError(errorMsg);
         } finally {
@@ -116,16 +103,15 @@ export default function AddSchool({ onSchoolAdded }) {
                         </div>
                         <div>
                             <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>Country</label>
-                            <select
-                                name="country_id"
-                                value={formData.country_id}
+                            <input
+                                type="text"
+                                name="country"
+                                required
+                                value={formData.country}
                                 onChange={handleChange}
+                                placeholder="e.g. Nigeria"
                                 style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', boxSizing: 'border-box' }}
-                            >
-                                {countries.map((c) => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                ))}
-                            </select>
+                            />
                         </div>
                     </div>
 
