@@ -10,7 +10,7 @@ export default function PublicRegister() {
         password: '',
         password_confirmation: '',
         phone: '',
-        role: 'organization_admin', // Use organization_admin for group/school accounts
+        role: 'admin', // Updated to match backend validation rule
     });
 
     const [loading, setLoading] = useState(false);
