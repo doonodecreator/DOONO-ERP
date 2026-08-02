@@ -8,6 +8,7 @@ export default function PublicRegister() {
         admin_name: '',
         email: '',
         password: '',
+        password_confirmation: '',
         phone: '',
     });
 
@@ -142,6 +143,18 @@ export default function PublicRegister() {
                                     name="password"
                                     required
                                     value={formData.password}
+                                    onChange={handleChange}
+                                    style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
+                                    placeholder="••••••••"
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>Confirm Password</label>
+                                <input
+                                    type="password"
+                                    name="password_confirmation"
+                                    required
+                                    value={formData.password_confirmation}
                                     onChange={handleChange}
                                     style={{ width: '100%', backgroundColor: '#0f172a', border: '1px solid #334155', color: '#ffffff', padding: '12px', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }}
                                     placeholder="••••••••"
