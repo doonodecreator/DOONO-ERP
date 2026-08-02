@@ -41,11 +41,13 @@ use App\Http\Controllers\Api\CurrencyController;
 use App\Http\Controllers\Api\CouponController;
 
 Route::prefix('v1')->group(function () {
+
     /*
     |--------------------------------------------------------------------------
     | Paystack Public Routes
     |--------------------------------------------------------------------------
     */
+
     Route::post(
         'payments/paystack/webhook',
         [PaymentController::class, 'webhook']
@@ -77,33 +79,31 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/me', [AuthController::class, 'me']);
+
         Route::get(
             'admin/revenue-dashboard',
             [AdminRevenueController::class, 'index']
         )->middleware('role:super_admin');
+
         Route::post('/logout', [AuthController::class, 'logout']);
+
         Route::get(
             'payments/receipt/{reference}',
             [ReceiptController::class, 'download']
         );
 
         Route::prefix('result-entry')->group(function () {
-            Route::get(
-                '/students',
-                [ResultEntryController::class, 'students']
-            );
 
-            Route::get(
-                '/form',
-                [ResultEntryController::class, 'form']
-            );
+            Route::get('/students', [ResultEntryController::class, 'students']);
+
+            Route::get('/form', [ResultEntryController::class, 'form']);
+
+            Route::post('/save', [ResultEntryController::class, 'save']);
 
             Route::post(
-                '/save',
-                [ResultEntryController::class, 'save']
+                '/results/{result}/publish',
+                [ResultController::class, 'publish']
             );
-
-            Route::post('/results/{result}/publish', [ResultController::class, 'publish']);
         });
 
         Route::apiResource(
@@ -111,19 +111,8 @@ Route::prefix('v1')->group(function () {
             PromoCampaignController::class
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Dashboard
-        |--------------------------------------------------------------------------
-        */
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->middleware('role:super_admin,school_admin,vice_principal,bursar');
-
-        /*
-        |--------------------------------------------------------------------------
-        | System Settings
-        |--------------------------------------------------------------------------
-        */
 
         Route::get('/system-settings', [SystemSettingController::class, 'index'])
             ->middleware('role:super_admin');
@@ -133,42 +122,42 @@ Route::prefix('v1')->group(function () {
 
         /*
         |--------------------------------------------------------------------------
-        | ERP Modules
+        | CHANGED SECTION
         |--------------------------------------------------------------------------
         */
 
         Route::apiResource('organizations', OrganizationController::class)
-            ->middleware('role:super_admin');
+            ->middleware('role:super_admin,proprietor');
 
         Route::apiResource('schools', SchoolController::class)
-            ->middleware('role:super_admin');
+            ->middleware('role:super_admin,proprietor');
 
-        Route::post('schools/{school}/extend-trial', [SchoolController::class, 'extendTrial'])
-            ->middleware('role:super_admin');
+        Route::post(
+            'schools/{school}/extend-trial',
+            [SchoolController::class, 'extendTrial']
+        )->middleware('role:super_admin');
 
-        Route::patch('schools/{school}/subscription-status', [SchoolController::class, 'updateSubscriptionStatus'])
-            ->middleware('role:super_admin');
+        Route::patch(
+            'schools/{school}/subscription-status',
+            [SchoolController::class, 'updateSubscriptionStatus']
+        )->middleware('role:super_admin');
+
+        /*
+        |--------------------------------------------------------------------------
+        | ERP Modules
+        |--------------------------------------------------------------------------
+        */
 
         Route::apiResource('academic-sessions', AcademicSessionController::class);
-
         Route::apiResource('terms', TermController::class);
-
         Route::apiResource('divisions', DivisionController::class);
-
         Route::apiResource('classes', ClassController::class);
-
         Route::apiResource('streams', StreamController::class);
-
         Route::apiResource('students', StudentController::class);
-
         Route::apiResource('parents', ParentController::class);
-
         Route::apiResource('subjects', SubjectController::class);
-
         Route::apiResource('staff', StaffController::class);
-
         Route::apiResource('examinations', ExaminationController::class);
-
         Route::apiResource('exam-scores', ExamScoreController::class);
 
         Route::get(
@@ -182,27 +171,16 @@ Route::prefix('v1')->group(function () {
         );
 
         Route::apiResource('fee-categories', FeeCategoryController::class);
-
         Route::apiResource('student-fees', StudentFeeController::class);
-
         Route::apiResource('fee-payments', FeePaymentController::class);
-
         Route::apiResource('payment-receipts', PaymentReceiptController::class);
-
         Route::apiResource('student-enrollments', StudentEnrollmentController::class);
-
         Route::apiResource('student-promotions', StudentPromotionController::class);
-
         Route::apiResource('parent-students', ParentStudentController::class);
-
         Route::apiResource('results', ResultController::class);
-
         Route::apiResource('timetables', TimetableController::class);
-
         Route::apiResource('report-cards', ReportCardController::class);
-
         Route::apiResource('fees', FeeController::class);
-
         Route::apiResource('subscription-plans', SubscriptionPlanController::class);
 
         Route::get(
@@ -216,18 +194,16 @@ Route::prefix('v1')->group(function () {
         );
 
         Route::apiResource('currencies', CurrencyController::class);
-
         Route::apiResource('coupons', CouponController::class);
 
         Route::get(
             'parent-dashboard/{parent}',
             [ParentDashboardController::class, 'index']
-        )->middleware('auth:sanctum');
+        );
 
         Route::get(
             'teacher-dashboard/{teacher}',
             [TeacherDashboardController::class, 'index']
-        )->middleware('auth:sanctum');
+        );
     });
 });
-
