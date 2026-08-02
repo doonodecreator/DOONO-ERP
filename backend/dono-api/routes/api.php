@@ -65,6 +65,7 @@ Route::prefix('v1')->group(function () {
     |--------------------------------------------------------------------------
     */
 
+    Route::post('/schools/register', [SchoolController::class, 'store']);
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
 
