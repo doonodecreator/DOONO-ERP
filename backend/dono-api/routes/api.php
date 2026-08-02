@@ -1,45 +1,44 @@
 <?php
 
-use Illuminate\Support\Facades\Route;                                                                
-use App\Http\Controllers\Api\AuthController;                                                         
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
-use App\Http\Controllers\Api\OrganizationController;                                                 
+use App\Http\Controllers\Api\OrganizationController;
 use App\Http\Controllers\Api\SchoolController;
-use App\Http\Controllers\Api\AcademicSessionController;                                              
+use App\Http\Controllers\Api\AcademicSessionController;
 use App\Http\Controllers\Api\TermController;
 use App\Http\Controllers\Api\DivisionController;
-use App\Http\Controllers\Api\ClassController;                                                        
+use App\Http\Controllers\Api\ClassController;
 use App\Http\Controllers\Api\StreamController;
-use App\Http\Controllers\Api\StudentController;                                                      
+use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\ParentController;
-use App\Http\Controllers\Api\SubjectController;                                                      
+use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\StaffController;
-use App\Http\Controllers\Api\ExaminationController;                                                  
+use App\Http\Controllers\Api\ExaminationController;
 use App\Http\Controllers\Api\ExamScoreController;
-use App\Http\Controllers\Api\AttendanceController;                                                   
+use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\FeeCategoryController;
-use App\Http\Controllers\Api\StudentFeeController;                                                   
+use App\Http\Controllers\Api\StudentFeeController;
 use App\Http\Controllers\Api\FeePaymentController;
-use App\Http\Controllers\Api\PaymentReceiptController;                                               
+use App\Http\Controllers\Api\PaymentReceiptController;
 use App\Http\Controllers\Api\StudentEnrollmentController;
-use App\Http\Controllers\Api\ParentStudentController;                                                
-use App\Http\Controllers\Api\StudentPromotionController;                                             
-use App\Http\Controllers\Api\ResultController;                                                       
-use App\Http\Controllers\Api\TimetableController;                                                    
-use App\Http\Controllers\Api\ReportCardController;                                                   
+use App\Http\Controllers\Api\ParentStudentController;
+use App\Http\Controllers\Api\StudentPromotionController;
+use App\Http\Controllers\Api\ResultController;
+use App\Http\Controllers\Api\TimetableController;
+use App\Http\Controllers\Api\ReportCardController;
 use App\Http\Controllers\Api\FeeController;
 use App\Http\Controllers\Api\SubscriptionPlanController;
 use App\Http\Controllers\Api\SystemSettingController;
 use App\Http\Controllers\Api\PaymentController;
-use App\Http\Controllers\Api\ReceiptController;                                                      
-use App\Http\Controllers\Api\AdminRevenueController;                                                 
-use App\Http\Controllers\Api\ParentDashboardController;                                              
-use App\Http\Controllers\Api\TeacherDashboardController;                                             
+use App\Http\Controllers\Api\ReceiptController;
+use App\Http\Controllers\Api\AdminRevenueController;
+use App\Http\Controllers\Api\ParentDashboardController;
+use App\Http\Controllers\Api\TeacherDashboardController;
 use App\Http\Controllers\Api\ResultEntryController;
 use App\Http\Controllers\Api\PromoCampaignController;
 use App\Http\Controllers\Api\CurrencyController;
 use App\Http\Controllers\Api\CouponController;
-use App\Models\Country;
 
 Route::prefix('v1')->group(function () {
     /*
@@ -63,9 +62,7 @@ Route::prefix('v1')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/countries', function () {
-        return response()->json(Country::all());
-    });
+    Route::get('/countries', [SchoolController::class, 'countries']);
 
     Route::post('/schools/register', [SchoolController::class, 'store']);
     Route::post('/register', [AuthController::class, 'register']);
