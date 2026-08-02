@@ -3,50 +3,148 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Organization;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     /**
-     * Register User
+     * Register a new proprietor and organization.
      */
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email'],
-            'password' => ['required', 'confirmed', 'min:8'],
-            'role' => [
-                'required',
-                'in:super_admin,proprietor,principal,vice_principal,bursar,head_teacher,teacher,class_teacher,librarian,hostel_master,nurse,parent,student'
-            ],
+            // Organization
+            'name' => 'required|string|max:255',
+            'code' => 'nullable|string|max:100',
+            'phone' => 'nullable|string|max:20',
+
+            // Owner
+            'admin_name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|confirmed|min:8',
+
+            'role' => 'required|in:proprietor',
         ]);
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-        ]);
+        DB::beginTransaction();
 
-        if ($role = Role::where('slug', $validated['role'])->first()) {
-            $user->roles()->sync([$role->id]);
+        try {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create User
+            |--------------------------------------------------------------------------
+            */
+
+            $user = User::create([
+                'name' => $validated['admin_name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Assign Proprietor Role
+            |--------------------------------------------------------------------------
+            */
+
+            $role = Role::where('slug', 'proprietor')->first();
+
+            if ($role) {
+                $user->roles()->sync([$role->id]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create Organization
+            |--------------------------------------------------------------------------
+            */
+
+            $organization = Organization::create([
+                'owner_id' => $user->id,
+
+                'name' => $validated['name'],
+                'short_name' => $validated['code'] ?? null,
+
+                'registration_number' => null,
+
+                'email' => $validated['email'],
+
+                'phone' => $validated['phone'] ?? null,
+
+                'alternative_phone' => null,
+
+                'website' => null,
+
+                'logo' => null,
+
+                'country' => 'Nigeria',
+
+                'state' => 'Not Set',
+
+                'lga' => 'Not Set',
+
+                'address' => null,
+
+                'status' => 'active',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Generate Token
+            |--------------------------------------------------------------------------
+            */
+
+            $token = $user->createToken('api-token')->plainTextToken;
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Registration successful.',
+                'token' => $token,
+
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'organization_id' => $organization->id,
+                    'school_id' => null,
+                ],
+
+                'roles' => $user->roles()->get(),
+
+                'permissions' => $user->roles()
+                    ->with('permissions')
+                    ->get()
+                    ->flatMap(fn ($role) => $role->permissions)
+                    ->pluck('slug')
+                    ->unique()
+                    ->values(),
+
+                'organization' => $organization,
+            ], 201);
+
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Registration failed.',
+                'error' => config('app.debug')
+                    ? $e->getMessage()
+                    : 'Unexpected server error.',
+            ], 500);
         }
-
-        $token = $user->createToken('api-token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'User registered successfully.',
-            'token' => $token,
-            'user' => $user->load('roles'),
-        ], 201);
     }
 
     /**
-     * Login
+     * Login.
      */
     public function login(Request $request)
     {
@@ -59,7 +157,8 @@ class AuthController extends Controller
             ->where('email', $request->email)
             ->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
+
             throw ValidationException::withMessages([
                 'email' => ['Invalid email or password.'],
             ]);
@@ -69,21 +168,34 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->plainTextToken;
 
+        $organization = Organization::where('owner_id', $user->id)->first();
+
         return response()->json([
             'message' => 'Login successful.',
             'token' => $token,
-            'user' => $user,
+
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'organization_id' => optional($organization)->id,
+                'school_id' => optional($user->schools()->first())->id,
+            ],
+
             'roles' => $user->roles,
+
             'permissions' => $user->roles
                 ->flatMap(fn ($role) => $role->permissions)
                 ->pluck('slug')
                 ->unique()
                 ->values(),
+
+            'organization' => $organization,
         ]);
     }
 
     /**
-     * Logout
+     * Logout.
      */
     public function logout(Request $request)
     {
@@ -95,13 +207,32 @@ class AuthController extends Controller
     }
 
     /**
-     * Current authenticated user
+     * Current authenticated user.
      */
     public function me(Request $request)
     {
-        return response()->json(
-            $request->user()->load('roles.permissions')
-        );
+        $user = $request->user()->load('roles.permissions');
+
+        $organization = Organization::where('owner_id', $user->id)->first();
+
+        return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'organization_id' => optional($organization)->id,
+                'school_id' => optional($user->schools()->first())->id,
+            ],
+
+            'roles' => $user->roles,
+
+            'permissions' => $user->roles
+                ->flatMap(fn ($role) => $role->permissions)
+                ->pluck('slug')
+                ->unique()
+                ->values(),
+
+            'organization' => $organization,
+        ]);
     }
 }
-

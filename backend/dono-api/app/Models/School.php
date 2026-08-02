@@ -2,50 +2,51 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class School extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'organization_id',
-        'country',
         'owner_id',
+
         'name',
         'short_name',
+
+        'school_code',
         'school_type',
+
         'has_primary',
         'has_secondary',
-        'school_code',
+
+        'country',
+
         'email',
         'phone',
-        'website',
         'address',
-        'logo',
+
         'status',
     ];
 
-    public function owner()
-    {
-        return $this->belongsTo(User::class, 'owner_id');
-    }
+    protected $casts = [
+        'has_primary' => 'boolean',
+        'has_secondary' => 'boolean',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
     public function organization()
     {
         return $this->belongsTo(Organization::class);
     }
 
-    public function country()
+    public function owner()
     {
-        return $this->getAttribute('country');
-    }
-
-    public function subscription()
-    {
-        return $this->hasOne(SchoolSubscription::class)
-            ->where('is_current', true);
+        return $this->belongsTo(User::class, 'owner_id');
     }
 
     public function students()
@@ -53,9 +54,29 @@ class School extends Model
         return $this->hasMany(Student::class);
     }
 
+    public function parents()
+    {
+        return $this->hasMany(ParentModel::class);
+    }
+
     public function staff()
     {
         return $this->hasMany(Staff::class);
+    }
+
+    public function subjects()
+    {
+        return $this->hasMany(Subject::class);
+    }
+
+    public function academicSessions()
+    {
+        return $this->hasMany(AcademicSession::class);
+    }
+
+    public function terms()
+    {
+        return $this->hasMany(Term::class);
     }
 
     public function divisions()
@@ -65,17 +86,11 @@ class School extends Model
 
     public function classes()
     {
-        return $this->hasMany(ClassModel::class, 'school_id');
+        return $this->hasMany(SchoolClass::class);
     }
 
     public function streams()
     {
         return $this->hasMany(Stream::class);
     }
-
-    public function subjects()
-    {
-        return $this->hasMany(Subject::class);
-    }
 }
-

@@ -42,26 +42,48 @@ class User extends Authenticatable
         return $this->belongsToMany(Role::class, 'user_roles');
     }
 
+    public function organizations()
+    {
+        return $this->hasMany(Organization::class, 'owner_id');
+    }
+
     public function schools()
     {
         return $this->hasMany(School::class, 'owner_id');
     }
 
     /*
-|--------------------------------------------------------------------------
-| Current School Helpers
-|--------------------------------------------------------------------------
-*/
+    |--------------------------------------------------------------------------
+    | Current Organization
+    |--------------------------------------------------------------------------
+    */
 
-public function currentSchool()
-{
-    return $this->schools()->first();
-}
+    public function currentOrganization()
+    {
+        return $this->organizations()->latest()->first();
+    }
 
-public function currentSchoolId()
-{
-    return optional($this->currentSchool())->id;
-}
+    public function currentOrganizationId()
+    {
+        return optional($this->currentOrganization())->id;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Current School
+    |--------------------------------------------------------------------------
+    */
+
+    public function currentSchool()
+    {
+        return $this->schools()->latest()->first();
+    }
+
+    public function currentSchoolId()
+    {
+        return optional($this->currentSchool())->id;
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Role & Permission Helpers
@@ -70,8 +92,9 @@ public function currentSchoolId()
 
     public function hasRole($role)
     {
-        return $this->role === $role
-            || $this->roles()->where('slug', $role)->exists();
+        return $this->roles()
+            ->where('slug', $role)
+            ->exists();
     }
 
     public function hasPermission($permission)
@@ -98,6 +121,6 @@ public function currentSchoolId()
 
     public function isSuperAdmin()
     {
-        return $this->role === 'super_admin';
+        return $this->hasRole('super_admin');
     }
 }
