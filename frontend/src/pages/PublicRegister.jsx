@@ -10,6 +10,7 @@ export default function PublicRegister() {
         password: '',
         password_confirmation: '',
         phone: '',
+        role: 'organization_admin', // Use organization_admin for group/school accounts
     });
 
     const [loading, setLoading] = useState(false);
@@ -110,7 +111,7 @@ export default function PublicRegister() {
                     </div>
 
                     <div style={{ borderTop: '1px solid #334155', paddingTop: '16px', marginTop: '8px' }}>
-                        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#ffffff', marginBottom: '14px' }}>Super Admin Credentials</h3>
+                        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#ffffff', marginBottom: '14px' }}>Organization Admin Credentials</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div>
                                 <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' }}>Full Name</label>
