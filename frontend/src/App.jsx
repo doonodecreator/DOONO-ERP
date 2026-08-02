@@ -3,6 +3,8 @@ import { useAuth } from "./context/AuthContext";
 
 import DashboardLayout from "./layouts/DashboardLayout";
 import Login from "./pages/Login";
+import PublicRegister from "./pages/PublicRegister";
+import PublicHome from "./pages/PublicHome";
 
 import Dashboard from "./pages/Dashboard";
 
@@ -59,6 +61,15 @@ export default function App() {
 
   if (loading) {
     return <h2 style={{ padding: 40 }}>Loading...</h2>;
+  }
+
+  // 🌐 Public routes accessible to everyone without login
+  if (window.location.pathname === "/register") {
+    return <PublicRegister />;
+  }
+
+  if (window.location.pathname === "/" || window.location.pathname === "/home") {
+    return <PublicHome />;
   }
 
   if (!isAuthenticated) {
@@ -165,3 +176,4 @@ export default function App() {
     </DashboardLayout>
   );
 }
+

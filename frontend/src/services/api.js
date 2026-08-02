@@ -82,9 +82,18 @@ export default {
         });
     },
 
+    // ➕ ADDED: PATCH method for updating subscription statuses
+    patch(endpoint, body) {
+        return request(endpoint, {
+            method: "PATCH",
+            body: JSON.stringify(body),
+        });
+    },
+
     delete(endpoint) {
         return request(endpoint, {
             method: "DELETE",
         });
     },
 };
+
