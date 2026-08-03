@@ -17,27 +17,13 @@ export default function Login() {
     setError("");
 
     try {
-      const response = await api.post("/login", {
-        email,
-        password,
-      });
-
-      const loggedUser = {
-  ...response.data.user,
-  roles: response.data.roles,
-  permissions: response.data.permissions,
-};
-
-login(response.data.token, loggedUser);
-
-window.location.reload();
+      const response = await api.post("/login", { email, password });
+      await login(response.data.token);
+      // No manual redirect needed — App.jsx reacts to isAuthenticated /
+      // onboardingStep changing and renders the right screen automatically.
     } catch (err) {
       console.log(err);
-
-      setError(
-        err.message ||
-        "Invalid email or password."
-      );
+      setError(err.message || "Invalid email or password.");
     } finally {
       setLoading(false);
     }
@@ -67,30 +53,18 @@ window.location.reload();
           DONO School ERP
         </h1>
 
-        <p
-          style={{
-            textAlign: "center",
-            color: "#64748b",
-            marginBottom: 30,
-          }}
-        >
+        <p style={{ textAlign: "center", color: "#64748b", marginBottom: 30 }}>
           Sign in to continue
         </p>
 
-        {error && (
-          <p style={{ color: "red" }}>{error}</p>
-        )}
+        {error && <p style={{ color: "red" }}>{error}</p>}
 
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 12,
-            marginBottom: 15,
-          }}
+          style={{ width: "100%", padding: 12, marginBottom: 15 }}
         />
 
         <input
@@ -98,11 +72,7 @@ window.location.reload();
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{
-            width: "100%",
-            padding: 12,
-            marginBottom: 20,
-          }}
+          style={{ width: "100%", padding: 12, marginBottom: 20 }}
         />
 
         <button

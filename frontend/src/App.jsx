@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
-import { useAuth } from "./context/AuthContext";                                                     
+import { useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 import DashboardLayout from "./layouts/DashboardLayout";
 import Login from "./pages/Login";
 import PublicRegister from "./pages/PublicRegister";
 import PublicHome from "./pages/PublicHome";
-import api from "./services/api";
 
 import Dashboard from "./pages/Dashboard";
 import AddSchool from "./pages/AddSchool";
@@ -52,69 +52,40 @@ import Subscriptions from "./pages/Subscriptions";
 
 import Settings from "./pages/Settings";
 
-export default function App() {
-  const { isAuthenticated, loading } = useAuth();
+function AuthenticatedApp() {
+  const { onboardingStep, refreshContext } = useAuth();
 
   const [page, setPage] = useState("dashboard");
-  const [hasSchool, setHasSchool] = useState(true);
-  const [checkingSchool, setCheckingSchool] = useState(true);
 
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedParent, setSelectedParent] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
 
-  // Check if proprietor has created a school yet
-  useEffect(() => {
-    if (isAuthenticated) {
-      api.get('/schools')
-        .then((res) => {
-          const schools = res.data.data || res.data;
-          if (!schools || schools.length === 0) {
-            setHasSchool(false);
-            setPage("add-school");
-          } else {
-            setHasSchool(true);
-          }
-        })
-        .catch(() => {
-          setHasSchool(false);
-          setPage("add-school");
-        })
-        .finally(() => {
-          setCheckingSchool(false);
-        });
-    } else {
-      setCheckingSchool(false);
-    }
-  }, [isAuthenticated]);
-
-  if (loading || checkingSchool) {
-    return <h2 style={{ padding: 40, color: '#fff', backgroundColor: '#090d16', minHeight: '100vh' }}>Loading...</h2>;
-  }
-
-  // 🌐 Public routes accessible to everyone without login
-  if (window.location.pathname === "/register") {
-    return <PublicRegister />;
-  }
-
-  if (window.location.pathname === "/" || window.location.pathname === "/home") {
-    return <PublicHome />;
-  }
-
-  if (!isAuthenticated) {
-    return <Login />;
-  }
-
-  // Force add-school if no school exists
-  if (!hasSchool) {
-    return <AddSchool onSchoolAdded={() => { setHasSchool(true); setPage("dashboard"); }} />;
+  // Onboarding gate — driven entirely by the backend's onboarding_step.
+  // Platform admins get "complete" immediately and skip this.
+  if (onboardingStep === "school_setup") {
+    return (
+      <AddSchool
+        onSchoolAdded={async () => {
+          await refreshContext();
+          setPage("dashboard");
+        }}
+      />
+    );
   }
 
   let content = <Dashboard />;
 
   switch (page) {
     case "add-school":
-      content = <AddSchool onSchoolAdded={() => { setHasSchool(true); setPage("dashboard"); }} />;
+      content = (
+        <AddSchool
+          onSchoolAdded={async () => {
+            await refreshContext();
+            setPage("dashboard");
+          }}
+        />
+      );
       break;
     case "students":
       content = <Students setPage={setPage} setSelectedStudent={setSelectedStudent} />;
@@ -214,3 +185,48 @@ export default function App() {
   );
 }
 
+export default function App() {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <h2 style={{ padding: 40, color: "#fff", backgroundColor: "#090d16", minHeight: "100vh" }}>
+        Loading...
+      </h2>
+    );
+  }
+
+  return (
+    <Routes>
+      <Route
+        path="/register"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <PublicRegister />}
+      />
+
+      <Route
+        path="/home"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <PublicHome />}
+      />
+
+      <Route
+        path="/"
+        element={
+          isAuthenticated ? (
+            <AuthenticatedApp />
+          ) : (
+            <PublicHome />
+          )
+        }
+      />
+
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+      />
+
+      {/* Anything unmatched falls back to the root, which decides
+          public vs authenticated based on real auth state. */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}

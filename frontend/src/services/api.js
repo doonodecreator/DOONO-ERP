@@ -4,21 +4,8 @@ function getToken() {
     return localStorage.getItem("token");
 }
 
-function getSchoolId() {
-    const storedSchoolId = localStorage.getItem("school_id");
-    if (storedSchoolId) return storedSchoolId;
-
-    try {
-        const user = JSON.parse(localStorage.getItem("user") || "{}");
-        return user?.school_id || user?.school?.id || null;
-    } catch (e) {
-        return null;
-    }
-}
-
 async function request(endpoint, options = {}) {
     const token = getToken();
-    const schoolId = getSchoolId();
 
     const headers = {
         Accept: "application/json",
@@ -28,10 +15,6 @@ async function request(endpoint, options = {}) {
 
     if (token) {
         headers.Authorization = `Bearer ${token}`;
-    }
-
-    if (schoolId) {
-        headers["X-School-Id"] = schoolId;
     }
 
     const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -49,8 +32,6 @@ async function request(endpoint, options = {}) {
 
     if (response.status === 401) {
         localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        localStorage.removeItem("school_id");
     }
 
     if (!response.ok) {
@@ -82,7 +63,6 @@ export default {
         });
     },
 
-    // ➕ ADDED: PATCH method for updating subscription statuses
     patch(endpoint, body) {
         return request(endpoint, {
             method: "PATCH",
@@ -96,4 +76,3 @@ export default {
         });
     },
 };
-

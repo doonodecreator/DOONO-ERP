@@ -1,9 +1,11 @@
 import { useState } from "react";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function PublicRegister() {
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -16,16 +18,11 @@ export default function PublicRegister() {
         phone: "",
         password: "",
         password_confirmation: "",
-        role: "proprietor",
     });
 
     function handleChange(e) {
         const { name, value } = e.target;
-
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
     }
 
     async function handleSubmit(e) {
@@ -37,19 +34,15 @@ export default function PublicRegister() {
         try {
             const response = await api.post("/register", formData);
 
-            localStorage.setItem("token", response.data.token);
-            localStorage.setItem(
-                "user",
-                JSON.stringify(response.data.user)
-            );
+            // Establish real auth state before navigating anywhere —
+            // this is what was missing before, and why users landed back
+            // on the register form after a successful registration.
+            await login(response.data.token);
 
-            navigate("/add-school");
+            navigate("/");
 
         } catch (err) {
-            setError(
-                err.message ||
-                "Registration failed."
-            );
+            setError(err.message || "Registration failed.");
         } finally {
             setLoading(false);
         }
@@ -90,91 +83,29 @@ export default function PublicRegister() {
                 <h2>Create Organization</h2>
 
                 {error && (
-                    <div
-                        style={{
-                            color: "#ffb4b4",
-                            marginBottom: 20,
-                        }}
-                    >
-                        {error}
-                    </div>
+                    <div style={{ color: "#ffb4b4", marginBottom: 20 }}>{error}</div>
                 )}
 
                 <label>Organization Name</label>
-                <input
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    style={inputStyle}
-                />
+                <input name="name" value={formData.name} onChange={handleChange} required style={inputStyle} />
 
-                <label style={{ marginTop: 15, display: "block" }}>
-                    Organization Code
-                </label>
-                <input
-                    name="code"
-                    value={formData.code}
-                    onChange={handleChange}
-                    style={inputStyle}
-                />
+                <label style={{ marginTop: 15, display: "block" }}>Organization Code</label>
+                <input name="code" value={formData.code} onChange={handleChange} style={inputStyle} />
 
-                <label style={{ marginTop: 15, display: "block" }}>
-                    Administrator Name
-                </label>
-                <input
-                    name="admin_name"
-                    value={formData.admin_name}
-                    onChange={handleChange}
-                    required
-                    style={inputStyle}
-                />
+                <label style={{ marginTop: 15, display: "block" }}>Administrator Name</label>
+                <input name="admin_name" value={formData.admin_name} onChange={handleChange} required style={inputStyle} />
 
-                <label style={{ marginTop: 15, display: "block" }}>
-                    Email
-                </label>
-                <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    style={inputStyle}
-                />
+                <label style={{ marginTop: 15, display: "block" }}>Email</label>
+                <input type="email" name="email" value={formData.email} onChange={handleChange} required style={inputStyle} />
 
-                <label style={{ marginTop: 15, display: "block" }}>
-                    Phone
-                </label>
-                <input
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    style={inputStyle}
-                />
+                <label style={{ marginTop: 15, display: "block" }}>Phone</label>
+                <input name="phone" value={formData.phone} onChange={handleChange} style={inputStyle} />
 
-                <label style={{ marginTop: 15, display: "block" }}>
-                    Password
-                </label>
-                <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    style={inputStyle}
-                />
+                <label style={{ marginTop: 15, display: "block" }}>Password</label>
+                <input type="password" name="password" value={formData.password} onChange={handleChange} required style={inputStyle} />
 
-                <label style={{ marginTop: 15, display: "block" }}>
-                    Confirm Password
-                </label>
-                <input
-                    type="password"
-                    name="password_confirmation"
-                    value={formData.password_confirmation}
-                    onChange={handleChange}
-                    required
-                    style={inputStyle}
-                />
+                <label style={{ marginTop: 15, display: "block" }}>Confirm Password</label>
+                <input type="password" name="password_confirmation" value={formData.password_confirmation} onChange={handleChange} required style={inputStyle} />
 
                 <button
                     type="submit"
@@ -190,9 +121,7 @@ export default function PublicRegister() {
                         fontWeight: "bold",
                     }}
                 >
-                    {loading
-                        ? "Creating Organization..."
-                        : "Continue"}
+                    {loading ? "Creating Organization..." : "Continue"}
                 </button>
             </form>
         </div>

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 
 export default function AddSchool({ onSchoolAdded }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [countries, setCountries] = useState([]);
+    const [loadingCountries, setLoadingCountries] = useState(true);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -12,12 +14,24 @@ export default function AddSchool({ onSchoolAdded }) {
         has_primary: true,
         has_secondary: true,
         school_code: '',
-        country: '',
+        country_id: '',
         email: '',
         phone: '',
         address: '',
-        status: 'active',
     });
+
+    useEffect(() => {
+        api.get('/countries')
+            .then((res) => {
+                setCountries(res.data.data || []);
+            })
+            .catch(() => {
+                setCountries([]);
+            })
+            .finally(() => {
+                setLoadingCountries(false);
+            });
+    }, []);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -35,37 +49,19 @@ export default function AddSchool({ onSchoolAdded }) {
         setError('');
 
         try {
-
-            const response = await api.post('/schools', formData);
-
-            console.log('SUCCESS');
-            console.log(response.data);
+            const response = await api.post('/schools', {
+                ...formData,
+                country_id: formData.country_id ? Number(formData.country_id) : null,
+            });
 
             if (typeof onSchoolAdded === 'function') {
-                onSchoolAdded();
-            } else {
-                window.location.reload();
+                await onSchoolAdded(response.data);
             }
 
         } catch (err) {
-
-            console.log('FULL ERROR');
-            console.log(err);
-
-            console.log('SERVER RESPONSE');
-            console.log(err.response);
-
-            console.log('SERVER DATA');
-            console.log(err.response?.data);
-
             setError(
-                JSON.stringify(
-                    err.response?.data ?? err.message,
-                    null,
-                    2
-                )
+                JSON.stringify(err.message ?? err, null, 2)
             );
-
         } finally {
             setLoading(false);
         }
@@ -91,17 +87,9 @@ export default function AddSchool({ onSchoolAdded }) {
                     borderRadius: '16px',
                 }}
             >
-                <div
-                    style={{
-                        textAlign: 'center',
-                        marginBottom: '24px',
-                    }}
-                >
+                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                     <h2>Setup Your First School</h2>
-
-                    <p>
-                        Register your first school to continue.
-                    </p>
+                    <p>Register your first school to continue.</p>
                 </div>
 
                 {error && (
@@ -122,11 +110,7 @@ export default function AddSchool({ onSchoolAdded }) {
 
                 <form
                     onSubmit={handleSubmit}
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '16px',
-                    }}
+                    style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
                 >
                     <input
                         name="name"
@@ -134,6 +118,13 @@ export default function AddSchool({ onSchoolAdded }) {
                         value={formData.name}
                         onChange={handleChange}
                         required
+                    />
+
+                    <input
+                        name="short_name"
+                        placeholder="Short Name"
+                        value={formData.short_name}
+                        onChange={handleChange}
                     />
 
                     <input
@@ -154,12 +145,22 @@ export default function AddSchool({ onSchoolAdded }) {
                         <option value="Combined">Combined</option>
                     </select>
 
-                    <input
-                        name="country"
-                        placeholder="Country"
-                        value={formData.country}
+                    <select
+                        name="country_id"
+                        value={formData.country_id}
                         onChange={handleChange}
-                    />
+                        required
+                        disabled={loadingCountries}
+                    >
+                        <option value="">
+                            {loadingCountries ? 'Loading countries...' : 'Select country'}
+                        </option>
+                        {countries.map((c) => (
+                            <option key={c.id} value={c.id}>
+                                {c.name}
+                            </option>
+                        ))}
+                    </select>
 
                     <input
                         type="email"
@@ -183,13 +184,8 @@ export default function AddSchool({ onSchoolAdded }) {
                         onChange={handleChange}
                     />
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                    >
-                        {loading
-                            ? 'Creating School...'
-                            : 'Complete Setup'}
+                    <button type="submit" disabled={loading}>
+                        {loading ? 'Creating School...' : 'Complete Setup'}
                     </button>
                 </form>
             </div>
