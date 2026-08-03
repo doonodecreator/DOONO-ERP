@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\PermissionMiddleware::class,
             'subscription' => \App\Http\Middleware\CheckActiveSubscription::class,
             'feature' => \App\Http\Middleware\CheckSubscriptionFeature::class,
+            'has.school' => \App\Http\Middleware\HasSchool::class,
         ]);
 
     })

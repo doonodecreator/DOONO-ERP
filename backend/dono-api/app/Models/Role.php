@@ -13,6 +13,16 @@ class Role extends Model
         'is_system',
     ];
 
+    protected $casts = [
+        'is_system' => 'boolean',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
     public function permissions()
     {
         return $this->belongsToMany(
@@ -21,5 +31,12 @@ class Role extends Model
             'role_id',
             'permission_id'
         );
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'user_roles')
+            ->withPivot('school_id')
+            ->withTimestamps();
     }
 }

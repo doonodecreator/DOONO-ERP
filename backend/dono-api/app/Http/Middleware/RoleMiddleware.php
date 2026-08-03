@@ -19,7 +19,13 @@ class RoleMiddleware
         }
 
         foreach ($roles as $role) {
-            if ($user->hasRole($role)) {
+            // 'any' = does the user hold this role at all, regardless of
+            // whether it's platform-wide (school_id null) or scoped to a
+            // specific school. Route-level gating only cares "can this
+            // user ever act as this role" — per-school ownership checks
+            // (e.g. "is this YOUR school") happen inside the controller,
+            // see SchoolController::userCanAccessSchool().
+            if ($user->hasRole($role, 'any')) {
                 return $next($request);
             }
         }

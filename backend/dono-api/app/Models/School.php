@@ -19,11 +19,13 @@ class School extends Model
         'has_primary',
         'has_secondary',
 
-        'country',
+        'country_id',
 
         'email',
         'phone',
+        'website',
         'address',
+        'logo',
 
         'status',
     ];
@@ -47,6 +49,11 @@ class School extends Model
     public function owner()
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
     }
 
     public function students()

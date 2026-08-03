@@ -15,7 +15,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
     ];
 
     protected $hidden = [
@@ -39,7 +38,9 @@ class User extends Authenticatable
 
     public function roles()
     {
-        return $this->belongsToMany(Role::class, 'user_roles');
+        return $this->belongsToMany(Role::class, 'user_roles')
+            ->withPivot('school_id')
+            ->withTimestamps();
     }
 
     public function organizations()
@@ -47,80 +48,58 @@ class User extends Authenticatable
         return $this->hasMany(Organization::class, 'owner_id');
     }
 
-    public function schools()
+    public function ownedSchools()
     {
         return $this->hasMany(School::class, 'owner_id');
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Current Organization
-    |--------------------------------------------------------------------------
-    */
-
-    public function currentOrganization()
-    {
-        return $this->organizations()->latest()->first();
-    }
-
-    public function currentOrganizationId()
-    {
-        return optional($this->currentOrganization())->id;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Current School
-    |--------------------------------------------------------------------------
-    */
-
-    public function currentSchool()
-    {
-        return $this->schools()->latest()->first();
-    }
-
-    public function currentSchoolId()
-    {
-        return optional($this->currentSchool())->id;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
     | Role & Permission Helpers
     |--------------------------------------------------------------------------
+    |
+    | NOTE: "current organization" / "current school" resolution is NOT done
+    | here anymore. That logic depends on more than the User model can see
+    | (ownership vs. role assignment vs. platform-admin bypass), so it lives
+    | in App\Services\CurrentContextService — the single place that answers
+    | "what does this user currently have access to." Do not re-add
+    | currentOrganization()/currentSchool() shortcuts here; that duplication
+    | is exactly what broke onboarding before.
+    |
     */
 
-    public function hasRole($role)
+    /**
+     * Does this user hold the given role?
+     * $schoolId = null checks for a platform-wide grant of that role.
+     * $schoolId = <id> checks for that role scoped to a specific school.
+     * Pass 'any' to check regardless of scope.
+     */
+    public function hasRole(string $slug, null|int|string $schoolId = null): bool
     {
-        return $this->roles()
-            ->where('slug', $role)
-            ->exists();
+        $query = $this->roles()->where('slug', $slug);
+
+        if ($schoolId === 'any') {
+            return $query->exists();
+        }
+
+        if ($schoolId === null) {
+            return $query->wherePivotNull('school_id')->exists();
+        }
+
+        return $query->wherePivot('school_id', $schoolId)->exists();
     }
 
-    public function hasPermission($permission)
-    {
-        return $this->roles()
-            ->whereHas('permissions', function ($query) use ($permission) {
-                $query->where('slug', $permission);
-            })
-            ->exists();
-    }
-
-    public function permissions()
-    {
-        return $this->roles
-            ->flatMap(fn ($role) => $role->permissions)
-            ->unique('id');
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Super Admin Helper
-    |--------------------------------------------------------------------------
-    */
-
-    public function isSuperAdmin()
+    public function isSuperAdmin(): bool
     {
         return $this->hasRole('super_admin');
+    }
+
+    public function hasPermission(string $permissionSlug): bool
+    {
+        return $this->roles()
+            ->whereHas('permissions', function ($query) use ($permissionSlug) {
+                $query->where('slug', $permissionSlug);
+            })
+            ->exists();
     }
 }

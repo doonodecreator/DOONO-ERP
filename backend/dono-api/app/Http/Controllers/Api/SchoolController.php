@@ -5,183 +5,156 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Country;
 use App\Models\Organization;
+use App\Models\Role;
 use App\Models\School;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SchoolController extends Controller
 {
     /**
-     * List schools.
+     * List schools visible to the current user.
+     * Super admins see everything; everyone else sees only schools they own.
+     * (Staff-visible schools via role assignment will extend this later —
+     * intentionally not built yet since no staff-invite flow exists.)
      */
     public function index(Request $request)
     {
         $user = $request->user();
 
-        if ($user->hasRole('super_admin')) {
-            $schools = School::with([
-                'organization',
-                'owner'
-            ])->latest()->get();
-        } else {
-            $schools = School::where('owner_id', $user->id)
-                ->with([
-                    'organization',
-                    'owner'
-                ])
-                ->latest()
-                ->get();
+        $query = School::with(['organization', 'owner', 'country']);
+
+        if (!$user->isSuperAdmin()) {
+            $query->where('owner_id', $user->id);
         }
 
         return response()->json([
             'success' => true,
-            'data' => $schools,
+            'data' => $query->latest()->get(),
         ]);
     }
 
     /**
-     * Create school.
+     * Create school (School Setup Wizard submit).
+     * owner_id / organization_id are always derived from the authenticated
+     * user server-side — never trusted from the request body.
      */
     public function store(Request $request)
     {
+        $user = $request->user();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'short_name' => 'nullable|string|max:255',
             'school_code' => 'required|string|max:50|unique:schools,school_code',
-            'school_type' => 'required|string|max:100',
-            'country' => 'nullable|string|max:255',
+            'school_type' => 'required|string|in:Primary,Secondary,Combined',
+            'country_id' => 'required|exists:countries,id',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string',
-            'status' => 'nullable|string',
             'has_primary' => 'boolean',
             'has_secondary' => 'boolean',
         ]);
 
-        $user = $request->user();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated.'
-            ], 401);
-        }
-
-        $organization = Organization::where(
-            'owner_id',
-            $user->id
-        )->first();
+        $organization = Organization::where('owner_id', $user->id)->first();
 
         if (!$organization) {
             return response()->json([
                 'success' => false,
-                'message' => 'No organization found for this account.'
+                'message' => 'No organization found for this account.',
             ], 422);
         }
 
-        $countryName = $validated['country'] ?? 'Nigeria';
+        $school = DB::transaction(function () use ($validated, $user, $organization) {
+            $school = School::create([
+                'organization_id' => $organization->id,
+                'owner_id' => $user->id,
 
-        $country = Country::where(
-            'name',
-            $countryName
-        )->first();
+                'country_id' => $validated['country_id'],
 
-        if (!$country) {
-            $country = Country::where('name', 'Nigeria')->first();
-        }
+                'name' => $validated['name'],
+                'short_name' => $validated['short_name'] ?? $validated['name'],
 
-        if (!$country) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Nigeria was not found in countries table.'
-            ], 500);
-        }
+                'school_code' => $validated['school_code'],
+                'school_type' => $validated['school_type'],
 
-        $school = School::create([
-            'organization_id' => $organization->id,
-            'owner_id' => $user->id,
+                'has_primary' => $validated['has_primary'] ?? true,
+                'has_secondary' => $validated['has_secondary'] ?? false,
 
-            'country_id' => $country->id,
-            'country' => $country->name,
+                'email' => $validated['email'] ?? null,
+                'phone' => $validated['phone'] ?? null,
+                'address' => $validated['address'] ?? null,
 
-            'name' => $validated['name'],
-            'short_name' => $validated['name'],
+                'status' => 'active',
+            ]);
 
-            'school_code' => $validated['school_code'],
-            'school_type' => $validated['school_type'],
+            $proprietorRole = Role::where('slug', 'proprietor')->first();
 
-            'has_primary' => $validated['has_primary'] ?? true,
-            'has_secondary' => $validated['has_secondary'] ?? true,
+            if ($proprietorRole) {
+                $user->roles()->attach($proprietorRole->id, [
+                    'school_id' => $school->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
-            'email' => $validated['email'] ?? null,
-            'phone' => $validated['phone'] ?? null,
-            'address' => $validated['address'] ?? null,
-
-            'status' => $validated['status'] ?? 'active',
-        ]);
+            return $school;
+        });
 
         return response()->json([
             'success' => true,
             'message' => 'School created successfully.',
-            'data' => $school,
+            'data' => $school->load(['organization', 'owner', 'country']),
         ], 201);
     }
 
-    /**
-     * Show school.
-     */
-    public function show(School $school)
+    public function show(Request $request, School $school)
     {
+        if (!$this->userCanAccessSchool($request->user(), $school)) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
         return response()->json([
             'success' => true,
-            'data' => $school->load([
-                'organization',
-                'owner'
-            ]),
+            'data' => $school->load(['organization', 'owner', 'country']),
         ]);
     }
 
-    /**
-     * Update school.
-     */
     public function update(Request $request, School $school)
     {
+        if (!$this->userCanAccessSchool($request->user(), $school)) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
+            'short_name' => 'nullable|string|max:255',
             'school_code' => 'sometimes|required|string|max:50|unique:schools,school_code,' . $school->id,
-            'school_type' => 'sometimes|required|string|max:100',
-            'country' => 'nullable|string|max:255',
+            'school_type' => 'sometimes|required|string|in:Primary,Secondary,Combined',
+            'country_id' => 'sometimes|required|exists:countries,id',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string',
-            'status' => 'nullable|string',
+            'status' => 'nullable|string|in:active,inactive',
             'has_primary' => 'boolean',
             'has_secondary' => 'boolean',
         ]);
-
-        if (isset($validated['country'])) {
-            $country = Country::where(
-                'name',
-                $validated['country']
-            )->first();
-
-            if ($country) {
-                $validated['country_id'] = $country->id;
-            }
-        }
 
         $school->update($validated);
 
         return response()->json([
             'success' => true,
             'message' => 'School updated successfully.',
-            'data' => $school->fresh(),
+            'data' => $school->fresh()->load(['organization', 'owner', 'country']),
         ]);
     }
 
-    /**
-     * Delete school.
-     */
-    public function destroy(School $school)
+    public function destroy(Request $request, School $school)
     {
+        if (!$this->userCanAccessSchool($request->user(), $school)) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
         $school->delete();
 
         return response()->json([
@@ -191,7 +164,7 @@ class SchoolController extends Controller
     }
 
     /**
-     * Countries.
+     * Public-ish reference data (still requires auth — see routes file).
      */
     public function countries()
     {
@@ -201,25 +174,44 @@ class SchoolController extends Controller
         ]);
     }
 
-    /**
-     * Extend trial.
-     */
     public function extendTrial(Request $request, School $school)
     {
+        if (!$this->userCanAccessSchool($request->user(), $school)) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Trial extended successfully.',
         ]);
     }
 
-    /**
-     * Update subscription.
-     */
     public function updateSubscriptionStatus(Request $request, School $school)
     {
+        if (!$request->user()->isSuperAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Subscription updated successfully.',
         ]);
+    }
+
+    /**
+     * A user can access a school if they're a super admin, the owner,
+     * or hold any role explicitly scoped to that school.
+     */
+    private function userCanAccessSchool($user, School $school): bool
+    {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($user->id === $school->owner_id) {
+            return true;
+        }
+
+        return $user->roles()->wherePivot('school_id', $school->id)->exists();
     }
 }
