@@ -105,10 +105,14 @@ class DashboardController extends Controller
                 Subject::where("school_id", $schoolId)->count(),
 
             "classes" =>
-                ClassModel::where("school_id", $schoolId)->count(),
+                ClassModel::whereHas("division", function ($query) use ($schoolId) {
+                    $query->where("school_id", $schoolId);
+                })->count(),
 
             "streams" =>
-                Stream::where("school_id", $schoolId)->count(),
+                Stream::whereHas("class.division", function ($query) use ($schoolId) {
+                    $query->where("school_id", $schoolId);
+                })->count(),
 
             "fee_categories" =>
                 FeeCategory::where("school_id", $schoolId)->count(),
