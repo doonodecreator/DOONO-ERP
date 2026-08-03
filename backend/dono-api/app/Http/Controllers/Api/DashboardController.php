@@ -17,10 +17,15 @@ use App\Models\Stream;
 use App\Models\Student;
 use App\Models\StudentFee;
 use App\Models\Subject;
+use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    public function __construct(private CurrentContextService $context)
+    {
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -61,11 +66,37 @@ class DashboardController extends Controller
             ]);
         }
 
-        $schoolId = $user->currentSchoolId();
+        $resolved = $this->context->resolve($user);
+        $schoolId = $resolved['school']['id'] ?? null;
+
+        if (!$schoolId) {
+            // Shouldn't normally be reachable — this route sits behind
+            // has.school middleware — but guarded explicitly rather than
+            // letting every query below run with school_id = null.
+            return response()->json([
+                'success' => false,
+                'message' => 'No active school.',
+            ], 409);
+        }
 
         $divisionIds = Division::where('school_id', $schoolId)->pluck('id');
-
         $classIds = ClassModel::whereIn('division_id', $divisionIds)->pluck('id');
+
+        // student_fees / fee_payments / attendances have no direct
+        // school_id column — they reach a school only via
+        // student_enrollments.school_id. These subqueries filter through
+        // that chain instead of assuming a column that doesn't exist.
+        $enrollmentIdsForSchool = function ($query) use ($schoolId) {
+            $query->select('id')
+                ->from('student_enrollments')
+                ->where('school_id', $schoolId);
+        };
+
+        $studentFeeIdsForSchool = function ($query) use ($enrollmentIdsForSchool) {
+            $query->select('id')
+                ->from('student_fees')
+                ->whereIn('student_enrollment_id', $enrollmentIdsForSchool);
+        };
 
         return response()->json([
             "dashboard_type" => "school",
@@ -94,32 +125,32 @@ class DashboardController extends Controller
                 FeeCategory::where("school_id", $schoolId)->count(),
 
             "student_fees" =>
-                StudentFee::where("school_id", $schoolId)->count(),
+                StudentFee::whereIn("student_enrollment_id", $enrollmentIdsForSchool)->count(),
 
             "payments_received" =>
-                FeePayment::where("school_id", $schoolId)->sum("amount_paid"),
+                FeePayment::whereIn("student_fee_id", $studentFeeIdsForSchool)->sum("amount_paid"),
 
             "outstanding_fees" =>
-                StudentFee::where("school_id", $schoolId)->sum("amount_due")
-                - FeePayment::where("school_id", $schoolId)->sum("amount_paid"),
+                StudentFee::whereIn("student_enrollment_id", $enrollmentIdsForSchool)->sum("amount_due")
+                - FeePayment::whereIn("student_fee_id", $studentFeeIdsForSchool)->sum("amount_paid"),
 
             "pending_fees" =>
-                StudentFee::where("school_id", $schoolId)
+                StudentFee::whereIn("student_enrollment_id", $enrollmentIdsForSchool)
                     ->where("status", "Pending")
                     ->count(),
 
             "partial_fees" =>
-                StudentFee::where("school_id", $schoolId)
+                StudentFee::whereIn("student_enrollment_id", $enrollmentIdsForSchool)
                     ->where("status", "Partial")
                     ->count(),
 
             "paid_fees" =>
-                StudentFee::where("school_id", $schoolId)
+                StudentFee::whereIn("student_enrollment_id", $enrollmentIdsForSchool)
                     ->where("status", "Paid")
                     ->count(),
 
             "attendance_records" =>
-                Attendance::where("school_id", $schoolId)->count(),
+                Attendance::whereIn("student_enrollment_id", $enrollmentIdsForSchool)->count(),
 
             "examinations" =>
                 Examination::where("school_id", $schoolId)->count(),
