@@ -10,32 +10,48 @@ export default function Sidebar({
   const { roles, isPlatformAdmin } = useAuth();
   const role = getPrimaryRoleSlug({ roles, isPlatformAdmin });
 
-  // Role-customized menu mapping according to system architecture
-  const allMenuItems = [
-    { name: "Dashboard", page: "dashboard", roles: ["all"] },
-    { name: "Staff Management", page: "staff", roles: ["super_admin", "proprietor", "principal", "vice_principal", "head_teacher"] },
-    { name: "Students", page: "students", roles: ["super_admin", "proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "bursar", "accountant", "receptionist"] },
-    { name: "Parents", page: "parents", roles: ["super_admin", "proprietor", "principal", "vice_principal", "head_teacher", "receptionist", "bursar", "accountant"] },
-    { name: "Teachers", page: "teachers", roles: ["super_admin", "proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head"] },
-    { name: "Subjects", page: "subjects", roles: ["super_admin", "proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "teacher"] },
-    { name: "Classes", page: "classes", roles: ["super_admin", "proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head", "teacher"] },
-    { name: "Streams", page: "streams", roles: ["super_admin", "proprietor", "principal", "vice_principal", "head_teacher"] },
-    { name: "Academic Sessions", page: "academic-sessions", roles: ["super_admin", "proprietor", "principal", "vice_principal"] },
-    { name: "Terms", page: "terms", roles: ["super_admin", "proprietor", "principal", "vice_principal"] },
-    { name: "Attendance", page: "attendance", roles: ["super_admin", "proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head", "teacher"] },
-    { name: "Results & Exams", page: "results", roles: ["super_admin", "proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "student", "parent"] },
-    { name: "Fees & Payments", page: "fees", roles: ["super_admin", "proprietor", "principal", "bursar", "accountant", "parent", "student"] },
-    { name: "Timetable", page: "timetable", roles: ["super_admin", "proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "student", "parent"] },
-    { name: "Report Cards", page: "report-cards", roles: ["super_admin", "proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "parent", "student"] },
-    { name: "Promotion & Graduation", page: "promotions", roles: ["super_admin", "proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster"] },
-    { name: "Subscriptions", page: "subscriptions", roles: ["super_admin", "proprietor"] },
-    { name: "Settings", page: "settings", roles: ["super_admin", "proprietor", "principal"] },
+  // Platform Owner gets a distinct menu — not the school-operational list.
+  // Per the architecture diagram: Dashboard, Organizations, Schools,
+  // Subscriptions, System Settings, Audit Logs.
+  // NOTE: pages marked "not yet built" fall back to the generic Dashboard
+  // until their real pages exist — listed here so they're visible in nav,
+  // not hidden, but they won't do anything real until built.
+  const platformMenuItems = [
+    { name: "Dashboard", page: "dashboard" },
+    { name: "Organizations", page: "organizations" }, // page not yet built
+    { name: "Schools", page: "schools" },              // page not yet built
+    { name: "Subscriptions", page: "subscriptions" },
+    { name: "System Settings", page: "settings" },
+    { name: "Audit Logs", page: "audit-logs" },        // page not yet built
   ];
 
-  // Filter items dynamically based on role
-  const menuItems = allMenuItems.filter(
-    (item) => item.roles.includes("all") || item.roles.includes(role)
-  );
+  const allMenuItems = [
+    { name: "Dashboard", page: "dashboard", roles: ["all"] },
+    { name: "Staff Management", page: "staff", roles: ["proprietor", "principal", "vice_principal", "head_teacher"] },
+    { name: "Students", page: "students", roles: ["proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "bursar", "accountant", "receptionist"] },
+    { name: "Parents", page: "parents", roles: ["proprietor", "principal", "vice_principal", "head_teacher", "receptionist", "bursar", "accountant"] },
+    { name: "Teachers", page: "teachers", roles: ["proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head"] },
+    { name: "Subjects", page: "subjects", roles: ["proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "teacher"] },
+    { name: "Classes", page: "classes", roles: ["proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head", "teacher"] },
+    { name: "Streams", page: "streams", roles: ["proprietor", "principal", "vice_principal", "head_teacher"] },
+    { name: "Academic Sessions", page: "academic-sessions", roles: ["proprietor", "principal", "vice_principal"] },
+    { name: "Terms", page: "terms", roles: ["proprietor", "principal", "vice_principal"] },
+    { name: "Attendance", page: "attendance", roles: ["proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head", "teacher"] },
+    { name: "Results & Exams", page: "results", roles: ["proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "student", "parent"] },
+    { name: "Fees & Payments", page: "fees", roles: ["proprietor", "principal", "bursar", "accountant", "parent", "student"] },
+    { name: "Timetable", page: "timetable", roles: ["proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "student", "parent"] },
+    { name: "Report Cards", page: "report-cards", roles: ["proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "parent", "student"] },
+    { name: "Promotion & Graduation", page: "promotions", roles: ["proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster"] },
+    { name: "Subscriptions", page: "subscriptions", roles: ["proprietor"] },
+    { name: "Settings", page: "settings", roles: ["proprietor", "principal"] },
+  ];
+
+  const menuItems =
+    role === "super_admin"
+      ? platformMenuItems
+      : allMenuItems.filter(
+          (item) => item.roles.includes("all") || item.roles.includes(role)
+        );
 
   return (
     <>
