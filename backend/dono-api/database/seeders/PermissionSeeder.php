@@ -10,7 +10,6 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
-
             // Dashboard
             ['name' => 'View Dashboard', 'slug' => 'view_dashboard'],
 
@@ -54,6 +53,49 @@ class PermissionSeeder extends Seeder
             ['name' => 'Manage Users', 'slug' => 'manage_users'],
             ['name' => 'Assign Roles', 'slug' => 'assign_roles'],
 
+            // --- Added to complete the full role-based architecture ---
+
+            // Platform / system
+            ['name' => 'Manage System Settings', 'slug' => 'manage_system_settings'],
+            ['name' => 'Manage Subscriptions', 'slug' => 'manage_subscriptions'],
+            ['name' => 'View Audit Logs', 'slug' => 'view_audit_logs'],
+
+            // Academic (results, promotion, timetable)
+            ['name' => 'Manage Assessments', 'slug' => 'manage_assessments'],
+            ['name' => 'Manage Results', 'slug' => 'manage_results'],
+            ['name' => 'View Results', 'slug' => 'view_results'],
+            ['name' => 'Manage Promotions', 'slug' => 'manage_promotions'],
+            ['name' => 'Manage Report Cards', 'slug' => 'manage_report_cards'],
+            ['name' => 'Manage Timetable', 'slug' => 'manage_timetable'],
+            ['name' => 'View Timetable', 'slug' => 'view_timetable'],
+
+            // Approvals
+            ['name' => 'Approve Admissions', 'slug' => 'approve_admissions'],
+            ['name' => 'Approve Results', 'slug' => 'approve_results'],
+            ['name' => 'Approve Promotions', 'slug' => 'approve_promotions'],
+            ['name' => 'Approve Timetable', 'slug' => 'approve_timetable'],
+
+            // Finance
+            ['name' => 'Manage Payroll', 'slug' => 'manage_payroll'],
+            ['name' => 'Manage Budget', 'slug' => 'manage_budget'],
+            ['name' => 'View Finance Reports', 'slug' => 'view_finance_reports'],
+
+            // Communication
+            ['name' => 'Send Communication', 'slug' => 'send_communication'],
+            ['name' => 'View Communication', 'slug' => 'view_communication'],
+
+            // Facilities & support services
+            ['name' => 'Manage Library', 'slug' => 'manage_library'],
+            ['name' => 'Manage Hostel', 'slug' => 'manage_hostel'],
+            ['name' => 'Manage Transport', 'slug' => 'manage_transport'],
+            ['name' => 'Manage Clinic', 'slug' => 'manage_clinic'],
+            ['name' => 'Manage Inventory', 'slug' => 'manage_inventory'],
+            ['name' => 'Manage Discipline', 'slug' => 'manage_discipline'],
+            ['name' => 'Manage Front Desk', 'slug' => 'manage_front_desk'],
+
+            // Portals
+            ['name' => 'Parent Portal Access', 'slug' => 'portal_parent_access'],
+            ['name' => 'Student Portal Access', 'slug' => 'portal_student_access'],
         ];
 
         foreach ($permissions as $permission) {

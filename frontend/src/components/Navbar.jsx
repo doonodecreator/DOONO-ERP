@@ -1,20 +1,11 @@
 import { useAuth } from "../context/AuthContext";
+import { getPrimaryRoleSlug, formatRoleLabel } from "../utils/role";
 
 export default function Navbar({ onMenuClick }) {
-  const { user } = useAuth();
+  const { user, roles, isPlatformAdmin } = useAuth();
 
-  const role =
-    user?.role ||
-    user?.roles?.[0]?.slug ||
-    user?.roles?.[0]?.name ||
-    "Guest";
-
-  const roleLabel =
-    role === "super_admin"
-      ? "Software Owner"
-      : role
-          .replace(/_/g, " ")
-          .replace(/\b\w/g, (c) => c.toUpperCase());
+  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin });
+  const roleLabel = formatRoleLabel(role);
 
   return (
     <header
@@ -34,7 +25,6 @@ export default function Navbar({ onMenuClick }) {
         width: "100%",
       }}
     >
-      {/* Left: Mobile Menu Trigger & Brand Info */}
       <div
         style={{
           display: "flex",
@@ -94,7 +84,6 @@ export default function Navbar({ onMenuClick }) {
         </div>
       </div>
 
-      {/* Right: Notification, Role Badge, and Profile Icon */}
       <div
         style={{
           display: "flex",

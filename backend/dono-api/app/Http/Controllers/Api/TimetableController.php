@@ -7,102 +7,56 @@ use App\Http\Requests\StoreTimetableRequest;
 use App\Http\Requests\UpdateTimetableRequest;
 use App\Http\Resources\TimetableResource;
 use App\Models\Timetable;
+use App\Services\TimetableService;
+use Illuminate\Http\Request;
 
 class TimetableController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(
+        protected TimetableService $timetableService
+    ) {}
+
+    public function index(Request $request)
     {
-        return TimetableResource::collection(
-            Timetable::with([
-                'school',
-                'academicSession',
-                'term',
-                'division',
-                'class',
-                'stream',
-                'subject',
-                'staff',
-            ])
-            ->latest()
-            ->paginate(10)
-        );
+        $schoolId = $request->attributes->get('current_school_id') ?? $request->user()->school_id;
+
+        $query = Timetable::with([
+            'school', 'academicSession', 'term', 'division',
+            'class', 'stream', 'subject', 'staff'
+        ]);
+
+        if ($schoolId) {
+            $query->where('school_id', $schoolId);
+        }
+
+        return TimetableResource::collection($query->latest()->paginate(15));
     }
 
-    /**
-     * Store a newly created resource.
-     */
     public function store(StoreTimetableRequest $request)
     {
-        $timetable = Timetable::create($request->validated());
+        $data = $request->validated();
+        $data['school_id'] = $request->attributes->get('current_school_id') ?? $request->user()->school_id;
 
-        return (new TimetableResource(
-            $timetable->load([
-                'school',
-                'academicSession',
-                'term',
-                'division',
-                'class',
-                'stream',
-                'subject',
-                'staff',
-            ])
-        ))
-        ->response()
-        ->setStatusCode(201);
+        try {
+            $timetable = $this->timetableService->createSchedule($data);
+
+            return (new TimetableResource(
+                $timetable->load(['school', 'academicSession', 'term', 'class', 'subject', 'staff'])
+            ))->response()->setStatusCode(201);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Timetable $timetable)
-    {
-        return new TimetableResource(
-            $timetable->load([
-                'school',
-                'academicSession',
-                'term',
-                'division',
-                'class',
-                'stream',
-                'subject',
-                'staff',
-            ])
-        );
-    }
-
-    /**
-     * Update the specified resource.
-     */
-    public function update(UpdateTimetableRequest $request, Timetable $timetable)
-    {
-        $timetable->update($request->validated());
-
-        return new TimetableResource(
-            $timetable->load([
-                'school',
-                'academicSession',
-                'term',
-                'division',
-                'class',
-                'stream',
-                'subject',
-                'staff',
-            ])
-        );
-    }
-
-    /**
-     * Remove the specified resource.
-     */
     public function destroy(Timetable $timetable)
     {
         $timetable->delete();
 
         return response()->json([
-            'message' => 'Timetable deleted successfully.',
+            'message' => 'Timetable period deleted successfully.',
         ]);
     }
 }

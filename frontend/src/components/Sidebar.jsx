@@ -1,4 +1,5 @@
 import { useAuth } from "../context/AuthContext";
+import { getPrimaryRoleSlug } from "../utils/role";
 
 export default function Sidebar({
   page,
@@ -6,36 +7,32 @@ export default function Sidebar({
   open,
   closeSidebar,
 }) {
-  const { user } = useAuth();
+  const { roles, isPlatformAdmin } = useAuth();
+  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin });
 
-  const role =
-    user?.role ||
-    user?.roles?.[0]?.slug ||
-    user?.roles?.[0]?.name ||
-    "guest";
-
-  // Strict 17-item order according to system specification
+  // Role-customized menu mapping according to system architecture
   const allMenuItems = [
     { name: "Dashboard", page: "dashboard", roles: ["all"] },
-    { name: "Students", page: "students", roles: ["all"] },
-    { name: "Parents", page: "parents", roles: ["all"] },
-    { name: "Teachers", page: "teachers", roles: ["all"] },
-    { name: "Subjects", page: "subjects", roles: ["all"] },
-    { name: "Classes", page: "classes", roles: ["all"] },
-    { name: "Streams", page: "streams", roles: ["all"] },
-    { name: "Academic Sessions", page: "academic-sessions", roles: ["all"] },
-    { name: "Terms", page: "terms", roles: ["all"] },
-    { name: "Attendance", page: "attendance", roles: ["all"] },
-    { name: "Results & Exams", page: "results", roles: ["all"] },
-    { name: "Fees & Payments", page: "fees", roles: ["all"] },
-    { name: "Timetable", page: "timetable", roles: ["all"] },
-    { name: "Report Cards", page: "report-cards", roles: ["all"] },
-    { name: "Promotion & Graduation", page: "promotions", roles: ["all"] },
-    { name: "Subscriptions", page: "subscriptions", roles: ["super_admin"] },
-    { name: "Settings", page: "settings", roles: ["all"] },
+    { name: "Staff Management", page: "staff", roles: ["super_admin", "proprietor", "principal", "vice_principal", "head_teacher"] },
+    { name: "Students", page: "students", roles: ["super_admin", "proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "bursar", "accountant", "receptionist"] },
+    { name: "Parents", page: "parents", roles: ["super_admin", "proprietor", "principal", "vice_principal", "head_teacher", "receptionist", "bursar", "accountant"] },
+    { name: "Teachers", page: "teachers", roles: ["super_admin", "proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head"] },
+    { name: "Subjects", page: "subjects", roles: ["super_admin", "proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "teacher"] },
+    { name: "Classes", page: "classes", roles: ["super_admin", "proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head", "teacher"] },
+    { name: "Streams", page: "streams", roles: ["super_admin", "proprietor", "principal", "vice_principal", "head_teacher"] },
+    { name: "Academic Sessions", page: "academic-sessions", roles: ["super_admin", "proprietor", "principal", "vice_principal"] },
+    { name: "Terms", page: "terms", roles: ["super_admin", "proprietor", "principal", "vice_principal"] },
+    { name: "Attendance", page: "attendance", roles: ["super_admin", "proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head", "teacher"] },
+    { name: "Results & Exams", page: "results", roles: ["super_admin", "proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "student", "parent"] },
+    { name: "Fees & Payments", page: "fees", roles: ["super_admin", "proprietor", "principal", "bursar", "accountant", "parent", "student"] },
+    { name: "Timetable", page: "timetable", roles: ["super_admin", "proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "student", "parent"] },
+    { name: "Report Cards", page: "report-cards", roles: ["super_admin", "proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "parent", "student"] },
+    { name: "Promotion & Graduation", page: "promotions", roles: ["super_admin", "proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster"] },
+    { name: "Subscriptions", page: "subscriptions", roles: ["super_admin", "proprietor"] },
+    { name: "Settings", page: "settings", roles: ["super_admin", "proprietor", "principal"] },
   ];
 
-  // Role filter check
+  // Filter items dynamically based on role
   const menuItems = allMenuItems.filter(
     (item) => item.roles.includes("all") || item.roles.includes(role)
   );

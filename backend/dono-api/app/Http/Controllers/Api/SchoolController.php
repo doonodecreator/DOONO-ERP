@@ -7,17 +7,14 @@ use App\Models\Country;
 use App\Models\Organization;
 use App\Models\Role;
 use App\Models\School;
+use App\Models\SchoolSubscription;
+use App\Models\SubscriptionPlan;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class SchoolController extends Controller
 {
-    /**
-     * List schools visible to the current user.
-     * Super admins see everything; everyone else sees only schools they own.
-     * (Staff-visible schools via role assignment will extend this later —
-     * intentionally not built yet since no staff-invite flow exists.)
-     */
     public function index(Request $request)
     {
         $user = $request->user();
@@ -34,11 +31,6 @@ class SchoolController extends Controller
         ]);
     }
 
-    /**
-     * Create school (School Setup Wizard submit).
-     * owner_id / organization_id are always derived from the authenticated
-     * user server-side — never trusted from the request body.
-     */
     public function store(Request $request)
     {
         $user = $request->user();
@@ -101,6 +93,14 @@ class SchoolController extends Controller
             return $school;
         });
 
+        ActivityLogService::log(
+            module: 'school',
+            action: 'created',
+            description: "School \"{$school->name}\" was created",
+            subject: $school,
+            schoolId: $school->id,
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'School created successfully.',
@@ -140,7 +140,18 @@ class SchoolController extends Controller
             'has_secondary' => 'boolean',
         ]);
 
+        $changedFields = array_keys($validated);
+
         $school->update($validated);
+
+        ActivityLogService::log(
+            module: 'school',
+            action: 'updated',
+            description: 'School settings updated (' . implode(', ', $changedFields) . ')',
+            subject: $school,
+            properties: $validated,
+            schoolId: $school->id,
+        );
 
         return response()->json([
             'success' => true,
@@ -163,9 +174,6 @@ class SchoolController extends Controller
         ]);
     }
 
-    /**
-     * Public-ish reference data (still requires auth — see routes file).
-     */
     public function countries()
     {
         return response()->json([
@@ -199,9 +207,147 @@ class SchoolController extends Controller
     }
 
     /**
-     * A user can access a school if they're a super admin, the owner,
-     * or hold any role explicitly scoped to that school.
+     * Toggle lifetime-free exemption for a school. Records who granted it
+     * and when, so exemptions are auditable, not just a silent flag flip.
      */
+    public function toggleExemption(Request $request, School $school)
+    {
+        if (!$request->user()->isSuperAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
+        $subscription = SchoolSubscription::firstOrCreate(
+            ['school_id' => $school->id, 'is_current' => true],
+            [
+                'subscription_plan_id' => SubscriptionPlan::where('is_active', true)->value('id'),
+                'start_date' => now(),
+                'expiry_date' => now()->addYears(100),
+                'status' => 'active',
+                'currency' => 'USD',
+            ]
+        );
+
+        $subscription->is_exempt = !$subscription->is_exempt;
+
+        if ($subscription->is_exempt) {
+            $subscription->exempted_by = $request->user()->id;
+            $subscription->exempted_at = now();
+        } else {
+            $subscription->exempted_by = null;
+            $subscription->exempted_at = null;
+        }
+
+        $subscription->save();
+
+        ActivityLogService::log(
+            module: 'subscription',
+            action: $subscription->is_exempt ? 'exemption_granted' : 'exemption_revoked',
+            description: ($subscription->is_exempt ? 'Granted' : 'Revoked') . " lifetime-free exemption for \"{$school->name}\"",
+            subject: $school,
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => $subscription->is_exempt
+                ? 'School granted free lifetime access.'
+                : 'Free lifetime access revoked.',
+            'data' => $subscription,
+        ]);
+    }
+
+    /**
+     * Grant a school a custom subscription end date — "free for as long
+     * as I want" without permanent exemption.
+     */
+    public function grantCustomTimeframe(Request $request, School $school)
+    {
+        if (!$request->user()->isSuperAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
+        $validated = $request->validate([
+            'expiry_date' => 'required|date|after:today',
+        ]);
+
+        $subscription = SchoolSubscription::firstOrCreate(
+            ['school_id' => $school->id, 'is_current' => true],
+            [
+                'subscription_plan_id' => SubscriptionPlan::where('is_active', true)->value('id'),
+                'start_date' => now(),
+                'status' => 'active',
+                'currency' => 'USD',
+            ]
+        );
+
+        $subscription->expiry_date = $validated['expiry_date'];
+        $subscription->status = 'active';
+        $subscription->save();
+
+        ActivityLogService::log(
+            module: 'subscription',
+            action: 'custom_timeframe_granted',
+            description: "Set custom access until {$validated['expiry_date']} for \"{$school->name}\"",
+            subject: $school,
+            properties: $validated,
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Custom access period set.',
+            'data' => $subscription,
+        ]);
+    }
+
+    /**
+     * Set a discount percentage for a school's subscription pricing.
+     * Accepts an optional reason (shown in the audit trail) and an
+     * optional expiry — a discount with no expiry stays until manually
+     * changed.
+     */
+    public function setDiscount(Request $request, School $school)
+    {
+        if (!$request->user()->isSuperAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
+        $validated = $request->validate([
+            'discount_percentage' => 'required|numeric|min:0|max:100',
+            'discount_reason' => 'nullable|string|max:1000',
+            'discount_ends_at' => 'nullable|date|after:today',
+        ]);
+
+        $subscription = SchoolSubscription::firstOrCreate(
+            ['school_id' => $school->id, 'is_current' => true],
+            [
+                'subscription_plan_id' => SubscriptionPlan::where('is_active', true)->value('id'),
+                'start_date' => now(),
+                'expiry_date' => now()->addYear(),
+                'status' => 'active',
+                'currency' => 'USD',
+            ]
+        );
+
+        $subscription->discount_percentage = $validated['discount_percentage'];
+        $subscription->discount_reason = $validated['discount_reason'] ?? null;
+        $subscription->discount_ends_at = $validated['discount_ends_at'] ?? null;
+        $subscription->save();
+
+        ActivityLogService::log(
+            module: 'subscription',
+            action: 'discount_set',
+            description: "Set {$validated['discount_percentage']}% discount for \"{$school->name}\"" .
+                (isset($validated['discount_reason']) ? " — {$validated['discount_reason']}" : ''),
+            subject: $school,
+            properties: $validated,
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Discount applied.',
+            'data' => $subscription,
+        ]);
+    }
+
     private function userCanAccessSchool($user, School $school): bool
     {
         if ($user->isSuperAdmin()) {

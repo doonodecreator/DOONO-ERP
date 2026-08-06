@@ -7,35 +7,19 @@ use App\Http\Requests\StoreAcademicSessionRequest;
 use App\Http\Requests\UpdateAcademicSessionRequest;
 use App\Http\Resources\AcademicSessionResource;
 use App\Models\AcademicSession;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AcademicSessionController extends Controller
 {
-    /**
-     * Display a listing of academic sessions.
-     */
-    public function index(Request $request)
+    public function index()
     {
-        $query = AcademicSession::with([
-            'school',
-            'terms',
-            'students',
-        ]);
+        $user = auth()->user();
 
-        /*
-        |--------------------------------------------------------------------------
-        | School Filtering
-        |--------------------------------------------------------------------------
-        */
+        $query = AcademicSession::query();
 
-        if (
-            method_exists($request->user(), 'isSuperAdmin') &&
-            ! $request->user()->isSuperAdmin()
-        ) {
-            $query->where(
-                'school_id',
-                $request->user()->currentSchoolId()
-            );
+        if (!$user->isSuperAdmin()) {
+            $schoolId = $user->currentSchoolId();
+            $query->where('school_id', $schoolId);
         }
 
         return AcademicSessionResource::collection(
@@ -43,127 +27,88 @@ class AcademicSessionController extends Controller
         );
     }
 
-    /**
-     * Store a newly created academic session.
-     */
     public function store(StoreAcademicSessionRequest $request)
     {
-        $data = $request->validated();
+        $user = auth()->user();
 
-        /*
-        |--------------------------------------------------------------------------
-        | School Assignment
-        |--------------------------------------------------------------------------
-        */
+        return DB::transaction(function () use ($request, $user) {
+            $data = $request->validated();
+
+            if (!$user->isSuperAdmin()) {
+                $data['school_id'] = $user->currentSchoolId();
+            }
+
+            if (!empty($data['is_current']) && $data['is_current'] === true) {
+                AcademicSession::where('school_id', $data['school_id'])
+                    ->update(['is_current' => false]);
+            }
+
+            $session = AcademicSession::create($data);
+
+            return (new AcademicSessionResource($session))
+                ->response()
+                ->setStatusCode(201);
+        });
+    }
+
+    public function show(AcademicSession $academicSession)
+    {
+        $user = auth()->user();
 
         if (
-            method_exists($request->user(), 'isSuperAdmin') &&
-            ! $request->user()->isSuperAdmin()
+            !$user->isSuperAdmin() &&
+            $academicSession->school_id !== $user->currentSchoolId()
         ) {
-            $data['school_id'] = $request->user()->currentSchoolId();
+            abort(403, 'Unauthorized access to this academic session.');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Only One Current Session
-        |--------------------------------------------------------------------------
-        */
-
-        if ($data['is_current']) {
-            AcademicSession::where(
-                'school_id',
-                $data['school_id']
-            )->update([
-                'is_current' => false,
-            ]);
-        }
-
-        $data['status'] = $data['is_current']
-            ? 'active'
-            : 'closed';
-
-        $academicSession = AcademicSession::create($data);
-
-        return (new AcademicSessionResource(
-            $academicSession->load([
-                'school',
-                'terms',
-                'students',
-            ])
-        ))
-            ->response()
-            ->setStatusCode(201);
+        return new AcademicSessionResource($academicSession);
     }
 
-    /**
-     * Display the specified academic session.
-     */
-    public function show(
-        Request $request,
-        AcademicSession $academicSession
-    ) {
-        return new AcademicSessionResource(
-            $academicSession->load([
-                'school',
-                'terms',
-                'students',
-            ])
-        );
-    }
-
-    /**
-     * Update the specified academic session.
-     */
     public function update(
         UpdateAcademicSessionRequest $request,
         AcademicSession $academicSession
     ) {
-        $data = $request->validated();
+        $user = auth()->user();
 
-        if (($data['is_current'] ?? false) === true) {
-
-            AcademicSession::where(
-                'school_id',
-                $academicSession->school_id
-            )
-                ->where(
-                    'id',
-                    '!=',
-                    $academicSession->id
-                )
-                ->update([
-                    'is_current' => false,
-                ]);
+        if (
+            !$user->isSuperAdmin() &&
+            $academicSession->school_id !== $user->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized access to update this academic session.');
         }
 
-        if (array_key_exists('is_current', $data)) {
-            $data['status'] = $data['is_current']
-                ? 'active'
-                : 'closed';
-        }
+        return DB::transaction(function () use ($request, $academicSession) {
+            $data = $request->validated();
 
-        $academicSession->update($data);
+            if (($data['is_current'] ?? false) === true) {
+                AcademicSession::where('school_id', $academicSession->school_id)
+                    ->where('id', '!=', $academicSession->id)
+                    ->update(['is_current' => false]);
+            }
 
-        return new AcademicSessionResource(
-            $academicSession->fresh([
-                'school',
-                'terms',
-                'students',
-            ])
-        );
+            $academicSession->update($data);
+
+            return new AcademicSessionResource($academicSession->fresh());
+        });
     }
 
-    /**
-     * Remove the specified academic session.
-     */
-    public function destroy(
-        Request $request,
-        AcademicSession $academicSession
-    ) {
+    public function destroy(AcademicSession $academicSession)
+    {
+        $user = auth()->user();
+
+        if (
+            !$user->isSuperAdmin() &&
+            $academicSession->school_id !== $user->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized access to delete this academic session.');
+        }
+
         $academicSession->delete();
 
         return response()->json([
-            'message' => 'Academic Session deleted successfully.',
+            'message' => 'Academic session deleted successfully.',
         ]);
     }
 }
+

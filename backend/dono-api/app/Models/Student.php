@@ -34,6 +34,19 @@ class Student extends Model
         'status',
     ];
 
+    protected $appends = [
+        'full_name',
+    ];
+
+    public function getFullNameAttribute(): string
+    {
+        return trim(implode(' ', array_filter([
+            $this->first_name,
+            $this->middle_name,
+            $this->last_name,
+        ])));
+    }
+
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
@@ -74,6 +87,17 @@ class Student extends Model
         return $this->hasMany(ExamScore::class);
     }
 
+        public function guardians(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Guardian::class,
+            'guardian_student',
+            'student_id',
+            'guardian_id'
+        )->withPivot('relation_type')->withTimestamps();
+    }
+
+
     public function parents(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -84,3 +108,4 @@ class Student extends Model
         );
     }
 }
+

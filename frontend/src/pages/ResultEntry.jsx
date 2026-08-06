@@ -1,424 +1,367 @@
-import { useEffect, useState } from "react";
-import api from "../services/api";
-import { useAuth } from "../context/AuthContext";
+import React, { useEffect, useState } from 'react';
+import api from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function ResultEntry({ setPage }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
-  // Filters & Dropdowns
+  // Dropdown States
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [terms, setTerms] = useState([]);
-  const [structures, setStructures] = useState([]); // Assessment Components (CA1, CA2, Exam...)
 
-  // Selection state
-  const [selectedClass, setSelectedClass] = useState("");
-  const [selectedSubject, setSelectedSubject] = useState("");
-  const [selectedSession, setSelectedSession] = useState("");
-  const [selectedTerm, setSelectedTerm] = useState("");
+  // Selections
+  const [selectedClass, setSelectedClass] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState('');
+  const [selectedSession, setSelectedSession] = useState('');
+  const [selectedTerm, setSelectedTerm] = useState('');
 
-  // Student Score Matrix
+  // Roster & Matrix
   const [students, setStudents] = useState([]);
-  const [scores, setScores] = useState({}); // { [enrollment_id]: { [structure_id]: score } }
+  const [scores, setScores] = useState({});
   const [isLocked, setIsLocked] = useState(false);
 
-  // User role checking
   const userRole = (
     user?.role ||
     user?.roles?.[0]?.slug ||
     user?.roles?.[0]?.name ||
-    "guest"
+    'guest'
   ).toLowerCase();
 
-  const isPrincipalOrAdmin =
-    userRole === "super_admin" ||
-    userRole === "school_admin" ||
-    userRole === "admin" ||
-    userRole === "principal";
+  const isPrincipalOrAdmin = [
+    'super_admin',
+    'school_admin',
+    'admin',
+    'principal',
+    'proprietor',
+  ].includes(userRole);
 
-  const isTeacher = userRole === "teacher";
-
-  /* ============================================================
-     INITIAL LOAD: Classes, Sessions, Terms
-  ============================================================ */
   useEffect(() => {
-    async function fetchInitialData() {
-      try {
-        const [classRes, sessionRes, termRes] = await Promise.allSettled([
-          api.get("/classes"),
-          api.get("/academic-sessions"),
-          api.get("/terms"),
-        ]);
-
-        if (classRes.status === "fulfilled") {
-          setClasses(classRes.value?.data?.data ?? classRes.value?.data ?? []);
-        }
-        if (sessionRes.status === "fulfilled") {
-          setSessions(sessionRes.value?.data?.data ?? sessionRes.value?.data ?? []);
-        }
-        if (termRes.status === "fulfilled") {
-          setTerms(termRes.value?.data?.data ?? termRes.value?.data ?? []);
-        }
-      } catch (err) {
-        console.error("Initial load error:", err);
-      }
-    }
-
-    fetchInitialData();
+    loadDropdowns();
   }, []);
 
-  /* ============================================================
-     LOAD STUDENTS & ASSESSMENT STRUCTURES WHEN CLASS CHANGED
-  ============================================================ */
-  async function loadStudentSheet() {
-    if (!selectedClass) {
-      setError("Please select a class first.");
-      return;
+  useEffect(() => {
+    if (selectedClass && selectedSubject && selectedSession && selectedTerm) {
+      loadStudentScores();
     }
+  }, [selectedClass, selectedSubject, selectedSession, selectedTerm]);
 
-    setLoading(true);
-    setError("");
-    setMessage("");
-
+  const loadDropdowns = async () => {
     try {
-      const res = await api.get(`/result-entry/students?class_id=${selectedClass}`);
-      const data = res?.data ?? {};
+      setLoading(true);
+      const [classRes, subjRes, sessRes, termRes] = await Promise.allSettled([
+        api.get('/classes'),
+        api.get('/subjects'),
+        api.get('/academic-sessions'),
+        api.get('/terms'),
+      ]);
 
-      const loadedStudents = data.students || [];
-      const loadedSubjects = data.subjects || [];
-      const loadedStructures = data.structures || [];
-
-      setStudents(loadedStudents);
-      setSubjects(loadedSubjects);
-      setStructures(loadedStructures);
-
-      if (data.sessions?.length) setSessions(data.sessions);
-      if (data.terms?.length) setTerms(data.terms);
-
-      // Reset score state mapping
-      const initialScores = {};
-      loadedStudents.forEach((enrollment) => {
-        initialScores[enrollment.id] = {};
-        loadedStructures.forEach((struct) => {
-          initialScores[enrollment.id][struct.id] = "";
-        });
-      });
-
-      setScores(initialScores);
-      setIsLocked(false);
+      if (classRes.status === 'fulfilled') {
+        const data = classRes.value.data.data || classRes.value.data;
+        setClasses(Array.isArray(data) ? data : []);
+      }
+      if (subjRes.status === 'fulfilled') {
+        const data = subjRes.value.data.data || subjRes.value.data;
+        setSubjects(Array.isArray(data) ? data : []);
+      }
+      if (sessRes.status === 'fulfilled') {
+        const data = sessRes.value.data.data || sessRes.value.data;
+        const sessList = Array.isArray(data) ? data : [];
+        setSessions(sessList);
+        if (sessList.length > 0) setSelectedSession(sessList[0].id);
+      }
+      if (termRes.status === 'fulfilled') {
+        const data = termRes.value.data.data || termRes.value.data;
+        const termList = Array.isArray(data) ? data : [];
+        setTerms(termList);
+        if (termList.length > 0) setSelectedTerm(termList[0].id);
+      }
     } catch (err) {
-      console.error(err);
-      setError("Unable to load student list or assessment structures.");
+      setError(err.response?.data?.message || 'Failed to initialize entry options.');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  /* ============================================================
-     HANDLE SCORE INPUT CHANGE
-  ============================================================ */
-  function handleScoreChange(enrollmentId, structureId, val, maxScore) {
-    if (isLocked) return;
+  const loadStudentScores = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      setMessage('');
 
-    const numVal = parseFloat(val);
-    if (maxScore && numVal > maxScore) {
-      alert(`Maximum score allowed for this component is ${maxScore}`);
-      return;
+      const response = await api.get('/results', {
+        params: {
+          class_id: selectedClass,
+          subject_id: selectedSubject,
+          academic_session_id: selectedSession,
+          term_id: selectedTerm,
+        },
+      });
+
+      const resData = response.data.data || response.data || [];
+      const studentList = resData.students || resData || [];
+      setStudents(Array.isArray(studentList) ? studentList : []);
+
+      const initialScores = {};
+      (Array.isArray(studentList) ? studentList : []).forEach((st) => {
+        const stId = st.id || st.student_id || st.student_enrollment_id;
+        initialScores[stId] = {
+          ca_score: st.ca_score ?? st.result?.ca_score ?? 0,
+          exam_score: st.exam_score ?? st.result?.exam_score ?? 0,
+        };
+      });
+
+      setScores(initialScores);
+      setIsLocked(resData.is_locked || false);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch score matrix.');
+    } finally {
+      setLoading(false);
     }
+  };
 
+  const handleScoreChange = (studentId, field, value) => {
+    const numericValue = Math.max(0, Math.min(field === 'ca_score' ? 40 : 60, Number(value) || 0));
     setScores((prev) => ({
       ...prev,
-      [enrollmentId]: {
-        ...prev[enrollmentId],
-        [structureId]: val,
+      [studentId]: {
+        ...prev[studentId],
+        [field]: numericValue,
       },
     }));
-  }
+  };
 
-  /* ============================================================
-     CALCULATE TOTAL SCORE PER STUDENT
-  ============================================================ */
-  function getStudentTotal(enrollmentId) {
-    const studentScores = scores[enrollmentId] || {};
-    return Object.values(studentScores).reduce((acc, curr) => {
-      const val = parseFloat(curr);
-      return acc + (isNaN(val) ? 0 : val);
-    }, 0);
-  }
+  const calculateTotal = (ca, exam) => {
+    return (Number(ca) || 0) + (Number(exam) || 0);
+  };
 
-  /* ============================================================
-     SAVE & COMPUTE SCORES (Teacher & Admin)
-  ============================================================ */
-  async function saveResults(lockAfterSave = false) {
-    if (!selectedSubject || !selectedSession || !selectedTerm) {
-      setError("Please select Subject, Academic Session, and Term before saving.");
-      return;
-    }
+  const calculateGrade = (total) => {
+    if (total >= 70) return { grade: 'A', remark: 'Excellent' };
+    if (total >= 60) return { grade: 'B', remark: 'Very Good' };
+    if (total >= 50) return { grade: 'C', remark: 'Credit' };
+    if (total >= 45) return { grade: 'D', remark: 'Pass' };
+    if (total >= 40) return { grade: 'E', remark: 'Fair' };
+    return { grade: 'F', remark: 'Fail' };
+  };
+
+  const handleSaveScores = async (e) => {
+    e.preventDefault();
+    if (!selectedClass || !selectedSubject) return;
 
     setSaving(true);
-    setError("");
-    setMessage("");
+    setError('');
+    setMessage('');
 
-    // Build payload matching ResultEntryController@save expectations
     const payload = {
-      school_id: user?.school_id || 1,
-      subject_id: parseInt(selectedSubject),
-      academic_session_id: parseInt(selectedSession),
-      term_id: parseInt(selectedTerm),
-      students: students.map((enrollment) => {
-        const studentScores = scores[enrollment.id] || {};
-        const components = Object.keys(studentScores).map((structId) => ({
-          assessment_structure_id: parseInt(structId),
-          score: parseFloat(studentScores[structId]) || 0,
-        }));
+      class_id: selectedClass,
+      subject_id: selectedSubject,
+      academic_session_id: selectedSession,
+      term_id: selectedTerm,
+      results: students.map((st) => {
+        const stId = st.id || st.student_id || st.student_enrollment_id;
+        const sc = scores[stId] || { ca_score: 0, exam_score: 0 };
+        const total = calculateTotal(sc.ca_score, sc.exam_score);
+        const { grade, remark } = calculateGrade(total);
 
         return {
-          student_enrollment_id: enrollment.id,
-          components,
+          student_enrollment_id: st.student_enrollment_id || stId,
+          student_id: st.student_id || stId,
+          ca_score: sc.ca_score,
+          exam_score: sc.exam_score,
+          total_score: total,
+          grade: grade,
+          remark: remark,
         };
       }),
     };
 
     try {
-      await api.post("/result-entry/save", payload);
-
-      if (lockAfterSave) {
-        setIsLocked(true);
-        setMessage("Scores calculated and saved successfully! Scores are now locked.");
-      } else {
-        setMessage("Scores saved successfully as draft.");
-      }
+      await api.post('/results', payload);
+      setMessage('Scores successfully saved and computed!');
     } catch (err) {
-      console.error(err);
-      setError(err?.data?.message || err?.message || "Failed to save student scores.");
+      setError(err.response?.data?.message || 'Failed to submit score sheet.');
     } finally {
       setSaving(false);
     }
-  }
-
-/* ============================================================
-     PRINCIPAL UNLOCK ACTION
-  ============================================================ */
-  function unlockForReentry() {
-    if (!isPrincipalOrAdmin) return;
-    setIsLocked(false);
-    setMessage("Results unlocked for editing by Principal.");
-  }
+  };
 
   return (
-    <div className="container-fluid py-4" style={{ maxWidth: "1200px", margin: "0 auto" }}>
+    <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div>
-          <h1 className="mb-1" style={{ fontSize: "26px", fontWeight: "700", color: "#1e3a8a" }}>
-            Student Result Entry
-          </h1>
-          <p className="text-muted mb-0">
-            Enter component scores (CA, Tests, Assignments, Exams). The backend will auto-compute totals, grades, and remarks.
-          </p>
+          <h1 className="text-2xl font-bold text-gray-800">Class Result Entry Sheet</h1>
+          <p className="text-sm text-gray-500">Record CA test marks and exam scores with real-time grade calculations.</p>
         </div>
-
-        {setPage && (
-          <button className="btn btn-outline-secondary" onClick={() => setPage("results")}>
-            &larr; Back to Examinations
+        {students.length > 0 && !isLocked && (
+          <button
+            onClick={handleSaveScores}
+            disabled={saving}
+            className="inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition shadow-sm disabled:opacity-50 text-sm"
+          >
+            {saving ? 'Saving Sheet...' : 'Save & Submit Scores'}
           </button>
         )}
       </div>
 
-      {message && <div className="alert alert-success mb-3">{message}</div>}
-      {error && <div className="alert alert-danger mb-3">{error}</div>}
+      {/* Notifications */}
+      {message && (
+        <div className="p-4 mb-6 bg-green-50 text-green-700 rounded-lg border border-green-200 text-sm flex justify-between items-center">
+          <span>{message}</span>
+          <button onClick={() => setMessage('')} className="font-bold">✕</button>
+        </div>
+      )}
+      {error && (
+        <div className="p-4 mb-6 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm flex justify-between items-center">
+          <span>{error}</span>
+          <button onClick={loadStudentScores} className="underline font-semibold">Retry</button>
+        </div>
+      )}
 
-      {/* Filter Selection Card */}
-      <div className="card shadow-sm border-0 p-4 mb-4">
-        <div className="row g-3">
-          <div className="col-md-3">
-            <label className="form-label font-weight-bold">Class *</label>
-            <select
-              className="form-select"
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
-            >
-              <option value="">Select Class</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="col-md-3">
-            <label className="form-label font-weight-bold">Subject *</label>
-            <select
-              className="form-select"
-              value={selectedSubject}
-              onChange={(e) => setSelectedSubject(e.target.value)}
-            >
-              <option value="">Select Subject</option>
-              {subjects.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="col-md-3">
-            <label className="form-label font-weight-bold">Academic Session *</label>
-            <select
-              className="form-select"
-              value={selectedSession}
-              onChange={(e) => setSelectedSession(e.target.value)}
-            >
-              <option value="">Select Session</option>
-              {sessions.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="col-md-3">
-            <label className="form-label font-weight-bold">Term *</label>
-            <select
-              className="form-select"
-              value={selectedTerm}
-              onChange={(e) => setSelectedTerm(e.target.value)}
-            >
-              <option value="">Select Term</option>
-              {terms.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          </div>
+      {/* Selections Panel */}
+      <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Class *</label>
+          <select
+            value={selectedClass}
+            onChange={(e) => setSelectedClass(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select Class...</option>
+            {classes.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
         </div>
 
-        <div className="mt-3 text-end">
-          <button
-            className="btn btn-primary"
-            onClick={loadStudentSheet}
-            disabled={loading || !selectedClass}
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Subject *</label>
+          <select
+            value={selectedSubject}
+            onChange={(e) => setSelectedSubject(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500"
           >
-            {loading ? "Loading Sheet..." : "Load Result Sheet"}
-          </button>
+            <option value="">Select Subject...</option>
+            {subjects.map((s) => (
+              <option key={s.id} value={s.id}>{s.name} ({s.code || 'CORE'})</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Academic Session</label>
+          <select
+            value={selectedSession}
+            onChange={(e) => setSelectedSession(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500"
+          >
+            {sessions.map((s) => (
+              <option key={s.id} value={s.id}>{s.name || s.session_year}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Academic Term</label>
+          <select
+            value={selectedTerm}
+            onChange={(e) => setSelectedTerm(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500"
+          >
+            {terms.map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* Result Entry Sheet */}
-      {students.length > 0 && (
-        <div className="card shadow-sm border-0 overflow-hidden">
-          <div className="p-3 bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <div className="d-flex align-items-center gap-2">
-              <span className="fw-bold">Status:</span>
-              <span className={`badge ${isLocked ? "bg-danger" : "bg-success"}`}>
-                {isLocked ? "Locked (Calculated)" : "Open for Score Entry"}
-              </span>
-            </div>
-
-            <div className="d-flex gap-2">
-              {/* Unlock button for Principal */}
-              {isLocked && isPrincipalOrAdmin && (
-                <button
-                  className="btn btn-sm btn-outline-warning text-dark fw-bold"
-                  onClick={unlockForReentry}
-                >
-                  Unlock for Re-entry
-                </button>
-              )}
-
-              {/* Save Draft */}
-              {!isLocked && (
-                <button
-                  className="btn btn-sm btn-secondary"
-                  onClick={() => saveResults(false)}
-                  disabled={saving}
-                >
-                  {saving ? "Saving..." : "Save Draft"}
-                </button>
-              )}
-
-              {/* Calculate and Lock */}
-              {!isLocked && (
-                <button
-                  className="btn btn-sm btn-success fw-bold"
-                  onClick={() => saveResults(true)}
-                  disabled={saving}
-                >
-                  {saving ? "Processing..." : "Calculate & Lock Results"}
-                </button>
-              )}
-            </div>
+      {/* Score Matrix Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        {loading ? (
+          <div className="p-12 text-center text-gray-500">Loading student roster and scores...</div>
+        ) : !selectedClass || !selectedSubject ? (
+          <div className="p-12 text-center text-gray-400">
+            <p className="text-base font-medium">Please select a Class and Subject to open the score sheet.</p>
           </div>
-
-          <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0">
-              <thead className="table-dark">
+        ) : students.length === 0 ? (
+          <div className="p-12 text-center text-gray-400">
+            <p className="text-base font-medium">No students enrolled in this class.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-gray-600">
+              <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
                 <tr>
-                  <th>#</th>
-                  <th>Student Name</th>
-                  <th>Reg / Admission No</th>
-
-                  {/* Dynamic Assessment Structure Headers */}
-                  {structures.map((struct) => (
-                    <th key={struct.id} style={{ minWidth: "110px" }}>
-                      {struct.name} ({struct.max_score || 100})
-                    </th>
-                  ))}
-
-                  <th className="text-center" style={{ minWidth: "100px", background: "#1e3a8a" }}>
-                    Total Score
-                  </th>
+                  <th className="px-6 py-3">#</th>
+                  <th className="px-6 py-3">Student Name</th>
+                  <th className="px-6 py-3">Admission No</th>
+                  <th className="px-6 py-3">CA Score (Max 40)</th>
+                  <th className="px-6 py-3">Exam Score (Max 60)</th>
+                  <th className="px-6 py-3">Total (100)</th>
+                  <th className="px-6 py-3">Grade</th>
+                  <th className="px-6 py-3">Remark</th>
                 </tr>
               </thead>
-
-              <tbody>
-                {students.map((enrollment, idx) => {
-                  const student = enrollment.student || {};
-                  const total = getStudentTotal(enrollment.id);
+              <tbody className="divide-y divide-gray-100">
+                {students.map((st, idx) => {
+                  const stId = st.id || st.student_id || st.student_enrollment_id;
+                  const fullName = st.full_name || `${st.first_name || ''} ${st.last_name || ''}`.trim();
+                  const currentScores = scores[stId] || { ca_score: 0, exam_score: 0 };
+                  const total = calculateTotal(currentScores.ca_score, currentScores.exam_score);
+                  const { grade, remark } = calculateGrade(total);
 
                   return (
-                    <tr key={enrollment.id}>
-                      <td>{idx + 1}</td>
-                      <td className="fw-bold">
-                        {student.first_name || ""} {student.last_name || enrollment.id}
+                    <tr key={stId} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-mono text-xs text-gray-400">{idx + 1}</td>
+                      <td className="px-6 py-4 font-semibold text-gray-900">{fullName}</td>
+                      <td className="px-6 py-4 font-mono text-xs text-gray-500">{st.admission_number || '—'}</td>
+                      <td className="px-6 py-4">
+                        <input
+                          type="number"
+                          max="40"
+                          min="0"
+                          disabled={isLocked}
+                          value={currentScores.ca_score}
+                          onChange={(e) => handleScoreChange(stId, 'ca_score', e.target.value)}
+                          className="w-24 px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-mono font-semibold focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                        />
                       </td>
-                      <td className="text-muted">{student.admission_number || enrollment.student_id || "-"}</td>
-
-                      {/* Dynamic Component Score Inputs */}
-                      {structures.map((struct) => (
-                        <td key={struct.id}>
-                          <input
-                            type="number"
-                            className="form-control form-control-sm"
-                            min="0"
-                            max={struct.max_score || 100}
-                            disabled={isLocked}
-                            value={scores[enrollment.id]?.[struct.id] ?? ""}
-                            onChange={(e) =>
-                              handleScoreChange(
-                                enrollment.id,
-                                struct.id,
-                                e.target.value,
-                                struct.max_score
-                              )
-                            }
-                            placeholder="0"
-                          />
-                        </td>
-                      ))}
-
-                      {/* Live Calculated Total */}
-                      <td className="text-center fw-bold text-primary fs-6 bg-light">
-                        {total}
+                      <td className="px-6 py-4">
+                        <input
+                          type="number"
+                          max="60"
+                          min="0"
+                          disabled={isLocked}
+                          value={currentScores.exam_score}
+                          onChange={(e) => handleScoreChange(stId, 'exam_score', e.target.value)}
+                          className="w-24 px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-mono font-semibold focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                        />
                       </td>
+                      <td className="px-6 py-4 font-mono font-bold text-gray-900 text-base">{total}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 text-xs rounded-full font-bold ${
+                          grade === 'A' ? 'bg-green-100 text-green-700' :
+                          grade === 'B' ? 'bg-blue-100 text-blue-700' :
+                          grade === 'C' ? 'bg-indigo-100 text-indigo-700' :
+                          grade === 'D' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {grade}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-xs font-medium text-gray-600">{remark}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

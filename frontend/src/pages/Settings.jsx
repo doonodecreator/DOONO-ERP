@@ -24,6 +24,13 @@ const emptySchoolSettings = {
   school_phone: "",
   school_address: "",
   school_logo: "",
+  bank_name: "",
+  account_number: "",
+  account_name: "",
+  paystack_public_key: "",
+  paystack_secret_key: "",
+  paystack_subaccount_code: "",
+  motto: "",
 };
 
 export default function Settings() {
@@ -39,7 +46,7 @@ export default function Settings() {
     "guest";
 
   const isSuperAdmin = userRole === "super_admin";
-  const isSchoolAdmin = userRole === "school_admin" || userRole === "admin";
+  const isSchoolAdmin = userRole === "school_admin" || userRole === "admin" || userRole === "proprietor";
 
   // State containers
   const [platformSettings, setPlatformSettings] = useState(emptyPlatformSettings);
@@ -136,7 +143,7 @@ export default function Settings() {
       setMessage("");
       setError("");
       await api.put("/school/settings", schoolSettings);
-      setMessage("School details updated successfully.");
+      setMessage("School details and payment credentials updated successfully.");
     } catch (err) {
       setError(err?.message || "Unable to save school settings.");
     } finally {
@@ -145,7 +152,6 @@ export default function Settings() {
   }
 
   // --- Strict UI Isolation Guard ---
-  // If user is neither Super Admin nor School Admin (e.g. Student/Teacher/Parent), render nothing.
   if (!isSuperAdmin && !isSchoolAdmin) {
     return null;
   }
@@ -356,16 +362,16 @@ export default function Settings() {
       )}
 
       {/* ============================================================
-          VIEW 2: SCHOOL ADMIN (School Profile Settings Only)
+          VIEW 2: SCHOOL ADMIN / PROPRIETOR (School Profile & Payment Settings)
       ============================================================ */}
       {isSchoolAdmin && !isSuperAdmin && (
         <div className="card shadow-sm">
           <div className="card-header d-flex justify-content-between align-items-center bg-white py-3">
             <div>
               <h4 className="mb-0" style={{ fontSize: "20px", color: "#1e3a8a", fontWeight: "700" }}>
-                School Profile & Settings
+                School Profile & Payment Configuration
               </h4>
-              <small className="text-muted">Manage your school information and branding</small>
+              <small className="text-muted">Manage your school information and direct fee collection credentials</small>
             </div>
             <button
               className="btn btn-primary"
@@ -373,7 +379,7 @@ export default function Settings() {
               disabled={loading}
               style={{ background: "#2563eb", border: "none" }}
             >
-              {loading ? "Saving..." : "Save School Details"}
+              {loading ? "Saving..." : "Save School Settings"}
             </button>
           </div>
 
@@ -423,16 +429,97 @@ export default function Settings() {
                 />
               </div>
 
-              <div className="col-12">
+              <div className="col-md-12">
                 <label className="form-label font-weight-bold">Physical Address</label>
                 <textarea
                   className="form-control"
-                  rows="3"
+                  rows="2"
                   value={schoolSettings.school_address}
                   onChange={(e) =>
                     setSchoolSettings({ ...schoolSettings, school_address: e.target.value })
                   }
                 />
+              </div>
+
+              <hr className="my-4" />
+
+              <div className="col-12">
+                <h5 style={{ color: "#1e3a8a", fontWeight: "600" }}>Direct Fee Collection & Bank Accounts</h5>
+                <p className="text-muted small">Enter your school's bank payout details and Paystack keys so student online fee payments go straight to your school account.</p>
+              </div>
+
+              <div className="col-md-4">
+                <label className="form-label font-weight-bold">Bank Name</label>
+                <input
+                  className="form-control"
+                  value={schoolSettings.bank_name}
+                  onChange={(e) =>
+                    setSchoolSettings({ ...schoolSettings, bank_name: e.target.value })
+                  }
+                  placeholder="e.g. First Bank / Guarantee Trust Bank"
+                />
+              </div>
+
+              <div className="col-md-4">
+                <label className="form-label font-weight-bold">Account Number</label>
+                <input
+                  className="form-control"
+                  value={schoolSettings.account_number}
+                  onChange={(e) =>
+                    setSchoolSettings({ ...schoolSettings, account_number: e.target.value })
+                  }
+                  placeholder="0123456789"
+                />
+              </div>
+
+              <div className="col-md-4">
+                <label className="form-label font-weight-bold">Account Name</label>
+                <input
+                  className="form-control"
+                  value={schoolSettings.account_name}
+                  onChange={(e) =>
+                    setSchoolSettings({ ...schoolSettings, account_name: e.target.value })
+                  }
+                  placeholder="School Official Account Name"
+                />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label font-weight-bold">Paystack Public Key</label>
+                <input
+                  className="form-control font-monospace"
+                  value={schoolSettings.paystack_public_key}
+                  onChange={(e) =>
+                    setSchoolSettings({ ...schoolSettings, paystack_public_key: e.target.value })
+                  }
+                  placeholder="pk_live_xxxxxxxxxxxxxxxxxxxx"
+                />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label font-weight-bold">Paystack Secret Key</label>
+                <input
+                  type="password"
+                  className="form-control font-monospace"
+                  value={schoolSettings.paystack_secret_key}
+                  onChange={(e) =>
+                    setSchoolSettings({ ...schoolSettings, paystack_secret_key: e.target.value })
+                  }
+                  placeholder="sk_live_xxxxxxxxxxxxxxxxxxxx"
+                />
+              </div>
+
+              <div className="col-md-12">
+                <label className="form-label font-weight-bold">Paystack Subaccount Code (Optional)</label>
+                <input
+                  className="form-control font-monospace"
+                  value={schoolSettings.paystack_subaccount_code}
+                  onChange={(e) =>
+                    setSchoolSettings({ ...schoolSettings, paystack_subaccount_code: e.target.value })
+                  }
+                  placeholder="ACCT_xxxxxxxxxx"
+                />
+                <small className="text-muted">Use this if you prefer split settlements from a single master merchant account.</small>
               </div>
             </div>
           </div>
@@ -441,3 +528,4 @@ export default function Settings() {
     </div>
   );
 }
+

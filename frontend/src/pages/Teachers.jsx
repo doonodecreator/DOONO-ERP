@@ -5,188 +5,165 @@ export default function Teachers({
   setPage,
   setSelectedTeacher,
 }) {
-  const [teachers,
-    setTeachers] =
-    useState([]);
-
-  const [loading,
-    setLoading] =
-    useState(true);
+  const [teachers, setTeachers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     loadTeachers();
   }, []);
 
-  const loadTeachers =
-    async () => {
-      try {
-        const response =
-          await api.get(
-            "/staff"
-          );
+  const loadTeachers = async () => {
+    try {
+      const response = await api.get("/staff");
+      setTeachers(response.data.data || []);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setTeachers(
-          response.data.data ||
-          []
-        );
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const filteredTeachers = teachers.filter((teacher) => {
+    const text = `${teacher.full_name || ""} ${teacher.department || ""} ${teacher.designation || ""} ${teacher.staff_number || ""}`.toLowerCase();
+    return text.includes(search.toLowerCase());
+  });
 
   return (
     <div>
-      <h1>
-        Teachers
-      </h1>
-
-      <button
-        onClick={() =>
-          setPage(
-            "add-teacher"
-          )
-        }
+      <h1
         style={{
-          background:
-            "#2563eb",
-          color: "#fff",
-          border: "none",
-          padding:
-            "12px 20px",
-          borderRadius:
-            "10px",
-          cursor:
-            "pointer",
-          marginBottom:
-            "20px",
+          fontSize: "32px",
+          color: "#1e293b",
+          marginBottom: "10px",
         }}
       >
-        + Add Teacher
-      </button>
+        Teachers & Staff
+      </h1>
 
-      {loading ? (
-        <p>
-          Loading...
-        </p>
-      ) : (
-        <table
+      <p
+        style={{
+          color: "#64748b",
+          marginBottom: "30px",
+        }}
+      >
+        Manage staff members, roles, and designations.
+      </p>
+
+      <div
+        style={{
+          display: "flex",
+          gap: "20px",
+          marginBottom: "30px",
+        }}
+      >
+        <div
           style={{
-            width: "100%",
-            borderCollapse:
-              "collapse",
-            background:
-              "white",
+            background: "#fff",
+            padding: "20px",
+            borderRadius: "20px",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+            minWidth: "250px",
           }}
         >
-          <thead>
-            <tr>
-              <th
-                style={
-                  thStyle
-                }
-              >
-                Name
-              </th>
+          <h3>Total Staff</h3>
 
-              <th
-                style={
-                  thStyle
-                }
-              >
-                Department
-              </th>
+          <h1
+            style={{
+              color: "#2563eb",
+            }}
+          >
+            {teachers.length}
+          </h1>
+        </div>
+      </div>
 
-              <th
-                style={
-                  thStyle
-                }
-              >
-                Designation
-              </th>
+      <div
+        style={{
+          background: "#fff",
+          padding: "30px",
+          borderRadius: "20px",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginBottom: "20px",
+          }}
+        >
+          <input
+            placeholder="Search staff..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              padding: "12px",
+              width: "300px",
+              border: "1px solid #cbd5e1",
+              borderRadius: "12px",
+            }}
+          />
 
-              <th
-                style={
-                  thStyle
-                }
-              >
-                Phone
-              </th>
-            </tr>
-          </thead>
+          <button
+            onClick={() => setPage("add-teacher")}
+            style={{
+              background: "#2563eb",
+              color: "#fff",
+              border: "none",
+              padding: "12px 20px",
+              borderRadius: "12px",
+              cursor: "pointer",
+            }}
+          >
+            + Add Staff
+          </button>
+        </div>
 
-          <tbody>
-            {teachers.map(
-              (
-                teacher
-              ) => (
+        {loading ? (
+          <p>Loading staff...</p>
+        ) : filteredTeachers.length === 0 ? (
+          <p>No staff members found.</p>
+        ) : (
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+            }}
+          >
+            <thead>
+              <tr style={{ background: "#f8fafc" }}>
+                <th style={thStyle}>Staff No.</th>
+                <th style={thStyle}>Name</th>
+                <th style={thStyle}>Department</th>
+                <th style={thStyle}>Designation</th>
+                <th style={thStyle}>Phone</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredTeachers.map((teacher) => (
                 <tr
-                  key={
-                    teacher.id
-                  }
+                  key={teacher.id}
                   onClick={() => {
-                    setSelectedTeacher(
-                      teacher
-                    );
-
-                    setPage(
-                      "teacher-profile"
-                    );
+                    setSelectedTeacher(teacher);
+                    setPage("teacher-profile");
                   }}
                   style={{
-                    cursor:
-                      "pointer",
+                    cursor: "pointer",
                   }}
                 >
-                  <td
-                    style={
-                      tdStyle
-                    }
-                  >
-                    {
-                      teacher.first_name
-                    }{" "}
-                    {
-                      teacher.last_name
-                    }
-                  </td>
-
-                  <td
-                    style={
-                      tdStyle
-                    }
-                  >
-                    {
-                      teacher.department
-                    }
-                  </td>
-
-                  <td
-                    style={
-                      tdStyle
-                    }
-                  >
-                    {
-                      teacher.designation
-                    }
-                  </td>
-
-                  <td
-                    style={
-                      tdStyle
-                    }
-                  >
-                    {
-                      teacher.phone
-                    }
-                  </td>
+                  <td style={tdStyle}>{teacher.staff_number || "-"}</td>
+                  <td style={tdStyle}>{teacher.full_name || `${teacher.first_name} ${teacher.last_name}`}</td>
+                  <td style={tdStyle}>{teacher.department || "-"}</td>
+                  <td style={tdStyle}>{teacher.designation || "-"}</td>
+                  <td style={tdStyle}>{teacher.phone || "-"}</td>
                 </tr>
-              )
-            )}
-          </tbody>
-        </table>
-      )}
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }
@@ -194,12 +171,11 @@ export default function Teachers({
 const thStyle = {
   padding: "15px",
   textAlign: "left",
-  borderBottom:
-    "1px solid #e2e8f0",
+  borderBottom: "1px solid #e2e8f0",
 };
 
 const tdStyle = {
   padding: "15px",
-  borderBottom:
-    "1px solid #e2e8f0",
+  borderBottom: "1px solid #e2e8f0",
 };
+

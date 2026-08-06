@@ -62,6 +62,14 @@ class SubjectController extends Controller
 
     public function show(Request $request, Subject $subject)
     {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $subject->school_id !== $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized access to this subject.');
+        }
+
         return new SubjectResource(
             $subject->load([
                 'school',
@@ -75,6 +83,14 @@ class SubjectController extends Controller
         UpdateSubjectRequest $request,
         Subject $subject
     ) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $subject->school_id !== $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized access to update this subject.');
+        }
+
         $subject->update(
             $request->validated()
         );
@@ -92,6 +108,14 @@ class SubjectController extends Controller
         Request $request,
         Subject $subject
     ) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $subject->school_id !== $request->user()->currentSchoolId()
+        ) {
+            abort(403, 'Unauthorized access to delete this subject.');
+        }
+
         $subject->delete();
 
         return response()->json([
@@ -99,3 +123,4 @@ class SubjectController extends Controller
         ]);
     }
 }
+

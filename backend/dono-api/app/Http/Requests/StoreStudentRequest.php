@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreStudentRequest extends FormRequest
 {
@@ -13,67 +14,59 @@ class StoreStudentRequest extends FormRequest
 
     public function rules(): array
     {
+        $user = auth()->user();
+        $schoolId = method_exists($user, 'currentSchoolId') ? $user->currentSchoolId() : $user->school_id;
+
         return [
-
-            'school_id' => 'sometimes|exists:schools,id',
-
-            'division_id' => 'required|exists:divisions,id',
-
-            'class_id' => 'required|exists:classes,id',
-
-            'stream_id' => 'nullable|exists:streams,id',
-
-            'academic_session_id' => 'required|exists:academic_sessions,id',
-
-            'admission_number' => 'required|string|max:50|unique:students,admission_number',
-
-            'first_name' => 'required|string|max:100',
-
-            'middle_name' => 'nullable|string|max:100',
-
-            'last_name' => 'required|string|max:100',
-
-            'gender' => 'required|in:Male,Female',
-
-            'date_of_birth' => 'required|date',
-
-            'admission_date' => 'required|date',
-
-            'photo' => 'nullable|string|max:255',
-
-            'religion' => 'nullable|string|max:100',
-
-            'nationality' => 'nullable|string|max:100',
-
-            'state_of_origin' => 'nullable|string|max:100',
-
-            'local_government' => 'nullable|string|max:100',
-
+            'admission_number' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('students')->where(function ($query) use ($schoolId) {
+                    return $query->where('school_id', $schoolId);
+                }),
+            ],
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'gender' => ['required', Rule::in(['Male', 'Female', 'Other', 'male', 'female'])],
+            'division_id' => [
+                'nullable',
+                Rule::exists('divisions', 'id')->where('school_id', $schoolId),
+            ],
+            'class_id' => [
+                'required',
+                Rule::exists('classes', 'id')->where(function ($query) use ($schoolId) {
+                    $query->whereHas('division', function ($q) use ($schoolId) {
+                        $q->where('school_id', $schoolId);
+                    });
+                }),
+            ],
+            'stream_id' => [
+                'nullable',
+                Rule::exists('streams', 'id')->where(function ($query) use ($schoolId) {
+                    $query->whereHas('class.division', function ($q) use ($schoolId) {
+                        $q->where('school_id', $schoolId);
+                    });
+                }),
+            ],
+            'academic_session_id' => [
+                'nullable',
+                Rule::exists('academic_sessions', 'id')->where('school_id', $schoolId),
+            ],
+            'date_of_birth' => 'nullable|date',
+            'admission_date' => 'nullable|date',
+            'photo' => 'nullable|string',
+            'religion' => 'nullable|string|max:255',
+            'nationality' => 'nullable|string|max:255',
+            'state_of_origin' => 'nullable|string|max:255',
+            'local_government' => 'nullable|string|max:255',
             'address' => 'nullable|string',
-
             'blood_group' => 'nullable|string|max:10',
-
             'genotype' => 'nullable|string|max:10',
-
             'medical_notes' => 'nullable|string',
-
-            'status' => 'required|in:Active,Graduated,Transferred,Suspended,Withdrawn',
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'division_id.required' => 'Division is required.',
-            'class_id.required' => 'Class is required.',
-            'academic_session_id.required' => 'Academic session is required.',
-            'admission_number.required' => 'Admission number is required.',
-            'admission_number.unique' => 'Admission number already exists.',
-            'first_name.required' => 'First name is required.',
-            'last_name.required' => 'Last name is required.',
-            'gender.required' => 'Gender is required.',
-            'date_of_birth.required' => 'Date of birth is required.',
-            'admission_date.required' => 'Admission date is required.',
+            'status' => ['nullable', Rule::in(['active', 'graduated', 'suspended', 'withdrawn', 'transferred'])],
         ];
     }
 }
+

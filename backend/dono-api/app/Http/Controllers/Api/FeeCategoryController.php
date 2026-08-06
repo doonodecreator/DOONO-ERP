@@ -12,16 +12,26 @@ class FeeCategoryController extends Controller
 {
     public function index()
     {
+        $schoolId = auth()->user()->school_id ?? null;
+
         return FeeCategoryResource::collection(
-            FeeCategory::with('school')
-                ->latest()
-                ->paginate(10)
+            FeeCategory::when($schoolId, function ($query) use ($schoolId) {
+                $query->where('school_id', $schoolId);
+            })
+            ->with('school')
+            ->latest()
+            ->paginate(10)
         );
     }
 
     public function store(StoreFeeCategoryRequest $request)
     {
-        $feeCategory = FeeCategory::create($request->validated());
+        $data = $request->validated();
+        if (auth()->check() && auth()->user()->school_id) {
+            $data['school_id'] = auth()->user()->school_id;
+        }
+
+        $feeCategory = FeeCategory::create($data);
 
         return (new FeeCategoryResource(
             $feeCategory->load('school')

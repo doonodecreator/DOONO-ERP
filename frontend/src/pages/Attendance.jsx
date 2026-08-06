@@ -1,292 +1,332 @@
-import { useEffect, useState } from "react";
-import api from "../services/api";
+import React, { useState, useEffect } from 'react';
+import api from '../utils/api';
 
 export default function Attendance() {
-  const [sessions, setSessions] = useState([]);
-  const [terms, setTerms] = useState([]);
   const [classes, setClasses] = useState([]);
-  const [streams, setStreams] = useState([]);
-
+  const [selectedClassId, setSelectedClassId] = useState('');
+  const [attendanceDate, setAttendanceDate] = useState(
+    new Date().toISOString().split('T')[0]
+  );
+  
   const [students, setStudents] = useState([]);
-
-  const [filter, setFilter] = useState({
-    academic_session_id: "",
-    term_id: "",
-    class_id: "",
-    stream_id: "",
-    attendance_date: new Date().toISOString().slice(0, 10),
-  });
+  const [attendanceMap, setAttendanceMap] = useState({});
+  const [remarksMap, setRemarksMap] = useState({});
+  
+  const [loadingClasses, setLoadingClasses] = useState(true);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
-    loadSessions();
-    loadTerms();
     loadClasses();
-    loadStreams();
   }, []);
 
-  const loadSessions = async () => {
-    const res = await api.get("/academic-sessions");
-    setSessions(res.data.data || []);
-  };
-
-  const loadTerms = async () => {
-    const res = await api.get("/terms");
-    setTerms(res.data.data || []);
-  };
+  useEffect(() => {
+    if (selectedClassId) {
+      loadClassAttendance();
+    } else {
+      setStudents([]);
+    }
+  }, [selectedClassId, attendanceDate]);
 
   const loadClasses = async () => {
-    const res = await api.get("/classes");
-    setClasses(res.data.data || []);
-  };
-
-  const loadStreams = async () => {
-    const res = await api.get("/streams");
-    setStreams(res.data.data || []);
-  };
-
-  const handleChange = (e) => {
-    setFilter({
-      ...filter,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const loadStudents = async () => {
     try {
-      const res = await api.get("/attendance/class-list", {
-        params: filter,
+      setLoadingClasses(true);
+      const res = await api.get('/classes');
+      const data = res.data.data || res.data;
+      const classList = Array.isArray(data) ? data : [];
+      setClasses(classList);
+      if (classList.length > 0) {
+        setSelectedClassId(classList[0].id);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load classes list.');
+    } finally {
+      setLoadingClasses(false);
+    }
+  };
+
+  const loadClassAttendance = async () => {
+    try {
+      setLoadingStudents(true);
+      setError(null);
+      setSuccessMsg('');
+
+      const res = await api.get('/attendance/class-list', {
+        params: {
+          class_id: selectedClassId,
+          date: attendanceDate,
+        },
       });
 
-      const rows = (res.data.data || []).map((item) => ({
-        enrollment: item,
-        status: "Present",
-        remarks: "",
-      }));
+      const list = res.data.data || res.data || [];
+      setStudents(Array.isArray(list) ? list : []);
 
-      setStudents(rows);
+      // Initialize status and remarks map
+      const initialStatus = {};
+      const initialRemarks = {};
+
+      (Array.isArray(list) ? list : []).forEach((item) => {
+        const studentId = item.id || item.student_id || item.student_enrollment_id;
+        initialStatus[studentId] = item.attendance_status || item.status || 'present';
+        initialRemarks[studentId] = item.remarks || '';
+      });
+
+      setAttendanceMap(initialStatus);
+      setRemarksMap(initialRemarks);
     } catch (err) {
-      console.log(err);
-      alert("Unable to load students.");
+      setError(err.response?.data?.message || 'Failed to load class register.');
+    } finally {
+      setLoadingStudents(false);
     }
   };
 
-  const saveAttendance = async () => {
+  const handleStatusChange = (studentId, status) => {
+    setAttendanceMap((prev) => ({
+      ...prev,
+      [studentId]: status,
+    }));
+  };
+
+  const handleRemarkChange = (studentId, remark) => {
+    setRemarksMap((prev) => ({
+      ...prev,
+      [studentId]: remark,
+    }));
+  };
+
+  const handleMarkAll = (status) => {
+    const updated = {};
+    students.forEach((s) => {
+      const id = s.id || s.student_id || s.student_enrollment_id;
+      updated[id] = status;
+    });
+    setAttendanceMap(updated);
+  };
+
+  const handleSaveAttendance = async (e) => {
+    e.preventDefault();
+    if (!selectedClassId) return;
+
+    setSubmitting(true);
+    setError(null);
+    setSuccessMsg('');
+
+    const payload = {
+      class_id: selectedClassId,
+      attendance_date: attendanceDate,
+      attendances: students.map((s) => {
+        const id = s.id || s.student_id || s.student_enrollment_id;
+        return {
+          student_enrollment_id: s.student_enrollment_id || id,
+          student_id: s.student_id || id,
+          status: attendanceMap[id] || 'present',
+          remarks: remarksMap[id] || '',
+        };
+      }),
+    };
+
     try {
-      for (const row of students) {
-        await api.post("/attendances", {
-          school_id: 1,
-          student_enrollment_id: row.enrollment.id,
-          academic_session_id: filter.academic_session_id,
-          term_id: filter.term_id,
-          attendance_date: filter.attendance_date,
-          status: row.status,
-          remarks: row.remarks,
-        });
-      }
-
-      alert("Attendance saved successfully.");
+      await api.post('/attendance/bulk', payload);
+      setSuccessMsg('Attendance records updated successfully!');
     } catch (err) {
-      console.log(err);
-
-      if (err.response?.data?.message) {
-        alert(err.response.data.message);
-      } else {
-        alert("Attendance could not be saved.");
-      }
+      setError(err.response?.data?.message || 'Failed to save attendance records.');
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  // Summary counts
+  const totalCount = students.length;
+  const presentCount = Object.values(attendanceMap).filter((s) => s === 'present').length;
+  const absentCount = Object.values(attendanceMap).filter((s) => s === 'absent').length;
+  const lateCount = Object.values(attendanceMap).filter((s) => s === 'late').length;
+  const excusedCount = Object.values(attendanceMap).filter((s) => s === 'excused').length;
 
   return (
-    <div>
-
-      <h1>Attendance</h1>
-
-      <div
-        style={{
-          background: "#fff",
-          padding: 20,
-          borderRadius: 20,
-          marginBottom: 20,
-        }}
-      >
-
-        <h3>Attendance Filter</h3>
-
-        <select
-          name="academic_session_id"
-          value={filter.academic_session_id}
-          onChange={handleChange}
-          style={inputStyle}
-        >
-          <option value="">Academic Session</option>
-
-          {sessions.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
-            </option>
-          ))}
-        </select>
-
-        <select
-          name="term_id"
-          value={filter.term_id}
-          onChange={handleChange}
-          style={inputStyle}
-        >
-          <option value="">Term</option>
-
-          {terms.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
-            </option>
-          ))}
-        </select>
-
-        <select
-          name="class_id"
-          value={filter.class_id}
-          onChange={handleChange}
-          style={inputStyle}
-        >
-          <option value="">Class</option>
-
-          {classes.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
-            </option>
-          ))}
-        </select>
-
-        <select
-          name="stream_id"
-          value={filter.stream_id}
-          onChange={handleChange}
-          style={inputStyle}
-        >
-          <option value="">All Streams</option>
-
-          {streams.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="date"
-          name="attendance_date"
-          value={filter.attendance_date}
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <button
-          onClick={loadStudents}
-          style={buttonStyle}
-        >
-          Load Students
-        </button>
-
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Daily Student Attendance</h1>
+          <p className="text-sm text-gray-500">Take roll call, monitor absenteeism, and log student class presence.</p>
+        </div>
+        {students.length > 0 && (
+          <button
+            onClick={handleSaveAttendance}
+            disabled={submitting}
+            className="inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition shadow-sm disabled:opacity-50 text-sm"
+          >
+            {submitting ? 'Saving Register...' : 'Save Attendance Register'}
+          </button>
+        )}
       </div>
 
-      {students.length > 0 && (
-
-        <div
-          style={{
-            background: "#fff",
-            padding: 20,
-            borderRadius: 20,
-          }}
-        >
-
-          <table width="100%">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Status</th>
-                <th>Remarks</th>
-              </tr>
-            </thead>
-
-            <tbody>
-
-              {students.map((row, index) => (
-
-                <tr key={row.enrollment.id}>
-
-                  <td>
-                    {row.enrollment.student?.surname}{" "}
-                    {row.enrollment.student?.firstname}
-                  </td>
-
-                  <td>
-
-                    <select
-                      value={row.status}
-                      onChange={(e) => {
-                        const copy = [...students];
-                        copy[index].status = e.target.value;
-                        setStudents(copy);
-                      }}
-                    >
-                      <option>Present</option>
-                      <option>Absent</option>
-                      <option>Late</option>
-                      <option>Excused</option>
-                    </select>
-
-                  </td>
-
-                  <td>
-
-                    <input
-                      value={row.remarks}
-                      onChange={(e) => {
-                        const copy = [...students];
-                        copy[index].remarks = e.target.value;
-                        setStudents(copy);
-                      }}
-                    />
-
-                  </td>
-
-                </tr>
-
-              ))}
-
-            </tbody>
-          </table>
-
-          <br />
-
-          <button
-            onClick={saveAttendance}
-            style={buttonStyle}
-          >
-            Save Attendance
-          </button>
-
+      {/* Notifications */}
+      {successMsg && (
+        <div className="p-4 mb-6 bg-green-50 text-green-700 rounded-lg border border-green-200 text-sm flex justify-between items-center">
+          <span>{successMsg}</span>
+          <button onClick={() => setSuccessMsg('')} className="font-bold text-gray-500">✕</button>
         </div>
-
+      )}
+      {error && (
+        <div className="p-4 mb-6 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm flex justify-between items-center">
+          <span>{error}</span>
+          <button onClick={loadClassAttendance} className="underline font-semibold">Retry</button>
+        </div>
       )}
 
+      {/* Filters Bar */}
+      <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Select Academic Class</label>
+          {loadingClasses ? (
+            <div className="text-sm text-gray-400 py-2">Loading classes...</div>
+          ) : (
+            <select
+              value={selectedClassId}
+              onChange={(e) => setSelectedClassId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+            >
+              {classes.map((cls) => (
+                <option key={cls.id} value={cls.id}>
+                  {cls.name} {cls.division?.name ? `(${cls.division.name})` : ''}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Attendance Date</label>
+          <input
+            type="date"
+            value={attendanceDate}
+            onChange={(e) => setAttendanceDate(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+        </div>
+
+        <div className="flex flex-col justify-end">
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Quick Bulk Actions</label>
+          <div className="flex space-x-2">
+            <button
+              type="button"
+              onClick={() => handleMarkAll('present')}
+              className="px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded text-xs font-medium border border-green-200 flex-1"
+            >
+              All Present
+            </button>
+            <button
+              type="button"
+              onClick={() => handleMarkAll('absent')}
+              className="px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded text-xs font-medium border border-red-200 flex-1"
+            >
+              All Absent
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      {students.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+          <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+            <p className="text-xs text-gray-400 font-medium">Total Enrolled</p>
+            <h3 className="text-xl font-bold text-gray-800">{totalCount}</h3>
+          </div>
+          <div className="bg-white p-4 rounded-xl border border-green-100 shadow-sm bg-green-50/20">
+            <p className="text-xs text-green-600 font-medium">Present</p>
+            <h3 className="text-xl font-bold text-green-700">{presentCount}</h3>
+          </div>
+          <div className="bg-white p-4 rounded-xl border border-red-100 shadow-sm bg-red-50/20">
+            <p className="text-xs text-red-600 font-medium">Absent</p>
+            <h3 className="text-xl font-bold text-red-700">{absentCount}</h3>
+          </div>
+          <div className="bg-white p-4 rounded-xl border border-yellow-100 shadow-sm bg-yellow-50/20">
+            <p className="text-xs text-yellow-600 font-medium">Late</p>
+            <h3 className="text-xl font-bold text-yellow-700">{lateCount}</h3>
+          </div>
+          <div className="bg-white p-4 rounded-xl border border-purple-100 shadow-sm bg-purple-50/20">
+            <p className="text-xs text-purple-600 font-medium">Excused</p>
+            <h3 className="text-xl font-bold text-purple-700">{excusedCount}</h3>
+          </div>
+        </div>
+      )}
+
+      {/* Attendance Register Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        {loadingStudents ? (
+          <div className="p-12 text-center text-gray-500">Loading student roster for this date...</div>
+        ) : students.length === 0 ? (
+          <div className="p-12 text-center text-gray-400">
+            <p className="text-base font-medium">No students enrolled in the selected class.</p>
+            <p className="text-xs mt-1">Select another class or register students into this academic level.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-gray-600">
+              <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
+                <tr>
+                  <th className="px-6 py-3">#</th>
+                  <th className="px-6 py-3">Student Name</th>
+                  <th className="px-6 py-3">Admission No</th>
+                  <th className="px-6 py-3">Attendance Status</th>
+                  <th className="px-6 py-3">Remarks / Note</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {students.map((st, idx) => {
+                  const studentId = st.id || st.student_id || st.student_enrollment_id;
+                  const fullName = st.full_name || `${st.first_name || ''} ${st.last_name || ''}`.trim() || 'Student';
+                  const currentStatus = attendanceMap[studentId] || 'present';
+
+                  return (
+                    <tr key={studentId} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-mono text-xs text-gray-400">{idx + 1}</td>
+                      <td className="px-6 py-4 font-semibold text-gray-900">{fullName}</td>
+                      <td className="px-6 py-4 font-mono text-xs text-gray-500">{st.admission_number || '—'}</td>
+                      <td className="px-6 py-4">
+                        <div className="inline-flex rounded-lg border border-gray-200 p-1 bg-gray-50 space-x-1">
+                          {[
+                            { key: 'present', label: 'Present', color: 'bg-green-600 text-white' },
+                            { key: 'absent', label: 'Absent', color: 'bg-red-600 text-white' },
+                            { key: 'late', label: 'Late', color: 'bg-yellow-500 text-white' },
+                            { key: 'excused', label: 'Excused', color: 'bg-purple-600 text-white' },
+                          ].map((opt) => (
+                            <button
+                              key={opt.key}
+                              type="button"
+                              onClick={() => handleStatusChange(studentId, opt.key)}
+                              className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${
+                                currentStatus === opt.key
+                                  ? opt.color
+                                  : 'text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <input
+                          type="text"
+                          placeholder="Add optional note..."
+                          value={remarksMap[studentId] || ''}
+                          onChange={(e) => handleRemarkChange(studentId, e.target.value)}
+                          className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
-const inputStyle = {
-  width: "100%",
-  padding: "12px",
-  marginBottom: "15px",
-  borderRadius: "10px",
-  border: "1px solid #cbd5e1",
-};
-
-const buttonStyle = {
-  background: "#2563eb",
-  color: "#fff",
-  border: "none",
-  padding: "12px 20px",
-  borderRadius: "10px",
-  cursor: "pointer",
-};

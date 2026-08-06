@@ -1,18 +1,23 @@
 import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
+import { getPrimaryRoleSlug } from "./utils/role";
 import DashboardLayout from "./layouts/DashboardLayout";
 import Login from "./pages/Login";
 import PublicRegister from "./pages/PublicRegister";
 import PublicHome from "./pages/PublicHome";
+import FeePayments from "./pages/FeePayments";
 
 import Dashboard from "./pages/Dashboard";
 import AddSchool from "./pages/AddSchool";
-
 import Students from "./pages/Students";
 import AddStudent from "./pages/AddStudent";
 import StudentProfile from "./pages/StudentProfile";
 import EditStudent from "./pages/EditStudent";
+
+import Staff from "./pages/Staff";
+import AddStaff from "./pages/AddStaff";
+import EditStaff from "./pages/EditStaff";
 
 import Parents from "./pages/Parents";
 import AddParent from "./pages/AddParent";
@@ -30,7 +35,6 @@ import AddSubject from "./pages/AddSubject";
 
 import Classes from "./pages/Classes";
 import Streams from "./pages/Streams";
-
 import AcademicSessions from "./pages/AcademicSessions";
 import Terms from "./pages/Terms";
 
@@ -38,7 +42,6 @@ import Attendance from "./pages/Attendance";
 
 import Results from "./pages/Results";
 import ResultEntry from "./pages/ResultEntry";
-
 import Fees from "./pages/Fees";
 import FeesAndPayments from "./pages/FeesAndPayments";
 
@@ -52,17 +55,57 @@ import Subscriptions from "./pages/Subscriptions";
 
 import Settings from "./pages/Settings";
 
+import SecondaryPrincipalDashboard from "./pages/SecondaryPrincipalDashboard";
+import PrimaryHeadmasterDashboard from "./pages/PrimaryHeadmasterDashboard";
+import NurseryHeadDashboard from "./pages/NurseryHeadDashboard";
+import VicePrincipalAdminDashboard from "./pages/VicePrincipalAdminDashboard";
+import VicePrincipalAcademicDashboard from "./pages/VicePrincipalAcademicDashboard";
+import PrincipalDashboard from "./pages/PrincipalDashboard";
+import ProprietorDashboard from "./pages/ProprietorDashboard";
+import PlatformOwnerDashboard from "./pages/PlatformOwnerDashboard";
+import TeacherDashboard from "./pages/TeacherDashboard";
+import StudentPortal from "./pages/StudentPortal";
+import ParentPortal from "./pages/ParentPortal";
+import ReceptionDashboard from "./pages/ReceptionDashboard";
+import TransportDashboard from "./pages/TransportDashboard";
+import HostelDashboard from "./pages/HostelDashboard";
+import NurseDashboard from "./pages/NurseDashboard";
+import LibrarianDashboard from "./pages/LibrarianDashboard";
+import CashierDashboard from "./pages/CashierDashboard";
+import AccountantDashboard from "./pages/AccountantDashboard";
+
+const ROLE_DASHBOARDS = {
+  super_admin: PlatformOwnerDashboard,
+  proprietor: ProprietorDashboard,
+  principal: PrincipalDashboard,
+  vice_principal: VicePrincipalAcademicDashboard,
+  head_teacher: VicePrincipalAdminDashboard,
+  teacher: TeacherDashboard,
+  bursar: CashierDashboard,
+  accountant: AccountantDashboard,
+  librarian: LibrarianDashboard,
+  school_nurse: NurseDashboard,
+  hostel_master: HostelDashboard,
+  hostel_mistress: HostelDashboard,
+  transport_officer: TransportDashboard,
+  receptionist: ReceptionDashboard,
+  nursery_head: NurseryHeadDashboard,
+  primary_headmaster: PrimaryHeadmasterDashboard,
+  secondary_principal: SecondaryPrincipalDashboard,
+  parent: ParentPortal,
+  student: StudentPortal,
+};
+
 function AuthenticatedApp() {
-  const { onboardingStep, refreshContext } = useAuth();
+  const { onboardingStep, refreshContext, roles, isPlatformAdmin } = useAuth();
 
   const [page, setPage] = useState("dashboard");
 
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedStaff, setSelectedStaff] = useState(null);
   const [selectedParent, setSelectedParent] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
 
-  // Onboarding gate — driven entirely by the backend's onboarding_step.
-  // Platform admins get "complete" immediately and skip this.
   if (onboardingStep === "school_setup") {
     return (
       <AddSchool
@@ -74,9 +117,15 @@ function AuthenticatedApp() {
     );
   }
 
-  let content = <Dashboard />;
+  const roleSlug = getPrimaryRoleSlug({ roles, isPlatformAdmin });
+  const RoleDashboard = ROLE_DASHBOARDS[roleSlug];
+
+  let content = RoleDashboard ? <RoleDashboard /> : <Dashboard />;
 
   switch (page) {
+    case "dashboard":
+      content = RoleDashboard ? <RoleDashboard /> : <Dashboard />;
+      break;
     case "add-school":
       content = (
         <AddSchool
@@ -98,6 +147,15 @@ function AuthenticatedApp() {
       break;
     case "edit-student":
       content = <EditStudent student={selectedStudent} setSelectedStudent={setSelectedStudent} setPage={setPage} />;
+      break;
+    case "staff":
+      content = <Staff setPage={setPage} setSelectedStaff={setSelectedStaff} />;
+      break;
+    case "add-staff":
+      content = <AddStaff setPage={setPage} />;
+      break;
+    case "edit-staff":
+      content = <EditStaff staff={selectedStaff} setPage={setPage} />;
       break;
     case "parents":
       content = <Parents setPage={setPage} setSelectedParent={setSelectedParent} />;
@@ -175,7 +233,7 @@ function AuthenticatedApp() {
       content = <Settings />;
       break;
     default:
-      content = <Dashboard />;
+      content = RoleDashboard ? <RoleDashboard /> : <Dashboard />;
   }
 
   return (
@@ -209,14 +267,13 @@ export default function App() {
       />
 
       <Route
+        path="/fees-payments"
+        element={<FeePayments />}
+      />
+
+      <Route
         path="/"
-        element={
-          isAuthenticated ? (
-            <AuthenticatedApp />
-          ) : (
-            <PublicHome />
-          )
-        }
+        element={isAuthenticated ? <AuthenticatedApp /> : <PublicHome />}
       />
 
       <Route
@@ -224,8 +281,6 @@ export default function App() {
         element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
       />
 
-      {/* Anything unmatched falls back to the root, which decides
-          public vs authenticated based on real auth state. */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

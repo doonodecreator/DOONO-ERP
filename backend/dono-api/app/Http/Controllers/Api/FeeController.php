@@ -10,13 +10,15 @@ use App\Models\Fee;
 
 class FeeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
+        $schoolId = auth()->user()->school_id ?? null;
+
         return FeeResource::collection(
-            Fee::with([
+            Fee::when($schoolId, function ($query) use ($schoolId) {
+                $query->where('school_id', $schoolId);
+            })
+            ->with([
                 'school',
                 'academicSession',
                 'term',
@@ -28,12 +30,14 @@ class FeeController extends Controller
         );
     }
 
-    /**
-     * Store a newly created resource.
-     */
     public function store(StoreFeeRequest $request)
     {
-        $fee = Fee::create($request->validated());
+        $data = $request->validated();
+        if (auth()->check() && auth()->user()->school_id) {
+            $data['school_id'] = auth()->user()->school_id;
+        }
+
+        $fee = Fee::create($data);
 
         return (new FeeResource(
             $fee->load([
@@ -48,9 +52,6 @@ class FeeController extends Controller
         ->setStatusCode(201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Fee $fee)
     {
         return new FeeResource(
@@ -64,9 +65,6 @@ class FeeController extends Controller
         );
     }
 
-    /**
-     * Update the specified resource.
-     */
     public function update(UpdateFeeRequest $request, Fee $fee)
     {
         $fee->update($request->validated());
@@ -82,9 +80,6 @@ class FeeController extends Controller
         );
     }
 
-    /**
-     * Remove the specified resource.
-     */
     public function destroy(Fee $fee)
     {
         $fee->delete();

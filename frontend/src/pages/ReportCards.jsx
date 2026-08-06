@@ -1,429 +1,293 @@
-import { useEffect, useState } from "react";
-import api from "../services/api";
-import { useAuth } from "../context/AuthContext";
+import React, { useState, useEffect } from 'react';
+import api from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
-export default function ReportCards({ setPage }) {
-    const { user } = useAuth();
-    const [loading, setLoading] = useState(true);
-    const [reportCards, setReportCards] = useState([]);
-    const [selectedReport, setSelectedReport] = useState(null);
-    const [showPreview, setShowPreview] = useState(false);
-    const [search, setSearch] = useState("");
-    const [error, setError] = useState("");
+export default function ReportCards() {
+  const { user } = useAuth();
+  const [reportCards, setReportCards] = useState([]);
+  const [sessions, setSessions] = useState([]);
+  const [terms, setTerms] = useState([]);
+  const [classes, setClasses] = useState([]);
 
-    // Detect user roles
-    const userRole = (
-        user?.role ||
-        user?.roles?.[0]?.slug ||
-        user?.roles?.[0]?.name ||
-        "guest"
-    ).toLowerCase();
+  const [selectedSession, setSelectedSession] = useState('');
+  const [selectedTerm, setSelectedTerm] = useState('');
+  const [selectedClass, setSelectedClass] = useState('');
+  const [search, setSearch] = useState('');
 
-    const isStudent = userRole === "student";
-    const isParent = userRole === "parent";
-    const isViewOnlyUser = isStudent || isParent;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [downloadingId, setDownloadingId] = useState(null);
 
-    useEffect(() => {
-        fetchReportCards();
-    }, []);
+  useEffect(() => {
+    loadFiltersAndReports();
+  }, []);
 
-    async function fetchReportCards() {
-        try {
-            setLoading(true);
-            setError("");
-            const response = await api.get("/report-cards");
-            // Controller returns Laravel paginated collection: response.data.data
-            const rawData = response?.data?.data ?? response?.data ?? [];
-            setReportCards(Array.isArray(rawData) ? rawData : []);
-        } catch (err) {
-            console.error("Failed to fetch report cards:", err);
-            setError("Unable to load report cards.");
-        } finally {
-            setLoading(false);
-        }
+  const loadFiltersAndReports = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [repRes, sessRes, termRes, classRes] = await Promise.allSettled([
+        api.get('/report-cards'),
+        api.get('/academic-sessions'),
+        api.get('/terms'),
+        api.get('/classes'),
+      ]);
+
+      if (repRes.status === 'fulfilled') {
+        const data = repRes.value.data.data || repRes.value.data;
+        setReportCards(Array.isArray(data) ? data : []);
+      }
+      if (sessRes.status === 'fulfilled') {
+        const data = sessRes.value.data.data || sessRes.value.data;
+        setSessions(Array.isArray(data) ? data : []);
+      }
+      if (termRes.status === 'fulfilled') {
+        const data = termRes.value.data.data || termRes.value.data;
+        setTerms(Array.isArray(data) ? data : []);
+      }
+      if (classRes.status === 'fulfilled') {
+        const data = classRes.value.data.data || classRes.value.data;
+        setClasses(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load report cards.');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    async function openReportCard(id) {
-        try {
-            setError("");
-            const response = await api.get(`/report-cards/${id}`);
-            setSelectedReport(response.data);
-            setShowPreview(true);
-        } catch (err) {
-            console.error("Failed to load report card details:", err);
-            setError("Unable to load report card details.");
-        }
+  const handleDownloadPdf = async (e, report) => {
+    e.stopPropagation();
+    try {
+      setDownloadingId(report.id);
+      const response = await api.get(`/report-cards/${report.id}/download-pdf`, {
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      const studentName = report.student?.full_name || report.student_name || 'Student';
+      link.setAttribute('download', `ReportCard_${studentName.replace(/\s+/g, '_')}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to download report card PDF.');
+    } finally {
+      setDownloadingId(null);
     }
+  };
 
-    function closePreview() {
-        setSelectedReport(null);
-        setShowPreview(false);
+  const handleViewReport = async (report) => {
+    try {
+      const response = await api.get(`/report-cards/${report.id}`);
+      const detailedData = response.data.data || response.data;
+      setSelectedReport(detailedData);
+      setShowModal(true);
+    } catch (err) {
+      setSelectedReport(report);
+      setShowModal(true);
     }
+  };
 
-    function printReport() {
-        window.print();
-    }
+  const filteredReports = reportCards.filter((rc) => {
+    const studentName = (rc.student?.full_name || rc.student_name || '').toLowerCase();
+    const admNo = (rc.student?.admission_number || '').toLowerCase();
+    const matchesSearch = studentName.includes(search.toLowerCase()) || admNo.includes(search.toLowerCase());
 
-    // Role-aware filtering
-    const filteredCards = reportCards.filter((card) => {
-        const student = card.student_enrollment?.student || card.student;
-        if (!student) return false;
+    const matchesSession = !selectedSession || String(rc.academic_session_id) === String(selectedSession);
+    const matchesTerm = !selectedTerm || String(rc.term_id) === String(selectedTerm);
+    const matchesClass = !selectedClass || String(rc.class_id) === String(selectedClass);
 
-        if (isStudent) {
-            const studentUserId = student.user_id || student.id;
-            const currentUserId = user?.student_id || user?.id;
-            if (studentUserId !== currentUserId && student.admission_number !== user?.admission_number) {
-                return false;
-            }
-        }
+    return matchesSearch && matchesSession && matchesTerm && matchesClass;
+  });
 
-        if (isParent) {
-            const linkedChildrenIds = user?.children_ids || user?.children?.map(c => c.id) || [];
-            const studentId = student.id;
-            if (linkedChildrenIds.length > 0 && !linkedChildrenIds.includes(studentId)) {
-                return false;
-            }
-        }
-
-        const fullname = `${student.surname ?? ""} ${student.first_name ?? student.firstname ?? ""} ${student.other_name ?? student.othername ?? ""}`.toLowerCase();
-        return (
-            fullname.includes(search.toLowerCase()) ||
-            (student.admission_number && student.admission_number.toLowerCase().includes(search.toLowerCase()))
-        );
-    });
-
-    // Helper to safely get component name (camelCase or snake_case)
-    const getComponentName = (comp) => {
-        return (
-            comp?.assessment_structure?.name ||
-            comp?.assessmentStructure?.name ||
-            "Component"
-        );
-    };
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                <div className="text-2xl font-bold text-blue-700">
-                    Loading Report Cards...
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="min-h-screen bg-gray-100 p-6">
-            {/* Header */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-6 print:hidden">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"> 
-                    <div>
-                        <h1 className="text-3xl font-bold text-blue-700">
-                            {isViewOnlyUser ? "Academic Report Cards" : "Student Report Cards"}
-                        </h1>
-                        <p className="text-gray-500 mt-1">
-                            {isStudent && "View and print your official term report card."}
-                            {isParent && "View official term report cards for your child."}
-                            {!isViewOnlyUser && "View, preview, and print official student report cards."}
-                        </p>
-                    </div>
-                    <div className="flex gap-3 items-center flex-wrap">
-                        {setPage && (
-                            <button
-                                onClick={() => setPage("results")}
-                                className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-semibold"
-                            >
-                                &larr; Back to Exams
-                            </button>
-                        )}
-                        <input
-                            type="text"
-                            placeholder="Search student or adm no..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="border rounded-lg px-4 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <button
-                            onClick={fetchReportCards}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold"
-                        >
-                            Refresh
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {error && <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-6 print:hidden">{error}</div>}
-
-            {/* List Table */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden print:hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-blue-700 text-white">
-                            <tr>
-                                <th className="p-4 text-left">Student</th>
-                                <th className="p-4 text-left">Class</th>
-                                <th className="p-4 text-left">Session</th>
-                                <th className="p-4 text-left">Term</th>
-                                <th className="p-4 text-center">Average</th>
-                                <th className="p-4 text-center">Grade</th>
-                                <th className="p-4 text-center">Position</th>
-                                <th className="p-4 text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredCards.length === 0 ? (
-                                <tr>
-                                    <td colSpan="8" className="text-center p-10 text-gray-500">
-                                        No report cards available at this time.
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredCards.map((card) => {
-                                    const student = card.student_enrollment?.student || card.student || {};
-                                    const classObj = card.student_enrollment?.class || card.class || {};
-
-                                    return (
-                                        <tr key={card.id} className="border-b hover:bg-gray-50">
-                                            <td className="p-4">
-                                                <div className="font-semibold">
-                                                    {student.surname ?? ""} {student.first_name ?? student.firstname ?? ""}
-                                                </div>
-                                                <div className="text-sm text-gray-500">
-                                                    {student.admission_number || "-"}
-                                                </div>
-                                            </td>
-                                            <td className="p-4">{classObj.name || "-"}</td>
-                                            <td className="p-4">{card.academic_session?.name || "-"}</td>
-                                            <td className="p-4">{card.term?.name || "-"}</td>
-                                            <td className="p-4 text-center font-semibold">{card.average_score ?? card.overall_average ?? "-"}</td>
-                                            <td className="p-4 text-center font-bold text-green-700">{card.overall_grade || "-"}</td>
-                                            <td className="p-4 text-center">{card.position || "-"}</td>
-                                            <td className="p-4 text-center">
-                                                <button
-                                                    onClick={() => openReportCard(card.id)}
-                                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
-                                                >
-                                                    View Card
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-{/* Modal Preview & Printable Area */}
-            {showPreview && selectedReport && (
-                <div className="fixed inset-0 bg-black/60 overflow-y-auto z-50 p-2 md:p-6 print:p-0 print:static print:bg-white">
-                    <div className="max-w-5xl mx-auto my-4 bg-white rounded-xl shadow-2xl print:shadow-none print:my-0">
-                        {/* Header controls (hidden when printing) */}
-                        <div className="flex justify-between items-center p-5 border-b print:hidden">
-                            <h2 className="text-2xl font-bold text-blue-700">
-                                Official Report Card Preview
-                            </h2>
-                            <div className="space-x-3">
-                                <button
-                                    onClick={printReport}
-                                    className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg font-semibold"
-                                >
-                                    Print / PDF
-                                </button>
-                                <button
-                                    onClick={closePreview}
-                                    className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg font-semibold"
-                                >
-                                    Close
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Printable Document Sheet */}
-                        <div id="report-card" className="bg-white text-black p-8 md:p-10">
-                            {/* School Header */}
-                            <div className="flex justify-between items-start border-b-4 border-blue-700 pb-6 gap-4">
-                                <div className="w-24 h-24 border rounded-full flex items-center justify-center shrink-0 overflow-hidden">
-                                    {selectedReport.report_card?.school?.logo ? (
-                                        <img
-                                            src={selectedReport.report_card.school.logo}
-                                            alt="School Logo"
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <span className="text-xs text-gray-500 font-bold">LOGO</span>
-                                    )}
-                                </div>
-                                <div className="text-center flex-1">
-                                    <h1 className="text-3xl md:text-4xl font-extrabold uppercase text-blue-900">
-                                        {selectedReport.report_card?.school?.name || "SCHOOL NAME"}
-                                    </h1>
-                                    <p className="text-sm mt-1">{selectedReport.report_card?.school?.address}</p>
-                                    <p className="text-xs text-gray-600">
-                                        Phone: {selectedReport.report_card?.school?.phone || "-"} | Email: {selectedReport.report_card?.school?.email || "-"}
-                                    </p>
-                                    <h2 className="text-xl font-bold mt-4 uppercase tracking-wider text-gray-800">
-                                        Terminal Report Card
-                                    </h2>
-                                </div>
-                                <div className="w-24 h-28 border flex items-center justify-center shrink-0">
-                                    <span className="text-xs text-gray-400 font-bold">PASSPORT</span>
-                                </div>
-                            </div>
-
-                            {/* Student Metadata */}
-                            <div className="grid grid-cols-2 gap-6 mt-6 bg-gray-50 p-4 rounded-lg border text-sm">
-                                <div className="space-y-2">
-                                    <p><strong>Student Name:</strong> {selectedReport.generated?.student?.student?.surname || ""} {selectedReport.generated?.student?.student?.first_name || selectedReport.generated?.student?.student?.firstname || ""} {selectedReport.generated?.student?.student?.other_name || selectedReport.generated?.student?.student?.othername || ""}</p>
-                                    <p><strong>Admission No:</strong> {selectedReport.generated?.student?.student?.admission_number || "-"}</p>
-                                    <p><strong>Gender:</strong> {selectedReport.generated?.student?.student?.gender || "-"}</p>
-                                    <p><strong>Date of Birth:</strong> {selectedReport.generated?.student?.student?.date_of_birth || "-"}</p>
-                                    {selectedReport.generated?.parent && (
-                                        <p><strong>Parent/Guardian:</strong> {selectedReport.generated.parent.first_name || ""} {selectedReport.generated.parent.last_name || ""}</p>
-                                    )}
-                                </div>
-                                <div className="space-y-2">
-                                    <p><strong>Class:</strong> {selectedReport.generated?.student?.class?.name || selectedReport.report_card?.student_enrollment?.class?.name || "-"}</p>
-                                    <p><strong>Stream/Arm:</strong> {selectedReport.generated?.student?.stream?.name || "-"}</p>
-                                    <p><strong>Academic Session:</strong> {selectedReport.report_card?.academic_session?.name || "-"}</p>
-                                    <p><strong>Term:</strong> {selectedReport.report_card?.term?.name || "-"}</p>
-                                </div>
-                            </div>
-
-                            {/* Subject Results Table */}
-                            <div className="mt-8 overflow-x-auto">
-                                <table className="w-full border-collapse border border-gray-700 text-sm">
-                                    <thead>
-                                        <tr className="bg-blue-700 text-white">
-                                            <th className="border border-gray-700 p-2 text-center">S/N</th>
-                                            <th className="border border-gray-700 p-2 text-left">Subject</th>
-                                            <th className="border border-gray-700 p-2 text-center">Assessment Components</th>
-                                            <th className="border border-gray-700 p-2 text-center">Total Score</th>
-                                            <th className="border border-gray-700 p-2 text-center">Grade</th>
-                                            <th className="border border-gray-700 p-2 text-left">Remark</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(selectedReport.generated?.subject_results || []).length === 0 ? (
-                                            <tr>
-                                                <td colSpan="6" className="text-center p-4 text-gray-500">
-                                                    No subject results recorded for this term.
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            selectedReport.generated.subject_results.map((result, index) => {
-                                                const components = result.components || [];
-
-                                                return (
-                                                    <tr key={result.id || index} className="hover:bg-gray-50">
-                                                        <td className="border border-gray-700 p-2 text-center">{index + 1}</td>
-                                                        <td className="border border-gray-700 p-2 font-medium">{result.subject?.name || "-"}</td>
-                                                        <td className="border border-gray-700 p-2">
-                                                            <div className="flex flex-wrap gap-2 justify-center">
-                                                                {components.length > 0 ? (
-                                                                    components.map((c, idx) => (
-                                                                        <span key={idx} className="bg-gray-100 px-2 py-0.5 rounded border text-xs">
-                                                                            <strong>{getComponentName(c)}:</strong> {c.score}
-                                                                        </span>
-                                                                    ))
-                                                                ) : (
-                                                                    <span className="text-gray-400 text-xs">-</span>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                        <td className="border border-gray-700 p-2 text-center font-bold text-blue-900">{result.total_score ?? "-"}</td>
-                                                        <td className="border border-gray-700 p-2 text-center font-bold text-green-700">{result.grade || "-"}</td>
-                                                        <td className="border border-gray-700 p-2">{result.remark || "-"}</td>
-                                                    </tr>
-                                                );
-                                            })
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {/* Attendance & Summary Section */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                                {/* Attendance Summary */}
-                                <div>
-                                    <h3 className="text-lg font-bold mb-2 border-b-2 border-blue-700 pb-1">Attendance Record</h3>
-                                    <table className="w-full border border-gray-700 text-sm">
-                                        <tbody>
-                                            <tr>
-                                                <td className="border p-2">School Days Opened</td>
-                                                <td className="border p-2 text-center font-semibold">{selectedReport.generated?.attendance?.days_opened ?? 0}</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border p-2">Days Present</td>
-                                                <td className="border p-2 text-center font-semibold">{selectedReport.generated?.attendance?.days_present ?? 0}</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border p-2">Days Absent</td>
-                                                <td className="border p-2 text-center font-semibold">{selectedReport.generated?.attendance?.days_absent ?? 0}</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border p-2">Days Late</td>
-                                                <td className="border p-2 text-center font-semibold">{selectedReport.generated?.attendance?.days_late ?? 0}</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border p-2">Days Excused</td>
-                                                <td className="border p-2 text-center font-semibold">{selectedReport.generated?.attendance?.days_excused ?? 0}</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border p-2">Attendance Rate</td>
-                                                <td className="border p-2 text-center font-bold text-green-700">{selectedReport.generated?.attendance?.attendance_percentage ?? 0}%</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {/* Academic Performance Summary */}
-                                <div>
-                                    <h3 className="text-lg font-bold mb-2 border-b-2 border-blue-700 pb-1">Academic Performance Summary</h3>
-                                    <table className="w-full border border-gray-700 text-sm">
-                                        <tbody>
-                                            <tr>
-                                                <td className="border p-2">Subjects Offered</td>
-                                                <td className="border p-2 text-center font-semibold">{selectedReport.generated?.summary?.subjects_offered ?? "-"}</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border p-2">Subjects Passed</td>
-                                                <td className="border p-2 text-center font-semibold">{selectedReport.generated?.summary?.subjects_passed ?? "-"}</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border p-2">Subjects Failed</td>
-                                                <td className="border p-2 text-center font-semibold">{selectedReport.generated?.summary?.subjects_failed ?? "-"}</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border p-2">Total Score Obtained</td>
-                                                <td className="border p-2 text-center font-bold">{selectedReport.generated?.summary?.total_score ?? "-"}</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border p-2">Student Average</td>
-                                                <td className="border p-2 text-center font-bold text-blue-700">{selectedReport.generated?.summary?.student_average ?? "-"}</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border p-2">Class Average</td>
-                                                <td className="border p-2 text-center font-semibold">{selectedReport.generated?.summary?.class_average ?? "-"}</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border p-2">Class Position</td>
-                                                <td className="border p-2 text-center font-bold text-purple-700">{selectedReport.generated?.summary?.position ?? selectedReport.report_card?.position ?? "-"}</td>
-                                            </tr>
-                                            <tr>
-                                                <td className="border p-2">Overall Grade</td>
-                                                <td className="border p-2 text-center font-bold text-green-700">{selectedReport.generated?.summary?.overall_grade ?? selectedReport.report_card?.overall_grade ?? "-"}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Terminal Report Cards</h1>
+          <p className="text-sm text-gray-500">View student academic performance summaries, class positions, and print PDF report cards.</p>
         </div>
-    );
-}
+      </div>
 
+      {/* Filter Bar */}
+      <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <input
+          type="text"
+          placeholder="Search student or admission no..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+
+        <select
+          value={selectedSession}
+          onChange={(e) => setSelectedSession(e.target.value)}
+          className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All Academic Sessions</option>
+          {sessions.map((s) => (
+            <option key={s.id} value={s.id}>{s.name || s.session_year}</option>
+          ))}
+        </select>
+
+        <select
+          value={selectedTerm}
+          onChange={(e) => setSelectedTerm(e.target.value)}
+          className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All Academic Terms</option>
+          {terms.map((t) => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
+        </select>
+
+        <select
+          value={selectedClass}
+          onChange={(e) => setSelectedClass(e.target.value)}
+          className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All Classes</option>
+          {classes.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {error && (
+        <div className="p-4 mb-6 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm flex justify-between items-center">
+          <span>{error}</span>
+          <button onClick={loadFiltersAndReports} className="underline font-semibold">Retry</button>
+        </div>
+      )}
+
+      {/* Report Cards Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        {loading ? (
+          <div className="p-12 text-center text-gray-500">Loading terminal report cards...</div>
+        ) : filteredReports.length === 0 ? (
+          <div className="p-12 text-center text-gray-400">
+            <p className="text-base font-medium">No report cards found.</p>
+            <p className="text-xs mt-1">Make sure results have been calculated and published for the selected term.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-gray-600">
+              <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
+                <tr>
+                  <th className="px-6 py-3">Student Name</th>
+                  <th className="px-6 py-3">Total Score</th>
+                  <th className="px-6 py-3">Average %</th>
+                  <th className="px-6 py-3">Position</th>
+                  <th className="px-6 py-3">Grade</th>
+                  <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredReports.map((rc) => {
+                  const studentName = rc.student?.full_name || rc.student_name || 'N/A';
+                  return (
+                    <tr
+                      key={rc.id}
+                      onClick={() => handleViewReport(rc)}
+                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <td className="px-6 py-4 font-semibold text-gray-900">{studentName}</td>
+                      <td className="px-6 py-4 font-mono font-semibold text-gray-800">{rc.total_score || '—'}</td>
+                      <td className="px-6 py-4 font-mono font-semibold text-blue-600">
+                        {rc.average_score ? `${Number(rc.average_score).toFixed(1)}%` : '—'}
+                      </td>
+                      <td className="px-6 py-4 font-mono text-xs font-bold text-indigo-700">
+                        {rc.position ? `${rc.position}` : '—'}
+                      </td>
+                      <td className="px-6 py-4 font-bold text-gray-800">{rc.overall_grade || '—'}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${
+                          rc.is_published ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {rc.is_published ? 'Published' : 'Draft'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right space-x-2">
+                        <button
+                          onClick={(e) => handleDownloadPdf(e, rc)}
+                          disabled={downloadingId === rc.id}
+                          className="px-3 py-1 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          {downloadingId === rc.id ? 'Downloading...' : 'PDF Report'}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Detail Preview Modal */}
+      {showModal && selectedReport && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl">
+            <div className="flex justify-between items-center mb-4 border-b pb-3">
+              <h2 className="text-lg font-bold text-gray-800">
+                {selectedReport.student?.full_name || selectedReport.student_name || 'Report Card Summary'}
+              </h2>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <div><span className="text-gray-500 text-xs">Total Score:</span> <p className="font-bold font-mono">{selectedReport.total_score || '—'}</p></div>
+                <div><span className="text-gray-500 text-xs">Average Score:</span> <p className="font-bold font-mono text-blue-600">{selectedReport.average_score}%</p></div>
+                <div><span className="text-gray-500 text-xs">Position:</span> <p className="font-bold text-indigo-700">{selectedReport.position || '—'}</p></div>
+                <div><span className="text-gray-500 text-xs">Overall Grade:</span> <p className="font-bold">{selectedReport.overall_grade || '—'}</p></div>
+              </div>
+
+              {selectedReport.teacher_comment && (
+                <div>
+                  <label className="text-xs font-semibold text-gray-500">Teacher's Comment:</label>
+                  <p className="text-xs bg-blue-50/50 p-2.5 rounded border border-blue-100 text-gray-700 italic">
+                    "{selectedReport.teacher_comment}"
+                  </p>
+                </div>
+              )}
+
+              {selectedReport.principal_comment && (
+                <div>
+                  <label className="text-xs font-semibold text-gray-500">Principal's Comment:</label>
+                  <p className="text-xs bg-purple-50/50 p-2.5 rounded border border-purple-100 text-gray-700 italic">
+                    "{selectedReport.principal_comment}"
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-4 mt-4 border-t">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100"
+              >
+                Close
+              </button>
+              <button
+                onClick={(e) => handleDownloadPdf(e, selectedReport)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 font-medium"
+              >
+                Download PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

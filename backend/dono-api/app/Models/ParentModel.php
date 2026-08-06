@@ -34,6 +34,10 @@ class ParentModel extends Model
         'updated_at' => 'datetime',
     ];
 
+    protected $appends = [
+        'display_name',
+    ];
+
     /*
     |--------------------------------------------------------------------------
     | School
@@ -85,16 +89,21 @@ class ParentModel extends Model
     |--------------------------------------------------------------------------
     */
 
-    public function getDisplayNameAttribute()
+    public function getDisplayNameAttribute(): string
     {
-        if ($this->father_name) {
+        if (!empty($this->father_name)) {
             return $this->father_name;
         }
 
-        if ($this->guardian_name) {
+        if (!empty($this->mother_name)) {
+            return $this->mother_name;
+        }
+
+        if (!empty($this->guardian_name)) {
             return $this->guardian_name;
         }
 
         return 'Unnamed Parent';
     }
 }
+

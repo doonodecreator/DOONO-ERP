@@ -9,12 +9,19 @@ use App\Http\Resources\AttendanceResource;
 use App\Http\Resources\StudentEnrollmentResource;
 use App\Models\Attendance;
 use App\Models\StudentEnrollment;
+use App\Services\AttendanceService;
 use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
+    public function __construct(
+        protected AttendanceService $attendanceService
+    ) {}
+
     public function index(Request $request)
     {
+        $schoolId = $request->attributes->get('current_school_id') ?? $request->user()->school_id;
+
         $query = Attendance::with([
             'school',
             'studentEnrollment',
@@ -23,18 +30,12 @@ class AttendanceController extends Controller
             'staff',
         ]);
 
-        if (
-            method_exists($request->user(), 'isSuperAdmin') &&
-            ! $request->user()->isSuperAdmin()
-        ) {
-            $query->where(
-                'school_id',
-                $request->user()->currentSchoolId()
-            );
+        if ($schoolId) {
+            $query->where('school_id', $schoolId);
         }
 
         return AttendanceResource::collection(
-            $query->latest()->paginate(10)
+            $query->latest()->paginate(15)
         );
     }
 
@@ -47,121 +48,55 @@ class AttendanceController extends Controller
             'stream_id' => 'nullable|exists:streams,id',
         ]);
 
-        $query = StudentEnrollment::with([
-            'student',
-            'class',
-            'stream',
-        ])
-        ->where('academic_session_id', $request->academic_session_id)
-        ->where('term_id', $request->term_id)
-        ->where('class_id', $request->class_id);
+        $schoolId = $request->attributes->get('current_school_id') ?? $request->user()->school_id;
+
+        $query = StudentEnrollment::with(['student', 'class', 'stream'])
+            ->where('school_id', $schoolId)
+            ->where('academic_session_id', $request->academic_session_id)
+            ->where('term_id', $request->term_id)
+            ->where('class_id', $request->class_id);
 
         if ($request->filled('stream_id')) {
             $query->where('stream_id', $request->stream_id);
         }
 
-        return StudentEnrollmentResource::collection(
-            $query->orderBy('id')->get()
-        );
+        return StudentEnrollmentResource::collection($query->orderBy('id')->get());
     }
 
-    public function store(StoreAttendanceRequest $request)
+    public function bulkStore(Request $request)
     {
-        $data = $request->validated();
+        $request->validate([
+            'academic_session_id' => 'required|exists:academic_sessions,id',
+            'term_id' => 'required|exists:terms,id',
+            'attendance_date' => 'required|date',
+            'records' => 'required|array|min:1',
+            'records.*.student_enrollment_id' => 'required|exists:student_enrollments,id',
+            'records.*.status' => 'required|string|in:Present,Absent,Late,Excused',
+            'records.*.remarks' => 'nullable|string|max:255',
+        ]);
 
-        if (
-            method_exists($request->user(), 'isSuperAdmin') &&
-            ! $request->user()->isSuperAdmin()
-        ) {
-            $data['school_id'] = $request->user()->currentSchoolId();
-        }
+        $schoolId = $request->attributes->get('current_school_id') ?? $request->user()->school_id;
 
-        $attendance = Attendance::create($data);
+        $saved = $this->attendanceService->recordClassAttendance(
+            $schoolId,
+            $request->academic_session_id,
+            $request->term_id,
+            $request->attendance_date,
+            $request->user()->id,
+            $request->records
+        );
 
-        return (new AttendanceResource(
-            $attendance->load([
-                'school',
-                'studentEnrollment',
-                'academicSession',
-                'term',
-                'staff',
-            ])
-        ))
-        ->response()
-        ->setStatusCode(201);
+        return response()->json([
+            'success' => true,
+            'message' => 'Bulk attendance updated successfully.',
+            'count' => $saved->count(),
+        ], 200);
     }
 
     public function show(Request $request, Attendance $attendance)
     {
-        if (
-            method_exists($request->user(), 'isSuperAdmin') &&
-            ! $request->user()->isSuperAdmin() &&
-            $attendance->school_id != $request->user()->currentSchoolId()
-        ) {
-            abort(403, 'Unauthorized.');
-        }
-
         return new AttendanceResource(
-            $attendance->load([
-                'school',
-                'studentEnrollment',
-                'academicSession',
-                'term',
-                'staff',
-            ])
+            $attendance->load(['school', 'studentEnrollment', 'academicSession', 'term', 'staff'])
         );
-    }
-
-    public function update(
-        UpdateAttendanceRequest $request,
-        Attendance $attendance
-    ) {
-        if (
-            method_exists($request->user(), 'isSuperAdmin') &&
-            ! $request->user()->isSuperAdmin() &&
-            $attendance->school_id != $request->user()->currentSchoolId()
-        ) {
-            abort(403, 'Unauthorized.');
-        }
-
-        $data = $request->validated();
-
-        if (
-            method_exists($request->user(), 'isSuperAdmin') &&
-            ! $request->user()->isSuperAdmin()
-        ) {
-            unset($data['school_id']);
-        }
-
-        $attendance->update($data);
-
-        return new AttendanceResource(
-            $attendance->load([
-                'school',
-                'studentEnrollment',
-                'academicSession',
-                'term',
-                'staff',
-            ])
-        );
-    }
-
-    public function destroy(
-        Request $request,
-        Attendance $attendance
-    ) {
-        if (
-            method_exists($request->user(), 'isSuperAdmin') &&
-            ! $request->user()->isSuperAdmin() &&
-            $attendance->school_id != $request->user()->currentSchoolId()
-        ) {
-            abort(403, 'Unauthorized.');
-        }
-
-        $attendance->delete();
-
-        return response()->json([
-            'message' => 'Attendance record deleted successfully.',
-        ]);
     }
 }

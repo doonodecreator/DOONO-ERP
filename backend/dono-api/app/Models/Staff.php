@@ -35,8 +35,22 @@ class Staff extends Model
         'basic_salary' => 'decimal:2',
     ];
 
+    protected $appends = [
+        'full_name',
+    ];
+
+    public function getFullNameAttribute(): string
+    {
+        return trim(implode(' ', array_filter([
+            $this->first_name,
+            $this->middle_name,
+            $this->last_name,
+        ])));
+    }
+
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
     }
 }
+

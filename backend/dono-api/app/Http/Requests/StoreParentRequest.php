@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreParentRequest extends FormRequest
 {
@@ -13,39 +14,30 @@ class StoreParentRequest extends FormRequest
 
     public function rules(): array
     {
-        $rules = [
+        $user = auth()->user();
+        $schoolId = method_exists($user, 'currentSchoolId') ? $user->currentSchoolId() : $user->school_id;
 
-            'father_name' => 'nullable|string|max:100',
-            'father_phone' => 'nullable|string|max:20',
-            'father_email' => 'nullable|email|max:255',
-            'father_occupation' => 'nullable|string|max:100',
-
-            'mother_name' => 'nullable|string|max:100',
-            'mother_phone' => 'nullable|string|max:20',
-            'mother_email' => 'nullable|email|max:255',
-            'mother_occupation' => 'nullable|string|max:100',
-
-            'guardian_name' => 'nullable|string|max:100',
-            'guardian_phone' => 'nullable|string|max:20',
-            'guardian_email' => 'nullable|email|max:255',
-            'guardian_occupation' => 'nullable|string|max:100',
-            'guardian_relationship' => 'nullable|string|max:100',
-
-            'address' => 'nullable|string',
-        ];
-
-        if ($this->user()->isSuperAdmin()) {
-            $rules['school_id'] = 'required|exists:schools,id';
-        }
-
-        return $rules;
-    }
-
-    public function messages(): array
-    {
         return [
-            'school_id.required' => 'School is required.',
-            'school_id.exists' => 'Selected school does not exist.',
+            'father_name' => 'nullable|string|max:255',
+            'father_phone' => 'nullable|string|max:50',
+            'father_email' => 'nullable|email|max:255',
+            'father_occupation' => 'nullable|string|max:255',
+            'mother_name' => 'nullable|string|max:255',
+            'mother_phone' => 'nullable|string|max:50',
+            'mother_email' => 'nullable|email|max:255',
+            'mother_occupation' => 'nullable|string|max:255',
+            'guardian_name' => 'nullable|string|max:255',
+            'guardian_phone' => 'nullable|string|max:50',
+            'guardian_email' => 'nullable|email|max:255',
+            'guardian_occupation' => 'nullable|string|max:255',
+            'guardian_relationship' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+            'student_ids' => 'nullable|array',
+            'student_ids.*' => [
+                'integer',
+                Rule::exists('students', 'id')->where('school_id', $schoolId),
+            ],
         ];
     }
 }
+

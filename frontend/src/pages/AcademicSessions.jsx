@@ -8,7 +8,7 @@ export default function AcademicSessions() {
     name: "",
     start_date: "",
     end_date: "",
-    is_active: true,
+    is_current: true, // Fixed payload mismatch
   });
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export default function AcademicSessions() {
         name: "",
         start_date: "",
         end_date: "",
-        is_active: true,
+        is_current: true, // Reset to correct field name
       });
 
       loadSessions();
@@ -77,40 +77,40 @@ export default function AcademicSessions() {
         <form onSubmit={saveSession}>
           <input
             name="name"
-            placeholder="2026/2027"
+            placeholder="e.g. 2026/2027"
             value={form.name}
             onChange={handleChange}
             style={inputStyle}
+            required
           />
 
           <label>Start Date</label>
-
           <input
             type="date"
             name="start_date"
             value={form.start_date}
             onChange={handleChange}
             style={inputStyle}
+            required
           />
 
           <label>End Date</label>
-
           <input
             type="date"
             name="end_date"
             value={form.end_date}
             onChange={handleChange}
             style={inputStyle}
+            required
           />
 
           <label>
             <input
               type="checkbox"
-              name="is_active"
-              checked={form.is_active}
+              name="is_current" // Changed from is_active
+              checked={form.is_current}
               onChange={handleChange}
             />
-
             Current Academic Session
           </label>
 
@@ -125,6 +125,7 @@ export default function AcademicSessions() {
               border: "none",
               padding: "12px 20px",
               borderRadius: "10px",
+              cursor: "pointer"
             }}
           >
             Save Academic Session
@@ -142,10 +143,10 @@ export default function AcademicSessions() {
         <table width="100%">
           <thead>
             <tr>
-              <th>Session</th>
-              <th>Start</th>
-              <th>End</th>
-              <th>Status</th>
+              <th style={{ textAlign: "left" }}>Session</th>
+              <th style={{ textAlign: "left" }}>Start</th>
+              <th style={{ textAlign: "left" }}>End</th>
+              <th style={{ textAlign: "left" }}>Status</th>
             </tr>
           </thead>
 
@@ -156,7 +157,11 @@ export default function AcademicSessions() {
                 <td>{item.start_date}</td>
                 <td>{item.end_date}</td>
                 <td>
-                  {item.is_active ? "Current" : "Closed"}
+                  {item.is_current ? ( // Checks the correct DB field
+                    <span style={{ color: "green", fontWeight: "bold" }}>Current</span>
+                  ) : (
+                    <span style={{ color: "gray" }}>Archived</span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -174,3 +179,4 @@ const inputStyle = {
   border: "1px solid #cbd5e1",
   borderRadius: "10px",
 };
+

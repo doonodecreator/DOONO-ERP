@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             RoleSeeder::class,
             AdditionalRoleSeeder::class,
+            RolePermissionSeeder::class,
             CountrySeeder::class,
             CurrencySeeder::class,
             FeatureSeeder::class,

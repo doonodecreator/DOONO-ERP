@@ -3,145 +3,60 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreReportCardRequest;
-use App\Http\Requests\UpdateReportCardRequest;
 use App\Http\Resources\ReportCardResource;
 use App\Models\ReportCard;
 use App\Services\Academic\ReportCardService;
+use Illuminate\Http\Request;
 
 class ReportCardController extends Controller
 {
     public function __construct(
         protected ReportCardService $reportCardService
-    ) {
-    }
+    ) {}
 
-    /**
-     * Display a listing of report cards.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        return ReportCardResource::collection(
-            ReportCard::with([
-                'school',
-                'studentEnrollment.student',
-                'studentEnrollment.class',
-                'studentEnrollment.stream',
-                'academicSession',
-                'term',
-            ])
-            ->latest()
-            ->paginate(10)
-        );
-    }
+        $schoolId = $request->attributes->get('current_school_id') ?? $request->user()->school_id;
 
-    /**
-     * Store a newly created report card.
-     */
-    public function store(StoreReportCardRequest $request)
-    {
-        $reportCard = ReportCard::create(
-            $request->validated()
-        );
-
-        return (new ReportCardResource(
-            $reportCard->load([
-                'school',
-                'studentEnrollment.student',
-                'studentEnrollment.class',
-                'studentEnrollment.stream',
-                'academicSession',
-                'term',
-            ])
-        ))
-        ->response()
-        ->setStatusCode(201);
-    }
-
-    /**
-     * Display one report card together with all generated data.
-     */
-    public function show(
-        ReportCard $reportCard
-    ) {
-
-        $reportCard->load([
+        $query = ReportCard::with([
             'school',
             'studentEnrollment.student',
             'studentEnrollment.class',
-            'studentEnrollment.stream',
             'academicSession',
             'term',
         ]);
 
-        $generated =
-            $this->reportCardService->generate(
-                $reportCard->studentEnrollment,
-                $reportCard->academic_session_id,
-                $reportCard->term_id
-            );
-           return response()->json([
+        if ($schoolId) {
+            $query->where('school_id', $schoolId);
+        }
 
-            'success' => true,
-
-            'report_card' => new ReportCardResource(
-                $reportCard
-            ),
-
-            'generated' => $generated,
-
-        ]);
+        return ReportCardResource::collection($query->latest()->paginate(15));
     }
 
-    /**
-     * Update the specified report card.
-     */
-    public function update(
-        UpdateReportCardRequest $request,
-        ReportCard $reportCard
-    ) {
-
-        $reportCard->update(
-            $request->validated()
+    public function show(Request $request, ReportCard $reportCard)
+    {
+        $generated = $this->reportCardService->generatePayload(
+            $reportCard->studentEnrollment,
+            $reportCard->academic_session_id,
+            $reportCard->term_id
         );
-
-        return new ReportCardResource(
-
-            $reportCard->load([
-
-                'school',
-
-                'studentEnrollment.student',
-
-                'studentEnrollment.class',
-
-                'studentEnrollment.stream',
-
-                'academicSession',
-
-                'term',
-
-            ])
-
-        );
-    }
-
-    /**
-     * Delete a report card.
-     */
-    public function destroy(
-        ReportCard $reportCard
-    ) {
-
-        $reportCard->delete();
 
         return response()->json([
-
             'success' => true,
-
-            'message' =>
-                'Report card deleted successfully.',
-
+            'report_card' => new ReportCardResource($reportCard),
+            'generated' => $generated,
         ]);
+    }
+
+    /**
+     * Download or stream PDF Report Card.
+     */
+    public function downloadPdf(ReportCard $reportCard)
+    {
+        return $this->reportCardService->downloadPdf(
+            $reportCard->studentEnrollment,
+            $reportCard->academic_session_id,
+            $reportCard->term_id
+        );
     }
 }

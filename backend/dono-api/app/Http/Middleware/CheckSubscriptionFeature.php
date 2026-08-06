@@ -4,69 +4,62 @@ namespace App\Http\Middleware;
 
 use App\Models\SchoolSubscription;
 use App\Models\SubscriptionPlan;
+use App\Models\SystemSetting;
+use App\Services\CurrentContextService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckSubscriptionFeature
 {
-    /**
-     * Handle an incoming request.
-     */
-    public function handle(
-        Request $request,
-        Closure $next,
-        string $feature
-    ): Response {
+    public function __construct(private CurrentContextService $context)
+    {
+    }
 
-        $schoolId = $request->school_id
-            ?? $request->route('school_id')
-            ?? $request->input('school_id');
+    public function handle(Request $request, Closure $next, string $feature): Response
+    {
+        $systemSetting = SystemSetting::first();
+        if ($systemSetting && !$systemSetting->enforce_subscriptions) {
+            return $next($request);
+        }
+
+        $user = $request->user();
+
+        if ($user && $user->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        $resolved = $this->context->resolve($user);
+        $schoolId = $resolved['school']['id'] ?? null;
 
         if (!$schoolId) {
-
-            return response()->json([
-                'success' => false,
-                'message' => 'School ID is required.'
-            ], 400);
-        }
-
-        $subscription = SchoolSubscription::with(
-            'subscriptionPlan.featureModels'
-        )
-        ->where('school_id', $schoolId)
-        ->where('is_current', true)
-        ->first();
-
-        if (!$subscription) {
-
-            return response()->json([
-                'success' => false,
-                'message' => 'No active subscription found. Please subscribe to continue.'
-            ], 403);
-        }
-
-        if (!$subscription->isActive()) {
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Your subscription has expired. Please renew your subscription.',
-                'current_plan' => optional($subscription->subscriptionPlan)->name
-            ], 403);
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Check feature using the new database-driven system.
-        |--------------------------------------------------------------------------
-        */
-
-        $allowed = $subscription->subscriptionPlan
-            ->featureModels
-            ->contains('slug', $feature);
-
-        if ($allowed) {
             return $next($request);
+        }
+
+        $subscription = SchoolSubscription::with('subscriptionPlan.featureModels')
+            ->where('school_id', $schoolId)
+            ->where('is_current', true)
+            ->first();
+
+        if ($subscription && $subscription->is_exempt) {
+            return $next($request);
+        }
+
+        if (!$subscription || !$subscription->isActive()) {
+            return response()->json([
+                'success' => false,
+                'requires_subscription' => true,
+                'message' => 'An active subscription plan is required to access this feature.',
+                'requested_feature' => $feature,
+            ], 402);
+        }
+
+        if ($subscription->subscriptionPlan && $subscription->subscriptionPlan->featureModels) {
+            $allowed = $subscription->subscriptionPlan->featureModels->contains('slug', $feature);
+
+            if ($allowed) {
+                return $next($request);
+            }
         }
 
         $recommendedPlan = SubscriptionPlan::recommendedPlanForFeature($feature);
@@ -78,7 +71,7 @@ class CheckSubscriptionFeature
                 : "Upgrade your subscription to use this feature.",
             'current_plan' => optional($subscription->subscriptionPlan)->name,
             'recommended_plan' => optional($recommendedPlan)->name,
-            'requested_feature' => $feature
+            'requested_feature' => $feature,
         ], 403);
     }
 }

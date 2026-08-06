@@ -2,36 +2,53 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\CurrentContextService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class HasSchool
 {
-    public function __construct(private CurrentContextService $context)
-    {
-    }
-
     /**
-     * Gates any route that requires an active school context.
-     * Platform admins bypass this — they operate across all schools.
+     * Handle an incoming request with strict tenant isolation.
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $resolved = $this->context->resolve($request->user());
+        $user = $request->user();
 
-        if ($resolved['is_platform_admin']) {
+        // 1. Super Admins hold God-Mode override access across all schools
+        if ($user && method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+            $requestedSchoolId = $request->header('X-School-Id') 
+                ?? $request->input('school_id') 
+                ?? $user->currentSchoolId();
+
+            if ($requestedSchoolId) {
+                $request->attributes->set('current_school_id', (int) $requestedSchoolId);
+            }
+
             return $next($request);
         }
 
-        if (!$resolved['school']) {
+        // 2. Regular Tenant Users MUST be tied to an authenticated school
+        $schoolId = $user ? $user->currentSchoolId() : null;
+
+        if (!$schoolId) {
             return response()->json([
                 'success' => false,
-                'message' => 'No active school. Complete school setup first.',
-                'onboarding_step' => $resolved['onboarding_step'],
-            ], 409);
+                'message' => 'Access Denied: Unassigned or invalid school context.',
+            ], 403);
         }
+
+        // 3. Strict Context Override Prevention:
+        // Wipe any user-supplied school_id in request bodies to prevent spoofing
+        if ($request->has('school_id') && (int) $request->input('school_id') !== (int) $schoolId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Security Alert: Cross-tenant data modification attempt blocked.',
+            ], 403);
+        }
+
+        // Lock down current school ID in request attributes
+        $request->attributes->set('current_school_id', (int) $schoolId);
 
         return $next($request);
     }
