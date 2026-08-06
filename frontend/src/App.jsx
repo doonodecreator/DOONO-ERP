@@ -54,6 +54,9 @@ import Promotions from "./pages/Promotions";
 import Subscriptions from "./pages/Subscriptions";
 
 import Settings from "./pages/Settings";
+import Organizations from "./pages/Organizations";
+import Schools from "./pages/Schools";
+import AuditLogs from "./pages/AuditLogs";
 
 import SecondaryPrincipalDashboard from "./pages/SecondaryPrincipalDashboard";
 import PrimaryHeadmasterDashboard from "./pages/PrimaryHeadmasterDashboard";
@@ -135,6 +138,15 @@ function AuthenticatedApp() {
           }}
         />
       );
+      break;
+    case "organizations":
+      content = <Organizations />;
+      break;
+    case "schools":
+      content = <Schools />;
+      break;
+    case "audit-logs":
+      content = <AuditLogs />;
       break;
     case "students":
       content = <Students setPage={setPage} setSelectedStudent={setSelectedStudent} />;
@@ -268,7 +280,7 @@ export default function App() {
 
       <Route
         path="/fees-payments"
-        element={<FeePayments />}
+        element={isAuthenticated ? <FeePayments /> : <Navigate to="/login" replace />}
       />
 
       <Route

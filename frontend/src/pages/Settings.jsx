@@ -110,7 +110,7 @@ export default function Settings() {
     setLoading(true);
     setError("");
     try {
-      const res = await api.get("/school/settings");
+      const res = await api.get("/school-settings");
       const data = res?.data?.data ?? res?.data ?? {};
       setSchoolSettings({ ...emptySchoolSettings, ...data });
     } catch (err) {
@@ -142,7 +142,7 @@ export default function Settings() {
       setLoading(true);
       setMessage("");
       setError("");
-      await api.put("/school/settings", schoolSettings);
+      await api.put("/school-settings", schoolSettings);
       setMessage("School details and payment credentials updated successfully.");
     } catch (err) {
       setError(err?.message || "Unable to save school settings.");
