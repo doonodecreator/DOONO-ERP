@@ -1,54 +1,198 @@
 import axios from "axios";
 
+/*
+|--------------------------------------------------------------------------
+| DONO SCHOOL ERP API
+|--------------------------------------------------------------------------
+| Production Laravel backend hosted on Railway.
+|
+| Do not change this URL unless the Railway backend URL changes.
+|
+*/
+
+const API_URL =
+    "https://doono-erp-production.up.railway.app/api/v1";
+
 const api = axios.create({
-    baseURL:
-        import.meta.env.VITE_API_URL ||
-        "http://127.0.0.1:8000/api/v1",
+    baseURL: API_URL,
 
     headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
     },
+
+    timeout: 30000,
 });
 
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("token");
+/*
+|--------------------------------------------------------------------------
+| REQUEST INTERCEPTOR
+|--------------------------------------------------------------------------
+| Automatically attaches the logged-in user's Sanctum token.
+|--------------------------------------------------------------------------
+*/
 
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem("token");
+
+        if (token) {
+            config.headers = config.headers || {};
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
+);
 
-    return config;
-});
+/*
+|--------------------------------------------------------------------------
+| RESPONSE INTERCEPTOR
+|--------------------------------------------------------------------------
+*/
 
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        return response;
+    },
 
     (error) => {
-        if (error.response?.status === 401) {
+        /*
+        |--------------------------------------------------------------------------
+        | NETWORK ERROR
+        |--------------------------------------------------------------------------
+        | No response means the browser could not communicate with
+        | the Railway Laravel backend.
+        |--------------------------------------------------------------------------
+        */
+
+        if (!error.response) {
+            const networkError = new Error(
+                "Unable to connect to the DONO School ERP server. " +
+                "Please check the Railway backend connection."
+            );
+
+            networkError.code = error.code || "NETWORK_ERROR";
+            networkError.isNetworkError = true;
+            networkError.originalError = error;
+
+            return Promise.reject(networkError);
+        }
+
+        const status = error.response.status;
+        const data = error.response.data || {};
+
+        /*
+        |--------------------------------------------------------------------------
+        | 401 - UNAUTHORIZED
+        |--------------------------------------------------------------------------
+        */
+
+        if (status === 401) {
             localStorage.removeItem("token");
             localStorage.removeItem("user");
 
-            window.location.href = "/login";
+            if (window.location.pathname !== "/login") {
+                window.location.href = "/login";
+            }
         }
 
-        // Normalize err.message to the backend's real message when present,
-        // so every caller across the app gets useful error text via
-        // err.message instead of Axios's generic "Request failed with
-        // status code 422" — fixed once here, not per-page.
-        if (error.response?.data?.message) {
-            error.message = error.response.data.message;
+        /*
+        |--------------------------------------------------------------------------
+        | BACKEND MESSAGE
+        |--------------------------------------------------------------------------
+        */
+
+        if (data.message) {
+            error.message = data.message;
         }
 
-        // Surface field-level validation errors the same way everywhere —
-        // err.errors, so pages can show them under the right input without
-        // reaching into err.response.data.errors themselves.
-        if (error.response?.data?.errors) {
-            error.errors = error.response.data.errors;
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATION ERRORS
+        |--------------------------------------------------------------------------
+        */
+
+        if (data.errors) {
+            error.errors = data.errors;
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 403 - FORBIDDEN
+        |--------------------------------------------------------------------------
+        */
+
+        if (status === 403) {
+            error.forbidden = true;
+
+            if (!data.message) {
+                error.message =
+                    "You do not have permission to perform this action.";
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 404 - NOT FOUND
+        |--------------------------------------------------------------------------
+        */
+
+        if (status === 404) {
+            error.notFound = true;
+
+            if (!data.message) {
+                error.message =
+                    "The requested resource was not found.";
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 422 - VALIDATION ERROR
+        |--------------------------------------------------------------------------
+        */
+
+        if (status === 422) {
+            error.validationError = true;
+
+            if (!data.message) {
+                error.message =
+                    "Please check the information entered and try again.";
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 500+ - SERVER ERROR
+        |--------------------------------------------------------------------------
+        */
+
+        if (status >= 500) {
+            error.serverError = true;
+
+            if (!data.message) {
+                error.message =
+                    "The DONO School ERP server encountered an error.";
+            }
+        }
+
+        error.status = status;
+        error.responseData = data;
 
         return Promise.reject(error);
     }
 );
+
+/*
+|--------------------------------------------------------------------------
+| API INFORMATION
+|--------------------------------------------------------------------------
+*/
+
+export const getApiBaseUrl = () => API_URL;
 
 export default api;
