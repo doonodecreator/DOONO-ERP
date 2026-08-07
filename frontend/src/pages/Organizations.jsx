@@ -22,9 +22,11 @@ export default function Organizations() {
         setError("");
         try {
             const res = await api.get("/organizations");
-            setOrganizations(res.data.data || []);
+            const data = res.data?.data;
+            setOrganizations(Array.isArray(data) ? data : []);
         } catch (err) {
             setError(err.message || "Failed to load organizations.");
+            setOrganizations([]);
         } finally {
             setLoading(false);
         }
@@ -36,7 +38,7 @@ export default function Organizations() {
         setDetailLoading(true);
         try {
             const res = await api.get(`/organizations/${org.id}`);
-            setSelectedDetail(res.data.data);
+            setSelectedDetail(res.data?.data || null);
         } catch (err) {
             setError(err.message || "Failed to load organization details.");
         } finally {
@@ -89,7 +91,7 @@ export default function Organizations() {
 
                         <PageHeader title="Schools" subtitle={`${selectedDetail.schools?.length || 0} school(s) under this organization`} />
 
-                        {(!selectedDetail.schools || selectedDetail.schools.length === 0) ? (
+                        {(!Array.isArray(selectedDetail.schools) || selectedDetail.schools.length === 0) ? (
                             <EmptyState title="No Schools" message="This organization has no schools yet." />
                         ) : (
                             <DataTable
@@ -120,7 +122,7 @@ export default function Organizations() {
             {loading ? (
                 <LoadingSpinner text="Loading organizations..." />
             ) : organizations.length === 0 ? (
-                <EmptyState title="No Organizations" message="No organizations have registered yet." />
+                <EmptyState title="No Organizations" message="No organizations have registered yet, or the request failed above." />
             ) : (
                 <DataTable columns={columns} data={rows} emptyMessage="No organizations found." />
             )}
