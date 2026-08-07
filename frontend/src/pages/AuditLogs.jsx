@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import PageHeader from "../components/layout/PageHeader";
+import DataTable from "../components/tables/DataTable";
+import LoadingSpinner from "../components/feedback/LoadingSpinner";
+import EmptyState from "../components/feedback/EmptyState";
 
 export default function AuditLogs() {
     const [schoolActivity, setSchoolActivity] = useState([]);
@@ -26,19 +30,13 @@ export default function AuditLogs() {
         }
     }
 
-    const containerStyle = {
-        minHeight: "100vh",
-        padding: "20px",
-        fontFamily: "system-ui, sans-serif",
-    };
+    const columns = [
+        { key: "user", label: "User", render: (row) => row.user || "System" },
+        { key: "action", label: "Action" },
+        { key: "time", label: "Time", align: "right" },
+    ];
 
-    const cardStyle = {
-        background: "#fff",
-        borderRadius: 12,
-        padding: 16,
-        boxShadow: "0 2px 10px rgba(0,0,0,.06)",
-        marginBottom: 10,
-    };
+    const list = tab === "schools" ? schoolActivity : myActions;
 
     const tabBtn = (active) => ({
         padding: "8px 16px",
@@ -51,15 +49,12 @@ export default function AuditLogs() {
         color: active ? "#fff" : "#334155",
     });
 
-    const list = tab === "schools" ? schoolActivity : myActions;
-
     return (
-        <div style={containerStyle}>
-            <h1 style={{ marginBottom: 4 }}>Audit Logs</h1>
-            <p style={{ color: "#64748b", marginTop: 0, marginBottom: 16 }}>
-                What schools are doing, and your own platform-level actions — kept separate
-                so schools never see your activity, and you can see theirs.
-            </p>
+        <div style={{ padding: 20 }}>
+            <PageHeader
+                title="Audit Logs"
+                subtitle="What schools are doing, and your own platform-level actions — kept separate so schools never see your activity."
+            />
 
             <div style={{ marginBottom: 16 }}>
                 <button style={tabBtn(tab === "schools")} onClick={() => setTab("schools")}>
@@ -71,27 +66,17 @@ export default function AuditLogs() {
             </div>
 
             {error && (
-                <div style={{ ...cardStyle, background: "#fef2f2", color: "#b91c1c" }}>
+                <div style={{ background: "#fef2f2", color: "#b91c1c", padding: 16, borderRadius: 12, marginBottom: 16 }}>
                     {error}
                 </div>
             )}
 
             {loading ? (
-                <p>Loading...</p>
+                <LoadingSpinner text="Loading audit logs..." />
             ) : list.length === 0 ? (
-                <div style={cardStyle}>
-                    <p style={{ color: "#94a3b8", margin: 0 }}>No activity recorded yet.</p>
-                </div>
+                <EmptyState title="No Activity" message="No activity has been recorded yet." />
             ) : (
-                list.map((entry, i) => (
-                    <div key={i} style={cardStyle}>
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
-                            <strong>{entry.user || "System"}</strong>
-                            <span style={{ color: "#94a3b8", fontSize: 13 }}>{entry.time}</span>
-                        </div>
-                        <div style={{ marginTop: 4, color: "#334155" }}>{entry.action}</div>
-                    </div>
-                ))
+                <DataTable columns={columns} data={list} emptyMessage="No activity recorded." />
             )}
         </div>
     );

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import api from '../utils/api';
+import React, { useState, useEffect } from 'react';
+import api from '../services/api';
 
 const AddStaff = ({ setPage }) => {
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
+    const [roles, setRoles] = useState([]);
+    const [rolesLoading, setRolesLoading] = useState(true);
 
     const [formData, setFormData] = useState({
         staff_number: '',
@@ -13,15 +15,24 @@ const AddStaff = ({ setPage }) => {
         gender: 'male',
         date_of_birth: '',
         phone: '',
-        email: '',
         address: '',
         designation: '',
         department: '',
         employment_date: new Date().toISOString().split('T')[0],
         basic_salary: '',
         qualification: '',
-        employment_status: 'active'
+        employment_status: 'active',
+        email: '',
+        password: '',
+        role_slug: '',
     });
+
+    useEffect(() => {
+        api.get('/roles')
+            .then((res) => setRoles(res.data.data || []))
+            .catch(() => setRoles([]))
+            .finally(() => setRolesLoading(false));
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -40,10 +51,10 @@ const AddStaff = ({ setPage }) => {
             await api.post('/staff', formData);
             setPage('staff');
         } catch (err) {
-            if (err.response && err.response.status === 422) {
-                setErrors(err.response.data.errors || {});
+            if (err.errors) {
+                setErrors(err.errors);
             } else {
-                alert(err.response?.data?.message || 'An error occurred while creating staff member.');
+                alert(err.message || 'An error occurred while creating staff member.');
             }
         } finally {
             setSubmitting(false);
@@ -55,7 +66,7 @@ const AddStaff = ({ setPage }) => {
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800">Add Staff Member</h1>
-                    <p className="text-sm text-gray-500">Fill in the personnel details to register a new staff member.</p>
+                    <p className="text-sm text-gray-500">Fill in the personnel details, and set up their login and role for the system.</p>
                 </div>
                 <button
                     type="button"
@@ -143,7 +154,64 @@ const AddStaff = ({ setPage }) => {
                 </div>
 
                 <div>
-                    <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Employment & Position</h2>
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Login & Role</h2>
+                    <p className="text-xs text-gray-500 mb-4">
+                        This creates a real account this staff member can log in with, and grants
+                        them the selected role at this school.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Login Email *</label>
+                            <input
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            />
+                            {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email[0]}</p>}
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Temporary Password *</label>
+                            <input
+                                type="text"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                required
+                                minLength={8}
+                                placeholder="At least 8 characters"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            />
+                            {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password[0]}</p>}
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Role *</label>
+                            <select
+                                name="role_slug"
+                                value={formData.role_slug}
+                                onChange={handleChange}
+                                required
+                                disabled={rolesLoading}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
+                            >
+                                <option value="">
+                                    {rolesLoading ? 'Loading roles...' : 'Select a role'}
+                                </option>
+                                {roles.map((role) => (
+                                    <option key={role.id} value={role.slug}>
+                                        {role.name}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.role_slug && <p className="text-xs text-red-500 mt-1">{errors.role_slug[0]}</p>}
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Employment Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label className="block text-xs font-semibold text-gray-600 mb-1">Staff ID / Number</label>
@@ -157,7 +225,7 @@ const AddStaff = ({ setPage }) => {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1">Designation / Role</label>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Designation (display title)</label>
                             <input
                                 type="text"
                                 name="designation"

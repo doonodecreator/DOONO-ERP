@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { getPrimaryRoleSlug } from "../utils/role";
 
 import {
   FaBuilding,
@@ -23,17 +24,12 @@ import {
 import "../styles/dashboard.css";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, roles, isPlatformAdmin } = useAuth();
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Extract user role cleanly from AuthContext
-  const userRole =
-    user?.role ||
-    user?.roles?.[0]?.slug ||
-    user?.roles?.[0]?.name ||
-    "guest";
+  const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin });
 
   const isSuperAdmin =
     userRole === "super_admin" || stats?.dashboard_type === "super_admin";
@@ -65,9 +61,7 @@ export default function Dashboard() {
     }
   }
 
-  // Master Card Definitions with Strict Role Checks
   const cards = [
-    // --- Super Admin Only Cards ---
     {
       title: "Organizations",
       value: stats?.organizations,
@@ -82,8 +76,6 @@ export default function Dashboard() {
       color: "#2563eb",
       show: isSuperAdmin,
     },
-
-    // --- School Operational Cards (Super Admin & School Admin) ---
     {
       title: "Students",
       value: stats?.students,
@@ -126,8 +118,6 @@ export default function Dashboard() {
       color: "#475569",
       show: isSuperAdmin || isSchoolAdmin,
     },
-
-    // --- Financial Cards ---
     {
       title: "Fee Categories",
       value: stats?.fee_categories,
@@ -163,21 +153,19 @@ export default function Dashboard() {
       color: "#16a34a",
       show: isSuperAdmin || isSchoolAdmin,
     },
-
-    // --- Academic & Assessment Cards ---
     {
       title: "Examinations",
       value: stats?.examinations,
       icon: <FaFileAlt />,
       color: "#7c3aed",
-      show: true, // Visible to Teachers, Admins & Super Admin
+      show: true,
     },
     {
       title: "Attendance",
       value: stats?.attendance_records,
       icon: <FaChartLine />,
       color: "#1e40af",
-      show: true, // Visible across roles
+      show: true,
     },
   ];
 
@@ -226,7 +214,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Grid displaying cards dynamically filtered by Role */}
       <div className="dashboard-grid">
         {cards
           .filter((card) => card.show)
@@ -250,7 +237,6 @@ export default function Dashboard() {
           ))}
       </div>
 
-      {/* Financial Overview (Visible only to Admins & Super Admins) */}
       {(isSuperAdmin || isSchoolAdmin) && (
         <div className="dashboard-two-columns">
           <div className="dashboard-section">

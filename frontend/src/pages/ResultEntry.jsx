@@ -1,37 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { getPrimaryRoleSlug } from '../utils/role';
 
 export default function ResultEntry({ setPage }) {
-  const { user } = useAuth();
+  const { roles, isPlatformAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  // Dropdown States
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [terms, setTerms] = useState([]);
 
-  // Selections
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedSession, setSelectedSession] = useState('');
   const [selectedTerm, setSelectedTerm] = useState('');
 
-  // Roster & Matrix
   const [students, setStudents] = useState([]);
   const [scores, setScores] = useState({});
   const [isLocked, setIsLocked] = useState(false);
 
-  const userRole = (
-    user?.role ||
-    user?.roles?.[0]?.slug ||
-    user?.roles?.[0]?.name ||
-    'guest'
-  ).toLowerCase();
+  const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin });
 
   const isPrincipalOrAdmin = [
     'super_admin',
@@ -82,7 +75,7 @@ export default function ResultEntry({ setPage }) {
         if (termList.length > 0) setSelectedTerm(termList[0].id);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to initialize entry options.');
+      setError(err.message || 'Failed to initialize entry options.');
     } finally {
       setLoading(false);
     }
@@ -119,7 +112,7 @@ export default function ResultEntry({ setPage }) {
       setScores(initialScores);
       setIsLocked(resData.is_locked || false);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch score matrix.');
+      setError(err.message || 'Failed to fetch score matrix.');
     } finally {
       setLoading(false);
     }
@@ -184,7 +177,7 @@ export default function ResultEntry({ setPage }) {
       await api.post('/results', payload);
       setMessage('Scores successfully saved and computed!');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit score sheet.');
+      setError(err.message || 'Failed to submit score sheet.');
     } finally {
       setSaving(false);
     }
@@ -192,7 +185,6 @@ export default function ResultEntry({ setPage }) {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Class Result Entry Sheet</h1>
@@ -209,7 +201,6 @@ export default function ResultEntry({ setPage }) {
         )}
       </div>
 
-      {/* Notifications */}
       {message && (
         <div className="p-4 mb-6 bg-green-50 text-green-700 rounded-lg border border-green-200 text-sm flex justify-between items-center">
           <span>{message}</span>
@@ -223,7 +214,6 @@ export default function ResultEntry({ setPage }) {
         </div>
       )}
 
-      {/* Selections Panel */}
       <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1">Class *</label>
@@ -280,7 +270,6 @@ export default function ResultEntry({ setPage }) {
         </div>
       </div>
 
-      {/* Score Matrix Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-gray-500">Loading student roster and scores...</div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\CurrentContextService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,7 +16,8 @@ class StoreStaffRequest extends FormRequest
     public function rules(): array
     {
         $user = auth()->user();
-        $schoolId = method_exists($user, 'currentSchoolId') ? $user->currentSchoolId() : $user->school_id;
+        $resolved = app(CurrentContextService::class)->resolve($user);
+        $schoolId = $resolved['school']['id'] ?? null;
 
         return [
             'school_id' => 'nullable|integer|exists:schools,id',
@@ -33,7 +35,6 @@ class StoreStaffRequest extends FormRequest
             'gender' => ['nullable', Rule::in(['Male', 'Female', 'Other', 'male', 'female'])],
             'date_of_birth' => 'nullable|date',
             'phone' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'designation' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
@@ -42,7 +43,16 @@ class StoreStaffRequest extends FormRequest
             'qualification' => 'nullable|string|max:255',
             'photo' => 'nullable|string',
             'employment_status' => ['nullable', Rule::in(['active', 'on_leave', 'suspended', 'terminated', 'resigned'])],
+
+            // Login + role — creates a real User account for this staff
+            // member, scoped to the current school.
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|string|min:8',
+            'role_slug' => [
+                'required',
+                'string',
+                Rule::exists('roles', 'slug')->whereNotIn('slug', ['super_admin', 'student', 'parent']),
+            ],
         ];
     }
 }
-

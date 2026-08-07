@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import api from "../utils/api";
 import { useAuth } from "../context/AuthContext";
+import { getPrimaryRoleSlug } from "../utils/role";
 
 export default function Fees({ setPage }) {
-    const { user } = useAuth();
+    const { roles, isPlatformAdmin } = useAuth();
     const [loading, setLoading] = useState(true);
     const [studentFees, setStudentFees] = useState([]);
     const [feeStructures, setFeeStructures] = useState([]);
@@ -28,12 +29,7 @@ export default function Fees({ setPage }) {
         remarks: ""
     });
 
-    const userRole = (
-        user?.role ||
-        user?.roles?.[0]?.slug ||
-        user?.roles?.[0]?.name ||
-        "guest"
-    ).toLowerCase();
+    const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin });
 
     const canManageFees = ["super_admin", "proprietor", "principal", "bursar", "accountant"].includes(userRole);
 
@@ -74,7 +70,7 @@ export default function Fees({ setPage }) {
                 setClasses(Array.isArray(data) ? data : []);
             }
         } catch (err) {
-            setError(err.response?.data?.message || "Failed to load fee management data.");
+            setError(err.message || "Failed to load fee management data.");
         } finally {
             setLoading(false);
         }
@@ -94,7 +90,7 @@ export default function Fees({ setPage }) {
             setSelectedFee(null);
             loadFinancialData();
         } catch (err) {
-            alert(err.response?.data?.message || "Failed to process payment.");
+            alert(err.message || "Failed to process payment.");
         }
     };
 
@@ -107,7 +103,6 @@ export default function Fees({ setPage }) {
 
     return (
         <div className="p-6 bg-gray-50 min-h-screen">
-            {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800">Fees & Student Invoices</h1>
@@ -125,7 +120,6 @@ export default function Fees({ setPage }) {
                 )}
             </div>
 
-            {/* Banner Notifications */}
             {successMsg && (
                 <div className="p-4 mb-4 bg-green-50 text-green-700 rounded-lg border border-green-200 text-sm flex justify-between">
                     <span>{successMsg}</span>
@@ -139,7 +133,6 @@ export default function Fees({ setPage }) {
                 </div>
             )}
 
-            {/* Filter Controls */}
             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-4">
                 <input
                     type="text"
@@ -160,7 +153,6 @@ export default function Fees({ setPage }) {
                 </select>
             </div>
 
-            {/* Student Fees Table */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 {loading ? (
                     <div className="p-12 text-center text-gray-500">Loading student fee invoices...</div>
@@ -228,7 +220,6 @@ export default function Fees({ setPage }) {
                 )}
             </div>
 
-            {/* Payment Modal */}
             {showPayModal && selectedFee && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">

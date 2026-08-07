@@ -3,105 +3,223 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreOrganizationRequest;
+use App\Http\Requests\UpdateOrganizationRequest;
+use App\Models\ActivityLog;
 use App\Models\Organization;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class OrganizationController extends Controller
 {
     /**
-     * Display all organizations.
+     * Display a listing of organizations.
      */
-    public function index()
+    public function index(): JsonResponse
     {
+        $query = Organization::with(['owner'])
+            ->withCount('schools');
+
+        if (request()->filled('search')) {
+            $search = request('search');
+
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('short_name', 'like', "%{$search}%")
+                    ->orWhere('registration_number', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if (request()->filled('status')) {
+            $query->where('status', request('status'));
+        }
+
+        $organizations = $query
+            ->latest()
+            ->paginate(request('per_page', 15));
+
         return response()->json([
             'success' => true,
-            'data' => Organization::with('owner')->latest()->get(),
+            'message' => 'Organizations retrieved successfully.',
+            'data' => $organizations,
         ]);
     }
 
     /**
      * Store a newly created organization.
      */
-    public function store(Request $request)
+    public function store(StoreOrganizationRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'short_name' => 'nullable|string|max:100',
-            'registration_number' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:30',
-            'alternative_phone' => 'nullable|string|max:30',
-            'website' => 'nullable|string|max:255',
-            'logo' => 'nullable|string|max:255',
-            'country' => 'required|string|max:100',
-            'state' => 'required|string|max:100',
-            'lga' => 'required|string|max:100',
-            'address' => 'nullable|string',
-            'status' => 'nullable|in:active,inactive,suspended',
-        ]);
+        DB::beginTransaction();
 
-        $validated['owner_id'] = auth()->id();
+        try {
 
-        $organization = Organization::create($validated);
+            $organization = Organization::create([
+                ...$request->validated(),
+                'owner_id' => Auth::id(),
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Organization created successfully.',
-            'data' => $organization->load('owner'),
-        ], 201);
+            ActivityLog::create([
+                'school_id' => null,
+                'user_id' => Auth::id(),
+                'is_platform_action' => true,
+                'module' => 'Organization',
+                'action' => 'CREATE',
+                'description' => 'Created organization "' . $organization->name . '".',
+                'subject_type' => Organization::class,
+                'subject_id' => $organization->id,
+                'properties' => [
+                    'organization' => $organization->toArray(),
+                ],
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Organization created successfully.',
+                'data' => $organization->load('owner'),
+            ], 201);
+
+        } catch (Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create organization.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
     }
 
     /**
-     * Display one organization.
+     * Display the specified organization.
      */
-    public function show(Organization $organization)
+    public function show(Organization $organization): JsonResponse
     {
-        return response()->json([
-            'success' => true,
-            'data' => $organization->load(['owner', 'schools']),
+        $organization->load([
+            'owner',
+            'schools',
         ]);
-    }
-
-    /**
-     * Update an organization.
-     */
-    public function update(Request $request, Organization $organization)
-    {
-        $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'short_name' => 'nullable|string|max:100',
-            'registration_number' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:30',
-            'alternative_phone' => 'nullable|string|max:30',
-            'website' => 'nullable|string|max:255',
-            'logo' => 'nullable|string|max:255',
-            'country' => 'sometimes|required|string|max:100',
-            'state' => 'sometimes|required|string|max:100',
-            'lga' => 'sometimes|required|string|max:100',
-            'address' => 'nullable|string',
-            'status' => 'nullable|in:active,inactive,suspended',
-        ]);
-
-        $organization->update($validated);
 
         return response()->json([
             'success' => true,
-            'message' => 'Organization updated successfully.',
-            'data' => $organization->fresh()->load('owner'),
+            'message' => 'Organization retrieved successfully.',
+            'data' => $organization,
         ]);
     }
 
     /**
-     * Delete an organization.
+     * Update the specified organization.
      */
-    public function destroy(Organization $organization)
-    {
-        $organization->delete();
+    public function update(
+        UpdateOrganizationRequest $request,
+        Organization $organization
+    ): JsonResponse {
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Organization deleted successfully.',
-        ]);
+        DB::beginTransaction();
+
+        try {
+
+            $oldData = $organization->toArray();
+
+            $organization->update($request->validated());
+
+            ActivityLog::create([
+                'school_id' => null,
+                'user_id' => Auth::id(),
+                'is_platform_action' => true,
+                'module' => 'Organization',
+                'action' => 'UPDATE',
+                'description' => 'Updated organization "' . $organization->name . '".',
+                'subject_type' => Organization::class,
+                'subject_id' => $organization->id,
+                'properties' => [
+                    'before' => $oldData,
+                    'after' => $organization->fresh()->toArray(),
+                ],
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Organization updated successfully.',
+                'data' => $organization->fresh()->load('owner'),
+            ]);
+
+        } catch (Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update organization.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove the specified organization.
+     */
+    public function destroy(Organization $organization): JsonResponse
+    {
+        if ($organization->schools()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This organization still owns one or more schools and cannot be deleted.',
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+
+            $deleted = $organization->toArray();
+
+            ActivityLog::create([
+                'school_id' => null,
+                'user_id' => Auth::id(),
+                'is_platform_action' => true,
+                'module' => 'Organization',
+                'action' => 'DELETE',
+                'description' => 'Deleted organization "' . $organization->name . '".',
+                'subject_type' => Organization::class,
+                'subject_id' => $organization->id,
+                'properties' => [
+                    'deleted' => $deleted,
+                ],
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            $organization->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Organization deleted successfully.',
+            ]);
+
+        } catch (Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete organization.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
     }
 }

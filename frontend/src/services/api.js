@@ -1,78 +1,54 @@
-const API_BASE = import.meta.env?.VITE_API_BASE_URL || "https://doono-erp-production.up.railway.app/api/v1";
+import axios from "axios";
 
-function getToken() {
-    return localStorage.getItem("token");
-}
+const api = axios.create({
+    baseURL:
+        import.meta.env.VITE_API_URL ||
+        "http://127.0.0.1:8000/api/v1",
 
-async function request(endpoint, options = {}) {
-    const token = getToken();
-
-    const headers = {
+    headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        ...(options.headers || {}),
-    };
+    },
+});
+
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem("token");
 
     if (token) {
-        headers.Authorization = `Bearer ${token}`;
+        config.headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-        ...options,
-        headers,
-    });
+    return config;
+});
 
-    let data = {};
+api.interceptors.response.use(
+    (response) => response,
 
-    try {
-        data = await response.json();
-    } catch (e) {
-        data = {};
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+
+            window.location.href = "/login";
+        }
+
+        // Normalize err.message to the backend's real message when present,
+        // so every caller across the app gets useful error text via
+        // err.message instead of Axios's generic "Request failed with
+        // status code 422" — fixed once here, not per-page.
+        if (error.response?.data?.message) {
+            error.message = error.response.data.message;
+        }
+
+        // Surface field-level validation errors the same way everywhere —
+        // err.errors, so pages can show them under the right input without
+        // reaching into err.response.data.errors themselves.
+        if (error.response?.data?.errors) {
+            error.errors = error.response.data.errors;
+        }
+
+        return Promise.reject(error);
     }
+);
 
-    if (response.status === 401) {
-        localStorage.removeItem("token");
-    }
-
-    if (!response.ok) {
-        throw data;
-    }
-
-    return {
-        data,
-        status: response.status,
-    };
-}
-
-export default {
-    get(endpoint) {
-        return request(endpoint);
-    },
-
-    post(endpoint, body) {
-        return request(endpoint, {
-            method: "POST",
-            body: JSON.stringify(body),
-        });
-    },
-
-    put(endpoint, body) {
-        return request(endpoint, {
-            method: "PUT",
-            body: JSON.stringify(body),
-        });
-    },
-
-    patch(endpoint, body) {
-        return request(endpoint, {
-            method: "PATCH",
-            body: JSON.stringify(body),
-        });
-    },
-
-    delete(endpoint) {
-        return request(endpoint, {
-            method: "DELETE",
-        });
-    },
-};
+export default api;

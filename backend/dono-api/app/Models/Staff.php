@@ -11,6 +11,7 @@ class Staff extends Model
 
     protected $fillable = [
         'school_id',
+        'user_id',
         'staff_number',
         'first_name',
         'middle_name',
@@ -52,5 +53,14 @@ class Staff extends Model
     {
         return $this->belongsTo(School::class);
     }
-}
 
+    /**
+     * The login account linked to this staff member, if one was created.
+     * Staff created before this feature (or imported historical records)
+     * may have no linked user.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+}

@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import PageHeader from "../components/layout/PageHeader";
+import LoadingSpinner from "../components/feedback/LoadingSpinner";
+import EmptyState from "../components/feedback/EmptyState";
 
 export default function Schools() {
     const [schools, setSchools] = useState([]);
@@ -82,12 +85,6 @@ export default function Schools() {
         }
     }
 
-    const containerStyle = {
-        minHeight: "100vh",
-        padding: "20px",
-        fontFamily: "system-ui, sans-serif",
-    };
-
     const cardStyle = {
         background: "#fff",
         borderRadius: 12,
@@ -118,11 +115,11 @@ export default function Schools() {
     };
 
     return (
-        <div style={containerStyle}>
-            <h1 style={{ marginBottom: 4 }}>Schools</h1>
-            <p style={{ color: "#64748b", marginTop: 0, marginBottom: 20 }}>
-                Every school on the platform. Grant free access, custom timeframes, or discounts.
-            </p>
+        <div style={{ padding: 20 }}>
+            <PageHeader
+                title="Schools"
+                subtitle="Every school on the platform. Grant free access, custom timeframes, or discounts."
+            />
 
             {error && (
                 <div style={{ ...cardStyle, background: "#fef2f2", color: "#b91c1c" }}>
@@ -134,12 +131,19 @@ export default function Schools() {
             )}
 
             {loading ? (
-                <p>Loading schools...</p>
+                <LoadingSpinner text="Loading schools..." />
             ) : schools.length === 0 ? (
-                <div style={cardStyle}>
-                    <p style={{ color: "#94a3b8", margin: 0 }}>No schools yet.</p>
-                </div>
+                <EmptyState title="No Schools" message="No schools have registered on the platform yet." />
             ) : (
+                /*
+                 * NOTE: intentionally not using DataTable here. Each school
+                 * needs an inline expanding form (timeframe/discount) below
+                 * its row — DataTable doesn't support row expansion or
+                 * modals yet (no Modal component exists in the shared
+                 * library per the current component list). Revisit this
+                 * once a Modal component is built — that's the correct
+                 * home for these action forms, not an expanded table row.
+                 */
                 schools.map((school) => (
                     <div key={school.id} style={cardStyle}>
                         <strong>{school.name}</strong>

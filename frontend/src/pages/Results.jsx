@@ -1,21 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { getPrimaryRoleSlug } from '../utils/role';
 
 export default function Results({ setPage }) {
-  const { user } = useAuth();
+  const { roles, isPlatformAdmin } = useAuth();
   const [examinations, setExaminations] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('submissions');
 
-  const userRole = (
-    user?.role ||
-    user?.roles?.[0]?.slug ||
-    user?.roles?.[0]?.name ||
-    'guest'
-  ).toLowerCase();
+  const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin });
 
   const isPrincipalOrAdmin = [
     'super_admin',
@@ -48,7 +44,7 @@ export default function Results({ setPage }) {
         setSubmissions(Array.isArray(data) ? data : []);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load examination management records.');
+      setError(err.message || 'Failed to load examination management records.');
     } finally {
       setLoading(false);
     }
@@ -62,13 +58,12 @@ export default function Results({ setPage }) {
       alert('Results successfully published!');
       loadExamData();
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to publish results.');
+      alert(err.message || 'Failed to publish results.');
     }
   };
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Exams & Result Submissions</h1>
@@ -84,7 +79,6 @@ export default function Results({ setPage }) {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="flex border-b border-gray-200 mb-6 bg-white rounded-xl p-1 shadow-sm">
         <button
           onClick={() => setActiveTab('submissions')}
@@ -111,7 +105,6 @@ export default function Results({ setPage }) {
         </div>
       )}
 
-      {/* Tab Content */}
       {activeTab === 'submissions' ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           {loading ? (

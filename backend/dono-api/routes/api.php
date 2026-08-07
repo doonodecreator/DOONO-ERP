@@ -70,18 +70,33 @@ use App\Http\Controllers\Api\ParentPortalController;
 
 Route::prefix('v1')->group(function () {
 
+    /*
+    |--------------------------------------------------------------------------
+    | Public Routes — genuinely public, no exceptions
+    |--------------------------------------------------------------------------
+    */
+
     Route::post('payments/paystack/webhook', [PaymentController::class, 'webhook']);
     Route::get('payments/paystack/verify/{reference}', [PaymentController::class, 'verify']);
 
     Route::get('/countries', [SchoolController::class, 'countries']);
+    Route::get('/roles', [\App\Http\Controllers\Api\RoleController::class, 'index'])->middleware('auth:sanctum');
 
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
 
+    /*
+    |--------------------------------------------------------------------------
+    | Protected — authenticated, no school required yet
+    |--------------------------------------------------------------------------
+    */
+
     Route::middleware('auth:sanctum')->group(function () {
+        // Platform Admin Subscription Overrides
         Route::post('schools/{school}/toggle-exemption', [SchoolController::class, 'toggleExemption']);
         Route::post('schools/{school}/grant-timeframe', [SchoolController::class, 'grantCustomTimeframe']);
         Route::post('schools/{school}/set-discount', [SchoolController::class, 'setDiscount']);
+
 
         Route::get('/me/context', [AuthController::class, 'context']);
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -115,21 +130,68 @@ Route::prefix('v1')->group(function () {
         Route::put('/system-settings', [SystemSettingController::class, 'update'])
             ->middleware('role:super_admin');
 
-        Route::apiResource('promo-campaigns', PromoCampaignController::class);
+        /*
+        |----------------------------------------------------------------
+        | Subscription-catalog resources: schools need READ access (to
+        | see available plans, check valid coupons, view promotions) but
+        | only the platform owner can CREATE/EDIT/DELETE the catalog
+        | itself. Split by verb rather than locking the whole resource
+        | to one role.
+        |----------------------------------------------------------------
+        */
+        Route::apiResource('subscription-plans', SubscriptionPlanController::class)
+            ->only(['index', 'show']);
+        Route::apiResource('subscription-plans', SubscriptionPlanController::class)
+            ->only(['store', 'update', 'destroy'])
+            ->middleware('role:super_admin');
+
+        Route::apiResource('coupons', CouponController::class)
+            ->only(['index', 'show']);
+        Route::apiResource('coupons', CouponController::class)
+            ->only(['store', 'update', 'destroy'])
+            ->middleware('role:super_admin');
+
+        Route::apiResource('promo-campaigns', PromoCampaignController::class)
+            ->only(['index', 'show']);
+        Route::apiResource('promo-campaigns', PromoCampaignController::class)
+            ->only(['store', 'update', 'destroy'])
+            ->middleware('role:super_admin');
+
+        // Reference data — harmless read for any authenticated user.
         Route::apiResource('currencies', CurrencyController::class);
-        Route::apiResource('coupons', CouponController::class);
-        Route::apiResource('subscription-plans', SubscriptionPlanController::class);
-        Route::apiResource('school-subscriptions', SchoolSubscriptionController::class);
+
+        /*
+        |----------------------------------------------------------------
+        | school-subscriptions: KNOWN GAP — SchoolSubscriptionController
+        | currently has no ownership scoping (index/show return every
+        | school's records, not just the caller's own). Restricted to
+        | super_admin entirely until that's fixed with a proper
+        | "my own subscription" scoped endpoint — do not relax this
+        | without adding that scoping first.
+        |----------------------------------------------------------------
+        */
+        Route::apiResource('school-subscriptions', SchoolSubscriptionController::class)
+            ->middleware('role:super_admin');
 
         Route::get('payments/receipt/{reference}', [ReceiptController::class, 'download']);
         Route::get('payments/history/{school}', [PaymentController::class, 'history']);
         Route::post('payments/paystack/initialize', [PaymentController::class, 'initialize']);
 
+        /*
+        |----------------------------------------------------------------
+        | Everything below requires an active current school AND passes
+        | subscription enforcement (CheckActiveSubscription — no-ops
+        | globally until SystemSetting.enforce_subscriptions is turned on).
+        | HasSchool bypasses school-requirement for platform admins.
+        |----------------------------------------------------------------
+        */
         Route::middleware(['has.school', 'subscription'])->group(function () {
+            // Scoped Tiered Settings Routes
             Route::get('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'show']);
             Route::put('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'update']);
             Route::get('academic-settings', [\App\Http\Controllers\Api\AcademicSettingController::class, 'show']);
             Route::put('academic-settings', [\App\Http\Controllers\Api\AcademicSettingController::class, 'update']);
+
 
             Route::prefix('result-entry')->group(function () {
                 Route::get('/students', [ResultEntryController::class, 'students']);
@@ -161,6 +223,11 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('hostel-rooms', HostelRoomController::class);
             Route::apiResource('hostel-allocations', HostelAllocationController::class);
 
+            /*
+            |------------------------------------------------------------
+            | Role-specific dashboards.
+            |------------------------------------------------------------
+            */
             Route::get('teacher/dashboard', [TeacherPortalController::class, 'dashboard'])
                 ->middleware('role:teacher');
             Route::get('form-teacher/dashboard', [FormTeacherPortalController::class, 'dashboard'])

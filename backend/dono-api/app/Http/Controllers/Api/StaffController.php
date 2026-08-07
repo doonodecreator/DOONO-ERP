@@ -6,20 +6,32 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreStaffRequest;
 use App\Http\Requests\UpdateStaffRequest;
 use App\Http\Resources\StaffResource;
+use App\Models\Role;
 use App\Models\Staff;
+use App\Models\User;
+use App\Services\ActivityLogService;
+use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class StaffController extends Controller
 {
+    public function __construct(private CurrentContextService $context)
+    {
+    }
+
+    private function currentSchoolId(Request $request): ?int
+    {
+        return $this->context->resolve($request->user())['school']['id'] ?? null;
+    }
+
     public function index(Request $request)
     {
-        $query = Staff::with('school');
+        $query = Staff::with(['school', 'user.roles']);
 
         if (! $request->user()->isSuperAdmin()) {
-            $query->where(
-                'school_id',
-                $request->user()->currentSchoolId()
-            );
+            $query->where('school_id', $this->currentSchoolId($request));
         }
 
         return StaffResource::collection(
@@ -39,9 +51,11 @@ class StaffController extends Controller
                 ], 422);
             }
 
+            $schoolId = $data['school_id'];
+
         } else {
 
-            $schoolId = $request->user()->currentSchoolId();
+            $schoolId = $this->currentSchoolId($request);
 
             if (! $schoolId) {
                 return response()->json([
@@ -52,11 +66,42 @@ class StaffController extends Controller
             $data['school_id'] = $schoolId;
         }
 
-        $staff = Staff::create($data);
+        $staff = DB::transaction(function () use ($data, $schoolId) {
+            $newUser = User::create([
+                'name' => trim("{$data['first_name']} {$data['last_name']}"),
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+            ]);
+
+            $role = Role::where('slug', $data['role_slug'])->first();
+
+            if ($role) {
+                $newUser->roles()->attach($role->id, [
+                    'school_id' => $schoolId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            $staffData = collect($data)
+                ->except(['email', 'password', 'role_slug'])
+                ->toArray();
+            $staffData['user_id'] = $newUser->id;
+
+            return Staff::create($staffData);
+        });
+
+        ActivityLogService::log(
+            module: 'staff',
+            action: 'created',
+            description: "Staff member \"{$staff->first_name} {$staff->last_name}\" added as {$data['role_slug']}",
+            subject: $staff,
+            schoolId: $schoolId,
+        );
 
         return (
             new StaffResource(
-                $staff->load('school')
+                $staff->load(['school', 'user.roles'])
             )
         )
         ->response()
@@ -67,13 +112,13 @@ class StaffController extends Controller
     {
         if (
             ! $request->user()->isSuperAdmin()
-            && $staff->school_id != $request->user()->currentSchoolId()
+            && $staff->school_id != $this->currentSchoolId($request)
         ) {
             abort(403);
         }
 
         return new StaffResource(
-            $staff->load('school')
+            $staff->load(['school', 'user.roles'])
         );
     }
 
@@ -83,7 +128,7 @@ class StaffController extends Controller
     ) {
         if (
             ! $request->user()->isSuperAdmin()
-            && $staff->school_id != $request->user()->currentSchoolId()
+            && $staff->school_id != $this->currentSchoolId($request)
         ) {
             abort(403);
         }
@@ -93,7 +138,7 @@ class StaffController extends Controller
         );
 
         return new StaffResource(
-            $staff->load('school')
+            $staff->load(['school', 'user.roles'])
         );
     }
 
@@ -103,7 +148,7 @@ class StaffController extends Controller
     ) {
         if (
             ! $request->user()->isSuperAdmin()
-            && $staff->school_id != $request->user()->currentSchoolId()
+            && $staff->school_id != $this->currentSchoolId($request)
         ) {
             abort(403);
         }

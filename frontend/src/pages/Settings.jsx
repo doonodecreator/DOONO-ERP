@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { getPrimaryRoleSlug } from "../utils/role";
 
 const emptyPlatformSettings = {
   platform_name: "",
@@ -34,16 +35,12 @@ const emptySchoolSettings = {
 };
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, roles, isPlatformAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const userRole =
-    user?.role ||
-    user?.roles?.[0]?.slug ||
-    user?.roles?.[0]?.name ||
-    "guest";
+  const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin });
 
   const isSuperAdmin = userRole === "super_admin";
   const isSchoolAdmin = userRole === "school_admin" || userRole === "admin" || userRole === "proprietor";
@@ -528,4 +525,3 @@ export default function Settings() {
     </div>
   );
 }
-
