@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\SystemSettingController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ReceiptController;
 use App\Http\Controllers\Api\AdminRevenueController;
+use App\Http\Controllers\Api\SchoolSubscriptionController;
 
 Route::prefix('v1')->group(function () {
 
@@ -79,6 +80,12 @@ Route::get(
         Route::get(  'payments/receipt/{reference}',
     [ReceiptController::class, 'download']
 );
+
+        Route::apiResource(
+    'school-subscriptions',
+    SchoolSubscriptionController::class
+)->middleware('role:super_admin');
+
 
         /*
         |--------------------------------------------------------------------------

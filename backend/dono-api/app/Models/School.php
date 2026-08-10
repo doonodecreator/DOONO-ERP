@@ -56,6 +56,17 @@ class School extends Model
         return $this->belongsTo(Country::class);
     }
 
+    public function subscription()
+    {
+        return $this->hasOne(SchoolSubscription::class)
+            ->where('is_current', true);
+    }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(SchoolSubscription::class);
+    }
+
     public function students()
     {
         return $this->hasMany(Student::class);

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\OrganizationController;
@@ -72,214 +73,761 @@ Route::prefix('v1')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Public Routes — genuinely public, no exceptions
+    | Public Routes
     |--------------------------------------------------------------------------
     */
 
-    Route::post('payments/paystack/webhook', [PaymentController::class, 'webhook']);
-    Route::get('payments/paystack/verify/{reference}', [PaymentController::class, 'verify']);
+    Route::post(
+        'payments/paystack/webhook',
+        [PaymentController::class, 'webhook']
+    );
 
-    Route::get('/countries', [SchoolController::class, 'countries']);
-    Route::get('/roles', [\App\Http\Controllers\Api\RoleController::class, 'index'])->middleware('auth:sanctum');
+    Route::get(
+        'payments/paystack/verify/{reference}',
+        [PaymentController::class, 'verify']
+    );
 
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::get(
+        '/countries',
+        [SchoolController::class, 'countries']
+    );
+
+    Route::get(
+        '/roles',
+        [\App\Http\Controllers\Api\RoleController::class, 'index']
+    )->middleware('auth:sanctum');
+
+    Route::post(
+        '/register',
+        [AuthController::class, 'register']
+    );
+
+    Route::post(
+        '/login',
+        [AuthController::class, 'login']
+    );
+
 
     /*
     |--------------------------------------------------------------------------
-    | Protected — authenticated, no school required yet
+    | Protected — Authenticated
     |--------------------------------------------------------------------------
     */
 
     Route::middleware('auth:sanctum')->group(function () {
-        // Platform Admin Subscription Overrides
-        Route::post('schools/{school}/toggle-exemption', [SchoolController::class, 'toggleExemption']);
-        Route::post('schools/{school}/grant-timeframe', [SchoolController::class, 'grantCustomTimeframe']);
-        Route::post('schools/{school}/set-discount', [SchoolController::class, 'setDiscount']);
-
-
-        Route::get('/me/context', [AuthController::class, 'context']);
-        Route::post('/logout', [AuthController::class, 'logout']);
-
-        Route::post('/schools', [SchoolController::class, 'store']);
-
-        Route::get('/schools', [SchoolController::class, 'index']);
-        Route::get('/schools/{school}', [SchoolController::class, 'show']);
-        Route::put('/schools/{school}', [SchoolController::class, 'update']);
-        Route::delete('/schools/{school}', [SchoolController::class, 'destroy'])
-            ->middleware('role:super_admin,proprietor');
-
-        Route::post('schools/{school}/extend-trial', [SchoolController::class, 'extendTrial'])
-            ->middleware('role:super_admin');
-
-        Route::patch('schools/{school}/subscription-status', [SchoolController::class, 'updateSubscriptionStatus'])
-            ->middleware('role:super_admin');
-
-        Route::apiResource('organizations', OrganizationController::class)
-            ->middleware('role:super_admin,proprietor');
-
-        Route::get('admin/revenue-dashboard', [AdminRevenueController::class, 'index'])
-            ->middleware('role:super_admin');
-
-        Route::get('/dashboard', [DashboardController::class, 'index'])
-            ->middleware('role:super_admin,proprietor,principal,vice_principal,bursar');
-
-        Route::get('/system-settings', [SystemSettingController::class, 'index'])
-            ->middleware('role:super_admin');
-
-        Route::put('/system-settings', [SystemSettingController::class, 'update'])
-            ->middleware('role:super_admin');
 
         /*
-        |----------------------------------------------------------------
-        | Subscription-catalog resources: schools need READ access (to
-        | see available plans, check valid coupons, view promotions) but
-        | only the platform owner can CREATE/EDIT/DELETE the catalog
-        | itself. Split by verb rather than locking the whole resource
-        | to one role.
-        |----------------------------------------------------------------
+        |--------------------------------------------------------------------------
+        | Platform Admin Subscription Overrides
+        |--------------------------------------------------------------------------
         */
-        Route::apiResource('subscription-plans', SubscriptionPlanController::class)
-            ->only(['index', 'show']);
-        Route::apiResource('subscription-plans', SubscriptionPlanController::class)
-            ->only(['store', 'update', 'destroy'])
-            ->middleware('role:super_admin');
 
-        Route::apiResource('coupons', CouponController::class)
-            ->only(['index', 'show']);
-        Route::apiResource('coupons', CouponController::class)
-            ->only(['store', 'update', 'destroy'])
-            ->middleware('role:super_admin');
+        Route::post(
+            'schools/{school}/toggle-exemption',
+            [SchoolController::class, 'toggleExemption']
+        )->middleware('role:super_admin');
 
-        Route::apiResource('promo-campaigns', PromoCampaignController::class)
-            ->only(['index', 'show']);
-        Route::apiResource('promo-campaigns', PromoCampaignController::class)
-            ->only(['store', 'update', 'destroy'])
-            ->middleware('role:super_admin');
+        Route::post(
+            'schools/{school}/grant-timeframe',
+            [SchoolController::class, 'grantCustomTimeframe']
+        )->middleware('role:super_admin');
 
-        // Reference data — harmless read for any authenticated user.
-        Route::apiResource('currencies', CurrencyController::class);
+        Route::post(
+            'schools/{school}/set-discount',
+            [SchoolController::class, 'setDiscount']
+        )->middleware('role:super_admin');
+
+/*
+        |--------------------------------------------------------------------------
+        | Authentication / Context
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get(
+            '/me/context',
+            [AuthController::class, 'context']
+        );
+
+        Route::post(
+            '/logout',
+            [AuthController::class, 'logout']
+        );
+
 
         /*
-        |----------------------------------------------------------------
-        | school-subscriptions: KNOWN GAP — SchoolSubscriptionController
-        | currently has no ownership scoping (index/show return every
-        | school's records, not just the caller's own). Restricted to
-        | super_admin entirely until that's fixed with a proper
-        | "my own subscription" scoped endpoint — do not relax this
-        | without adding that scoping first.
-        |----------------------------------------------------------------
+        |--------------------------------------------------------------------------
+        | School Management
+        |--------------------------------------------------------------------------
         */
-        Route::apiResource('school-subscriptions', SchoolSubscriptionController::class)
-            ->middleware('role:super_admin');
 
-        Route::get('payments/receipt/{reference}', [ReceiptController::class, 'download']);
-        Route::get('payments/history/{school}', [PaymentController::class, 'history']);
-        Route::post('payments/paystack/initialize', [PaymentController::class, 'initialize']);
+        Route::post(
+            '/schools',
+            [SchoolController::class, 'store']
+        );
+
+        Route::get(
+            '/schools',
+            [SchoolController::class, 'index']
+        );
+
+        Route::get(
+            '/schools/{school}',
+            [SchoolController::class, 'show']
+        );
+
+        Route::put(
+            '/schools/{school}',
+            [SchoolController::class, 'update']
+        );
+
+        Route::delete(
+            '/schools/{school}',
+            [SchoolController::class, 'destroy']
+        )->middleware('role:super_admin,proprietor');
+
+        Route::post(
+            'schools/{school}/extend-trial',
+            [SchoolController::class, 'extendTrial']
+        )->middleware('role:super_admin');
+
+        Route::patch(
+            'schools/{school}/subscription-status',
+            [SchoolController::class, 'updateSubscriptionStatus']
+        )->middleware('role:super_admin');
+
 
         /*
-        |----------------------------------------------------------------
-        | Everything below requires an active current school AND passes
-        | subscription enforcement (CheckActiveSubscription — no-ops
-        | globally until SystemSetting.enforce_subscriptions is turned on).
-        | HasSchool bypasses school-requirement for platform admins.
-        |----------------------------------------------------------------
+        |--------------------------------------------------------------------------
+        | Organizations
+        |--------------------------------------------------------------------------
         */
-        Route::middleware(['has.school', 'subscription'])->group(function () {
-            // Scoped Tiered Settings Routes
-            Route::get('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'show']);
-            Route::put('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'update']);
-            Route::get('academic-settings', [\App\Http\Controllers\Api\AcademicSettingController::class, 'show']);
-            Route::put('academic-settings', [\App\Http\Controllers\Api\AcademicSettingController::class, 'update']);
+
+        Route::apiResource(
+            'organizations',
+            OrganizationController::class
+        )->middleware('role:super_admin,proprietor');
 
 
-            Route::prefix('result-entry')->group(function () {
-                Route::get('/students', [ResultEntryController::class, 'students']);
-                Route::get('/form', [ResultEntryController::class, 'form']);
-                Route::post('/save', [ResultEntryController::class, 'save']);
-                Route::post('/results/{result}/publish', [ResultController::class, 'publish']);
-            });
+        /*
+        |--------------------------------------------------------------------------
+        | Admin Revenue
+        |--------------------------------------------------------------------------
+        */
 
-            Route::apiResource('academic-sessions', AcademicSessionController::class);
-            Route::apiResource('terms', TermController::class);
-            Route::apiResource('divisions', DivisionController::class);
-            Route::apiResource('classes', ClassController::class);
-            Route::apiResource('streams', StreamController::class);
-            Route::apiResource('students', StudentController::class);
-            Route::apiResource('parents', ParentController::class);
-            Route::apiResource('subjects', SubjectController::class);
-            Route::apiResource('staff', StaffController::class);
-            Route::apiResource('examinations', ExaminationController::class);
-            Route::apiResource('exam-scores', ExamScoreController::class);
+        Route::get(
+            'admin/revenue-dashboard',
+            [AdminRevenueController::class, 'index']
+        )->middleware('role:super_admin');
 
-            Route::get('attendance/class-list', [AttendanceController::class, 'classList']);
-            Route::post('attendances/bulk', [AttendanceController::class, 'bulkStore']);
-            Route::apiResource('attendances', AttendanceController::class);
 
-            Route::apiResource('books', BookController::class);
-            Route::apiResource('book-loans', BookLoanController::class);
+        /*
+        |--------------------------------------------------------------------------
+        | General Dashboard
+        |--------------------------------------------------------------------------
+        */
 
-            Route::apiResource('hostels', HostelController::class);
-            Route::apiResource('hostel-rooms', HostelRoomController::class);
-            Route::apiResource('hostel-allocations', HostelAllocationController::class);
+        Route::get(
+            '/dashboard',
+            [DashboardController::class, 'index']
+        )->middleware(
+            'role:super_admin,proprietor,principal,vice_principal,bursar'
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | System Settings
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get(
+            '/system-settings',
+            [SystemSettingController::class, 'index']
+        )->middleware('role:super_admin');
+
+        Route::put(
+            '/system-settings',
+            [SystemSettingController::class, 'update']
+        )->middleware('role:super_admin');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SUBSCRIPTION MANAGEMENT
+        |
+        | IMPORTANT:
+        |
+        | Subscription plans and school subscriptions are platform-owned.
+        |
+        | Schools/proprietors DO NOT get access to the subscription
+        | catalog and cannot create/update/delete subscriptions.
+        |
+        | Only the platform owner (super_admin) can manage them.
+        |--------------------------------------------------------------------------
+        */
+
+        /*
+        |--------------------------------------------------------------------------
+        | Subscription Plans
+        |--------------------------------------------------------------------------
+        */
+
+        Route::apiResource(
+            'subscription-plans',
+            SubscriptionPlanController::class
+        )->middleware('role:super_admin');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | School Subscriptions
+        |--------------------------------------------------------------------------
+        |
+        | Only super_admin can perform CRUD operations.
+        |
+        */
+
+        Route::apiResource(
+            'school-subscriptions',
+            SchoolSubscriptionController::class
+        )->middleware('role:super_admin');
+
+
+/*
+        |--------------------------------------------------------------------------
+        | My Subscription
+        |--------------------------------------------------------------------------
+        |
+        | Schools/proprietors can ONLY view their own subscription.
+        |
+        | They cannot:
+        |
+        | - create a subscription
+        | - change plan
+        | - change price
+        | - change billing cycle
+        | - change dates
+        | - change status
+        | - delete subscription
+        |
+        */
+
+        Route::get(
+            'my-subscription',
+            [SchoolSubscriptionController::class, 'mySubscription']
+        )->middleware('role:proprietor,super_admin');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Coupons
+        |--------------------------------------------------------------------------
+        |
+        | Only the platform owner manages coupons.
+        |
+        */
+
+        Route::apiResource(
+            'coupons',
+            CouponController::class
+        )->middleware('role:super_admin');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Promotional Campaigns
+        |--------------------------------------------------------------------------
+        */
+
+        Route::apiResource(
+            'promo-campaigns',
+            PromoCampaignController::class
+        )->middleware('role:super_admin');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Currency Reference Data
+        |--------------------------------------------------------------------------
+        */
+
+        Route::apiResource(
+            'currencies',
+            CurrencyController::class
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Payment Routes
+        |--------------------------------------------------------------------------
+        |
+        | These existing routes are for school/student fee payments.
+        | They are NOT being converted into subscription payments.
+        |
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get(
+            'payments/receipt/{reference}',
+            [ReceiptController::class, 'download']
+        );
+
+        Route::get(
+            'payments/history/{school}',
+            [PaymentController::class, 'history']
+        );
+
+        Route::post(
+            'payments/paystack/initialize',
+            [PaymentController::class, 'initialize']
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Everything Below Requires:
+        |
+        | 1. Authenticated user
+        | 2. Current school
+        | 3. Active subscription
+        |
+        | CheckActiveSubscription is handled by the subscription middleware.
+        |--------------------------------------------------------------------------
+        */
+
+        Route::middleware([
+            'has.school',
+            'subscription',
+        ])->group(function () {
 
             /*
-            |------------------------------------------------------------
-            | Role-specific dashboards.
-            |------------------------------------------------------------
+            |--------------------------------------------------------------------------
+            | School Settings
+            |--------------------------------------------------------------------------
             */
-            Route::get('teacher/dashboard', [TeacherPortalController::class, 'dashboard'])
-                ->middleware('role:teacher');
-            Route::get('form-teacher/dashboard', [FormTeacherPortalController::class, 'dashboard'])
-                ->middleware('role:teacher');
-            Route::get('platform-owner/dashboard', [PlatformOwnerController::class, 'dashboard'])
-                ->middleware('role:super_admin');
-            Route::get('org-owner/dashboard', [OrganizationOwnerController::class, 'dashboard'])
-                ->middleware('role:super_admin,proprietor');
-            Route::get('proprietor/dashboard', [ProprietorController::class, 'dashboard'])
-                ->middleware('role:super_admin,proprietor');
-            Route::get('principal/dashboard', [PrincipalController::class, 'dashboard'])
-                ->middleware('role:super_admin,principal');
-            Route::get('vp-academic/dashboard', [VicePrincipalAcademicController::class, 'dashboard'])
-                ->middleware('role:super_admin,vice_principal');
-            Route::get('vp-admin/dashboard', [VicePrincipalAdminController::class, 'dashboard'])
-                ->middleware('role:super_admin,head_teacher');
-            Route::get('nursery-head/dashboard', [NurseryHeadController::class, 'dashboard'])
-                ->middleware('role:super_admin,nursery_head');
-            Route::get('primary-headmaster/dashboard', [PrimaryHeadmasterController::class, 'dashboard'])
-                ->middleware('role:super_admin,primary_headmaster');
-            Route::get('secondary-principal/dashboard', [SecondaryPrincipalController::class, 'dashboard'])
-                ->middleware('role:super_admin,secondary_principal');
 
-            Route::apiResource('fee-categories', FeeCategoryController::class);
-            Route::apiResource('student-fees', StudentFeeController::class);
-            Route::apiResource('fee-payments', FeePaymentController::class);
-            Route::apiResource('payment-receipts', PaymentReceiptController::class);
-            Route::apiResource('student-enrollments', StudentEnrollmentController::class);
-            Route::apiResource('student-promotions', StudentPromotionController::class);
-            Route::apiResource('parent-students', ParentStudentController::class);
-            Route::apiResource('results', ResultController::class);
-            Route::apiResource('timetables', TimetableController::class);
-            Route::get('report-cards/{reportCard}/download-pdf', [ReportCardController::class, 'downloadPdf']);
-            Route::apiResource('report-cards', ReportCardController::class);
-            Route::apiResource('fees', FeeController::class);
-            Route::apiResource('expenses', ExpenseController::class);
+            Route::get(
+                'school-settings',
+                [\App\Http\Controllers\Api\SchoolSettingController::class, 'show']
+            );
 
-            Route::apiResource('medical-records', MedicalRecordController::class);
-            Route::apiResource('clinic-visits', ClinicVisitController::class);
+            Route::put(
+                'school-settings',
+                [\App\Http\Controllers\Api\SchoolSettingController::class, 'update']
+            );
 
-            Route::get('parent-dashboard/{parent}', [ParentDashboardController::class, 'index']);
-            Route::get('teacher-dashboard/{teacher}', [TeacherDashboardController::class, 'index']);
+            Route::get(
+                'academic-settings',
+                [\App\Http\Controllers\Api\AcademicSettingController::class, 'show']
+            );
 
-            Route::apiResource('vehicles', VehicleController::class);
-            Route::apiResource('transport-routes', TransportRouteController::class);
-            Route::apiResource('transport-allocations', TransportAllocationController::class);
-            Route::apiResource('visitors', VisitorController::class);
-            Route::apiResource('student-gate-passes', StudentGatePassController::class);
-            Route::apiResource('reception-appointments', ReceptionAppointmentController::class);
+            Route::put(
+                'academic-settings',
+                [\App\Http\Controllers\Api\AcademicSettingController::class, 'update']
+            );
 
-            Route::get('student/dashboard', [StudentPortalController::class, 'dashboard']);
-            Route::get('parent/dashboard', [ParentPortalController::class, 'dashboard']);
+
+/*
+            |--------------------------------------------------------------------------
+            | Result Entry
+            |--------------------------------------------------------------------------
+            */
+
+            Route::prefix('result-entry')->group(function () {
+
+                Route::get(
+                    '/students',
+                    [ResultEntryController::class, 'students']
+                );
+
+                Route::get(
+                    '/form',
+                    [ResultEntryController::class, 'form']
+                );
+
+                Route::post(
+                    '/save',
+                    [ResultEntryController::class, 'save']
+                );
+
+                Route::post(
+                    '/results/{result}/publish',
+                    [ResultController::class, 'publish']
+                );
+            });
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Academic Management
+            |--------------------------------------------------------------------------
+            */
+
+            Route::apiResource(
+                'academic-sessions',
+                AcademicSessionController::class
+            );
+
+            Route::apiResource(
+                'terms',
+                TermController::class
+            );
+
+            Route::apiResource(
+                'divisions',
+                DivisionController::class
+            );
+
+            Route::apiResource(
+                'classes',
+                ClassController::class
+            );
+
+            Route::apiResource(
+                'streams',
+                StreamController::class
+            );
+
+            Route::apiResource(
+                'students',
+                StudentController::class
+            );
+
+            Route::apiResource(
+                'parents',
+                ParentController::class
+            );
+
+            Route::apiResource(
+                'subjects',
+                SubjectController::class
+            );
+
+            Route::apiResource(
+                'staff',
+                StaffController::class
+            );
+
+            Route::apiResource(
+                'examinations',
+                ExaminationController::class
+            );
+
+            Route::apiResource(
+                'exam-scores',
+                ExamScoreController::class
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Attendance
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get(
+                'attendance/class-list',
+                [AttendanceController::class, 'classList']
+            );
+
+            Route::post(
+                'attendances/bulk',
+                [AttendanceController::class, 'bulkStore']
+            );
+
+            Route::apiResource(
+                'attendances',
+                AttendanceController::class
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Library
+            |--------------------------------------------------------------------------
+            */
+
+            Route::apiResource(
+                'books',
+                BookController::class
+            );
+
+            Route::apiResource(
+                'book-loans',
+                BookLoanController::class
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Hostel
+            |--------------------------------------------------------------------------
+            */
+
+            Route::apiResource(
+                'hostels',
+                HostelController::class
+            );
+
+            Route::apiResource(
+                'hostel-rooms',
+                HostelRoomController::class
+            );
+
+            Route::apiResource(
+                'hostel-allocations',
+                HostelAllocationController::class
+            );
+
+/*
+            |--------------------------------------------------------------------------
+            | Role-Specific Dashboards
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get(
+                'teacher/dashboard',
+                [TeacherPortalController::class, 'dashboard']
+            )->middleware('role:teacher');
+
+            Route::get(
+                'form-teacher/dashboard',
+                [FormTeacherPortalController::class, 'dashboard']
+            )->middleware('role:teacher');
+
+            Route::get(
+                'platform-owner/dashboard',
+                [PlatformOwnerController::class, 'dashboard']
+            )->middleware('role:super_admin');
+
+            Route::get(
+                'org-owner/dashboard',
+                [OrganizationOwnerController::class, 'dashboard']
+            )->middleware('role:super_admin,proprietor');
+
+            Route::get(
+                'proprietor/dashboard',
+                [ProprietorController::class, 'dashboard']
+            )->middleware('role:super_admin,proprietor');
+
+            Route::get(
+                'principal/dashboard',
+                [PrincipalController::class, 'dashboard']
+            )->middleware('role:super_admin,principal');
+
+            Route::get(
+                'vp-academic/dashboard',
+                [VicePrincipalAcademicController::class, 'dashboard']
+            )->middleware('role:super_admin,vice_principal');
+
+            Route::get(
+                'vp-admin/dashboard',
+                [VicePrincipalAdminController::class, 'dashboard']
+            )->middleware('role:super_admin,head_teacher');
+
+            Route::get(
+                'nursery-head/dashboard',
+                [NurseryHeadController::class, 'dashboard']
+            )->middleware('role:super_admin,nursery_head');
+
+            Route::get(
+                'primary-headmaster/dashboard',
+                [PrimaryHeadmasterController::class, 'dashboard']
+            )->middleware('role:super_admin,primary_headmaster');
+
+            Route::get(
+                'secondary-principal/dashboard',
+                [SecondaryPrincipalController::class, 'dashboard']
+            )->middleware('role:super_admin,secondary_principal');
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Fees
+            |--------------------------------------------------------------------------
+            */
+
+            Route::apiResource(
+                'fee-categories',
+                FeeCategoryController::class
+            );
+
+            Route::apiResource(
+                'student-fees',
+                StudentFeeController::class
+            );
+
+            Route::apiResource(
+                'fee-payments',
+                FeePaymentController::class
+            );
+
+            Route::apiResource(
+                'payment-receipts',
+                PaymentReceiptController::class
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Students
+            |--------------------------------------------------------------------------
+            */
+
+            Route::apiResource(
+                'student-enrollments',
+                StudentEnrollmentController::class
+            );
+
+            Route::apiResource(
+                'student-promotions',
+                StudentPromotionController::class
+            );
+
+            Route::apiResource(
+                'parent-students',
+                ParentStudentController::class
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Results
+            |--------------------------------------------------------------------------
+            */
+
+            Route::apiResource(
+                'results',
+                ResultController::class
+            );
+
+            Route::apiResource(
+                'timetables',
+                TimetableController::class
+            );
+
+            Route::get(
+                'report-cards/{reportCard}/download-pdf',
+                [ReportCardController::class, 'downloadPdf']
+            );
+
+            Route::apiResource(
+                'report-cards',
+                ReportCardController::class
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Finance
+            |--------------------------------------------------------------------------
+            */
+
+            Route::apiResource(
+                'fees',
+                FeeController::class
+            );
+
+            Route::apiResource(
+                'expenses',
+                ExpenseController::class
+            );
+
+/*
+            |--------------------------------------------------------------------------
+            | Medical
+            |--------------------------------------------------------------------------
+            */
+
+            Route::apiResource(
+                'medical-records',
+                MedicalRecordController::class
+            );
+
+            Route::apiResource(
+                'clinic-visits',
+                ClinicVisitController::class
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Parent / Teacher Dashboards
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get(
+                'parent-dashboard/{parent}',
+                [ParentDashboardController::class, 'index']
+            );
+
+            Route::get(
+                'teacher-dashboard/{teacher}',
+                [TeacherDashboardController::class, 'index']
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Transport
+            |--------------------------------------------------------------------------
+            */
+
+            Route::apiResource(
+                'vehicles',
+                VehicleController::class
+            );
+
+            Route::apiResource(
+                'transport-routes',
+                TransportRouteController::class
+            );
+
+            Route::apiResource(
+                'transport-allocations',
+                TransportAllocationController::class
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Reception / Visitor Management
+            |--------------------------------------------------------------------------
+            */
+
+            Route::apiResource(
+                'visitors',
+                VisitorController::class
+            );
+
+            Route::apiResource(
+                'student-gate-passes',
+                StudentGatePassController::class
+            );
+
+            Route::apiResource(
+                'reception-appointments',
+                ReceptionAppointmentController::class
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Student / Parent Portals
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get(
+                'student/dashboard',
+                [StudentPortalController::class, 'dashboard']
+            );
+
+            Route::get(
+                'parent/dashboard',
+                [ParentPortalController::class, 'dashboard']
+            );
         });
     });
 });
+
