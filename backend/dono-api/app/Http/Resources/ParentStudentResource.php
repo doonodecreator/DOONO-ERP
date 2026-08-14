@@ -19,6 +19,8 @@ class ParentStudentResource extends JsonResource
 
             'student_id' => $this->student_id,
 
+            'relationship_type' => $this->relationship_type,
+
             'is_primary_contact' => $this->is_primary_contact,
 
             'parent' => $this->whenLoaded('parent', function () {

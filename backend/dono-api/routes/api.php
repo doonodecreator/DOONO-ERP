@@ -703,6 +703,8 @@ Route::prefix('v1')->group(function () {
             Route::apiResource(
                 'parent-students',
                 ParentStudentController::class
+            )->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_admin'
             );
 
 

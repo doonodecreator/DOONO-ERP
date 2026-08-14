@@ -64,6 +64,7 @@ class ParentModel extends Model
             'student_id'
         )
         ->withPivot([
+            'relationship_type',
             'is_primary_contact',
         ])
         ->withTimestamps();

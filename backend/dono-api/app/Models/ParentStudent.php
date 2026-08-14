@@ -12,6 +12,7 @@ class ParentStudent extends Model
     protected $fillable = [
         'parent_id',
         'student_id',
+        'relationship_type',
         'is_primary_contact',
     ];
 

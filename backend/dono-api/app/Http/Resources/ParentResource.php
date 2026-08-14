@@ -28,7 +28,21 @@ class ParentResource extends JsonResource
             'guardian_relationship' => $this->guardian_relationship,
             'address' => $this->address,
             'school' => $this->whenLoaded('school'),
-            'students' => StudentResource::collection($this->whenLoaded('students')),
+            'students' => $this->whenLoaded('students', function () use ($request) {
+                return $this->students
+                    ->map(function ($student) use ($request) {
+                        return array_merge(
+                            (new StudentResource($student))->toArray($request),
+                            [
+                                'relationship_type' => $student->pivot?->relationship_type,
+                                'is_primary_contact' => (bool) (
+                                    $student->pivot?->is_primary_contact
+                                ),
+                            ]
+                        );
+                    })
+                    ->values();
+            }),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

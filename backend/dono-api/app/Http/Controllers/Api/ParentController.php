@@ -24,7 +24,8 @@ class ParentController extends Controller
     {
         $query = ParentModel::with([
             'school',
-            'students',
+            'students.class',
+            'students.stream',
         ]);
 
         if (! $request->user()->isSuperAdmin()) {
@@ -52,7 +53,8 @@ class ParentController extends Controller
         return (new ParentResource(
             $parent->load([
                 'school',
-                'students',
+                'students.class',
+            'students.stream',
             ])
         ))
         ->response()
@@ -71,7 +73,8 @@ class ParentController extends Controller
         return new ParentResource(
             $parent->load([
                 'school',
-                'students',
+                'students.class',
+            'students.stream',
             ])
         );
     }
@@ -98,7 +101,8 @@ class ParentController extends Controller
         return new ParentResource(
             $parent->load([
                 'school',
-                'students',
+                'students.class',
+            'students.stream',
             ])
         );
     }

@@ -1,7 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { getPrimaryRoleSlug } from '../utils/role';
 
 export default function Parents({ setPage, setSelectedParent }) {
+  const { roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
+  const roleSlug = getPrimaryRoleSlug({
+    roles,
+    isPlatformAdmin,
+    isOrganizationOwner,
+  });
+  const canManageLinks = [
+    'super_admin',
+    'proprietor',
+    'principal',
+    'vice_principal_admin',
+  ].includes(roleSlug);
+
   const [parents, setParents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -152,12 +167,14 @@ export default function Parents({ setPage, setSelectedParent }) {
                         {p.address || '—'}
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
-                        <button
-                          onClick={(e) => handleLinkStudent(e, p)}
-                          className="px-2.5 py-1 bg-green-50 text-green-700 hover:bg-green-100 rounded text-xs font-medium"
-                        >
-                          + Link Student
-                        </button>
+                        {canManageLinks && (
+                          <button
+                            onClick={(e) => handleLinkStudent(e, p)}
+                            className="px-2.5 py-1 bg-green-50 text-green-700 hover:bg-green-100 rounded text-xs font-medium"
+                          >
+                            + Link Student
+                          </button>
+                        )}
                         <button
                           onClick={(e) => handleEdit(e, p)}
                           className="text-blue-600 hover:text-blue-800 font-medium text-xs"

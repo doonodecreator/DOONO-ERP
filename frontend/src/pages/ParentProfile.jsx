@@ -1,9 +1,23 @@
 import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { getPrimaryRoleSlug } from "../utils/role";
 
 export default function ParentProfile({
   parent,
   setPage,
 }) {
+  const { roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
+  const roleSlug = getPrimaryRoleSlug({
+    roles,
+    isPlatformAdmin,
+    isOrganizationOwner,
+  });
+  const canManageLinks = [
+    "super_admin",
+    "proprietor",
+    "principal",
+    "vice_principal_admin",
+  ].includes(roleSlug);
   if (!parent) {
     return (
       <div>
@@ -56,20 +70,22 @@ export default function ParentProfile({
         Edit Parent
       </button>
 
-      <button
-        onClick={() =>
-          setPage(
-            "link-student-parent"
-          )
-        }
-        style={{
-          ...buttonStyle,
-          background: "#2563eb",
-          marginLeft: "10px",
-        }}
-      >
-        Link Student
-      </button>
+      {canManageLinks && (
+        <button
+          onClick={() =>
+            setPage(
+              "link-student-parent"
+            )
+          }
+          style={{
+            ...buttonStyle,
+            background: "#2563eb",
+            marginLeft: "10px",
+          }}
+        >
+          Link Student
+        </button>
+      )}
 
       <button
         onClick={deleteParent}
@@ -194,7 +210,7 @@ export default function ParentProfile({
           Parent's Children
         </h3>
 
-        {parent.students &&
+        {Array.isArray(parent.students) &&
         parent.students.length >
           0 ? (
           <div>
@@ -230,9 +246,15 @@ export default function ParentProfile({
 
                   <p>
                     Class:{" "}
-                    {student.classroom
+                    {student.class
                       ?.name ||
                       "Not Assigned"}
+                  </p>
+
+                  <p>
+                    Relationship:{" "}
+                    {student.relationship_type || "Not recorded"}
+                    {student.is_primary_contact ? " (Primary Contact)" : ""}
                   </p>
                 </div>
               )
