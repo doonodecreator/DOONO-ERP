@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
 use App\Http\Requests\StoreStreamRequest;
 use App\Http\Requests\UpdateStreamRequest;
 use App\Http\Resources\StreamResource;
@@ -11,6 +12,14 @@ use Illuminate\Http\Request;
 
 class StreamController extends Controller
 {
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -26,7 +35,7 @@ class StreamController extends Controller
             $query->whereHas('class.division', function ($q) use ($request) {
                 $q->where(
                     'school_id',
-                    $request->user()->currentSchoolId()
+                    $this->currentContextSchoolId($request)
                 );
             });
         }
@@ -62,7 +71,7 @@ class StreamController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $stream->class->division->school_id !== $request->user()->currentSchoolId()
+            $stream->class->division->school_id !== $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -82,7 +91,7 @@ class StreamController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $stream->class->division->school_id !== $request->user()->currentSchoolId()
+            $stream->class->division->school_id !== $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -106,7 +115,7 @@ class StreamController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $stream->class->division->school_id !== $request->user()->currentSchoolId()
+            $stream->class->division->school_id !== $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }

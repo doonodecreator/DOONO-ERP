@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
 use App\Http\Requests\StoreExaminationRequest;
 use App\Http\Requests\UpdateExaminationRequest;
 use App\Http\Resources\ExaminationResource;
@@ -11,6 +12,14 @@ use Illuminate\Http\Request;
 
 class ExaminationController extends Controller
 {
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
     public function index(Request $request)
     {
         $query = Examination::with([
@@ -22,7 +31,7 @@ class ExaminationController extends Controller
         if (! $request->user()->isSuperAdmin()) {
             $query->where(
                 'school_id',
-                $request->user()->currentSchoolId()
+                $this->currentContextSchoolId($request)
             );
         }
 
@@ -37,7 +46,7 @@ class ExaminationController extends Controller
 
         if (! $request->user()->isSuperAdmin()) {
             $data['school_id'] =
-                $request->user()->currentSchoolId();
+                $this->currentContextSchoolId($request);
         }
 
         $examination = Examination::create($data);
@@ -62,7 +71,7 @@ class ExaminationController extends Controller
         if (
             ! $request->user()->isSuperAdmin() &&
             $examination->school_id !=
-            $request->user()->currentSchoolId()
+            $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -83,7 +92,7 @@ class ExaminationController extends Controller
         if (
             ! $request->user()->isSuperAdmin() &&
             $examination->school_id !=
-            $request->user()->currentSchoolId()
+            $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -112,7 +121,7 @@ class ExaminationController extends Controller
         if (
             ! $request->user()->isSuperAdmin() &&
             $examination->school_id !=
-            $request->user()->currentSchoolId()
+            $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }

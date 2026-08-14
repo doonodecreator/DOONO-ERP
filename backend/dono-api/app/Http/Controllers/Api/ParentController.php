@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
 use App\Http\Requests\StoreParentRequest;
 use App\Http\Requests\UpdateParentRequest;
 use App\Http\Resources\ParentResource;
@@ -11,6 +12,14 @@ use Illuminate\Http\Request;
 
 class ParentController extends Controller
 {
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
     public function index(Request $request)
     {
         $query = ParentModel::with([
@@ -21,7 +30,7 @@ class ParentController extends Controller
         if (! $request->user()->isSuperAdmin()) {
             $query->where(
                 'school_id',
-                $request->user()->currentSchoolId()
+                $this->currentContextSchoolId($request)
             );
         }
 
@@ -35,7 +44,7 @@ class ParentController extends Controller
         $data = $request->validated();
 
         if (! $request->user()->isSuperAdmin()) {
-            $data['school_id'] = $request->user()->currentSchoolId();
+            $data['school_id'] = $this->currentContextSchoolId($request);
         }
 
         $parent = ParentModel::create($data);
@@ -54,7 +63,7 @@ class ParentController extends Controller
     {
         if (
             ! $request->user()->isSuperAdmin()
-            && $parent->school_id != $request->user()->currentSchoolId()
+            && $parent->school_id != $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -73,7 +82,7 @@ class ParentController extends Controller
     ) {
         if (
             ! $request->user()->isSuperAdmin()
-            && $parent->school_id != $request->user()->currentSchoolId()
+            && $parent->school_id != $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -98,7 +107,7 @@ class ParentController extends Controller
     {
         if (
             ! $request->user()->isSuperAdmin()
-            && $parent->school_id != $request->user()->currentSchoolId()
+            && $parent->school_id != $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }

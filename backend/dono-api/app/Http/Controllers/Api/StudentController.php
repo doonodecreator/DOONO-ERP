@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Http\Resources\StudentResource;
@@ -11,6 +12,14 @@ use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
     public function index(Request $request)
     {
         $query = Student::with([
@@ -27,7 +36,7 @@ class StudentController extends Controller
         ) {
             $query->where(
                 'school_id',
-                $request->user()->currentSchoolId()
+                $this->currentContextSchoolId($request)
             );
         }
 
@@ -54,7 +63,7 @@ class StudentController extends Controller
         ) {
             $students->where(
                 'school_id',
-                $request->user()->currentSchoolId()
+                $this->currentContextSchoolId($request)
             );
         }
 
@@ -76,7 +85,7 @@ class StudentController extends Controller
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin()
         ) {
-            $data['school_id'] = $request->user()->currentSchoolId();
+            $data['school_id'] = $this->currentContextSchoolId($request);
         }
 
         $student = Student::create($data);
@@ -99,7 +108,7 @@ class StudentController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $student->school_id !== $request->user()->currentSchoolId()
+            $student->school_id !== $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -122,7 +131,7 @@ class StudentController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $student->school_id !== $request->user()->currentSchoolId()
+            $student->school_id !== $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -156,7 +165,7 @@ class StudentController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $student->school_id !== $request->user()->currentSchoolId()
+            $student->school_id !== $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }

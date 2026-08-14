@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
 use App\Http\Requests\StoreDivisionRequest;
 use App\Http\Requests\UpdateDivisionRequest;
 use App\Http\Resources\DivisionResource;
@@ -11,6 +12,14 @@ use Illuminate\Http\Request;
 
 class DivisionController extends Controller
 {
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -25,7 +34,7 @@ class DivisionController extends Controller
         ) {
             $query->where(
                 'school_id',
-                $request->user()->currentSchoolId()
+                $this->currentContextSchoolId($request)
             );
         }
 
@@ -45,7 +54,7 @@ class DivisionController extends Controller
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin()
         ) {
-            $data['school_id'] = $request->user()->currentSchoolId();
+            $data['school_id'] = $this->currentContextSchoolId($request);
         }
 
         $division = Division::create($data);
@@ -65,7 +74,7 @@ class DivisionController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $division->school_id !== $request->user()->currentSchoolId()
+            $division->school_id !== $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -85,7 +94,7 @@ class DivisionController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $division->school_id !== $request->user()->currentSchoolId()
+            $division->school_id !== $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -116,7 +125,7 @@ class DivisionController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $division->school_id !== $request->user()->currentSchoolId()
+            $division->school_id !== $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }

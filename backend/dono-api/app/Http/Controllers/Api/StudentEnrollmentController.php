@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
 use App\Http\Requests\StoreStudentEnrollmentRequest;
 use App\Http\Requests\UpdateStudentEnrollmentRequest;
 use App\Http\Resources\StudentEnrollmentResource;
@@ -11,6 +12,14 @@ use Illuminate\Http\Request;
 
 class StudentEnrollmentController extends Controller
 {
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
     public function index(Request $request)
     {
         $query = StudentEnrollment::with([
@@ -26,7 +35,7 @@ class StudentEnrollmentController extends Controller
         if (! $request->user()->isSuperAdmin()) {
             $query->where(
                 'school_id',
-                $request->user()->currentSchoolId()
+                $this->currentContextSchoolId($request)
             );
         }
 
@@ -40,7 +49,7 @@ class StudentEnrollmentController extends Controller
         $data = $request->validated();
 
         if (! $request->user()->isSuperAdmin()) {
-            $data['school_id'] = $request->user()->currentSchoolId();
+            $data['school_id'] = $this->currentContextSchoolId($request);
         }
 
         $enrollment = StudentEnrollment::create($data);
@@ -64,7 +73,7 @@ class StudentEnrollmentController extends Controller
     {
         if (
             ! $request->user()->isSuperAdmin() &&
-            $studentEnrollment->school_id != $request->user()->currentSchoolId()
+            $studentEnrollment->school_id != $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -88,7 +97,7 @@ class StudentEnrollmentController extends Controller
     ) {
         if (
             ! $request->user()->isSuperAdmin() &&
-            $studentEnrollment->school_id != $request->user()->currentSchoolId()
+            $studentEnrollment->school_id != $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -120,7 +129,7 @@ class StudentEnrollmentController extends Controller
     ) {
         if (
             ! $request->user()->isSuperAdmin() &&
-            $studentEnrollment->school_id != $request->user()->currentSchoolId()
+            $studentEnrollment->school_id != $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }

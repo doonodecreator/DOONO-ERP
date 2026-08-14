@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
 use App\Http\Requests\StoreStudentPromotionRequest;
 use App\Http\Requests\UpdateStudentPromotionRequest;
 use App\Http\Resources\StudentPromotionResource;
@@ -11,6 +12,14 @@ use Illuminate\Http\Request;
 
 class StudentPromotionController extends Controller
 {
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
     public function index(Request $request)
     {
         $query = StudentPromotion::with([
@@ -29,7 +38,7 @@ class StudentPromotionController extends Controller
         if (! $request->user()->isSuperAdmin()) {
             $query->where(
                 'school_id',
-                $request->user()->currentSchoolId()
+                $this->currentContextSchoolId($request)
             );
         }
 
@@ -43,7 +52,7 @@ class StudentPromotionController extends Controller
         $data = $request->validated();
 
         if (! $request->user()->isSuperAdmin()) {
-            $data['school_id'] = $request->user()->currentSchoolId();
+            $data['school_id'] = $this->currentContextSchoolId($request);
         }
 
         $promotion = StudentPromotion::create($data);
@@ -70,7 +79,7 @@ class StudentPromotionController extends Controller
     {
         if (
             ! $request->user()->isSuperAdmin() &&
-            $studentPromotion->school_id != $request->user()->currentSchoolId()
+            $studentPromotion->school_id != $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -97,7 +106,7 @@ class StudentPromotionController extends Controller
     ) {
         if (
             ! $request->user()->isSuperAdmin() &&
-            $studentPromotion->school_id != $request->user()->currentSchoolId()
+            $studentPromotion->school_id != $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -130,7 +139,7 @@ class StudentPromotionController extends Controller
     {
         if (
             ! $request->user()->isSuperAdmin() &&
-            $studentPromotion->school_id != $request->user()->currentSchoolId()
+            $studentPromotion->school_id != $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }

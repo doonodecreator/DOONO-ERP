@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
 use App\Http\Requests\StoreClassRequest;
 use App\Http\Requests\UpdateClassRequest;
 use App\Http\Resources\ClassResource;
@@ -11,6 +12,14 @@ use Illuminate\Http\Request;
 
 class ClassController extends Controller
 {
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -28,7 +37,7 @@ class ClassController extends Controller
             $query->whereHas('division', function ($q) use ($request) {
                 $q->where(
                     'school_id',
-                    $request->user()->currentSchoolId()
+                    $this->currentContextSchoolId($request)
                 );
             });
         }
@@ -69,7 +78,7 @@ class ClassController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $class->division->school_id !== $request->user()->currentSchoolId()
+            $class->division->school_id !== $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -92,7 +101,7 @@ class ClassController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $class->division->school_id !== $request->user()->currentSchoolId()
+            $class->division->school_id !== $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -119,7 +128,7 @@ class ClassController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $class->division->school_id !== $request->user()->currentSchoolId()
+            $class->division->school_id !== $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized.');
         }

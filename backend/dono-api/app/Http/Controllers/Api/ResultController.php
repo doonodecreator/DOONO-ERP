@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
 use App\Http\Requests\StoreResultRequest;
 use App\Http\Requests\UpdateResultRequest;
 use App\Http\Resources\ResultResource;
@@ -11,6 +12,14 @@ use Illuminate\Http\Request;
 
 class ResultController extends Controller
 {
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
     public function index(Request $request)
     {
         $query = Result::with([
@@ -25,7 +34,7 @@ class ResultController extends Controller
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin()
         ) {
-            $query->where('school_id', $request->user()->currentSchoolId());
+            $query->where('school_id', $this->currentContextSchoolId($request));
         }
 
         return ResultResource::collection(
@@ -41,7 +50,7 @@ class ResultController extends Controller
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin()
         ) {
-            $data['school_id'] = $request->user()->currentSchoolId();
+            $data['school_id'] = $this->currentContextSchoolId($request);
         }
 
         $data['total_score'] = ($data['ca_score'] ?? 0) + ($data['exam_score'] ?? 0);
@@ -68,7 +77,7 @@ class ResultController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $result->school_id != $request->user()->currentSchoolId()
+            $result->school_id != $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized access to this result.');
         }
@@ -89,7 +98,7 @@ class ResultController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $result->school_id != $request->user()->currentSchoolId()
+            $result->school_id != $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized action.');
         }
@@ -137,7 +146,7 @@ class ResultController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $result->school_id != $request->user()->currentSchoolId()
+            $result->school_id != $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized action.');
         }
@@ -162,7 +171,7 @@ class ResultController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $result->school_id != $request->user()->currentSchoolId()
+            $result->school_id != $this->currentContextSchoolId($request)
         ) {
             abort(403, 'Unauthorized action.');
         }
