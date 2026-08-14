@@ -24,18 +24,27 @@ import {
 import "../styles/dashboard.css";
 
 export default function Dashboard() {
-  const { user, roles, isPlatformAdmin } = useAuth();
+  const { roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin });
+  const userRole = getPrimaryRoleSlug({
+    roles,
+    isPlatformAdmin,
+    isOrganizationOwner,
+  });
 
   const isSuperAdmin =
     userRole === "super_admin" || stats?.dashboard_type === "super_admin";
 
-  const isSchoolAdmin =
-    userRole === "school_admin" || userRole === "admin";
+  const isSchoolAdmin = [
+    "proprietor",
+    "principal",
+    "vice_principal_academic",
+    "vice_principal_admin",
+    "bursar",
+  ].includes(userRole);
 
   useEffect(() => {
     loadDashboard();

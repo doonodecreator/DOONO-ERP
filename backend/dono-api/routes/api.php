@@ -231,7 +231,7 @@ Route::prefix('v1')->group(function () {
             '/dashboard',
             [DashboardController::class, 'index']
         )->middleware(
-            'role:super_admin,proprietor,principal,vice_principal,bursar'
+            'role:super_admin,proprietor,principal,vice_principal_academic,vice_principal_admin,bursar'
         );
 
 
