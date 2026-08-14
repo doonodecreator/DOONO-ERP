@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\StaffAttendanceController;
 use App\Http\Controllers\Api\LeaveRequestController;
 use App\Http\Controllers\Api\DisciplineCaseController;
+use App\Http\Controllers\Api\SafetyIncidentController;
 use App\Http\Controllers\Api\ExaminationController;
 use App\Http\Controllers\Api\ExamScoreController;
 use App\Http\Controllers\Api\AttendanceController;
@@ -587,6 +588,27 @@ Route::prefix('v1')->group(function () {
                 DisciplineCaseController::class
             )->only(['index', 'store', 'show'])->middleware(
                 'role:super_admin,proprietor,principal,vice_principal_admin,nursery_head,primary_headmaster,secondary_principal,teacher,form_teacher'
+            );
+
+            Route::get(
+                'safety-incidents/options',
+                [SafetyIncidentController::class, 'options']
+            )->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_admin,teacher,form_teacher,nurse,receptionist,transport_manager,hostel_master,hostel_mistress'
+            );
+
+            Route::post(
+                'safety-incidents/{safety_incident}/review',
+                [SafetyIncidentController::class, 'review']
+            )->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_admin'
+            );
+
+            Route::apiResource(
+                'safety-incidents',
+                SafetyIncidentController::class
+            )->only(['index', 'store', 'show'])->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_admin,teacher,form_teacher,nurse,receptionist,transport_manager,hostel_master,hostel_mistress'
             );
 
             Route::apiResource(
