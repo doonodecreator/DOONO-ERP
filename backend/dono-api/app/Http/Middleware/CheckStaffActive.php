@@ -2,12 +2,17 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\CurrentContextService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckStaffActive
 {
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
     /**
      * Handle an incoming request and ensure the staff member is still active in the school.
      */
@@ -20,16 +25,17 @@ class CheckStaffActive
             return $next($request);
         }
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthenticated.',
             ], 401);
         }
 
-        $schoolId = $request->attributes->get('current_school_id') ?? $user->currentSchoolId();
+        $schoolId = $request->attributes->get('current_school_id')
+            ?? $this->context->currentSchool($user)?->id;
 
-        if (!$schoolId) {
+        if (! $schoolId) {
             return $next($request);
         }
 
@@ -43,12 +49,12 @@ class CheckStaffActive
         if ($staffRecord) {
             $isStaffActive = property_exists($staffRecord, 'is_active') ? $staffRecord->is_active : true;
         } else {
-            if ($user->school_id == $schoolId) {
+            if ($this->context->currentSchool($user)?->id === (int) $schoolId) {
                 $isStaffActive = true;
             }
         }
 
-        if (!$isStaffActive) {
+        if (! $isStaffActive) {
             // Instantly revoke all active API tokens so they cannot make further requests
             $user->tokens()->delete();
 

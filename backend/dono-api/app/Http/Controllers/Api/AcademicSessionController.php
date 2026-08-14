@@ -7,10 +7,20 @@ use App\Http\Requests\StoreAcademicSessionRequest;
 use App\Http\Requests\UpdateAcademicSessionRequest;
 use App\Http\Resources\AcademicSessionResource;
 use App\Models\AcademicSession;
+use App\Models\User;
+use App\Services\CurrentContextService;
 use Illuminate\Support\Facades\DB;
 
 class AcademicSessionController extends Controller
 {
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentSchoolId(User $user): ?int
+    {
+        return $this->context->currentSchool($user)?->id;
+    }
     public function index()
     {
         $user = auth()->user();
@@ -18,7 +28,7 @@ class AcademicSessionController extends Controller
         $query = AcademicSession::query();
 
         if (!$user->isSuperAdmin()) {
-            $schoolId = $user->currentSchoolId();
+            $schoolId = $this->currentSchoolId($user);
             $query->where('school_id', $schoolId);
         }
 
@@ -35,7 +45,7 @@ class AcademicSessionController extends Controller
             $data = $request->validated();
 
             if (!$user->isSuperAdmin()) {
-                $data['school_id'] = $user->currentSchoolId();
+                $data['school_id'] = $this->currentSchoolId($user);
             }
 
             if (!empty($data['is_current']) && $data['is_current'] === true) {
@@ -57,7 +67,7 @@ class AcademicSessionController extends Controller
 
         if (
             !$user->isSuperAdmin() &&
-            $academicSession->school_id !== $user->currentSchoolId()
+            $academicSession->school_id !== $this->currentSchoolId($user)
         ) {
             abort(403, 'Unauthorized access to this academic session.');
         }
@@ -73,7 +83,7 @@ class AcademicSessionController extends Controller
 
         if (
             !$user->isSuperAdmin() &&
-            $academicSession->school_id !== $user->currentSchoolId()
+            $academicSession->school_id !== $this->currentSchoolId($user)
         ) {
             abort(403, 'Unauthorized access to update this academic session.');
         }
@@ -99,7 +109,7 @@ class AcademicSessionController extends Controller
 
         if (
             !$user->isSuperAdmin() &&
-            $academicSession->school_id !== $user->currentSchoolId()
+            $academicSession->school_id !== $this->currentSchoolId($user)
         ) {
             abort(403, 'Unauthorized access to delete this academic session.');
         }

@@ -8,10 +8,20 @@ use App\Http\Requests\UpdateTermRequest;
 use App\Http\Resources\TermResource;
 use App\Models\AcademicSession;
 use App\Models\Term;
+use App\Models\User;
+use App\Services\CurrentContextService;
 use Illuminate\Support\Facades\DB;
 
 class TermController extends Controller
 {
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentSchoolId(User $user): ?int
+    {
+        return $this->context->currentSchool($user)?->id;
+    }
     public function index()
     {
         $user = auth()->user();
@@ -20,7 +30,7 @@ class TermController extends Controller
 
         if (!$user->isSuperAdmin()) {
 
-            $schoolId = $user->currentSchoolId();
+            $schoolId = $this->currentSchoolId($user);
 
             $query->whereHas('academicSession', function ($q) use ($schoolId) {
                 $q->where('school_id', $schoolId);
@@ -44,7 +54,7 @@ class TermController extends Controller
 
             if (
                 !$user->isSuperAdmin() &&
-                $academicSession->school_id !== $user->currentSchoolId()
+                $academicSession->school_id !== $this->currentSchoolId($user)
             ) {
                 abort(403, 'You cannot create a term for another school.');
             }
@@ -79,7 +89,7 @@ class TermController extends Controller
 
         if (
             !$user->isSuperAdmin() &&
-            $term->academicSession->school_id !== $user->currentSchoolId()
+            $term->academicSession->school_id !== $this->currentSchoolId($user)
         ) {
             abort(403);
         }
@@ -97,7 +107,7 @@ class TermController extends Controller
 
         if (
             !$user->isSuperAdmin() &&
-            $term->academicSession->school_id !== $user->currentSchoolId()
+            $term->academicSession->school_id !== $this->currentSchoolId($user)
         ) {
             abort(403);
         }
@@ -137,7 +147,7 @@ class TermController extends Controller
 
         if (
             !$user->isSuperAdmin() &&
-            $term->academicSession->school_id !== $user->currentSchoolId()
+            $term->academicSession->school_id !== $this->currentSchoolId($user)
         ) {
             abort(403);
         }

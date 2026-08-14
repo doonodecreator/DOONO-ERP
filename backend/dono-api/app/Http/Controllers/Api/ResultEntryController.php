@@ -9,6 +9,7 @@ use App\Models\StudentEnrollment;
 use App\Models\Subject;
 use App\Models\Term;
 use App\Services\Academic\ResultEntryService;
+use App\Services\CurrentContextService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,8 @@ use Illuminate\Support\Facades\DB;
 class ResultEntryController extends Controller
 {
     public function __construct(
-        protected ResultEntryService $resultEntryService
+        protected ResultEntryService $resultEntryService,
+        private readonly CurrentContextService $context
     ) {}
 
     /**
@@ -40,7 +42,8 @@ class ResultEntryController extends Controller
         ]);
 
         $user = $request->user();
-        $schoolId = $user->isSuperAdmin() ? $request->input('school_id') : $user->currentSchoolId();
+        $schoolId = $request->attributes->get('current_school_id')
+            ?? ($user->isSuperAdmin() ? $request->input('school_id') : $this->context->currentSchool($user)?->id);
 
         $students = StudentEnrollment::with('student')
             ->where('school_id', $schoolId)
@@ -80,7 +83,8 @@ class ResultEntryController extends Controller
         ]);
 
         $user = $request->user();
-        $schoolId = $user->isSuperAdmin() ? $request->input('school_id') : $user->currentSchoolId();
+        $schoolId = $request->attributes->get('current_school_id')
+            ?? ($user->isSuperAdmin() ? $request->input('school_id') : $this->context->currentSchool($user)?->id);
 
         if (! $schoolId) {
             return response()->json([

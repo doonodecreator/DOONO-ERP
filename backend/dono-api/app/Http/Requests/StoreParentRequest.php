@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Services\CurrentContextService;
 use Illuminate\Validation\Rule;
 
 class StoreParentRequest extends FormRequest
@@ -14,8 +15,9 @@ class StoreParentRequest extends FormRequest
 
     public function rules(): array
     {
-        $user = auth()->user();
-        $schoolId = method_exists($user, 'currentSchoolId') ? $user->currentSchoolId() : $user->school_id;
+        $user = $this->user();
+        $schoolId = $this->attributes->get('current_school_id')
+            ?? ($user ? app(CurrentContextService::class)->currentSchool($user)?->id : null);
 
         return [
             'father_name' => 'nullable|string|max:255',
