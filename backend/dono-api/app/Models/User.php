@@ -100,9 +100,15 @@ class User extends Authenticatable
         return $this->hasRole('super_admin');
     }
 
-    public function hasPermission(string $permissionSlug): bool
+    public function hasPermission(string $permissionSlug, ?int $schoolId = null): bool
     {
-        return $this->roles()
+        $roles = $this->roles();
+
+        if ($schoolId !== null) {
+            $roles->wherePivot('school_id', $schoolId);
+        }
+
+        return $roles
             ->whereHas('permissions', function ($query) use ($permissionSlug) {
                 $query->where('slug', $permissionSlug);
             })
