@@ -18,10 +18,16 @@ class StudentController extends Controller
 
     private function currentContextSchoolId(Request $request): ?int
     {
-        return $this->context->currentSchool($request->user())?->id;
+        return $request->attributes->get('current_school_id')
+            ?? $this->context->currentSchool($request->user())?->id;
     }
     public function index(Request $request)
     {
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:100',
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+
         $query = Student::with([
             'school',
             'division',
@@ -40,8 +46,22 @@ class StudentController extends Controller
             );
         }
 
+        $search = trim((string) ($validated['search'] ?? ''));
+
+        if ($search !== '') {
+            $query->where(function ($studentQuery) use ($search) {
+                $studentQuery
+                    ->where('admission_number', 'like', "%{$search}%")
+                    ->orWhere('first_name', 'like', "%{$search}%")
+                    ->orWhere('middle_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%");
+            });
+        }
+
         return StudentResource::collection(
-            $query->orderBy('admission_number')->paginate(10)
+            $query
+                ->orderBy('admission_number')
+                ->paginate($validated['per_page'] ?? 10)
         );
     }
 

@@ -1,7 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { getPrimaryRoleSlug } from '../utils/role';
 
 export default function Students({ setPage, setSelectedStudent }) {
+  const { roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
+  const roleSlug = getPrimaryRoleSlug({
+    roles,
+    isPlatformAdmin,
+    isOrganizationOwner,
+  });
+  const canManageAdmissions = [
+    'super_admin',
+    'proprietor',
+    'principal',
+    'vice_principal_admin',
+  ].includes(roleSlug);
+
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,12 +80,14 @@ export default function Students({ setPage, setSelectedStudent }) {
           <h1 className="text-2xl font-bold text-gray-800">Students Directory</h1>
           <p className="text-sm text-gray-500">Manage enrolled student profiles, class assignments, and academic status.</p>
         </div>
-        <button
-          onClick={() => setPage('add-student')}
-          className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition shadow-sm"
-        >
-          + Add New Student
-        </button>
+        {canManageAdmissions && (
+          <button
+            onClick={() => setPage('admissions')}
+            className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition shadow-sm"
+          >
+            + New Admission
+          </button>
+        )}
       </div>
 
       {/* Filters & Search */}
@@ -122,7 +139,7 @@ export default function Students({ setPage, setSelectedStudent }) {
                   <th className="px-6 py-3">Gender</th>
                   <th className="px-6 py-3">Class / Stream</th>
                   <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
+                  {canManageAdmissions && <th className="px-6 py-3 text-right">Actions</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -152,20 +169,22 @@ export default function Students({ setPage, setSelectedStudent }) {
                         {student.status || 'Active'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={(e) => handleEdit(e, student)}
-                        className="text-blue-600 hover:text-blue-800 font-medium text-xs"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={(e) => handleDelete(e, student.id, `${student.first_name} ${student.last_name}`)}
-                        className="text-red-600 hover:text-red-800 font-medium text-xs"
-                      >
-                        Delete
-                      </button>
-                    </td>
+                    {canManageAdmissions && (
+                      <td className="px-6 py-4 text-right space-x-2">
+                        <button
+                          onClick={(e) => handleEdit(e, student)}
+                          className="text-blue-600 hover:text-blue-800 font-medium text-xs"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={(e) => handleDelete(e, student.id, `${student.first_name} ${student.last_name}`)}
+                          className="text-red-600 hover:text-red-800 font-medium text-xs"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

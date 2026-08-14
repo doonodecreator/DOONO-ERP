@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateStudentEnrollmentRequest;
 use App\Http\Resources\StudentEnrollmentResource;
 use App\Models\StudentEnrollment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StudentEnrollmentController extends Controller
 {
@@ -18,10 +19,15 @@ class StudentEnrollmentController extends Controller
 
     private function currentContextSchoolId(Request $request): ?int
     {
-        return $this->context->currentSchool($request->user())?->id;
+        return $request->attributes->get('current_school_id')
+            ?? $this->context->currentSchool($request->user())?->id;
     }
     public function index(Request $request)
     {
+        $validated = $request->validate([
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+
         $query = StudentEnrollment::with([
             'student',
             'school',
@@ -40,19 +46,21 @@ class StudentEnrollmentController extends Controller
         }
 
         return StudentEnrollmentResource::collection(
-            $query->latest()->paginate(10)
+            $query->latest()->paginate($validated['per_page'] ?? 10)
         );
     }
 
     public function store(StoreStudentEnrollmentRequest $request)
     {
         $data = $request->validated();
+        $data['school_id'] = $this->currentContextSchoolId($request);
 
-        if (! $request->user()->isSuperAdmin()) {
-            $data['school_id'] = $this->currentContextSchoolId($request);
-        }
+        $enrollment = DB::transaction(function () use ($data) {
+            $enrollment = StudentEnrollment::create($data);
+            $this->syncCurrentStudentPlacement($enrollment);
 
-        $enrollment = StudentEnrollment::create($data);
+            return $enrollment;
+        });
 
         return (new StudentEnrollmentResource(
             $enrollment->load([
@@ -103,12 +111,12 @@ class StudentEnrollmentController extends Controller
         }
 
         $data = $request->validated();
+        unset($data['school_id']);
 
-        if (! $request->user()->isSuperAdmin()) {
-            unset($data['school_id']);
-        }
-
-        $studentEnrollment->update($data);
+        DB::transaction(function () use ($studentEnrollment, $data) {
+            $studentEnrollment->update($data);
+            $this->syncCurrentStudentPlacement($studentEnrollment);
+        });
 
         return new StudentEnrollmentResource(
             $studentEnrollment->load([
@@ -121,6 +129,28 @@ class StudentEnrollmentController extends Controller
                 'stream',
             ])
         );
+    }
+
+    private function syncCurrentStudentPlacement(
+        StudentEnrollment $enrollment
+    ): void {
+        $enrollment->loadMissing(['student', 'academicSession', 'term']);
+
+        if (
+            $enrollment->status !== 'Active' ||
+            ! $enrollment->academicSession?->is_current ||
+            ! $enrollment->term?->is_current
+        ) {
+            return;
+        }
+
+        $enrollment->student->update([
+            'division_id' => $enrollment->division_id,
+            'class_id' => $enrollment->class_id,
+            'stream_id' => $enrollment->stream_id,
+            'academic_session_id' => $enrollment->academic_session_id,
+            'status' => 'Active',
+        ]);
     }
 
     public function destroy(

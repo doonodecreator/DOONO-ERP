@@ -11,7 +11,8 @@ import FeePayments from "./pages/FeePayments";
 import Dashboard from "./pages/Dashboard";
 import AddSchool from "./pages/AddSchool";
 import Students from "./pages/Students";
-import AddStudent from "./pages/AddStudent";
+import Admissions from "./pages/Admissions";
+import StudentEnrollments from "./pages/StudentEnrollments";
 import StudentProfile from "./pages/StudentProfile";
 import EditStudent from "./pages/EditStudent";
 
@@ -155,8 +156,12 @@ function AuthenticatedApp() {
     case "students":
       content = <Students setPage={setPage} setSelectedStudent={setSelectedStudent} />;
       break;
+    case "admissions":
     case "add-student":
-      content = <AddStudent setPage={setPage} />;
+      content = <Admissions setPage={setPage} />;
+      break;
+    case "student-enrollments":
+      content = <StudentEnrollments />;
       break;
     case "student-profile":
       content = <StudentProfile student={selectedStudent} setPage={setPage} />;

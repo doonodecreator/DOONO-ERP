@@ -1,7 +1,23 @@
+import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { getPrimaryRoleSlug } from '../utils/role';
+
 export default function StudentProfile({
   student,
   setPage,
 }) {
+  const { roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
+  const roleSlug = getPrimaryRoleSlug({
+    roles,
+    isPlatformAdmin,
+    isOrganizationOwner,
+  });
+  const canManageAdmissions = [
+    'super_admin',
+    'proprietor',
+    'principal',
+    'vice_principal_admin',
+  ].includes(roleSlug);
   if (!student) {
     return (
       <div>
@@ -54,81 +70,56 @@ export default function StudentProfile({
           {student.full_name}
         </h1>
 
-        <div
-          style={{
-            marginBottom: "30px",
-          }}
-        >
-          <button
-            onClick={() =>
-              setPage("edit-student")
-            }
+        {canManageAdmissions && (
+          <div
             style={{
-              background: "#16a34a",
-              color: "#fff",
-              border: "none",
-              padding: "12px 20px",
-              borderRadius: "10px",
-              cursor: "pointer",
-              marginRight: "15px",
+              marginBottom: "30px",
             }}
           >
-            Edit Student
-          </button>
-
-          <button
-            onClick={async () => {
-              const confirmDelete =
-                confirm(
-                  "Are you sure you want to delete this student?"
-                );
-
-              if (!confirmDelete)
-                return;
-
-              try {
-                await fetch(
-                  `${import.meta.env.VITE_API_URL}/students/${student.id}`,
-                  {
-                    method: "DELETE",
-                    headers: {
-                      Accept:
-                        "application/json",
-                      Authorization:
-                        `Bearer ${localStorage.getItem(
-                          "token"
-                        )}`,
-                    },
-                  }
-                );
-
-                alert(
-                  "Student deleted successfully."
-                );
-
-                setPage(
-                  "students"
-                );
-              } catch (error) {
-                console.log(error);
-
-                alert(
-                  "Unable to delete student."
-                );
+            <button
+              onClick={() =>
+                setPage("edit-student")
               }
-            }}
-            style={{
-              background: "#dc2626",
-              color: "#fff",
-              border: "none",
-              padding: "12px 20px",
-              borderRadius: "10px",
-              cursor: "pointer",
-            }}
-          >
-            Delete Student
-          </button>
-        </div>
+              style={{
+                background: "#16a34a",
+                color: "#fff",
+                border: "none",
+                padding: "12px 20px",
+                borderRadius: "10px",
+                cursor: "pointer",
+                marginRight: "15px",
+              }}
+            >
+              Edit Student
+            </button>
+
+            <button
+              onClick={async () => {
+                if (!window.confirm("Are you sure you want to delete this student?")) {
+                  return;
+                }
+
+                try {
+                  await api.delete(`/students/${student.id}`);
+                  alert("Student deleted successfully.");
+                  setPage("students");
+                } catch (error) {
+                  alert(error.message || "Unable to delete student.");
+                }
+              }}
+              style={{
+                background: "#dc2626",
+                color: "#fff",
+                border: "none",
+                padding: "12px 20px",
+                borderRadius: "10px",
+                cursor: "pointer",
+              }}
+            >
+              Delete Student
+            </button>
+          </div>
+        )}
 
         <p>
           <strong>

@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 
 export default function EditStudent({ student, setPage }) {
-  const [classes, setClasses] = useState([]);
-  const [streams, setStreams] = useState([]);
-  const [sessions, setSessions] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -16,9 +13,6 @@ export default function EditStudent({ student, setPage }) {
     gender: student?.gender || 'Male',
     date_of_birth: student?.date_of_birth || '',
     admission_date: student?.admission_date || '',
-    class_id: student?.class_id || '',
-    stream_id: student?.stream_id || '',
-    academic_session_id: student?.academic_session_id || '',
     religion: student?.religion || '',
     nationality: student?.nationality || 'Nigerian',
     state_of_origin: student?.state_of_origin || '',
@@ -31,7 +25,6 @@ export default function EditStudent({ student, setPage }) {
   });
 
   useEffect(() => {
-    fetchFormOptions();
     if (student?.id) {
       fetchStudentDetails(student.id);
     }
@@ -50,43 +43,18 @@ export default function EditStudent({ student, setPage }) {
         gender: data.gender || prev.gender,
         date_of_birth: data.date_of_birth || prev.date_of_birth,
         admission_date: data.admission_date || prev.admission_date,
-        class_id: data.class_id || prev.class_id,
-        stream_id: data.stream_id || prev.stream_id,
-        academic_session_id: data.academic_session_id || prev.academic_session_id,
         religion: data.religion || prev.religion,
+        nationality: data.nationality || prev.nationality,
         state_of_origin: data.state_of_origin || prev.state_of_origin,
+        local_government: data.local_government || prev.local_government,
         address: data.address || prev.address,
         blood_group: data.blood_group || prev.blood_group,
         genotype: data.genotype || prev.genotype,
+        medical_notes: data.medical_notes || prev.medical_notes,
         status: data.status || prev.status,
       }));
     } catch (err) {
       console.error('Failed to fetch full student record:', err);
-    }
-  };
-
-  const fetchFormOptions = async () => {
-    try {
-      const [classRes, streamRes, sessionRes] = await Promise.allSettled([
-        api.get('/classes'),
-        api.get('/streams'),
-        api.get('/academic-sessions'),
-      ]);
-
-      if (classRes.status === 'fulfilled') {
-        const cData = classRes.value.data.data || classRes.value.data;
-        setClasses(Array.isArray(cData) ? cData : []);
-      }
-      if (streamRes.status === 'fulfilled') {
-        const sData = streamRes.value.data.data || streamRes.value.data;
-        setStreams(Array.isArray(sData) ? sData : []);
-      }
-      if (sessionRes.status === 'fulfilled') {
-        const sessData = sessionRes.value.data.data || sessionRes.value.data;
-        setSessions(Array.isArray(sessData) ? sessData : []);
-      }
-    } catch (err) {
-      console.error('Error fetching options:', err);
     }
   };
 
@@ -215,53 +183,8 @@ export default function EditStudent({ student, setPage }) {
           </div>
         </div>
 
-        {/* Academic Details */}
-        <div>
-          <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Academic Placement</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Assigned Class</label>
-              <select
-                name="class_id"
-                value={form.class_id}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
-              >
-                <option value="">Select Class...</option>
-                {classes.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Assigned Stream</label>
-              <select
-                name="stream_id"
-                value={form.stream_id}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
-              >
-                <option value="">Select Stream...</option>
-                {streams.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Academic Session</label>
-              <select
-                name="academic_session_id"
-                value={form.academic_session_id}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
-              >
-                <option value="">Select Session...</option>
-                {sessions.map((sess) => (
-                  <option key={sess.id} value={sess.id}>{sess.name || sess.session_year}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+        <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          Academic placement is managed from <strong>Enrollment &amp; Placement</strong> to preserve complete enrollment history.
         </div>
 
         <div className="flex justify-end space-x-3 pt-4 border-t">

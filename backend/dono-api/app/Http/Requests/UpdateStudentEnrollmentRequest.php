@@ -2,10 +2,34 @@
 
 namespace App\Http\Requests;
 
+use App\Models\StudentEnrollment;
+use App\Services\CurrentContextService;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateStudentEnrollmentRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $enrollment = $this->route('studentEnrollment');
+
+        if (! $enrollment instanceof StudentEnrollment) {
+            return;
+        }
+
+        $this->merge([
+            'student_id' => $this->input('student_id', $enrollment->student_id),
+            'academic_session_id' => $this->input(
+                'academic_session_id',
+                $enrollment->academic_session_id
+            ),
+            'term_id' => $this->input('term_id', $enrollment->term_id),
+            'division_id' => $this->input('division_id', $enrollment->division_id),
+            'class_id' => $this->input('class_id', $enrollment->class_id),
+            'stream_id' => $this->input('stream_id', $enrollment->stream_id),
+        ]);
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -13,29 +37,69 @@ class UpdateStudentEnrollmentRequest extends FormRequest
 
     public function rules(): array
     {
-        $rules = [
+        $schoolId = $this->currentSchoolId();
 
-            'student_id' => 'sometimes|exists:students,id',
-
-            'academic_session_id' => 'sometimes|exists:academic_sessions,id',
-
-            'term_id' => 'sometimes|exists:terms,id',
-
-            'division_id' => 'sometimes|exists:divisions,id',
-
-            'class_id' => 'sometimes|exists:classes,id',
-
-            'stream_id' => 'nullable|exists:streams,id',
-
+        return [
+            'student_id' => [
+                'required',
+                Rule::exists('students', 'id')->where('school_id', $schoolId),
+            ],
+            'academic_session_id' => [
+                'required',
+                Rule::exists('academic_sessions', 'id')->where('school_id', $schoolId),
+            ],
+            'term_id' => [
+                'required',
+                Rule::exists('terms', 'id')->where(
+                    'academic_session_id',
+                    $this->input('academic_session_id')
+                ),
+            ],
+            'division_id' => [
+                'required',
+                Rule::exists('divisions', 'id')->where('school_id', $schoolId),
+            ],
+            'class_id' => [
+                'required',
+                Rule::exists('classes', 'id')->where(
+                    'division_id',
+                    $this->input('division_id')
+                ),
+            ],
+            'stream_id' => [
+                'nullable',
+                Rule::exists('streams', 'id')->where(
+                    'class_id',
+                    $this->input('class_id')
+                ),
+            ],
             'enrollment_date' => 'sometimes|date',
-
-            'status' => 'sometimes|in:Active,Promoted,Repeated,Graduated,Transferred,Withdrawn',
+            'status' => [
+                'sometimes',
+                Rule::in([
+                    'Active',
+                    'Promoted',
+                    'Repeated',
+                    'Graduated',
+                    'Transferred',
+                    'Withdrawn',
+                ]),
+            ],
         ];
+    }
 
-        if ($this->user()->isSuperAdmin()) {
-            $rules['school_id'] = 'sometimes|required|exists:schools,id';
+    private function currentSchoolId(): ?int
+    {
+        $schoolId = $this->attributes->get('current_school_id');
+
+        if ($schoolId) {
+            return (int) $schoolId;
         }
 
-        return $rules;
+        $user = $this->user();
+
+        return $user
+            ? app(CurrentContextService::class)->currentSchool($user)?->id
+            : null;
     }
 }

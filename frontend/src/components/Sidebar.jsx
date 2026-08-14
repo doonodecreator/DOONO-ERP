@@ -29,6 +29,8 @@ export default function Sidebar({
     { name: "Dashboard", page: "dashboard", roles: ["all"] },
     { name: "Staff Management", page: "staff", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin"] },
     { name: "Students", page: "students", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "bursar", "accountant", "receptionist"] },
+    { name: "Admissions", page: "admissions", roles: ["proprietor", "principal", "vice_principal_admin"] },
+    { name: "Enrollment & Placement", page: "student-enrollments", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin"] },
     { name: "Parents", page: "parents", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin", "receptionist", "bursar", "accountant"] },
     { name: "Teachers", page: "teachers", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin", "secondary_principal", "primary_headmaster", "nursery_head"] },
     { name: "Subjects", page: "subjects", roles: ["proprietor", "principal", "vice_principal_academic", "secondary_principal", "primary_headmaster", "teacher", "form_teacher"] },

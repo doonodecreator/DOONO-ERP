@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\OrganizationController;
 use App\Http\Controllers\Api\SchoolController;
 use App\Http\Controllers\Api\AcademicSessionController;
+use App\Http\Controllers\Api\AdmissionController;
 use App\Http\Controllers\Api\TermController;
 use App\Http\Controllers\Api\DivisionController;
 use App\Http\Controllers\Api\ClassController;
@@ -489,9 +490,21 @@ Route::prefix('v1')->group(function () {
                 StreamController::class
             );
 
+            Route::post(
+                'admissions',
+                [AdmissionController::class, 'store']
+            )->middleware('role:super_admin,proprietor,principal,vice_principal_admin');
+
             Route::apiResource(
                 'students',
                 StudentController::class
+            )->only(['index', 'show']);
+
+            Route::apiResource(
+                'students',
+                StudentController::class
+            )->only(['update', 'destroy'])->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_admin'
             );
 
             Route::apiResource(
@@ -678,6 +691,8 @@ Route::prefix('v1')->group(function () {
             Route::apiResource(
                 'student-enrollments',
                 StudentEnrollmentController::class
+            )->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_academic,vice_principal_admin'
             );
 
             Route::apiResource(
