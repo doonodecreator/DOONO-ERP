@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\ParentController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\StaffAttendanceController;
+use App\Http\Controllers\Api\LeaveRequestController;
 use App\Http\Controllers\Api\ExaminationController;
 use App\Http\Controllers\Api\ExamScoreController;
 use App\Http\Controllers\Api\AttendanceController;
@@ -543,6 +544,28 @@ Route::prefix('v1')->group(function () {
             )->except(['destroy'])->middleware(
                 'role:super_admin,proprietor,principal,vice_principal_admin'
             );
+
+            Route::get(
+                'leave-requests/options',
+                [LeaveRequestController::class, 'options']
+            );
+
+            Route::post(
+                'leave-requests/{leave_request}/review',
+                [LeaveRequestController::class, 'review']
+            )->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_admin'
+            );
+
+            Route::post(
+                'leave-requests/{leave_request}/cancel',
+                [LeaveRequestController::class, 'cancel']
+            );
+
+            Route::apiResource(
+                'leave-requests',
+                LeaveRequestController::class
+            )->only(['index', 'store', 'show']);
 
             Route::apiResource(
                 'examinations',

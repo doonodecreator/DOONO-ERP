@@ -41,6 +41,7 @@ import Terms from "./pages/Terms";
 
 import Attendance from "./pages/Attendance";
 import StaffAttendance from "./pages/StaffAttendance";
+import LeaveRequests from "./pages/LeaveRequests";
 
 import Results from "./pages/Results";
 import ResultEntry from "./pages/ResultEntry";
@@ -229,6 +230,9 @@ function AuthenticatedApp() {
       break;
     case "staff-attendance":
       content = <StaffAttendance />;
+      break;
+    case "leave-requests":
+      content = <LeaveRequests />;
       break;
     case "results":
       content = <Results />;
