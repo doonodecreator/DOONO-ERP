@@ -44,6 +44,7 @@ import StaffAttendance from "./pages/StaffAttendance";
 import LeaveRequests from "./pages/LeaveRequests";
 import DisciplineCases from "./pages/DisciplineCases";
 import SafetyIncidents from "./pages/SafetyIncidents";
+import AssetRegister from "./pages/AssetRegister";
 
 import Results from "./pages/Results";
 import ResultEntry from "./pages/ResultEntry";
@@ -241,6 +242,9 @@ function AuthenticatedApp() {
       break;
     case "safety-incidents":
       content = <SafetyIncidents />;
+      break;
+    case "asset-register":
+      content = <AssetRegister />;
       break;
     case "results":
       content = <Results />;

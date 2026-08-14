@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\StaffAttendanceController;
 use App\Http\Controllers\Api\LeaveRequestController;
 use App\Http\Controllers\Api\DisciplineCaseController;
 use App\Http\Controllers\Api\SafetyIncidentController;
+use App\Http\Controllers\Api\AssetController;
 use App\Http\Controllers\Api\ExaminationController;
 use App\Http\Controllers\Api\ExamScoreController;
 use App\Http\Controllers\Api\AttendanceController;
@@ -609,6 +610,20 @@ Route::prefix('v1')->group(function () {
                 SafetyIncidentController::class
             )->only(['index', 'store', 'show'])->middleware(
                 'role:super_admin,proprietor,principal,vice_principal_admin,teacher,form_teacher,nurse,receptionist,transport_manager,hostel_master,hostel_mistress'
+            );
+
+            Route::get(
+                'assets/options',
+                [AssetController::class, 'options']
+            )->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_admin'
+            );
+
+            Route::apiResource(
+                'assets',
+                AssetController::class
+            )->only(['index', 'store', 'show', 'update'])->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_admin'
             );
 
             Route::apiResource(
