@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\StaffAttendanceController;
 use App\Http\Controllers\Api\LeaveRequestController;
+use App\Http\Controllers\Api\DisciplineCaseController;
 use App\Http\Controllers\Api\ExaminationController;
 use App\Http\Controllers\Api\ExamScoreController;
 use App\Http\Controllers\Api\AttendanceController;
@@ -566,6 +567,27 @@ Route::prefix('v1')->group(function () {
                 'leave-requests',
                 LeaveRequestController::class
             )->only(['index', 'store', 'show']);
+
+            Route::get(
+                'discipline-cases/options',
+                [DisciplineCaseController::class, 'options']
+            )->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_admin,nursery_head,primary_headmaster,secondary_principal,teacher,form_teacher'
+            );
+
+            Route::post(
+                'discipline-cases/{discipline_case}/review',
+                [DisciplineCaseController::class, 'review']
+            )->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_admin'
+            );
+
+            Route::apiResource(
+                'discipline-cases',
+                DisciplineCaseController::class
+            )->only(['index', 'store', 'show'])->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_admin,nursery_head,primary_headmaster,secondary_principal,teacher,form_teacher'
+            );
 
             Route::apiResource(
                 'examinations',

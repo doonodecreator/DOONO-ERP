@@ -42,6 +42,7 @@ import Terms from "./pages/Terms";
 import Attendance from "./pages/Attendance";
 import StaffAttendance from "./pages/StaffAttendance";
 import LeaveRequests from "./pages/LeaveRequests";
+import DisciplineCases from "./pages/DisciplineCases";
 
 import Results from "./pages/Results";
 import ResultEntry from "./pages/ResultEntry";
@@ -233,6 +234,9 @@ function AuthenticatedApp() {
       break;
     case "leave-requests":
       content = <LeaveRequests />;
+      break;
+    case "discipline-cases":
+      content = <DisciplineCases />;
       break;
     case "results":
       content = <Results />;
