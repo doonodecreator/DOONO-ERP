@@ -28,6 +28,7 @@ export default function Sidebar({
   const allMenuItems = [
     { name: "Dashboard", page: "dashboard", roles: ["all"] },
     { name: "Staff Management", page: "staff", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin"] },
+    { name: "Staff Attendance", page: "staff-attendance", roles: ["proprietor", "principal", "vice_principal_admin"] },
     { name: "Students", page: "students", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "bursar", "accountant", "receptionist"] },
     { name: "Admissions", page: "admissions", roles: ["proprietor", "principal", "vice_principal_admin"] },
     { name: "Enrollment & Placement", page: "student-enrollments", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin"] },

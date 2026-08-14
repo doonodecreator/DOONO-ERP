@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\ParentController;
 use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\StaffController;
+use App\Http\Controllers\Api\StaffAttendanceController;
 use App\Http\Controllers\Api\ExaminationController;
 use App\Http\Controllers\Api\ExamScoreController;
 use App\Http\Controllers\Api\AttendanceController;
@@ -520,6 +521,27 @@ Route::prefix('v1')->group(function () {
             Route::apiResource(
                 'staff',
                 StaffController::class
+            );
+
+            Route::get(
+                'staff-attendances/roster',
+                [StaffAttendanceController::class, 'roster']
+            )->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_admin'
+            );
+
+            Route::post(
+                'staff-attendances/bulk',
+                [StaffAttendanceController::class, 'bulkStore']
+            )->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_admin'
+            );
+
+            Route::apiResource(
+                'staff-attendances',
+                StaffAttendanceController::class
+            )->except(['destroy'])->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_admin'
             );
 
             Route::apiResource(

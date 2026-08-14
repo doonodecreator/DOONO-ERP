@@ -40,6 +40,7 @@ import AcademicSessions from "./pages/AcademicSessions";
 import Terms from "./pages/Terms";
 
 import Attendance from "./pages/Attendance";
+import StaffAttendance from "./pages/StaffAttendance";
 
 import Results from "./pages/Results";
 import ResultEntry from "./pages/ResultEntry";
@@ -225,6 +226,9 @@ function AuthenticatedApp() {
       break;
     case "attendance":
       content = <Attendance />;
+      break;
+    case "staff-attendance":
+      content = <StaffAttendance />;
       break;
     case "results":
       content = <Results />;
