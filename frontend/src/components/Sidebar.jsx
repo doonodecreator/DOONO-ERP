@@ -7,8 +7,8 @@ export default function Sidebar({
   open,
   closeSidebar,
 }) {
-  const { roles, isPlatformAdmin } = useAuth();
-  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin });
+  const { roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
+  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner });
 
   // Platform Owner gets a distinct menu — not the school-operational list.
   // Per the architecture diagram: Dashboard, Organizations, Schools,
@@ -27,29 +27,36 @@ export default function Sidebar({
 
   const allMenuItems = [
     { name: "Dashboard", page: "dashboard", roles: ["all"] },
-    { name: "Staff Management", page: "staff", roles: ["proprietor", "principal", "vice_principal", "head_teacher"] },
-    { name: "Students", page: "students", roles: ["proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "bursar", "accountant", "receptionist"] },
-    { name: "Parents", page: "parents", roles: ["proprietor", "principal", "vice_principal", "head_teacher", "receptionist", "bursar", "accountant"] },
-    { name: "Teachers", page: "teachers", roles: ["proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head"] },
-    { name: "Subjects", page: "subjects", roles: ["proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "teacher"] },
-    { name: "Classes", page: "classes", roles: ["proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head", "teacher"] },
-    { name: "Streams", page: "streams", roles: ["proprietor", "principal", "vice_principal", "head_teacher"] },
-    { name: "Academic Sessions", page: "academic-sessions", roles: ["proprietor", "principal", "vice_principal"] },
-    { name: "Terms", page: "terms", roles: ["proprietor", "principal", "vice_principal"] },
-    { name: "Attendance", page: "attendance", roles: ["proprietor", "principal", "vice_principal", "head_teacher", "secondary_principal", "primary_headmaster", "nursery_head", "teacher"] },
-    { name: "Results & Exams", page: "results", roles: ["proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "student", "parent"] },
+    { name: "Staff Management", page: "staff", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin"] },
+    { name: "Students", page: "students", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "bursar", "accountant", "receptionist"] },
+    { name: "Parents", page: "parents", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin", "receptionist", "bursar", "accountant"] },
+    { name: "Teachers", page: "teachers", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin", "secondary_principal", "primary_headmaster", "nursery_head"] },
+    { name: "Subjects", page: "subjects", roles: ["proprietor", "principal", "vice_principal_academic", "secondary_principal", "primary_headmaster", "teacher", "form_teacher"] },
+    { name: "Classes", page: "classes", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "form_teacher"] },
+    { name: "Streams", page: "streams", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin"] },
+    { name: "Academic Sessions", page: "academic-sessions", roles: ["proprietor", "principal", "vice_principal_academic"] },
+    { name: "Terms", page: "terms", roles: ["proprietor", "principal", "vice_principal_academic"] },
+    { name: "Attendance", page: "attendance", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "form_teacher"] },
+    { name: "Results & Exams", page: "results", roles: ["proprietor", "principal", "vice_principal_academic", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "student", "parent"] },
     { name: "Fees & Payments", page: "fees", roles: ["proprietor", "principal", "bursar", "accountant", "parent", "student"] },
-    { name: "Timetable", page: "timetable", roles: ["proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "student", "parent"] },
-    { name: "Report Cards", page: "report-cards", roles: ["proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "parent", "student"] },
-    { name: "Promotion & Graduation", page: "promotions", roles: ["proprietor", "principal", "vice_principal", "secondary_principal", "primary_headmaster"] },
+    { name: "Timetable", page: "timetable", roles: ["proprietor", "principal", "vice_principal_academic", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "student", "parent"] },
+    { name: "Report Cards", page: "report-cards", roles: ["proprietor", "principal", "vice_principal_academic", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "parent", "student"] },
+    { name: "Promotion & Graduation", page: "promotions", roles: ["proprietor", "principal", "vice_principal_academic", "secondary_principal", "primary_headmaster"] },
     { name: "Subscriptions", page: "subscriptions", roles: ["proprietor"] },
     { name: "Settings", page: "settings", roles: ["proprietor", "principal"] },
+  ];
+
+  const organizationOwnerMenuItems = [
+    { name: "Dashboard", page: "dashboard" },
+    { name: "My Schools", page: "schools" },
   ];
 
   const menuItems =
     role === "super_admin"
       ? platformMenuItems
-      : allMenuItems.filter(
+      : role === "organization_owner"
+        ? organizationOwnerMenuItems
+        : allMenuItems.filter(
           (item) => item.roles.includes("all") || item.roles.includes(role)
         );
 

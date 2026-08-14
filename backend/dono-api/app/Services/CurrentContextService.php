@@ -34,6 +34,8 @@ class CurrentContextService
 
             'is_platform_admin' => $isPlatformAdmin,
 
+            'is_organization_owner' => $this->isOrganizationOwner($user),
+
             'organization' => $organization,
 
             'school' => $school,
@@ -94,6 +96,14 @@ class CurrentContextService
         return Organization::where('owner_id', $user->id)
             ->latest()
             ->first();
+    }
+
+    /**
+     * Determine whether the user owns at least one organization.
+     */
+    public function isOrganizationOwner(User $user): bool
+    {
+        return Organization::where('owner_id', $user->id)->exists();
     }
 
     /**

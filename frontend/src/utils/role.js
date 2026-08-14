@@ -1,21 +1,33 @@
-export function getPrimaryRoleSlug({ roles, isPlatformAdmin }) {
-    if (isPlatformAdmin) {
-        return "super_admin";
-    }
+export function getPrimaryRoleSlug({
+  roles = [],
+  isPlatformAdmin = false,
+  isOrganizationOwner = false,
+} = {}) {
+  if (isPlatformAdmin) {
+    return "super_admin";
+  }
 
-    return roles?.[0]?.slug || "guest";
+  if (isOrganizationOwner) {
+    return "organization_owner";
+  }
+
+  return roles?.[0]?.slug || "guest";
 }
 
 export function formatRoleLabel(roleSlug) {
-    if (roleSlug === "super_admin") {
-        return "Software Owner";
-    }
+  if (roleSlug === "super_admin") {
+    return "Software Owner";
+  }
 
-    if (!roleSlug || roleSlug === "guest") {
-        return "Guest";
-    }
+  if (roleSlug === "organization_owner") {
+    return "Organization Owner";
+  }
 
-    return roleSlug
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase());
+  if (!roleSlug || roleSlug === "guest") {
+    return "Guest";
+  }
+
+  return roleSlug
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }

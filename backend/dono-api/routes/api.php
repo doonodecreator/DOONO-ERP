@@ -594,7 +594,7 @@ Route::prefix('v1')->group(function () {
             Route::get(
                 'form-teacher/dashboard',
                 [FormTeacherPortalController::class, 'dashboard']
-            )->middleware('role:teacher');
+            )->middleware('role:form_teacher');
 
             Route::get(
                 'platform-owner/dashboard',
@@ -604,7 +604,7 @@ Route::prefix('v1')->group(function () {
             Route::get(
                 'org-owner/dashboard',
                 [OrganizationOwnerController::class, 'dashboard']
-            )->middleware('role:super_admin,proprietor');
+            )->middleware('organization.owner');
 
             Route::get(
                 'proprietor/dashboard',
@@ -619,12 +619,12 @@ Route::prefix('v1')->group(function () {
             Route::get(
                 'vp-academic/dashboard',
                 [VicePrincipalAcademicController::class, 'dashboard']
-            )->middleware('role:super_admin,vice_principal');
+            )->middleware('role:super_admin,vice_principal_academic');
 
             Route::get(
                 'vp-admin/dashboard',
                 [VicePrincipalAdminController::class, 'dashboard']
-            )->middleware('role:super_admin,head_teacher');
+            )->middleware('role:super_admin,vice_principal_admin');
 
             Route::get(
                 'nursery-head/dashboard',

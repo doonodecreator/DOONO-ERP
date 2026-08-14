@@ -10,6 +10,7 @@ export function AuthProvider({ children }) {
   const [roles, setRoles] = useState([]);
   const [permissions, setPermissions] = useState([]);
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
+  const [isOrganizationOwner, setIsOrganizationOwner] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -20,6 +21,7 @@ export function AuthProvider({ children }) {
     setRoles(ctx.roles ?? []);
     setPermissions(ctx.permissions ?? []);
     setIsPlatformAdmin(!!ctx.is_platform_admin);
+    setIsOrganizationOwner(!!ctx.is_organization_owner);
     setOnboardingStep(ctx.onboarding_step ?? null);
   }, []);
 
@@ -30,6 +32,7 @@ export function AuthProvider({ children }) {
     setRoles([]);
     setPermissions([]);
     setIsPlatformAdmin(false);
+    setIsOrganizationOwner(false);
     setOnboardingStep(null);
   }, []);
 
@@ -93,6 +96,7 @@ export function AuthProvider({ children }) {
         roles,
         permissions,
         isPlatformAdmin,
+        isOrganizationOwner,
         onboardingStep,
         loading,
         login,

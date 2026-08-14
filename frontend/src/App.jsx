@@ -76,21 +76,25 @@ import NurseDashboard from "./pages/NurseDashboard";
 import LibrarianDashboard from "./pages/LibrarianDashboard";
 import CashierDashboard from "./pages/CashierDashboard";
 import AccountantDashboard from "./pages/AccountantDashboard";
+import FormTeacherDashboard from "./pages/FormTeacherDashboard";
+import OrganizationOwnerDashboard from "./pages/OrganizationOwnerDashboard";
 
 const ROLE_DASHBOARDS = {
   super_admin: PlatformOwnerDashboard,
+  organization_owner: OrganizationOwnerDashboard,
   proprietor: ProprietorDashboard,
   principal: PrincipalDashboard,
-  vice_principal: VicePrincipalAcademicDashboard,
-  head_teacher: VicePrincipalAdminDashboard,
+  vice_principal_academic: VicePrincipalAcademicDashboard,
+  vice_principal_admin: VicePrincipalAdminDashboard,
   teacher: TeacherDashboard,
+  form_teacher: FormTeacherDashboard,
   bursar: CashierDashboard,
   accountant: AccountantDashboard,
   librarian: LibrarianDashboard,
-  school_nurse: NurseDashboard,
+  nurse: NurseDashboard,
   hostel_master: HostelDashboard,
   hostel_mistress: HostelDashboard,
-  transport_officer: TransportDashboard,
+  transport_manager: TransportDashboard,
   receptionist: ReceptionDashboard,
   nursery_head: NurseryHeadDashboard,
   primary_headmaster: PrimaryHeadmasterDashboard,
@@ -100,7 +104,7 @@ const ROLE_DASHBOARDS = {
 };
 
 function AuthenticatedApp() {
-  const { onboardingStep, refreshContext, roles, isPlatformAdmin } = useAuth();
+  const { onboardingStep, refreshContext, roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
 
   const [page, setPage] = useState("dashboard");
 
@@ -120,7 +124,7 @@ function AuthenticatedApp() {
     );
   }
 
-  const roleSlug = getPrimaryRoleSlug({ roles, isPlatformAdmin });
+  const roleSlug = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner });
   const RoleDashboard = ROLE_DASHBOARDS[roleSlug];
 
   let content = RoleDashboard ? <RoleDashboard /> : <Dashboard />;
