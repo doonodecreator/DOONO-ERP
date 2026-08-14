@@ -7,20 +7,36 @@ use App\Http\Requests\StoreOrganizationRequest;
 use App\Http\Requests\UpdateOrganizationRequest;
 use App\Models\ActivityLog;
 use App\Models\Organization;
+use App\Services\CurrentContextService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class OrganizationController extends Controller
 {
+    public function __construct(private readonly CurrentContextService $context)
+    {
+    }
+
+    private function assertCanManage(Request $request, Organization $organization): void
+    {
+        if (! $this->context->canManageOrganization($request->user(), $organization)) {
+            abort(403, 'You may only manage organizations you own.');
+        }
+    }
     /**
      * Display a listing of organizations.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $query = Organization::with(['owner'])
             ->withCount('schools');
+
+        if (! $request->user()->isSuperAdmin()) {
+            $query->where('owner_id', $request->user()->id);
+        }
 
         if (request()->filled('search')) {
             $search = request('search');
@@ -101,8 +117,10 @@ class OrganizationController extends Controller
     /**
      * Display the specified organization.
      */
-    public function show(Organization $organization): JsonResponse
+    public function show(Request $request, Organization $organization): JsonResponse
     {
+        $this->assertCanManage($request, $organization);
+
         $organization->load([
             'owner',
             'schools',
@@ -122,6 +140,7 @@ class OrganizationController extends Controller
         UpdateOrganizationRequest $request,
         Organization $organization
     ): JsonResponse {
+        $this->assertCanManage($request, $organization);
 
         DB::beginTransaction();
 
@@ -171,8 +190,10 @@ class OrganizationController extends Controller
     /**
      * Remove the specified organization.
      */
-    public function destroy(Organization $organization): JsonResponse
+    public function destroy(Request $request, Organization $organization): JsonResponse
     {
+        $this->assertCanManage($request, $organization);
+
         if ($organization->schools()->exists()) {
             return response()->json([
                 'success' => false,

@@ -107,6 +107,16 @@ class CurrentContextService
     }
 
     /**
+     * Determine whether the user may manage the specified organization.
+     * Platform owners can manage all organizations; organization owners can
+     * manage only records they own.
+     */
+    public function canManageOrganization(User $user, Organization $organization): bool
+    {
+        return $user->isSuperAdmin() || $organization->owner_id === $user->id;
+    }
+
+    /**
      * Resolve all permissions inherited through the user's roles.
      */
     private function resolvePermissions(User $user): array
