@@ -54,7 +54,7 @@ export default function Results({ setPage }) {
     if (!window.confirm('Are you sure you want to approve and publish these class results to student/parent portals?')) return;
 
     try {
-      await api.post(`/results/${id}/publish`);
+      await api.post(`/result-entry/results/${id}/publish`);
       alert('Results successfully published!');
       loadExamData();
     } catch (err) {
