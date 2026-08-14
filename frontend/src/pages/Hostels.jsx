@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../utils/api';
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 export default function Hostels({ setPage }) {

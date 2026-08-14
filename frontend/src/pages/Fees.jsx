@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api from "../utils/api";
+import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { getPrimaryRoleSlug } from "../utils/role";
 
