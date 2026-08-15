@@ -135,11 +135,11 @@ function AuthenticatedApp() {
   const roleSlug = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner });
   const RoleDashboard = ROLE_DASHBOARDS[roleSlug];
 
-  let content = RoleDashboard ? <RoleDashboard /> : <Dashboard />;
+  let content = RoleDashboard ? <RoleDashboard setPage={setPage} /> : <Dashboard />;
 
   switch (page) {
     case "dashboard":
-      content = RoleDashboard ? <RoleDashboard /> : <Dashboard />;
+      content = RoleDashboard ? <RoleDashboard setPage={setPage} /> : <Dashboard />;
       break;
     case "add-school":
       content = (
@@ -282,7 +282,7 @@ function AuthenticatedApp() {
       content = <Settings />;
       break;
     default:
-      content = RoleDashboard ? <RoleDashboard /> : <Dashboard />;
+      content = RoleDashboard ? <RoleDashboard setPage={setPage} /> : <Dashboard />;
   }
 
   return (

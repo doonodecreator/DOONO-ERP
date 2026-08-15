@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
+import LoadingSpinner from "../components/feedback/LoadingSpinner";
 
-export default function VicePrincipalAdminDashboard() {
+export default function VicePrincipalAdminDashboard({ setPage }) {
     const [activeTab, setActiveTab] = useState("dashboard");
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(null);
+    const [error, setError] = useState("");
+    const [reviewingLeaveId, setReviewingLeaveId] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -12,28 +15,60 @@ export default function VicePrincipalAdminDashboard() {
 
     const loadData = async () => {
         setLoading(true);
+        setError("");
         try {
             const res = await api.get("/vp-admin/dashboard");
-            setData(res.data);
+            setData(res?.data || null);
         } catch (err) {
-            console.error("Error loading VP Admin dashboard", err);
+            setData(null);
+            setError(err.message || "Unable to load the VP Admin dashboard.");
         } finally {
             setLoading(false);
         }
     };
 
+    const reviewLeave = async (leaveId, status) => {
+        try {
+            setReviewingLeaveId(leaveId);
+            setError("");
+            await api.post(`/leave-requests/${leaveId}/review`, { status });
+            await loadData();
+        } catch (err) {
+            setError(err.message || `Unable to ${status.toLowerCase()} the leave request.`);
+        } finally {
+            setReviewingLeaveId(null);
+        }
+    };
+
     if (loading) {
-        return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-cyan-700 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        );
+        return <LoadingSpinner text="Loading VP Admin dashboard..." />;
     }
 
-    const summary = data?.admin_summary || {};
-    const metrics = data?.metrics || {};
-    const leaves = data?.leave_requests || [];
-    const events = data?.upcoming_events || [];
+    const summary = data?.admin_summary && typeof data.admin_summary === "object" ? data.admin_summary : {};
+    const metrics = data?.metrics && typeof data.metrics === "object" ? data.metrics : {};
+    const leaves = Array.isArray(data?.leave_requests) ? data.leave_requests : [];
+    const events = Array.isArray(data?.upcoming_events) ? data.upcoming_events : [];
+
+    const openTab = (tabId) => {
+        const pageMap = {
+            staff_mgmt: "staff",
+            staff_attendance: "staff-attendance",
+            leave_mgmt: "leave-requests",
+            discipline: "discipline-cases",
+            inventory: "asset-register",
+            events: "school-events",
+            health_safety: "safety-incidents",
+            facilities: "school-facilities",
+            reports: "report-cards",
+        };
+
+        if (pageMap[tabId] && setPage) {
+            setPage(pageMap[tabId]);
+            return;
+        }
+
+        setActiveTab(tabId);
+    };
 
     const tabs = [
         { id: "dashboard", label: "Dashboard" },
@@ -50,6 +85,7 @@ export default function VicePrincipalAdminDashboard() {
 
     return (
         <div className="min-h-screen bg-slate-50 p-4 md:p-6 text-slate-800">
+            {error && <div role="alert" className="error-message mb-4">{error}</div>}
             {/* Header */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="flex items-center gap-4">
@@ -58,12 +94,12 @@ export default function VicePrincipalAdminDashboard() {
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-slate-900">VP Administration Panel</h1>
-                        <p className="text-sm text-slate-500">VP Admin: <span className="font-semibold text-slate-700">{summary.vp_name}</span> • {summary.school_name} ({summary.session})</p>
+                        <p className="text-sm text-slate-500">VP Admin: <span className="font-semibold text-slate-700">{summary.vp_name || "Current user"}</span> • {summary.school_name || "Current school"}{summary.session ? ` (${summary.session})` : ""}{summary.term ? ` • ${summary.term}` : ""}</p>
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <button className="bg-cyan-700 hover:bg-cyan-800 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
-                        + New Event / Asset Entry
+                    <button type="button" onClick={() => openTab("events")} className="bg-cyan-700 hover:bg-cyan-800 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        + Schedule Event
                     </button>
                 </div>
             </div>
@@ -90,6 +126,10 @@ export default function VicePrincipalAdminDashboard() {
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Assets</p>
                     <p className="text-2xl font-bold text-indigo-600 mt-1">{metrics.total_assets_count || 0}</p>
                 </div>
+                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Facilities Due</p>
+                    <p className="text-2xl font-bold text-orange-600 mt-1">{metrics.facilities_due_inspection || 0}</p>
+                </div>
             </div>
 
             {/* Navigation Bar (10 Sub-Modules) */}
@@ -97,7 +137,7 @@ export default function VicePrincipalAdminDashboard() {
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
+                        onClick={() => openTab(tab.id)}
                         className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                             activeTab === tab.id
                                 ? "bg-cyan-700 text-white shadow-md shadow-cyan-200"
@@ -116,18 +156,18 @@ export default function VicePrincipalAdminDashboard() {
                     <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                         <div className="p-5 border-b border-slate-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-900">Pending Leave Requests</h3>
-                            <button onClick={() => setActiveTab('leave_mgmt')} className="text-xs font-semibold text-cyan-700 hover:underline">Manage All</button>
+                            <button type="button" onClick={() => openTab('leave_mgmt')} className="text-xs font-semibold text-cyan-700 hover:underline">Manage All</button>
                         </div>
                         <div className="divide-y divide-slate-100">
-                            {leaves.map((item) => (
+                            {Array.isArray(leaves) && leaves.map((item) => (
                                 <div key={item.id} className="p-4 hover:bg-slate-50 flex justify-between items-center">
                                     <div>
                                         <h4 className="font-bold text-slate-800 text-sm">{item.staff}</h4>
                                         <p className="text-xs text-slate-500 mt-0.5">{item.type} • Duration: <span className="font-semibold text-slate-700">{item.duration}</span></p>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg text-xs font-semibold">Approve</button>
-                                        <button className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-lg text-xs font-semibold border border-slate-200">Reject</button>
+                                        <button type="button" disabled={reviewingLeaveId === item.id} onClick={() => reviewLeave(item.id, "Approved")} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg text-xs font-semibold">{reviewingLeaveId === item.id ? "Saving..." : "Approve"}</button>
+                                        <button type="button" disabled={reviewingLeaveId === item.id} onClick={() => reviewLeave(item.id, "Rejected")} className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-lg text-xs font-semibold border border-slate-200">Reject</button>
                                     </div>
                                 </div>
                             ))}
@@ -141,7 +181,7 @@ export default function VicePrincipalAdminDashboard() {
                             <button onClick={() => setActiveTab('events')} className="text-xs font-semibold text-cyan-700 hover:underline">Schedule</button>
                         </div>
                         <div className="divide-y divide-slate-100">
-                            {events.map((ev, idx) => (
+                            {Array.isArray(events) && events.map((ev) => (
                                 <div key={idx} className="p-4 hover:bg-slate-50">
                                     <h4 className="font-semibold text-slate-800 text-sm">{ev.title}</h4>
                                     <p className="text-xs text-slate-500 mt-1">Venue: {ev.venue}</p>
