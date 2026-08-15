@@ -5,6 +5,7 @@ export default function ParentPortal() {
     const [activeTab, setActiveTab] = useState("children");
     const [loading, setLoading] = useState(false);
     const [dashboardData, setDashboardData] = useState(null);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         loadParentData();
@@ -16,7 +17,7 @@ export default function ParentPortal() {
             const res = await api.get("/parent/dashboard");
             setDashboardData(res.data);
         } catch (err) {
-            console.error("Error loading parent dashboard", err);
+            setError(err?.message || "Unable to load the parent portal.");
         } finally {
             setLoading(false);
         }
@@ -30,9 +31,18 @@ export default function ParentPortal() {
         );
     }
 
-    const parent = dashboardData?.parent_profile || { first_name: "Parent", last_name: "" };
-    const children = dashboardData?.children || [];
-    const notices = dashboardData?.recent_notices || [];
+    if (error) {
+        return (
+            <div role="alert" className="min-h-screen bg-slate-50 p-8 text-center text-rose-700">
+                {error}
+            </div>
+        );
+    }
+
+    const parent = dashboardData?.parent_profile || {};
+    const children = Array.isArray(dashboardData?.children) ? dashboardData.children : [];
+    const notices = Array.isArray(dashboardData?.recent_notices) ? dashboardData.recent_notices : [];
+    const outstandingFees = dashboardData?.outstanding_fees;
 
     return (
         <div className="min-h-screen bg-slate-50 p-4 md:p-6 text-slate-800">
@@ -49,7 +59,11 @@ export default function ParentPortal() {
                 </div>
                 <div className="bg-rose-50 px-5 py-3 rounded-xl border border-rose-100 text-right">
                     <p className="text-xs font-semibold text-rose-500 uppercase tracking-wide">Total Outstanding Fees</p>
-                    <p className="text-xl font-bold text-rose-700">₦{dashboardData?.outstanding_fees?.toLocaleString() || "0.00"}</p>
+                    <p className="text-xl font-bold text-rose-700">
+                        {outstandingFees === null || outstandingFees === undefined
+                            ? "Unavailable"
+                            : `₦${Number(outstandingFees).toLocaleString()}`}
+                    </p>
                 </div>
             </div>
 

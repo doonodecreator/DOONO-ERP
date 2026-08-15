@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getPrimaryRoleSlug } from '../utils/role';
+import PortalAccountModal from '../components/modals/PortalAccountModal';
 
 export default function Students({ setPage, setSelectedStudent }) {
   const { roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
@@ -22,6 +23,7 @@ export default function Students({ setPage, setSelectedStudent }) {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [portalStudent, setPortalStudent] = useState(null);
 
   useEffect(() => {
     loadStudents();
@@ -57,6 +59,11 @@ export default function Students({ setPage, setSelectedStudent }) {
     e.stopPropagation();
     if (setSelectedStudent) setSelectedStudent(student);
     setPage('edit-student');
+  };
+
+  const handlePortalAccount = (event, student) => {
+    event.stopPropagation();
+    setPortalStudent(student);
   };
 
   const handleViewProfile = (student) => {
@@ -177,6 +184,16 @@ export default function Students({ setPage, setSelectedStudent }) {
                         >
                           Edit
                         </button>
+                        {student.portal_account?.linked ? (
+                          <span className="text-emerald-700 font-medium text-xs">Portal Linked</span>
+                        ) : (
+                          <button
+                            onClick={(e) => handlePortalAccount(e, student)}
+                            className="text-indigo-600 hover:text-indigo-800 font-medium text-xs"
+                          >
+                            Portal Account
+                          </button>
+                        )}
                         <button
                           onClick={(e) => handleDelete(e, student.id, `${student.first_name} ${student.last_name}`)}
                           className="text-red-600 hover:text-red-800 font-medium text-xs"
@@ -192,6 +209,14 @@ export default function Students({ setPage, setSelectedStudent }) {
           </div>
         )}
       </div>
+
+      <PortalAccountModal
+        open={!!portalStudent}
+        entity={portalStudent}
+        entityType="student"
+        onClose={() => setPortalStudent(null)}
+        onSuccess={loadStudents}
+      />
     </div>
   );
 }

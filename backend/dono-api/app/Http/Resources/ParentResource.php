@@ -27,6 +27,12 @@ class ParentResource extends JsonResource
             'guardian_occupation' => $this->guardian_occupation,
             'guardian_relationship' => $this->guardian_relationship,
             'address' => $this->address,
+            'portal_account' => $this->whenLoaded('guardian', function () {
+                return [
+                    'linked' => (bool) $this->guardian?->user_id,
+                    'email' => $this->guardian?->user?->email,
+                ];
+            }),
             'school' => $this->whenLoaded('school'),
             'students' => $this->whenLoaded('students', function () use ($request) {
                 return $this->students

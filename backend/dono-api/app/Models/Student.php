@@ -11,6 +11,7 @@ class Student extends Model
 {
     protected $fillable = [
         'school_id',
+        'user_id',
         'division_id',
         'class_id',
         'stream_id',
@@ -45,6 +46,11 @@ class Student extends Model
             $this->middle_name,
             $this->last_name,
         ])));
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function school(): BelongsTo
@@ -87,16 +93,15 @@ class Student extends Model
         return $this->hasMany(ExamScore::class);
     }
 
-        public function guardians(): BelongsToMany
+    public function guardians(): BelongsToMany
     {
         return $this->belongsToMany(
             Guardian::class,
             'guardian_student',
             'student_id',
             'guardian_id'
-        )->withPivot('relation_type')->withTimestamps();
+        )->withPivot('relationship')->withTimestamps();
     }
-
 
     public function parents(): BelongsToMany
     {
@@ -108,4 +113,3 @@ class Student extends Model
         );
     }
 }
-

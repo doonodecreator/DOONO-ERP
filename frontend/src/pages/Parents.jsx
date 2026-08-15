@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getPrimaryRoleSlug } from '../utils/role';
+import PortalAccountModal from '../components/modals/PortalAccountModal';
 
 export default function Parents({ setPage, setSelectedParent }) {
   const { roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
@@ -21,6 +22,7 @@ export default function Parents({ setPage, setSelectedParent }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
+  const [portalParent, setPortalParent] = useState(null);
 
   useEffect(() => {
     loadParents();
@@ -50,6 +52,11 @@ export default function Parents({ setPage, setSelectedParent }) {
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete parent record.');
     }
+  };
+
+  const handlePortalAccount = (e, parent) => {
+    e.stopPropagation();
+    setPortalParent(parent);
   };
 
   const handleLinkStudent = (e, parent) => {
@@ -168,12 +175,24 @@ export default function Parents({ setPage, setSelectedParent }) {
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
                         {canManageLinks && (
-                          <button
-                            onClick={(e) => handleLinkStudent(e, p)}
-                            className="px-2.5 py-1 bg-green-50 text-green-700 hover:bg-green-100 rounded text-xs font-medium"
-                          >
-                            + Link Student
-                          </button>
+                          <>
+                            {p.portal_account?.linked ? (
+                              <span className="text-emerald-700 font-medium text-xs">Portal Linked</span>
+                            ) : (
+                              <button
+                                onClick={(e) => handlePortalAccount(e, p)}
+                                className="px-2.5 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded text-xs font-medium"
+                              >
+                                Portal Account
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => handleLinkStudent(e, p)}
+                              className="px-2.5 py-1 bg-green-50 text-green-700 hover:bg-green-100 rounded text-xs font-medium"
+                            >
+                              + Link Student
+                            </button>
+                          </>
                         )}
                         <button
                           onClick={(e) => handleEdit(e, p)}
@@ -196,6 +215,14 @@ export default function Parents({ setPage, setSelectedParent }) {
           </div>
         )}
       </div>
+
+      <PortalAccountModal
+        open={!!portalParent}
+        entity={portalParent}
+        entityType="parent"
+        onClose={() => setPortalParent(null)}
+        onSuccess={loadParents}
+      />
     </div>
   );
 }

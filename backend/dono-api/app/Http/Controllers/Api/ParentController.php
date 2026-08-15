@@ -26,6 +26,7 @@ class ParentController extends Controller
             'school',
             'students.class',
             'students.stream',
+            'guardian.user',
         ]);
 
         if (! $request->user()->isSuperAdmin()) {
@@ -55,6 +56,7 @@ class ParentController extends Controller
                 'school',
                 'students.class',
             'students.stream',
+            'guardian.user',
             ])
         ))
         ->response()
@@ -75,6 +77,7 @@ class ParentController extends Controller
                 'school',
                 'students.class',
             'students.stream',
+            'guardian.user',
             ])
         );
     }
@@ -103,6 +106,7 @@ class ParentController extends Controller
                 'school',
                 'students.class',
             'students.stream',
+            'guardian.user',
             ])
         );
     }

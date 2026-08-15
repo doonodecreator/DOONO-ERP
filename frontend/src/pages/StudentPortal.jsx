@@ -5,6 +5,7 @@ export default function StudentPortal() {
     const [activeTab, setActiveTab] = useState("dashboard");
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(null);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         loadStudentData();
@@ -16,7 +17,7 @@ export default function StudentPortal() {
             const res = await api.get("/student/dashboard");
             setData(res.data);
         } catch (err) {
-            console.error("Error loading student dashboard", err);
+            setError(err?.message || "Unable to load the student portal.");
         } finally {
             setLoading(false);
         }
@@ -30,9 +31,17 @@ export default function StudentPortal() {
         );
     }
 
+    if (error) {
+        return (
+            <div role="alert" className="min-h-screen bg-slate-50 p-8 text-center text-rose-700">
+                {error}
+            </div>
+        );
+    }
+
     const student = data?.student_profile || {};
-    const assignments = data?.upcoming_assignments || [];
-    const results = data?.recent_results || [];
+    const assignments = Array.isArray(data?.upcoming_assignments) ? data.upcoming_assignments : [];
+    const results = Array.isArray(data?.recent_results) ? data.recent_results : [];
     const attendance = data?.attendance_summary || { present: 0, absent: 0 };
 
     return (

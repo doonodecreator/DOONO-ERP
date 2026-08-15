@@ -34,6 +34,9 @@ class StudentResource extends JsonResource
             'genotype' => $this->genotype,
             'medical_notes' => $this->medical_notes,
             'status' => $this->status,
+            'portal_account' => [
+                'linked' => (bool) $this->user_id,
+            ],
             'class' => $this->whenLoaded('class'),
             'stream' => $this->whenLoaded('stream'),
             'division' => $this->whenLoaded('division'),

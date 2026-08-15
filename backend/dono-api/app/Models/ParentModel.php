@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ParentModel extends Model
 {
@@ -82,6 +83,11 @@ class ParentModel extends Model
             ParentStudent::class,
             'parent_id'
         );
+    }
+
+    public function guardian(): HasOne
+    {
+        return $this->hasOne(Guardian::class, 'parent_id');
     }
 
     /*

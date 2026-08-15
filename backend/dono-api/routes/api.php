@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\FeePaymentController;
 use App\Http\Controllers\Api\PaymentReceiptController;
 use App\Http\Controllers\Api\StudentEnrollmentController;
 use App\Http\Controllers\Api\ParentStudentController;
+use App\Http\Controllers\Api\PortalAccountController;
 use App\Http\Controllers\Api\StudentPromotionController;
 use App\Http\Controllers\Api\ResultController;
 use App\Http\Controllers\Api\TimetableController;
@@ -517,6 +518,16 @@ Route::prefix('v1')->group(function () {
                 ParentController::class
             );
 
+            Route::post(
+                'students/{student}/portal-account',
+                [PortalAccountController::class, 'linkStudent']
+            )->middleware('role:super_admin,proprietor,principal,vice_principal_admin');
+
+            Route::post(
+                'parents/{parent}/portal-account',
+                [PortalAccountController::class, 'linkParent']
+            )->middleware('role:super_admin,proprietor,principal,vice_principal_admin');
+
             Route::apiResource(
                 'subjects',
                 SubjectController::class
@@ -942,12 +953,12 @@ Route::prefix('v1')->group(function () {
             Route::get(
                 'student/dashboard',
                 [StudentPortalController::class, 'dashboard']
-            );
+            )->middleware('role:student');
 
             Route::get(
                 'parent/dashboard',
                 [ParentPortalController::class, 'dashboard']
-            );
+            )->middleware('role:parent');
         });
     });
 });
