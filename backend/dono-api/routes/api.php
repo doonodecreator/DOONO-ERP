@@ -21,6 +21,8 @@ use App\Http\Controllers\Api\LeaveRequestController;
 use App\Http\Controllers\Api\DisciplineCaseController;
 use App\Http\Controllers\Api\SafetyIncidentController;
 use App\Http\Controllers\Api\AssetController;
+use App\Http\Controllers\Api\SchoolEventController;
+use App\Http\Controllers\Api\SchoolFacilityController;
 use App\Http\Controllers\Api\ExaminationController;
 use App\Http\Controllers\Api\ExamScoreController;
 use App\Http\Controllers\Api\AttendanceController;
@@ -630,9 +632,26 @@ Route::prefix('v1')->group(function () {
                 'role:super_admin,proprietor,principal,vice_principal_admin'
             );
 
+            Route::get(
+                'school-events/options',
+                [SchoolEventController::class, 'options']
+            )->middleware('role:super_admin,proprietor,principal,vice_principal_admin');
+
             Route::apiResource(
-                'assets',
-                AssetController::class
+                'school-events',
+                SchoolEventController::class
+            )->only(['index', 'store', 'show', 'update'])->middleware(
+                'role:super_admin,proprietor,principal,vice_principal_admin'
+            );
+
+            Route::get(
+                'school-facilities/options',
+                [SchoolFacilityController::class, 'options']
+            )->middleware('role:super_admin,proprietor,principal,vice_principal_admin');
+
+            Route::apiResource(
+                'school-facilities',
+                SchoolFacilityController::class
             )->only(['index', 'store', 'show', 'update'])->middleware(
                 'role:super_admin,proprietor,principal,vice_principal_admin'
             );

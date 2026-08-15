@@ -33,6 +33,8 @@ export default function Sidebar({
     { name: "Student Discipline", page: "discipline-cases", roles: ["proprietor", "principal", "vice_principal_admin", "nursery_head", "primary_headmaster", "secondary_principal", "teacher", "form_teacher"] },
     { name: "Safety Incidents", page: "safety-incidents", roles: ["proprietor", "principal", "vice_principal_admin", "teacher", "form_teacher", "nurse", "receptionist", "transport_manager", "hostel_master", "hostel_mistress"] },
     { name: "Asset Register", page: "asset-register", roles: ["proprietor", "principal", "vice_principal_admin"] },
+    { name: "School Events", page: "school-events", roles: ["proprietor", "principal", "vice_principal_admin"] },
+    { name: "Facilities", page: "school-facilities", roles: ["proprietor", "principal", "vice_principal_admin"] },
     { name: "Students", page: "students", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "bursar", "accountant", "receptionist"] },
     { name: "Admissions", page: "admissions", roles: ["proprietor", "principal", "vice_principal_admin"] },
     { name: "Enrollment & Placement", page: "student-enrollments", roles: ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin"] },

@@ -45,6 +45,8 @@ import LeaveRequests from "./pages/LeaveRequests";
 import DisciplineCases from "./pages/DisciplineCases";
 import SafetyIncidents from "./pages/SafetyIncidents";
 import AssetRegister from "./pages/AssetRegister";
+import SchoolEvents from "./pages/SchoolEvents";
+import SchoolFacilities from "./pages/SchoolFacilities";
 
 import Results from "./pages/Results";
 import ResultEntry from "./pages/ResultEntry";
@@ -245,6 +247,12 @@ function AuthenticatedApp() {
       break;
     case "asset-register":
       content = <AssetRegister />;
+      break;
+    case "school-events":
+      content = <SchoolEvents />;
+      break;
+    case "school-facilities":
+      content = <SchoolFacilities />;
       break;
     case "results":
       content = <Results />;
