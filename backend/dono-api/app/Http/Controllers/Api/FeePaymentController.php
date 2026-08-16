@@ -8,20 +8,23 @@ use App\Http\Requests\UpdateFeePaymentRequest;
 use App\Http\Resources\FeePaymentResource;
 use App\Models\FeePayment;
 use App\Models\StudentFee;
+use App\Services\CurrentContextService;
 use App\Services\Finance\PaymentService;
+use Illuminate\Http\Request;
 
 class FeePaymentController extends Controller
 {
     public function __construct(
-        protected PaymentService $paymentService
+        protected PaymentService $paymentService,
+        protected CurrentContextService $context
     ) {}
 
-    public function index()
+    public function index(Request $request)
     {
-        $schoolId = request()->attributes->get('current_school_id') ?? auth()->user()->school_id ?? null;
+        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
 
         return FeePaymentResource::collection(
-            FeePayment::whereHas('studentFee', function ($query) use ($schoolId) {
+            FeePayment::whereHas('studentFee.studentEnrollment.student', function ($query) use ($schoolId) {
                 if ($schoolId) {
                     $query->where('school_id', $schoolId);
                 }
@@ -35,7 +38,7 @@ class FeePaymentController extends Controller
     public function store(StoreFeePaymentRequest $request)
     {
         $data = $request->validated();
-        $data['staff_id'] = auth()->id();
+        $data['staff_id'] = $request->user()->id;
 
         $payment = $this->paymentService->recordPayment($data);
 
@@ -56,7 +59,6 @@ class FeePaymentController extends Controller
         $studentFee = $feePayment->studentFee;
         $feePayment->delete();
 
-        // Recalculate invoice status using PaymentService dependency
         app(\App\Services\Finance\FeeService::class)->recalculateStatus($studentFee);
 
         return response()->json([

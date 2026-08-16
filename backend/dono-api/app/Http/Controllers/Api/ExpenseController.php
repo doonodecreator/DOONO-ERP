@@ -4,13 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
+use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
 {
+    public function __construct(protected CurrentContextService $context) {}
+
     public function index(Request $request)
     {
-        $schoolId = auth()->user()->school_id ?? null;
+        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
 
         return response()->json(
             Expense::when($schoolId, function ($query) use ($schoolId) {
@@ -32,11 +35,12 @@ class ExpenseController extends Controller
             'expense_date' => 'required|date',
         ]);
 
-        if (auth()->check() && auth()->user()->school_id) {
-            $validated['school_id'] = auth()->user()->school_id;
+        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+        if ($schoolId) {
+            $validated['school_id'] = $schoolId;
         }
         
-        $validated['recorded_by'] = auth()->id();
+        $validated['recorded_by'] = $request->user()->id;
 
         $expense = Expense::create($validated);
 
