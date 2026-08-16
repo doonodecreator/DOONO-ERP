@@ -4,21 +4,26 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClinicVisit;
+use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
 
 class ClinicVisitController extends Controller
 {
+    public function __construct(protected CurrentContextService $context) {}
+
     public function index(Request $request)
     {
-        $schoolId = auth()->user()->school_id ?? null;
+        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
 
         return response()->json(
-            ClinicVisit::when($schoolId, function ($query) use ($schoolId) {
-                $query->where('school_id', $schoolId);
+            ClinicVisit::whereHas('student', function ($query) use ($schoolId) {
+                if ($schoolId) {
+                    $query->where('school_id', $schoolId);
+                }
             })
-            ->with(['student', 'nurse'])
+            ->with(['student'])
             ->latest()
-            ->paginate(15)
+            ->paginate(10)
         );
     }
 
@@ -32,18 +37,25 @@ class ClinicVisitController extends Controller
             'nurse_notes' => 'nullable|string',
         ]);
 
-        if (auth()->check() && auth()->user()->school_id) {
-            $validated['school_id'] = auth()->user()->school_id;
-        }
-
-        $validated['treated_by'] = auth()->id();
-
         $visit = ClinicVisit::create($validated);
 
         return response()->json([
             'message' => 'Clinic visit logged successfully.',
-            'data' => $visit->load(['student', 'nurse'])
+            'data' => $visit->load(['student'])
         ], 201);
     }
-}
 
+    public function show(ClinicVisit $clinicVisit)
+    {
+        return response()->json($clinicVisit->load(['student']));
+    }
+
+    public function destroy(ClinicVisit $clinicVisit)
+    {
+        $clinicVisit->delete();
+
+        return response()->json([
+            'message' => 'Clinic visit record deleted.'
+        ]);
+    }
+}

@@ -3,23 +3,27 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Book;
 use App\Models\BookLoan;
+use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
 
 class BookLoanController extends Controller
 {
+    public function __construct(protected CurrentContextService $context) {}
+
     public function index(Request $request)
     {
-        $schoolId = auth()->user()->school_id ?? null;
+        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
 
         return response()->json(
-            BookLoan::when($schoolId, function ($query) use ($schoolId) {
-                $query->where('school_id', $schoolId);
+            BookLoan::whereHas('student', function ($query) use ($schoolId) {
+                if ($schoolId) {
+                    $query->where('school_id', $schoolId);
+                }
             })
-            ->with(['book', 'student', 'issuer'])
+            ->with(['book', 'student'])
             ->latest()
-            ->paginate(15)
+            ->paginate(10)
         );
     }
 
@@ -31,22 +35,10 @@ class BookLoanController extends Controller
             'due_date' => 'required|date|after:today',
         ]);
 
-        $book = Book::findOrFail($validated['book_id']);
-
-        if ($book->available_copies < 1) {
-            return response()->json(['message' => 'No available copies left for loan.'], 422);
-        }
-
-        if (auth()->check() && auth()->user()->school_id) {
-            $validated['school_id'] = auth()->user()->school_id;
-        }
-
-        $validated['borrowed_date'] = now()->toDateString();
-        $validated['issued_by'] = auth()->id();
+        $validated['borrowed_date'] = now();
         $validated['status'] = 'Borrowed';
 
         $loan = BookLoan::create($validated);
-        $book->decrement('available_copies');
 
         return response()->json([
             'message' => 'Book issued successfully.',
@@ -57,24 +49,24 @@ class BookLoanController extends Controller
     public function update(Request $request, BookLoan $bookLoan)
     {
         $validated = $request->validate([
-            'status' => 'required|in:Returned,Lost',
+            'status' => 'required|in:Borrowed,Returned,Lost',
             'fine_amount' => 'nullable|numeric|min:0',
         ]);
 
-        if ($validated['status'] === 'Returned' && $bookLoan->status === 'Borrowed') {
-            $bookLoan->book->increment('available_copies');
-        }
-
-        $bookLoan->update([
-            'status' => $validated['status'],
-            'returned_date' => $validated['status'] === 'Returned' ? now()->toDateString() : $bookLoan->returned_date,
-            'fine_amount' => $validated['fine_amount'] ?? $bookLoan->fine_amount,
-        ]);
+        $bookLoan->update($validated);
 
         return response()->json([
-            'message' => 'Book loan status updated successfully.',
+            'message' => 'Book loan updated successfully.',
             'data' => $bookLoan->load(['book', 'student'])
         ]);
     }
-}
 
+    public function destroy(BookLoan $bookLoan)
+    {
+        $bookLoan->delete();
+
+        return response()->json([
+            'message' => 'Book loan record deleted.'
+        ]);
+    }
+}
