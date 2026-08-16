@@ -24,9 +24,10 @@ export default function Subscriptions() {
                 api.get("/subscription-plans"),
                 api.get("/my-subscription")
             ]);
-            // Handle both paginated and flat data
-            setPlans(plansRes.data?.data?.data ?? plansRes.data?.data ?? []);
-            setMySub(subRes.data?.data || null);
+            // Robust parsing for paginated vs flat data
+            const planData = plansRes.data?.data?.data ?? plansRes.data?.data ?? plansRes.data ?? [];
+            setPlans(Array.isArray(planData) ? planData : []);
+            setMySub(subRes.data?.data || subRes.data || null);
         } catch (err) {
             setError("Failed to load subscription details.");
         } finally {
@@ -47,31 +48,48 @@ export default function Subscriptions() {
 
     if (loading) return <PageContainer><LoadingSpinner /></PageContainer>;
 
-    // --- VIEW 1: SUPER ADMIN (Full Management) ---
     if (isPlatformAdmin) {
         return (
             <PageContainer>
                 <PageHeader title="Subscription Management" subtitle="Software Owner Master Control Panel" />
-                <div className="flex gap-4 mb-6">
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
                     {["plans", "coupons", "promos"].map(tab => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 rounded-lg font-medium capitalize ${activeTab === tab ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}>{tab}</button>
+                        <button 
+                            key={tab} 
+                            onClick={() => setActiveTab(tab)} 
+                            style={{
+                                padding: '8px 16px',
+                                borderRadius: '8px',
+                                fontWeight: '600',
+                                textTransform: 'capitalize',
+                                border: '1px solid #e2e8f0',
+                                backgroundColor: activeTab === tab ? '#4f46e5' : '#ffffff',
+                                color: activeTab === tab ? '#ffffff' : '#475569',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {tab}
+                        </button>
                     ))}
                 </div>
                 {activeTab === "plans" && (
                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                         <DataTable 
-                            columns={[{key: 'name', label: 'Plan Name'}, {key: 'monthly_price', label: 'Monthly Price'}, {key: 'currency', label: 'Currency'}, {key: 'is_active', label: 'Status', render: (row) => row.is_active ? 'Active' : 'Inactive'}]}
+                            columns={[
+                                {key: 'name', label: 'Plan Name'}, 
+                                {key: 'monthly_price', label: 'Monthly Price', render: (row) => `${row.currency} ${row.monthly_price}`}, 
+                                {key: 'is_active', label: 'Status', render: (row) => row.is_active ? 'Active' : 'Inactive'}
+                            ]}
                             data={plans}
-                            emptyMessage="No subscription plans created yet. Click 'Create Plan' to start."
+                            emptyMessage="No subscription plans found."
                         />
                     </div>
                 )}
-                {activeTab !== "plans" && <EmptyState title="Coming Soon" message="Coupon and Promo management is being finalized." />}
+                {activeTab !== "plans" && <EmptyState title="Under Maintenance" message={`${activeTab} management is currently being updated.`} />}
             </PageContainer>
         );
     }
 
-    // --- VIEW 2: PROPRIETOR (Renew / Upgrade) ---
     return (
         <PageContainer>
             <PageHeader title="Subscription" subtitle="Manage your school's platform access." />
@@ -79,19 +97,19 @@ export default function Subscriptions() {
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8 shadow-sm">
                     <div className="flex justify-between items-start">
                         <div>
-                            <h3 className="text-lg font-bold text-slate-900">Current Plan: {mySub.plan?.name}</h3>
+                            <h3 className="text-lg font-bold text-slate-900">Current Plan: {mySub.plan?.name || 'Assigned Plan'}</h3>
                             <p className="text-slate-500">Status: <span className={`font-semibold ${mySub.status === 'active' ? 'text-green-600' : 'text-red-600'}`}>{mySub.status?.toUpperCase()}</span></p>
-                            <p className="text-slate-500 text-sm mt-1">Expires on: {new Date(mySub.expiry_date).toLocaleDateString()}</p>
+                            <p className="text-slate-500 text-sm mt-1">Expires on: {mySub.expiry_date ? new Date(mySub.expiry_date).toLocaleDateString() : 'N/A'}</p>
                         </div>
                         {mySub.status !== 'exempt' && (
-                            <button onClick={handleRenew} className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">Renew Now</button>
+                            <button onClick={handleRenew} className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700">Renew Now</button>
                         )}
                     </div>
                 </div>
             )}
             <h3 className="text-xl font-bold text-slate-900 mb-4">Available Plans</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {plans.length === 0 ? <div className="col-span-full"><EmptyState title="No Plans Available" message="The platform owner has not published any subscription plans yet." /></div> : plans.map(plan => (
+                {plans.length === 0 ? <div className="col-span-full"><EmptyState title="No Plans Available" message="Please contact the platform owner." /></div> : plans.map(plan => (
                     <div key={plan.id} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col">
                         <h4 className="text-lg font-bold text-slate-900">{plan.name}</h4>
                         <p className="text-slate-500 text-sm mb-4">{plan.description}</p>
