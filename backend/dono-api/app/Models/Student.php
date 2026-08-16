@@ -12,6 +12,7 @@ class Student extends Model
     protected $fillable = [
         'school_id',
         'user_id',
+        'user_id',
         'division_id',
         'class_id',
         'stream_id',

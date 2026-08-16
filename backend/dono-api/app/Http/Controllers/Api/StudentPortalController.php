@@ -18,21 +18,15 @@ class StudentPortalController extends Controller
         $user = $request->user();
         $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($user)?->id;
 
-        $student = null;
-        if ($schoolId) {
-            $student = Student::where('school_id', $schoolId)
-                ->where('user_id', $user->id)
-                ->with(['class', 'stream', 'enrollments'])
-                ->first();
-        }
+        $student = Student::where('user_id', $user->id)
+            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
+            ->with(['class', 'stream', 'enrollments'])
+            ->first();
 
         if (!$student) {
-            $student = Student::with(['class', 'stream', 'enrollments'])->first();
-        }
-
-        if (!$student) {
+            // Fallback for demo or unlinked accounts
             return response()->json([
-                'student_profile' => ['first_name' => 'Demo', 'last_name' => 'Student', 'admission_number' => 'STD-0000'],
+                'student_profile' => ['first_name' => $user->name, 'last_name' => '', 'admission_number' => 'UNLINKED'],
                 'upcoming_assignments' => [],
                 'recent_results' => [],
                 'attendance_summary' => ['present' => 0, 'absent' => 0]
