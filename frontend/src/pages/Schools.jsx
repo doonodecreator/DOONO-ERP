@@ -144,7 +144,7 @@ export default function Schools() {
                  * once a Modal component is built — that's the correct
                  * home for these action forms, not an expanded table row.
                  */
-                schools.map((school) => (
+                Array.isArray(schools) && schools.map((school) => (
                     <div key={school.id} style={cardStyle}>
                         <strong>{school.name}</strong>
                         <div style={{ fontSize: 13, color: "#64748b", marginBottom: 8 }}>

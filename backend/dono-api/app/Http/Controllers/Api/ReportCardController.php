@@ -6,17 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ReportCardResource;
 use App\Models\ReportCard;
 use App\Services\Academic\ReportCardService;
+use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
 
 class ReportCardController extends Controller
 {
     public function __construct(
-        protected ReportCardService $reportCardService
+        protected ReportCardService $reportCardService,
+        protected CurrentContextService $context
     ) {}
 
     public function index(Request $request)
     {
-        $schoolId = $request->attributes->get('current_school_id') ?? $request->user()->school_id;
+        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
 
         $query = ReportCard::with([
             'school',
@@ -48,9 +50,6 @@ class ReportCardController extends Controller
         ]);
     }
 
-    /**
-     * Download or stream PDF Report Card.
-     */
     public function downloadPdf(ReportCard $reportCard)
     {
         return $this->reportCardService->downloadPdf(

@@ -10,21 +10,23 @@ use App\Http\Resources\StudentEnrollmentResource;
 use App\Models\Attendance;
 use App\Models\StudentEnrollment;
 use App\Services\AttendanceService;
+use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
     public function __construct(
-        protected AttendanceService $attendanceService
+        protected AttendanceService $attendanceService,
+        protected CurrentContextService $context
     ) {}
 
     public function index(Request $request)
     {
-        $schoolId = $request->attributes->get('current_school_id') ?? $request->user()->school_id;
+        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
 
         $query = Attendance::with([
             'school',
-            'studentEnrollment',
+            'studentEnrollment.student',
             'academicSession',
             'term',
             'staff',
@@ -48,7 +50,7 @@ class AttendanceController extends Controller
             'stream_id' => 'nullable|exists:streams,id',
         ]);
 
-        $schoolId = $request->attributes->get('current_school_id') ?? $request->user()->school_id;
+        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
 
         $query = StudentEnrollment::with(['student', 'class', 'stream'])
             ->where('school_id', $schoolId)
@@ -75,7 +77,7 @@ class AttendanceController extends Controller
             'records.*.remarks' => 'nullable|string|max:255',
         ]);
 
-        $schoolId = $request->attributes->get('current_school_id') ?? $request->user()->school_id;
+        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
 
         $saved = $this->attendanceService->recordClassAttendance(
             $schoolId,
@@ -96,7 +98,7 @@ class AttendanceController extends Controller
     public function show(Request $request, Attendance $attendance)
     {
         return new AttendanceResource(
-            $attendance->load(['school', 'studentEnrollment', 'academicSession', 'term', 'staff'])
+            $attendance->load(['school', 'studentEnrollment.student', 'academicSession', 'term', 'staff'])
         );
     }
 }

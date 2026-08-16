@@ -665,7 +665,7 @@ return (
                   </td>
                 </tr>
               ) : (
-                subscriptions.map((subscription) => (
+                Array.isArray(subscriptions) && subscriptions.map((subscription) => (
                   <tr key={subscription.id}>
                     <td>{subscription.school?.name}</td>
                     <td>{subscription.subscription_plan?.name}</td>
@@ -799,7 +799,7 @@ return (
                       </td>
                     </tr>
                   ) : (
-                    promoCampaigns.map((promo) => (
+                    Array.isArray(promoCampaigns) && promoCampaigns.map((promo) => (
                       <tr key={promo.id}>
                         <td>{promo.name}</td>
                         <td>{promo.discount_type}</td>
@@ -958,7 +958,7 @@ return (
                       </td>
                     </tr>
                   ) : (
-                    coupons.map((coupon) => (
+                    Array.isArray(coupons) && coupons.map((coupon) => (
                       <tr key={coupon.id}>
                         <td>
                           <strong>{coupon.code}</strong>

@@ -10,12 +10,20 @@ use App\Models\SchoolSubscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Services\ActivityLogService;
+use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
 
 class PlatformOwnerController extends Controller
 {
+    public function __construct(protected CurrentContextService $context) {}
+
     public function dashboard(Request $request)
     {
+        $user = $request->user();
+        if (!$user->isSuperAdmin()) {
+            abort(403, 'Platform metrics are restricted to Software Owners.');
+        }
+
         $totalOrganizations = Organization::count();
         $totalSchools = School::count();
         $activeSubscriptions = SchoolSubscription::where('status', 'active')->count();
@@ -35,10 +43,6 @@ class PlatformOwnerController extends Controller
             ->get()
             ->map(fn ($plan) => [
                 'name' => $plan->name,
-                // Plans have per-cycle pricing, not one flat price.
-                // Showing monthly as the representative figure here;
-                // full pricing (quarterly/half-yearly/yearly) is available
-                // via GET /subscription-plans/{id}.
                 'monthly_price' => $plan->monthly_price,
                 'currency' => $plan->currency,
                 'subscribers' => $plan->school_subscriptions_count,
@@ -71,9 +75,6 @@ class PlatformOwnerController extends Controller
                 'total_organizations' => $totalOrganizations,
                 'total_schools' => $totalSchools,
                 'active_subscriptions' => $activeSubscriptions,
-                // MRR and uptime require billing/monitoring integration not
-                // yet confirmed to exist — intentionally omitted rather
-                // than fabricated.
             ],
             'organizations' => $organizations,
             'subscription_plans' => $subscriptionPlans,
