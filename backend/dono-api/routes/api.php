@@ -31,42 +31,33 @@ use App\Http\Controllers\Api\SystemSettingController;
 use App\Http\Controllers\Api\TermController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-*/
-
 Route::prefix('v1')->group(function () {
-
-    // Public Auth
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
 
-    // Authenticated Routes
     Route::middleware('auth:sanctum')->group(function () {
-        
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me/context', [AuthController::class, 'context']);
 
-        // Platform Management (Super Admin Only)
         Route::middleware('role:super_admin')->group(function () {
             Route::get('/platform-owner/dashboard', [PlatformOwnerController::class, 'dashboard']);
             Route::post('/platform-owner/impersonate', [PlatformOwnerController::class, 'impersonateUser']);
-            
             Route::apiResource('subscription-plans', SubscriptionPlanController::class)->except(['index', 'show']);
             Route::apiResource('coupons', CouponController::class);
             Route::apiResource('promo-campaigns', PromoCampaignController::class);
             Route::apiResource('school-subscriptions', SchoolSubscriptionController::class);
             Route::apiResource('system-settings', SystemSettingController::class)->only(['index', 'update']);
+            
+            // Missing School Admin Actions
+            Route::post('schools/{school}/toggle-exemption', [SchoolController::class, 'toggleExemption']);
+            Route::post('schools/{school}/grant-timeframe', [SchoolController::class, 'grantCustomTimeframe']);
+            Route::post('schools/{school}/set-discount', [SchoolController::class, 'setDiscount']);
         });
 
-        // Subscription Catalog (Super Admin & Proprietor)
         Route::get('subscription-plans', [SubscriptionPlanController::class, 'index'])->middleware('role:super_admin,proprietor');
         Route::get('subscription-plans/{subscription_plan}', [SubscriptionPlanController::class, 'show'])->middleware('role:super_admin,proprietor');
         Route::get('my-subscription', [SchoolSubscriptionController::class, 'mySubscription'])->middleware('role:super_admin,proprietor');
 
-        // Payments
         Route::prefix('payments')->group(function () {
             Route::post('/initialize', [PaymentController::class, 'initialize']);
             Route::get('/verify/{reference}', [PaymentController::class, 'verify']);
@@ -74,18 +65,9 @@ Route::prefix('v1')->group(function () {
             Route::get('/verify-subscription/{reference}', [PaymentController::class, 'verifySubscription']);
         });
 
-        // Organizations & Schools
         Route::apiResource('organizations', OrganizationController::class)->middleware('role:super_admin,proprietor');
         Route::apiResource('schools', SchoolController::class)->middleware('role:super_admin,proprietor');
 
-        // School Admin Actions
-        Route::prefix('schools')->group(function () {
-            Route::post('/{school}/toggle-exemption', [SchoolController::class, 'toggleExemption'])->middleware('role:super_admin');
-            Route::post('/{school}/grant-timeframe', [SchoolController::class, 'grantCustomTimeframe'])->middleware('role:super_admin');
-            Route::post('/{school}/set-discount', [SchoolController::class, 'setDiscount'])->middleware('role:super_admin');
-        });
-
-        // Role Invitations
         Route::prefix('role-invitations')->group(function () {
             Route::get('/', [RoleInvitationController::class, 'index'])->middleware('role:proprietor');
             Route::post('/', [RoleInvitationController::class, 'store'])->middleware('role:proprietor');
@@ -95,7 +77,6 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{roleInvitation}', [RoleInvitationController::class, 'revoke'])->middleware('role:proprietor');
         });
 
-        // Academics & Operations
         Route::get('/dashboard', [DashboardController::class, 'index']);
         Route::apiResource('academic-sessions', AcademicSessionController::class);
         Route::apiResource('terms', TermController::class);
