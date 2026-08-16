@@ -78,6 +78,7 @@ class UpdateSystemSettingRequest extends FormRequest
             'paystack_enabled' => 'sometimes|boolean',
 
             'stripe_enabled' => 'sometimes|boolean',
+            'enforce_subscriptions' => 'sometimes|boolean',
 
             /*
             |--------------------------------------------------------------------------

@@ -1,527 +1,180 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import { getPrimaryRoleSlug } from "../utils/role";
-
-const emptyPlatformSettings = {
-  platform_name: "",
-  platform_email: "",
-  platform_phone: "",
-  platform_logo: "",
-  trial_days: 240,
-  default_subscription_plan_id: "",
-  default_currency_id: "",
-  allow_school_registration: true,
-  maintenance_mode: false,
-  paystack_enabled: true,
-  stripe_enabled: true,
-  email_notifications: true,
-  sms_notifications: false,
-};
-
-const emptySchoolSettings = {
-  school_name: "",
-  school_email: "",
-  school_phone: "",
-  school_address: "",
-  school_logo: "",
-  bank_name: "",
-  account_number: "",
-  account_name: "",
-  paystack_public_key: "",
-  paystack_secret_key: "",
-  paystack_subaccount_code: "",
-  motto: "",
-};
+import PageContainer from "../components/layout/PageContainer";
+import PageHeader from "../components/layout/PageHeader";
+import LoadingSpinner from "../components/feedback/LoadingSpinner";
 
 export default function Settings() {
-  const { user, roles, isPlatformAdmin } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+    const { isPlatformAdmin } = useAuth();
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [message, setMessage] = useState("");
+    const [error, setError] = useState("");
 
-  const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin });
+    const [settings, setSettings] = useState({
+        platform_name: "", platform_email: "", platform_phone: "", platform_logo: "",
+        trial_days: 30, default_subscription_plan_id: "", default_currency_id: "",
+        allow_school_registration: true, maintenance_mode: false,
+        enforce_subscriptions: false, paystack_enabled: true, stripe_enabled: false,
+        email_notifications: true, sms_notifications: false
+    });
 
-  const isSuperAdmin = userRole === "super_admin";
-  const isSchoolAdmin = userRole === "school_admin" || userRole === "admin" || userRole === "proprietor";
+    const [plans, setPlans] = useState([]);
+    const [currencies, setCurrencies] = useState([]);
 
-  // State containers
-  const [platformSettings, setPlatformSettings] = useState(emptyPlatformSettings);
-  const [schoolSettings, setSchoolSettings] = useState(emptySchoolSettings);
-  const [plans, setPlans] = useState([]);
-  const [currencies, setCurrencies] = useState([]);
+    useEffect(() => { loadData(); }, []);
 
-  useEffect(() => {
-    if (isSuperAdmin) {
-      loadPlatformData();
-    } else if (isSchoolAdmin) {
-      loadSchoolData();
+    async function loadData() {
+        try {
+            setLoading(true);
+            const [settingsRes, plansRes, currenciesRes] = await Promise.all([
+                api.get("/system-settings"),
+                api.get("/subscription-plans"),
+                api.get("/currencies")
+            ]);
+            
+            const sData = settingsRes.data?.data || settingsRes.data || {};
+            setSettings({
+                ...settings,
+                ...sData,
+                default_subscription_plan_id: sData.default_subscription_plan?.id || sData.default_subscription_plan_id || "",
+                default_currency_id: sData.default_currency?.id || sData.default_currency_id || ""
+            });
+            
+            setPlans(plansRes.data?.data?.data || plansRes.data?.data || []);
+            setCurrencies(currenciesRes.data?.data || currenciesRes.data || []);
+        } catch (err) {
+            setError("Failed to load system settings.");
+        } finally {
+            setLoading(false);
+        }
     }
-  }, [isSuperAdmin, isSchoolAdmin]);
 
-  /* ============================================================
-     SUPER ADMIN LOADER (Global Platform Settings)
-  ============================================================ */
-  async function loadPlatformData() {
-    setLoading(true);
-    setError("");
-    try {
-      const [settingsRes, plansRes, currenciesRes] = await Promise.allSettled([
-        api.get("/system-settings"),
-        api.get("/subscription-plans"),
-        api.get("/currencies"),
-      ]);
-
-      if (settingsRes.status === "fulfilled") {
-        const data = settingsRes.value?.data?.data ?? settingsRes.value?.data ?? {};
-        setPlatformSettings({
-          ...emptyPlatformSettings,
-          ...data,
-          default_subscription_plan_id:
-            data?.default_subscription_plan?.id ?? data?.default_subscription_plan_id ?? "",
-          default_currency_id:
-            data?.default_currency?.id ?? data?.default_currency_id ?? "",
-        });
-      }
-
-      if (plansRes.status === "fulfilled") {
-        const data = plansRes.value?.data?.data ?? plansRes.value?.data ?? [];
-        setPlans(Array.isArray(data) ? data : []);
-      }
-
-      if (currenciesRes.status === "fulfilled") {
-        const data = currenciesRes.value?.data?.data ?? currenciesRes.value?.data ?? [];
-        setCurrencies(Array.isArray(data) ? data : []);
-      }
-    } catch (err) {
-      setError("Failed to load platform settings.");
-    } finally {
-      setLoading(false);
+    async function handleSave() {
+        try {
+            setSaving(true);
+            setMessage("");
+            setError("");
+            await api.put("/system-settings", settings);
+            setMessage("Settings saved successfully!");
+            setTimeout(() => setMessage(""), 3000);
+        } catch (err) {
+            setError("Failed to save settings. Please check all fields.");
+        } finally {
+            setSaving(false);
+        }
     }
-  }
 
-  /* ============================================================
-     SCHOOL ADMIN LOADER (School Level Settings Only)
-  ============================================================ */
-  async function loadSchoolData() {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await api.get("/school-settings");
-      const data = res?.data?.data ?? res?.data ?? {};
-      setSchoolSettings({ ...emptySchoolSettings, ...data });
-    } catch (err) {
-      console.error("School settings load error:", err);
-    } finally {
-      setLoading(false);
-    }
-  }
+    if (loading) return <PageContainer><LoadingSpinner /></PageContainer>;
 
-  /* ============================================================
-     SAVE HANDLERS
-  ============================================================ */
-  async function savePlatformSettings() {
-    try {
-      setLoading(true);
-      setMessage("");
-      setError("");
-      await api.put("/system-settings", platformSettings);
-      setMessage("Platform settings updated successfully.");
-    } catch (err) {
-      setError(err?.message || "Unable to save platform settings.");
-    } finally {
-      setLoading(false);
-    }
-  }
+    return (
+        <PageContainer>
+            <PageHeader 
+                title="System Settings" 
+                subtitle="Global SaaS Platform Control" 
+                action={<button onClick={handleSave} disabled={saving} className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold shadow-lg hover:bg-indigo-700 disabled:opacity-50">{saving ? "Saving..." : "Save Changes"}</button>}
+            />
 
-  async function saveSchoolSettings() {
-    try {
-      setLoading(true);
-      setMessage("");
-      setError("");
-      await api.put("/school-settings", schoolSettings);
-      setMessage("School details and payment credentials updated successfully.");
-    } catch (err) {
-      setError(err?.message || "Unable to save school settings.");
-    } finally {
-      setLoading(false);
-    }
-  }
+            {message && <div className="bg-emerald-50 text-emerald-700 p-4 rounded-xl border border-emerald-100 mb-6 font-medium">{message}</div>}
+            {error && <div className="bg-rose-50 text-rose-700 p-4 rounded-xl border border-rose-100 mb-6 font-medium">{error}</div>}
 
-  // --- Strict UI Isolation Guard ---
-  if (!isSuperAdmin && !isSchoolAdmin) {
-    return null;
-  }
+            <div className="space-y-8">
+                {/* General Section */}
+                <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                        <span className="w-2 h-6 bg-indigo-600 rounded-full"></span> General Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-600">Platform Name</label>
+                            <input className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" value={settings.platform_name} onChange={e => setSettings({...settings, platform_name: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-600">Support Email</label>
+                            <input className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" value={settings.platform_email} onChange={e => setSettings({...settings, platform_email: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-600">Support Phone</label>
+                            <input className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" value={settings.platform_phone} onChange={e => setSettings({...settings, platform_phone: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-600">Trial Period (Days)</label>
+                            <input type="number" className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" value={settings.trial_days} onChange={e => setSettings({...settings, trial_days: e.target.value})} />
+                        </div>
+                    </div>
+                </section>
 
-  return (
-    <div className="container-fluid py-4" style={{ maxWidth: "1100px", margin: "0 auto" }}>
-      {message && <div className="alert alert-success mb-3">{message}</div>}
-      {error && <div className="alert alert-danger mb-3">{error}</div>}
+                {/* Billing Section */}
+                <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                        <span className="w-2 h-6 bg-amber-500 rounded-full"></span> Billing & Subscriptions
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-600">Default Plan</label>
+                            <select className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" value={settings.default_subscription_plan_id} onChange={e => setSettings({...settings, default_subscription_plan_id: e.target.value})}>
+                                <option value="">Select Plan</option>
+                                {plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-600">System Currency</label>
+                            <select className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" value={settings.default_currency_id} onChange={e => setSettings({...settings, default_currency_id: e.target.value})}>
+                                <option value="">Select Currency</option>
+                                {currencies.map(c => <option key={c.id} value={c.id}>{c.name} ({c.code})</option>)}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                            <div>
+                                <h4 className="font-bold text-slate-900">Enforce Subscriptions</h4>
+                                <p className="text-xs text-slate-500">Require schools to pay to access features</p>
+                            </div>
+                            <input type="checkbox" className="w-6 h-6 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked={settings.enforce_subscriptions} onChange={e => setSettings({...settings, enforce_subscriptions: e.target.checked})} />
+                        </div>
+                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                            <div>
+                                <h4 className="font-bold text-slate-900">Enable Paystack</h4>
+                                <p className="text-xs text-slate-500">Allow payments via Paystack gateway</p>
+                            </div>
+                            <input type="checkbox" className="w-6 h-6 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked={settings.paystack_enabled} onChange={e => setSettings({...settings, paystack_enabled: e.target.checked})} />
+                        </div>
+                    </div>
+                </section>
 
-      {/* ============================================================
-          VIEW 1: SOFTWARE OWNER / SUPER ADMIN (Platform Control)
-      ============================================================ */}
-      {isSuperAdmin && (
-        <div className="card shadow-sm">
-          <div className="card-header d-flex justify-content-between align-items-center bg-white py-3">
-            <div>
-              <h4 className="mb-0" style={{ fontSize: "20px", color: "#1e3a8a", fontWeight: "700" }}>
-                Global SaaS Platform Settings
-              </h4>
-              <small className="text-muted">Software Owner Master Control Panel</small>
+                {/* System Section */}
+                <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                        <span className="w-2 h-6 bg-emerald-500 rounded-full"></span> System & Notifications
+                    </h3>
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                            <div>
+                                <h4 className="font-bold text-slate-900">Self Registration</h4>
+                                <p className="text-xs text-slate-500">Allow new schools to register themselves</p>
+                            </div>
+                            <input type="checkbox" className="w-6 h-6 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked={settings.allow_school_registration} onChange={e => setSettings({...settings, allow_school_registration: e.target.checked})} />
+                        </div>
+                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                            <div>
+                                <h4 className="font-bold text-slate-900">Maintenance Mode</h4>
+                                <p className="text-xs text-slate-500">Take the platform offline for updates</p>
+                            </div>
+                            <input type="checkbox" className="w-6 h-6 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked={settings.maintenance_mode} onChange={e => setSettings({...settings, maintenance_mode: e.target.checked})} />
+                        </div>
+                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                            <div>
+                                <h4 className="font-bold text-slate-900">Email Notifications</h4>
+                                <p className="text-xs text-slate-500">Send system alerts via email</p>
+                            </div>
+                            <input type="checkbox" className="w-6 h-6 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked={settings.email_notifications} onChange={e => setSettings({...settings, email_notifications: e.target.checked})} />
+                        </div>
+                    </div>
+                </section>
             </div>
-            <button
-              className="btn btn-primary"
-              onClick={savePlatformSettings}
-              disabled={loading}
-              style={{ background: "#2563eb", border: "none" }}
-            >
-              {loading ? "Saving..." : "Save Platform Settings"}
-            </button>
-          </div>
-
-          <div className="card-body">
-            <div className="row g-4">
-              <div className="col-md-6">
-                <label className="form-label font-weight-bold">Platform Name</label>
-                <input
-                  className="form-control"
-                  value={platformSettings.platform_name}
-                  onChange={(e) =>
-                    setPlatformSettings({ ...platformSettings, platform_name: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label font-weight-bold">Platform Support Email</label>
-                <input
-                  className="form-control"
-                  value={platformSettings.platform_email}
-                  onChange={(e) =>
-                    setPlatformSettings({ ...platformSettings, platform_email: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label font-weight-bold">Platform Phone</label>
-                <input
-                  className="form-control"
-                  value={platformSettings.platform_phone}
-                  onChange={(e) =>
-                    setPlatformSettings({ ...platformSettings, platform_phone: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label font-weight-bold">Platform Logo URL</label>
-                <input
-                  className="form-control"
-                  value={platformSettings.platform_logo}
-                  onChange={(e) =>
-                    setPlatformSettings({ ...platformSettings, platform_logo: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="col-md-4">
-                <label className="form-label font-weight-bold">Trial Days</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={platformSettings.trial_days}
-                  onChange={(e) =>
-                    setPlatformSettings({ ...platformSettings, trial_days: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="col-md-4">
-                <label className="form-label font-weight-bold">Default Subscription Plan</label>
-                <select
-                  className="form-select"
-                  value={platformSettings.default_subscription_plan_id}
-                  onChange={(e) =>
-                    setPlatformSettings({
-                      ...platformSettings,
-                      default_subscription_plan_id: e.target.value,
-                    })
-                  }
-                >
-                  <option value="">Select Default Plan</option>
-                  {plans.map((plan) => (
-                    <option key={plan.id} value={plan.id}>
-                      {plan.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="col-md-4">
-                <label className="form-label font-weight-bold">System Currency</label>
-                <select
-                  className="form-select"
-                  value={platformSettings.default_currency_id}
-                  onChange={(e) =>
-                    setPlatformSettings({
-                      ...platformSettings,
-                      default_currency_id: e.target.value,
-                    })
-                  }
-                >
-                  <option value="">Select Currency</option>
-                  {currencies.map((currency) => (
-                    <option key={currency.id} value={currency.id}>
-                      {currency.name} ({currency.code})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <hr className="my-4" />
-
-              <div className="col-12">
-                <h5 style={{ color: "#1e3a8a", fontWeight: "600" }}>System & Gateways</h5>
-              </div>
-
-              <div className="col-md-6">
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={platformSettings.allow_school_registration}
-                    onChange={(e) =>
-                      setPlatformSettings({
-                        ...platformSettings,
-                        allow_school_registration: e.target.checked,
-                      })
-                    }
-                  />
-                  <label className="form-check-label">Allow Self Registration for Schools</label>
-                </div>
-              </div>
-
-              <div className="col-md-6">
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={platformSettings.maintenance_mode}
-                    onChange={(e) =>
-                      setPlatformSettings({
-                        ...platformSettings,
-                        maintenance_mode: e.target.checked,
-                      })
-                    }
-                  />
-                  <label className="form-check-label">Enable System Maintenance Mode</label>
-                </div>
-              </div>
-
-              <div className="col-md-6">
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={platformSettings.paystack_enabled}
-                    onChange={(e) =>
-                      setPlatformSettings({
-                        ...platformSettings,
-                        paystack_enabled: e.target.checked,
-                      })
-                    }
-                  />
-                  <label className="form-check-label">Enable Paystack Integration</label>
-                </div>
-              </div>
-
-              <div className="col-md-6">
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={platformSettings.stripe_enabled}
-                    onChange={(e) =>
-                      setPlatformSettings({
-                        ...platformSettings,
-                        stripe_enabled: e.target.checked,
-                      })
-                    }
-                  />
-                  <label className="form-check-label">Enable Stripe Integration</label>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================
-          VIEW 2: SCHOOL ADMIN / PROPRIETOR (School Profile & Payment Settings)
-      ============================================================ */}
-      {isSchoolAdmin && !isSuperAdmin && (
-        <div className="card shadow-sm">
-          <div className="card-header d-flex justify-content-between align-items-center bg-white py-3">
-            <div>
-              <h4 className="mb-0" style={{ fontSize: "20px", color: "#1e3a8a", fontWeight: "700" }}>
-                School Profile & Payment Configuration
-              </h4>
-              <small className="text-muted">Manage your school information and direct fee collection credentials</small>
-            </div>
-            <button
-              className="btn btn-primary"
-              onClick={saveSchoolSettings}
-              disabled={loading}
-              style={{ background: "#2563eb", border: "none" }}
-            >
-              {loading ? "Saving..." : "Save School Settings"}
-            </button>
-          </div>
-
-          <div className="card-body">
-            <div className="row g-4">
-              <div className="col-md-6">
-                <label className="form-label font-weight-bold">School Name</label>
-                <input
-                  className="form-control"
-                  value={schoolSettings.school_name}
-                  onChange={(e) =>
-                    setSchoolSettings({ ...schoolSettings, school_name: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label font-weight-bold">Official School Email</label>
-                <input
-                  className="form-control"
-                  value={schoolSettings.school_email}
-                  onChange={(e) =>
-                    setSchoolSettings({ ...schoolSettings, school_email: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label font-weight-bold">Phone Number</label>
-                <input
-                  className="form-control"
-                  value={schoolSettings.school_phone}
-                  onChange={(e) =>
-                    setSchoolSettings({ ...schoolSettings, school_phone: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label font-weight-bold">School Logo URL</label>
-                <input
-                  className="form-control"
-                  value={schoolSettings.school_logo}
-                  onChange={(e) =>
-                    setSchoolSettings({ ...schoolSettings, school_logo: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="col-md-12">
-                <label className="form-label font-weight-bold">Physical Address</label>
-                <textarea
-                  className="form-control"
-                  rows="2"
-                  value={schoolSettings.school_address}
-                  onChange={(e) =>
-                    setSchoolSettings({ ...schoolSettings, school_address: e.target.value })
-                  }
-                />
-              </div>
-
-              <hr className="my-4" />
-
-              <div className="col-12">
-                <h5 style={{ color: "#1e3a8a", fontWeight: "600" }}>Direct Fee Collection & Bank Accounts</h5>
-                <p className="text-muted small">Enter your school's bank payout details and Paystack keys so student online fee payments go straight to your school account.</p>
-              </div>
-
-              <div className="col-md-4">
-                <label className="form-label font-weight-bold">Bank Name</label>
-                <input
-                  className="form-control"
-                  value={schoolSettings.bank_name}
-                  onChange={(e) =>
-                    setSchoolSettings({ ...schoolSettings, bank_name: e.target.value })
-                  }
-                  placeholder="e.g. First Bank / Guarantee Trust Bank"
-                />
-              </div>
-
-              <div className="col-md-4">
-                <label className="form-label font-weight-bold">Account Number</label>
-                <input
-                  className="form-control"
-                  value={schoolSettings.account_number}
-                  onChange={(e) =>
-                    setSchoolSettings({ ...schoolSettings, account_number: e.target.value })
-                  }
-                  placeholder="0123456789"
-                />
-              </div>
-
-              <div className="col-md-4">
-                <label className="form-label font-weight-bold">Account Name</label>
-                <input
-                  className="form-control"
-                  value={schoolSettings.account_name}
-                  onChange={(e) =>
-                    setSchoolSettings({ ...schoolSettings, account_name: e.target.value })
-                  }
-                  placeholder="School Official Account Name"
-                />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label font-weight-bold">Paystack Public Key</label>
-                <input
-                  className="form-control font-monospace"
-                  value={schoolSettings.paystack_public_key}
-                  onChange={(e) =>
-                    setSchoolSettings({ ...schoolSettings, paystack_public_key: e.target.value })
-                  }
-                  placeholder="pk_live_xxxxxxxxxxxxxxxxxxxx"
-                />
-              </div>
-
-              <div className="col-md-6">
-                <label className="form-label font-weight-bold">Paystack Secret Key</label>
-                <input
-                  type="password"
-                  className="form-control font-monospace"
-                  value={schoolSettings.paystack_secret_key}
-                  onChange={(e) =>
-                    setSchoolSettings({ ...schoolSettings, paystack_secret_key: e.target.value })
-                  }
-                  placeholder="sk_live_xxxxxxxxxxxxxxxxxxxx"
-                />
-              </div>
-
-              <div className="col-md-12">
-                <label className="form-label font-weight-bold">Paystack Subaccount Code (Optional)</label>
-                <input
-                  className="form-control font-monospace"
-                  value={schoolSettings.paystack_subaccount_code}
-                  onChange={(e) =>
-                    setSchoolSettings({ ...schoolSettings, paystack_subaccount_code: e.target.value })
-                  }
-                  placeholder="ACCT_xxxxxxxxxx"
-                />
-                <small className="text-muted">Use this if you prefer split settlements from a single master merchant account.</small>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+        </PageContainer>
+    );
 }
