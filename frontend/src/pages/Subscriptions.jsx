@@ -53,7 +53,7 @@ export default function Subscriptions() {
         if (activeTab === "plans") {
             setFormData({ name: '', slug: '', description: '', monthly_price: '', quarterly_price: '', half_yearly_price: '', yearly_price: '', currency: 'NGN', max_students: 500, max_staff: 50, max_branches: 1, trial_days: 30, is_active: true });
         } else if (activeTab === "coupons") {
-            setFormData({ name: '', code: '', description: '', discount_type: 'percentage', discount_value: '', start_date: '', end_date: '', maximum_usage: '', is_active: true });
+            setFormData({ name: '', code: '', description: '', discount_type: 'percentage', discount_value: '', start_date: '', end_date: '', maximum_usage: 100, is_active: true });
         } else {
             setFormData({ name: '', slug: '', description: '', discount_type: 'percentage', discount_value: '', start_date: '', end_date: '', is_active: true });
         }
@@ -78,13 +78,22 @@ export default function Subscriptions() {
                 if (activeTab === "plans" && !formData.slug) {
                     formData.slug = formData.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
                 }
+                if (activeTab === "promos" && !formData.slug) {
+                    formData.slug = formData.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+                }
                 await api.post(endpoint, formData);
                 setMessage("Created successfully!");
             }
             resetForm();
             loadData();
         } catch (err) {
-            setError(err.response?.data?.message || "Operation failed. Please check all fields.");
+            const errData = err.response?.data;
+            if (errData?.errors) {
+                const firstKey = Object.keys(errData.errors)[0];
+                setError(errData.errors[firstKey][0]);
+            } else {
+                setError(errData?.message || "Operation failed. Please check all fields.");
+            }
         } finally {
             setLoading(false);
         }
@@ -149,16 +158,41 @@ export default function Subscriptions() {
                                             <option value="percentage">Percentage (%)</option>
                                             <option value="fixed">Fixed Amount</option>
                                         </select>
-                                        <input type="number" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Value" value={formData.discount_value || ''} onChange={e => setFormData({...formData, discount_value: e.target.value})} required />
+                                        <input type="number" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Discount Value" value={formData.discount_value || ''} onChange={e => setFormData({...formData, discount_value: e.target.value})} required />
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                        <div>
+                                            <label style={{ fontSize: '0.85rem', color: '#64748b' }}>Start Date</label>
+                                            <input type="date" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.start_date || ''} onChange={e => setFormData({...formData, start_date: e.target.value})} required />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '0.85rem', color: '#64748b' }}>End Date</label>
+                                            <input type="date" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.end_date || ''} onChange={e => setFormData({...formData, end_date: e.target.value})} required />
+                                        </div>
                                     </div>
                                 </>
                             )}
 
                             {activeTab === "promos" && (
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <input type="date" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.start_date || ''} onChange={e => setFormData({...formData, start_date: e.target.value})} required />
-                                    <input type="date" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.end_date || ''} onChange={e => setFormData({...formData, end_date: e.target.value})} required />
-                                </div>
+                                <>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                        <select style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.discount_type || 'percentage'} onChange={e => setFormData({...formData, discount_type: e.target.value})}>
+                                            <option value="percentage">Percentage (%)</option>
+                                            <option value="fixed">Fixed Amount</option>
+                                        </select>
+                                        <input type="number" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Discount Value" value={formData.discount_value || ''} onChange={e => setFormData({...formData, discount_value: e.target.value})} required />
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                        <div>
+                                            <label style={{ fontSize: '0.85rem', color: '#64748b' }}>Start Date</label>
+                                            <input type="date" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.start_date || ''} onChange={e => setFormData({...formData, start_date: e.target.value})} required />
+                                        </div>
+                                        <div>
+                                            <label style={{ fontSize: '0.85rem', color: '#64748b' }}>End Date</label>
+                                            <input type="date" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.end_date || ''} onChange={e => setFormData({...formData, end_date: e.target.value})} required />
+                                        </div>
+                                    </div>
+                                </>
                             )}
 
                             <button type="submit" style={{ width: '100%', padding: '14px', borderRadius: '12px', backgroundColor: '#4f46e5', color: '#fff', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
