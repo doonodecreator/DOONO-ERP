@@ -53,9 +53,9 @@ export default function Subscriptions() {
         if (activeTab === "plans") {
             setFormData({ name: '', slug: '', description: '', monthly_price: '', quarterly_price: '', half_yearly_price: '', yearly_price: '', currency: 'NGN', max_students: 500, max_staff: 50, max_branches: 1, trial_days: 30, is_active: true });
         } else if (activeTab === "coupons") {
-            setFormData({ name: '', code: '', description: '', discount_type: 'percentage', discount_value: '', start_date: '', end_date: '', maximum_usage: 100, is_active: true });
+            setFormData({ name: '', code: '', description: '', discount_type: 'percentage', discount_value: '', start_date: '', end_date: '', maximum_usage: 100, first_time_only: false, is_active: true });
         } else {
-            setFormData({ name: '', slug: '', description: '', discount_type: 'percentage', discount_value: '', start_date: '', end_date: '', is_active: true });
+            setFormData({ name: '', slug: '', description: '', discount_type: 'percentage', discount_value: '', start_date: '', end_date: '', auto_activate: true, is_active: true });
         }
     };
 
@@ -71,17 +71,18 @@ export default function Subscriptions() {
             if (activeTab === "coupons") endpoint = "/coupons";
             if (activeTab === "promos") endpoint = "/promo-campaigns";
 
+            const payload = { ...formData };
+            if (!editingId) {
+                if ((activeTab === "plans" || activeTab === "promos") && !payload.slug) {
+                    payload.slug = payload.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+                }
+            }
+
             if (editingId) {
-                await api.put(`${endpoint}/${editingId}`, formData);
+                await api.put(`${endpoint}/${editingId}`, payload);
                 setMessage("Updated successfully!");
             } else {
-                if (activeTab === "plans" && !formData.slug) {
-                    formData.slug = formData.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-                }
-                if (activeTab === "promos" && !formData.slug) {
-                    formData.slug = formData.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-                }
-                await api.post(endpoint, formData);
+                await api.post(endpoint, payload);
                 setMessage("Created successfully!");
             }
             resetForm();
@@ -142,7 +143,6 @@ export default function Subscriptions() {
                                     <input type="number" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Half-Yearly Price" value={formData.half_yearly_price || ''} onChange={e => setFormData({...formData, half_yearly_price: e.target.value})} required />
                                     <input type="number" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Max Students" value={formData.max_students || ''} onChange={e => setFormData({...formData, max_students: e.target.value})} required />
                                     <input type="number" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Trial Days" value={formData.trial_days || ''} onChange={e => setFormData({...formData, trial_days: e.target.value})} required />
-                                    <input type="number" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Max Branches" value={formData.max_branches || 1} onChange={e => setFormData({...formData, max_branches: e.target.value})} required />
                                     <select style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.is_active} onChange={e => setFormData({...formData, is_active: e.target.value === 'true'})}>
                                         <option value="true">Active</option>
                                         <option value="false">Inactive</option>
@@ -170,6 +170,10 @@ export default function Subscriptions() {
                                             <input type="date" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.end_date || ''} onChange={e => setFormData({...formData, end_date: e.target.value})} required />
                                         </div>
                                     </div>
+                                    <select style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.first_time_only} onChange={e => setFormData({...formData, first_time_only: e.target.value === 'true'})}>
+                                        <option value="false">All Users</option>
+                                        <option value="true">First Time Only</option>
+                                    </select>
                                 </>
                             )}
 
@@ -192,6 +196,10 @@ export default function Subscriptions() {
                                             <input type="date" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.end_date || ''} onChange={e => setFormData({...formData, end_date: e.target.value})} required />
                                         </div>
                                     </div>
+                                    <select style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.auto_activate} onChange={e => setFormData({...formData, auto_activate: e.target.value === 'true'})}>
+                                        <option value="true">Auto Activate</option>
+                                        <option value="false">Manual Only</option>
+                                    </select>
                                 </>
                             )}
 
