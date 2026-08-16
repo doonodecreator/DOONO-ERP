@@ -24,7 +24,7 @@ export default function Subscriptions() {
                 api.get("/subscription-plans"),
                 api.get("/my-subscription")
             ]);
-            setPlans(Array.isArray(plansRes.data?.data) ? plansRes.data.data : []);
+            setPlans(Array.isArray(plansRes.data?.data?.data) ? plansRes.data.data.data : (Array.isArray(plansRes.data?.data) ? plansRes.data.data : []));
             setMySub(subRes.data?.data || null);
         } catch (err) {
             setError("Failed to load subscription details.");

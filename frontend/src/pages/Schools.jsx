@@ -25,7 +25,7 @@ export default function Schools() {
         setError("");
         try {
             const res = await api.get("/schools");
-            setSchools(res.data.data || []);
+            setSchools(res.data.data?.data || res.data.data || []);
         } catch (err) {
             setError(err.message || "Failed to load schools.");
         } finally {

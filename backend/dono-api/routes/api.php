@@ -78,6 +78,13 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('organizations', OrganizationController::class)->middleware('role:super_admin,proprietor');
         Route::apiResource('schools', SchoolController::class)->middleware('role:super_admin,proprietor');
 
+        // School Admin Actions
+        Route::prefix('schools')->group(function () {
+            Route::post('/{school}/toggle-exemption', [SchoolController::class, 'toggleExemption'])->middleware('role:super_admin');
+            Route::post('/{school}/grant-timeframe', [SchoolController::class, 'grantCustomTimeframe'])->middleware('role:super_admin');
+            Route::post('/{school}/set-discount', [SchoolController::class, 'setDiscount'])->middleware('role:super_admin');
+        });
+
         // Role Invitations
         Route::prefix('role-invitations')->group(function () {
             Route::get('/', [RoleInvitationController::class, 'index'])->middleware('role:proprietor');
@@ -88,9 +95,8 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{roleInvitation}', [RoleInvitationController::class, 'revoke'])->middleware('role:proprietor');
         });
 
-        // Academics & Operations (Standard School Roles)
+        // Academics & Operations
         Route::get('/dashboard', [DashboardController::class, 'index']);
-        
         Route::apiResource('academic-sessions', AcademicSessionController::class);
         Route::apiResource('terms', TermController::class);
         Route::apiResource('divisions', DivisionController::class);
@@ -100,26 +106,19 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('students', StudentController::class);
         Route::apiResource('parents', ParentController::class);
         Route::apiResource('staff', StaffController::class);
-        
         Route::apiResource('enrollments', StudentEnrollmentController::class);
         Route::apiResource('promotions', StudentPromotionController::class);
-        
         Route::get('attendance', [AttendanceController::class, 'index']);
         Route::get('attendance/class-list', [AttendanceController::class, 'classList']);
         Route::post('attendance/bulk', [AttendanceController::class, 'bulkStore']);
-        
         Route::get('results', [ResultController::class, 'index']);
         Route::post('results/{result}/publish', [ResultController::class, 'publish']);
-        
         Route::get('report-cards', [ReportCardController::class, 'index']);
-        Route::get('report-cards/{reportCard}', [ReportCardController::class, 'show']);
         Route::get('report-cards/{reportCard}/download', [ReportCardController::class, 'downloadPdf']);
-        
         Route::prefix('result-entry')->group(function () {
             Route::get('/students', [ResultEntryController::class, 'students']);
             Route::post('/save', [ResultEntryController::class, 'save']);
         });
-
     });
 });
 
