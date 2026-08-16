@@ -8,20 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SystemSetting extends Model
 {
     protected $fillable = [
-        'platform_name',
-        'platform_email',
-        'platform_phone',
-        'platform_logo',
-        'trial_days',
-        'default_subscription_plan_id',
-        'default_currency_id',
-        'allow_school_registration',
-        'maintenance_mode',
-        'enforce_subscriptions',
-        'paystack_enabled',
-        'stripe_enabled',
-        'email_notifications',
-        'sms_notifications',
+        'platform_name', 'platform_email', 'platform_phone', 'platform_logo',
+        'trial_days', 'default_subscription_plan_id', 'default_currency_id',
+        'allow_school_registration', 'maintenance_mode', 'enforce_subscriptions',
+        'paystack_enabled', 'stripe_enabled', 'email_notifications', 'sms_notifications',
     ];
 
     protected $casts = [

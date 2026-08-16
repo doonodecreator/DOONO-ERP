@@ -6,7 +6,6 @@ import PageHeader from "../components/layout/PageHeader";
 import LoadingSpinner from "../components/feedback/LoadingSpinner";
 
 export default function Settings() {
-    const { isPlatformAdmin } = useAuth();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState("");
@@ -38,11 +37,10 @@ export default function Settings() {
             setSettings({
                 ...settings,
                 ...sData,
-                default_subscription_plan_id: sData.default_subscription_plan?.id || sData.default_subscription_plan_id || "",
-                default_currency_id: sData.default_currency?.id || sData.default_currency_id || ""
+                default_subscription_plan_id: sData.default_subscription_plan_id?.toString() || "",
+                default_currency_id: sData.default_currency_id?.toString() || ""
             });
             
-            // Robust parsing for plans and currencies
             const pItems = plansRes.data?.data?.data || plansRes.data?.data || plansRes.data || [];
             setPlans(Array.isArray(pItems) ? pItems : []);
             
@@ -84,7 +82,6 @@ export default function Settings() {
             {error && <div className="bg-rose-50 text-rose-700 p-4 rounded-xl border border-rose-100 mb-6 font-medium">{error}</div>}
 
             <div className="space-y-8">
-                {/* General Section */}
                 <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                     <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
                         <span className="w-2 h-6 bg-indigo-600 rounded-full"></span> General Information
@@ -109,7 +106,6 @@ export default function Settings() {
                     </div>
                 </section>
 
-                {/* Billing Section */}
                 <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                     <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
                         <span className="w-2 h-6 bg-amber-500 rounded-full"></span> Billing & Subscriptions
@@ -119,14 +115,14 @@ export default function Settings() {
                             <label className="text-sm font-semibold text-slate-600">Default Plan</label>
                             <select className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" value={settings.default_subscription_plan_id} onChange={e => setSettings({...settings, default_subscription_plan_id: e.target.value})}>
                                 <option value="">Select Plan</option>
-                                {plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                {plans.map(p => <option key={p.id} value={p.id.toString()}>{p.name}</option>)}
                             </select>
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-slate-600">System Currency</label>
                             <select className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" value={settings.default_currency_id} onChange={e => setSettings({...settings, default_currency_id: e.target.value})}>
                                 <option value="">Select Currency</option>
-                                {currencies.map(c => <option key={c.id} value={c.id}>{c.name} ({c.code})</option>)}
+                                {currencies.map(c => <option key={c.id} value={c.id.toString()}>{c.name} ({c.code})</option>)}
                             </select>
                         </div>
                     </div>
@@ -149,7 +145,6 @@ export default function Settings() {
                     </div>
                 </section>
 
-                {/* System Section */}
                 <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                     <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
                         <span className="w-2 h-6 bg-emerald-500 rounded-full"></span> System & Notifications
