@@ -25,29 +25,37 @@ export default function Settings() {
     useEffect(() => { loadData(); }, []);
 
     async function loadData() {
+        setLoading(true);
+        setError("");
+        
         try {
-            setLoading(true);
-            const [settingsRes, plansRes, currenciesRes] = await Promise.all([
-                api.get("/system-settings"),
-                api.get("/subscription-plans"),
-                api.get("/currencies")
-            ]);
-            
-            const sData = settingsRes.data?.data || settingsRes.data || {};
-            setSettings({
-                ...settings,
-                ...sData,
-                default_subscription_plan_id: sData.default_subscription_plan_id?.toString() || "",
-                default_currency_id: sData.default_currency_id?.toString() || ""
-            });
-            
-            const pItems = plansRes.data?.data?.data || plansRes.data?.data || plansRes.data || [];
-            setPlans(Array.isArray(pItems) ? pItems : []);
-            
-            const cItems = currenciesRes.data?.data || currenciesRes.data || [];
-            setCurrencies(Array.isArray(cItems) ? cItems : []);
-        } catch (err) {
-            setError("Failed to load settings. Check your connection.");
+            // 1. Load Settings
+            try {
+                const res = await api.get("/system-settings");
+                const sData = res.data?.data || res.data || {};
+                setSettings(prev => ({
+                    ...prev,
+                    ...sData,
+                    default_subscription_plan_id: sData.default_subscription_plan?.id || sData.default_subscription_plan_id || "",
+                    default_currency_id: sData.default_currency?.id || sData.default_currency_id || ""
+                }));
+            } catch (e) { console.error("Settings failed", e); }
+
+            // 2. Load Plans (Paginated or Simple)
+            try {
+                const res = await api.get("/subscription-plans");
+                // Check res.data.data.data (paginated resource) or res.data.data (simple resource) or res.data (raw)
+                const items = res.data?.data?.data || res.data?.data || res.data || [];
+                setPlans(Array.isArray(items) ? items : []);
+            } catch (e) { console.error("Plans failed", e); }
+
+            // 3. Load Currencies
+            try {
+                const res = await api.get("/currencies");
+                const items = res.data?.data || res.data || [];
+                setCurrencies(Array.isArray(items) ? items : []);
+            } catch (e) { console.error("Currencies failed", e); }
+
         } finally {
             setLoading(false);
         }
@@ -115,14 +123,14 @@ export default function Settings() {
                             <label className="text-sm font-semibold text-slate-600">Default Plan</label>
                             <select className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" value={settings.default_subscription_plan_id || ""} onChange={e => setSettings({...settings, default_subscription_plan_id: e.target.value})}>
                                 <option value="">Select Plan</option>
-                                {plans.map(p => <option key={p.id} value={p.id.toString()}>{p.name}</option>)}
+                                {plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                             </select>
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-slate-600">System Currency</label>
                             <select className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" value={settings.default_currency_id || ""} onChange={e => setSettings({...settings, default_currency_id: e.target.value})}>
                                 <option value="">Select Currency</option>
-                                {currencies.map(c => <option key={c.id} value={c.id.toString()}>{c.name} ({c.code})</option>)}
+                                {currencies.map(c => <option key={c.id} value={c.id}>{c.name} ({c.code})</option>)}
                             </select>
                         </div>
                     </div>
