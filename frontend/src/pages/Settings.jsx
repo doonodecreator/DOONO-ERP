@@ -37,18 +37,17 @@ export default function Settings() {
             setSettings({
                 ...settings,
                 ...sData,
-                default_subscription_plan_id: sData.default_subscription_plan?.id || sData.default_subscription_plan_id || "",
-                default_currency_id: sData.default_currency?.id || sData.default_currency_id || ""
+                default_subscription_plan_id: sData.default_subscription_plan_id?.toString() || "",
+                default_currency_id: sData.default_currency_id?.toString() || ""
             });
             
-            // Handle both paginated and simple list formats
             const pItems = plansRes.data?.data?.data || plansRes.data?.data || plansRes.data || [];
             setPlans(Array.isArray(pItems) ? pItems : []);
             
             const cItems = currenciesRes.data?.data || currenciesRes.data || [];
             setCurrencies(Array.isArray(cItems) ? cItems : []);
         } catch (err) {
-            setError("Failed to load system settings.");
+            setError("Failed to load settings. Check your connection.");
         } finally {
             setLoading(false);
         }
@@ -59,19 +58,11 @@ export default function Settings() {
             setSaving(true);
             setMessage("");
             setError("");
-            
-            // Clean payload to ensure IDs are sent correctly
-            const payload = { 
-                ...settings,
-                default_subscription_plan_id: settings.default_subscription_plan_id || null,
-                default_currency_id: settings.default_currency_id || null
-            };
-            
-            await api.put("/system-settings", payload);
+            await api.put("/system-settings", settings);
             setMessage("Settings saved successfully!");
             setTimeout(() => setMessage(""), 3000);
         } catch (err) {
-            setError(err.response?.data?.message || "Failed to save settings. Please check all fields.");
+            setError(err.response?.data?.message || "Failed to save settings.");
         } finally {
             setSaving(false);
         }
@@ -124,14 +115,14 @@ export default function Settings() {
                             <label className="text-sm font-semibold text-slate-600">Default Plan</label>
                             <select className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" value={settings.default_subscription_plan_id || ""} onChange={e => setSettings({...settings, default_subscription_plan_id: e.target.value})}>
                                 <option value="">Select Plan</option>
-                                {plans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                {plans.map(p => <option key={p.id} value={p.id.toString()}>{p.name}</option>)}
                             </select>
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-slate-600">System Currency</label>
                             <select className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none" value={settings.default_currency_id || ""} onChange={e => setSettings({...settings, default_currency_id: e.target.value})}>
                                 <option value="">Select Currency</option>
-                                {currencies.map(c => <option key={c.id} value={c.id}>{c.name} ({c.code})</option>)}
+                                {currencies.map(c => <option key={c.id} value={c.id.toString()}>{c.name} ({c.code})</option>)}
                             </select>
                         </div>
                     </div>
