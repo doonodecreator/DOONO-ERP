@@ -1,162 +1,97 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import api from "../services/api";
+import EmptyState from "../components/feedback/EmptyState";
+import LoadingSpinner from "../components/feedback/LoadingSpinner";
+import PageHeader from "../components/layout/PageHeader";
 
-export default function NurseryHeadDashboard() {
+const TABS = [
+    { id: "dashboard", label: "Dashboard" },
+    { id: "pupils", label: "Nursery Pupils", page: "students" },
+    { id: "teachers", label: "Nursery Teachers", page: "staff" },
+    { id: "classes", label: "Nursery Classes", page: "classes" },
+    { id: "assessment", label: "Assessment", page: "result-entry" },
+    { id: "attendance", label: "Attendance", page: "attendance" },
+    { id: "timetable", label: "Timetable", page: "timetable" },
+    { id: "reports", label: "Reports", page: "report-cards" },
+    { id: "communication", label: "Communication" },
+];
+
+const displayValue = (value, fallback = "Unavailable") => (
+    value === null || value === undefined || value === "" ? fallback : value
+);
+
+export default function NurseryHeadDashboard({ setPage }) {
     const [activeTab, setActiveTab] = useState("dashboard");
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
+    const [error, setError] = useState("");
 
     useEffect(() => {
+        const loadData = async () => {
+            setLoading(true);
+            setError("");
+            try {
+                const response = await api.get("/nursery-head/dashboard");
+                setData(response?.data && typeof response.data === "object" ? response.data : null);
+            } catch (requestError) {
+                setData(null);
+                setError(requestError?.response?.data?.message || "Unable to load nursery dashboard data.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
         loadData();
     }, []);
 
-    const loadData = async () => {
-        setLoading(true);
-        try {
-            const res = await api.get("/nursery-head/dashboard");
-            setData(res.data);
-        } catch (err) {
-            console.error("Error loading Nursery Head dashboard", err);
-        } finally {
-            setLoading(false);
+    const summary = data?.nursery_summary && typeof data.nursery_summary === "object" ? data.nursery_summary : {};
+    const metrics = data?.metrics && typeof data.metrics === "object" ? data.metrics : {};
+    const classesList = Array.isArray(data?.classes) ? data.classes : [];
+    const assessments = Array.isArray(data?.recent_assessments) ? data.recent_assessments : [];
+
+    const openTab = (tabId) => {
+        const tab = TABS.find((item) => item.id === tabId);
+        setActiveTab(tabId);
+        if (tab?.page && typeof setPage === "function") {
+            setPage(tab.page);
         }
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-pink-600 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        );
+        return <LoadingSpinner text="Loading nursery dashboard..." />;
     }
 
-    const summary = data?.nursery_summary || {};
-    const metrics = data?.metrics || {};
-    const classesList = data?.classes || [];
-    const assessments = data?.recent_assessments || [];
-
-    const tabs = [
-        { id: "dashboard", label: "Dashboard" },
-        { id: "pupils", label: "Nursery Pupils" },
-        { id: "teachers", label: "Nursery Teachers" },
-        { id: "classes", label: "Nursery Classes" },
-        { id: "assessment", label: "Assessment" },
-        { id: "attendance", label: "Attendance" },
-        { id: "timetable", label: "Timetable" },
-        { id: "reports", label: "Reports" },
-        { id: "communication", label: "Communication" }
-    ];
-
     return (
-        <div className="min-h-screen bg-slate-50 p-4 md:p-6 text-slate-800">
-            {/* Header */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-pink-100 text-pink-700 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-inner">
-                        🧸
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900">Nursery Head Portal</h1>
-                        <p className="text-sm text-slate-500">Head Teacher: <span className="font-semibold text-slate-700">{summary.head_name}</span> • {summary.school_name} ({summary.session})</p>
-                    </div>
-                </div>
-                <div className="flex gap-2">
-                    <button className="bg-pink-600 hover:bg-pink-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
-                        + Register New Pupil
-                    </button>
-                </div>
+        <div className="page-container">
+            <PageHeader
+                title="Nursery Head"
+                subtitle={`${summary.head_name || "Current user"} • ${summary.school_name || "Current school"} • ${summary.session || "Session unavailable"} / ${summary.term || "Term unavailable"}`}
+                action={<button type="button" onClick={() => setPage?.("add-student")} className="btn-primary">Register New Pupil</button>}
+            />
+            {error && <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-5 mb-6">
+                <div className="stat-card"><span>Nursery Pupils</span><strong>{displayValue(metrics.total_pupils, 0)}</strong></div>
+                <div className="stat-card"><span>Teachers</span><strong>{displayValue(metrics.total_teachers, 0)}</strong></div>
+                <div className="stat-card"><span>Classes</span><strong>{displayValue(metrics.nursery_classes, 0)}</strong></div>
+                <div className="stat-card"><span>Attendance Rate</span><strong>{metrics.today_attendance_pct === null || metrics.today_attendance_pct === undefined ? "Unavailable" : `${metrics.today_attendance_pct}%`}</strong></div>
+                <div className="stat-card"><span>Pending Assessments</span><strong>{displayValue(metrics.pending_assessments, 0)}</strong></div>
             </div>
-
-            {/* Metrics */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nursery Pupils</p>
-                    <p className="text-2xl font-bold text-slate-900 mt-1">{metrics.total_pupils || 0}</p>
-                </div>
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Teachers</p>
-                    <p className="text-2xl font-bold text-pink-600 mt-1">{metrics.total_teachers || 0}</p>
-                </div>
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Classes</p>
-                    <p className="text-2xl font-bold text-indigo-600 mt-1">{metrics.nursery_classes || 0}</p>
-                </div>
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Attendance Rate</p>
-                    <p className="text-2xl font-bold text-emerald-600 mt-1">{metrics.today_attendance_pct || "0%"}</p>
-                </div>
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pending Assessments</p>
-                    <p className="text-2xl font-bold text-amber-600 mt-1">{metrics.pending_assessments || 0}</p>
-                </div>
+            <div className="flex gap-2 overflow-x-auto mb-6 pb-2">
+                {TABS.map((tab) => <button key={tab.id} type="button" onClick={() => openTab(tab.id)} className={`whitespace-nowrap rounded-lg border px-3 py-2 text-xs font-semibold ${activeTab === tab.id ? "bg-pink-600 text-white border-pink-600" : "bg-white text-slate-600 border-slate-200"}`}>{tab.label}</button>)}
             </div>
-
-            {/* Navigation Bar (9 Sub-Modules) */}
-            <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-thin">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                            activeTab === tab.id
-                                ? "bg-pink-600 text-white shadow-md shadow-pink-200"
-                                : "bg-white text-slate-600 hover:bg-pink-50 border border-slate-200"
-                        }`}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
-
-            {/* Active Content */}
-            {activeTab === "dashboard" && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Nursery Classes Overview */}
-                    <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div className="p-5 border-b border-slate-100 flex justify-between items-center">
-                            <h3 className="font-bold text-slate-900">Nursery Classes & Teachers</h3>
-                            <button onClick={() => setActiveTab('classes')} className="text-xs font-semibold text-pink-600 hover:underline">View All</button>
-                        </div>
-                        <div className="divide-y divide-slate-100">
-                            {classesList.map((item, idx) => (
-                                <div key={idx} className="p-4 hover:bg-slate-50 flex justify-between items-center">
-                                    <div>
-                                        <h4 className="font-bold text-slate-800 text-sm">{item.name}</h4>
-                                        <p className="text-xs text-slate-500 mt-0.5">Teacher: <span className="font-semibold text-slate-700">{item.teacher}</span></p>
-                                    </div>
-                                    <span className="bg-pink-50 text-pink-700 text-xs px-3 py-1 rounded-md font-bold">
-                                        {item.pupils} Pupils
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Assessments Summary */}
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div className="p-5 border-b border-slate-100 flex justify-between items-center">
-                            <h3 className="font-bold text-slate-900">Recent Assessments</h3>
-                            <button onClick={() => setActiveTab('assessment')} className="text-xs font-semibold text-pink-600 hover:underline">Manage</button>
-                        </div>
-                        <div className="divide-y divide-slate-100">
-                            {assessments.map((item, idx) => (
-                                <div key={idx} className="p-4 hover:bg-slate-50">
-                                    <h4 className="font-semibold text-slate-800 text-sm">{item.title}</h4>
-                                    <p className="text-xs text-slate-500 mt-1">Class: <span className="font-medium text-slate-700">{item.class}</span> • Date: {item.date}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+            {activeTab === "dashboard" ? (
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <section className="lg:col-span-2 rounded-xl border border-slate-200 bg-white shadow-sm">
+                        <div className="flex items-center justify-between border-b border-slate-100 p-5"><div><h2 className="font-bold text-slate-900">Nursery Classes</h2><p className="text-xs text-slate-500 mt-1">Live classes and active pupil counts. Teacher allocation is not present in the current class model.</p></div><button type="button" onClick={() => openTab("classes")} className="text-xs font-semibold text-pink-600 hover:underline">View All</button></div>
+                        {classesList.length === 0 ? <EmptyState title="No nursery classes" message="Create or activate nursery divisions and classes to see them here." /> : <div className="divide-y divide-slate-100">{classesList.map((item) => <div key={item.id || item.name} className="flex items-center justify-between gap-4 p-4"><div><h3 className="font-semibold text-slate-800">{item.name || "Unnamed class"}</h3><p className="text-xs text-slate-500 mt-1">Teacher: {item.teacher || "Unavailable"}</p></div><span className="rounded-md bg-pink-50 px-3 py-1 text-xs font-bold text-pink-700">{displayValue(item.pupils, 0)} Pupils</span></div>)}</div>}
+                    </section>
+                    <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+                        <div className="flex items-center justify-between border-b border-slate-100 p-5"><div><h2 className="font-bold text-slate-900">Recent Assessments</h2><p className="text-xs text-slate-500 mt-1">Live result submissions for nursery classes.</p></div><button type="button" onClick={() => openTab("assessment")} className="text-xs font-semibold text-pink-600 hover:underline">Manage</button></div>
+                        {assessments.length === 0 ? <EmptyState title="No assessment submissions" message="Submitted nursery assessments will appear here." /> : <div className="divide-y divide-slate-100">{assessments.map((item) => <div key={item.id || `${item.title}-${item.date}`} className="p-4"><h3 className="font-semibold text-slate-800">{item.title || "Assessment submission"}</h3><p className="text-xs text-slate-500 mt-1">Class: {item.class || "Unavailable"} • {item.date || "Date unavailable"}</p><span className="mt-2 inline-block rounded bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600">{item.status || "Status unavailable"}</span></div>)}</div>}
+                    </section>
                 </div>
-            )}
-
-            {activeTab !== "dashboard" && (
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
-                    <h3 className="text-xl font-bold text-slate-900 mb-2 capitalize">{tabs.find(t => t.id === activeTab)?.label} Sub-Module</h3>
-                    <p className="text-slate-500 max-w-md mx-auto text-sm">
-                        Early childhood management tools for {tabs.find(t => t.id === activeTab)?.label} are active in this workspace.
-                    </p>
-                </div>
+            ) : (
+                <section className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm"><h2 className="text-xl font-bold text-slate-900">{TABS.find((tab) => tab.id === activeTab)?.label}</h2><p className="mt-2 text-sm text-slate-500">{TABS.find((tab) => tab.id === activeTab)?.page ? "Opening the registered nursery workspace." : "No verified communication workspace is registered yet; this control is intentionally unavailable."}</p></section>
             )}
         </div>
     );
