@@ -69,6 +69,7 @@ use App\Http\Controllers\Api\FormTeacherPortalController;
 use App\Http\Controllers\Api\PlatformOwnerController;
 use App\Http\Controllers\Api\OrganizationOwnerController;
 use App\Http\Controllers\Api\ProprietorController;
+use App\Http\Controllers\Api\RoleInvitationController;
 use App\Http\Controllers\Api\PrincipalController;
 use App\Http\Controllers\Api\VicePrincipalAcademicController;
 use App\Http\Controllers\Api\VicePrincipalAdminController;
@@ -116,6 +117,16 @@ Route::prefix('v1')->group(function () {
         [AuthController::class, 'login']
     );
 
+    Route::get(
+        '/role-invitations/preview/{token}',
+        [RoleInvitationController::class, 'preview']
+    );
+
+    Route::post(
+        '/role-invitations/accept',
+        [RoleInvitationController::class, 'accept']
+    );
+
 
     /*
     |--------------------------------------------------------------------------
@@ -160,6 +171,11 @@ Route::prefix('v1')->group(function () {
         Route::post(
             '/logout',
             [AuthController::class, 'logout']
+        );
+
+        Route::post(
+            '/role-invitations/accept-authenticated',
+            [RoleInvitationController::class, 'acceptAuthenticated']
         );
 
 
@@ -535,13 +551,31 @@ Route::prefix('v1')->group(function () {
                 SubjectController::class
             );
 
-            Route::apiResource(
+                        Route::apiResource(
                 'staff',
                 StaffController::class
             );
 
+            Route::middleware('role:proprietor,super_admin')->group(function () {
+                Route::get(
+                    'role-invitations',
+                    [RoleInvitationController::class, 'index']
+                );
+
+                Route::post(
+                    'role-invitations',
+                    [RoleInvitationController::class, 'store']
+                );
+
+                Route::post(
+                    'role-invitations/{roleInvitation}/revoke',
+                    [RoleInvitationController::class, 'revoke']
+                );
+            });
+
             Route::get(
                 'staff-attendances/roster',
+
                 [StaffAttendanceController::class, 'roster']
             )->middleware(
                 'role:super_admin,proprietor,principal,vice_principal_admin'

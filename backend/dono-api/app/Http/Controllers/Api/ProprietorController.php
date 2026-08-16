@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\RoleInvitation;
 use App\Models\Staff;
 use App\Models\Student;
 use App\Services\CurrentContextService;
@@ -87,6 +88,14 @@ class ProprietorController extends Controller
             ])
             ->values();
 
+        $pendingInvitations = RoleInvitation::with('role')
+            ->where('school_id', $schoolId)
+            ->where('status', 'pending')
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->limit(10)
+            ->get();
+
         // visibleToSchool() excludes anything logged by the software owner —
         // a Proprietor never sees platform-admin actions in their own log.
         $auditLogs = ActivityLog::where('school_id', $schoolId)
@@ -112,9 +121,17 @@ class ProprietorController extends Controller
                 'total_staff' => $totalStaff,
                 'total_students' => $totalStudents,
                 'total_revenue' => $totalRevenue,
-                'pending_approvals' => null,
+                'pending_approvals' => $pendingInvitations->count(),
             ],
             'leadership' => $leadership,
+            'pending_role_invitations' => $pendingInvitations->map(fn (RoleInvitation $invitation) => [
+                'id' => $invitation->id,
+                'name' => trim("{$invitation->first_name} {$invitation->last_name}"),
+                'email' => $invitation->email,
+                'role' => $invitation->role?->name,
+                'status' => $invitation->status,
+                'expires_at' => $invitation->expires_at?->toIso8601String(),
+            ])->values(),
             'audit_logs' => $auditLogs,
             'recent_communications' => [],
         ]);
