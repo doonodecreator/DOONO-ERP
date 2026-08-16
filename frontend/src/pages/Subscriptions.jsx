@@ -29,15 +29,24 @@ export default function Subscriptions() {
     async function loadData() {
         try {
             setLoading(true);
-            const [plansRes, subRes] = await Promise.all([
-                api.get("/subscription-plans"),
-                api.get("/my-subscription")
-            ]);
+            setError("");
+            
+            // Load plans - this is essential for both roles
+            const plansRes = await api.get("/subscription-plans");
             const planData = plansRes.data?.data?.data ?? plansRes.data?.data ?? plansRes.data ?? [];
             setPlans(Array.isArray(planData) ? planData : []);
-            setMySub(subRes.data?.data || subRes.data || null);
+
+            // Only load "My Subscription" if NOT a platform admin (or try and ignore failure)
+            if (!isPlatformAdmin) {
+                try {
+                    const subRes = await api.get("/my-subscription");
+                    setMySub(subRes.data?.data || subRes.data || null);
+                } catch (e) {
+                    console.log("No school subscription context for this user.");
+                }
+            }
         } catch (err) {
-            setError("Failed to load subscription details.");
+            setError("Failed to load subscription plans. Please refresh.");
         } finally {
             setLoading(false);
         }
@@ -65,7 +74,7 @@ export default function Subscriptions() {
             });
             loadData();
         } catch (err) {
-            const msg = err.response?.data?.message || "Failed to save plan. Please check all fields.";
+            const msg = err.response?.data?.message || "Failed to save plan. Ensure the slug is unique.";
             setError(msg);
         } finally {
             setLoading(false);
