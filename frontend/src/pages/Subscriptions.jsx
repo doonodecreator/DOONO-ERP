@@ -16,9 +16,13 @@ export default function Subscriptions() {
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
     
-    // Form States
     const [showForm, setShowForm] = useState(false);
-    const [formData, setFormData] = useState({ name: '', monthly_price: '', currency: 'NGN', max_students: 100, max_staff: 10, is_active: true });
+    const [formData, setFormData] = useState({
+        name: '', slug: '', description: '',
+        monthly_price: '', quarterly_price: '', half_yearly_price: '', yearly_price: '',
+        currency: 'NGN', max_students: 500, max_staff: 50, max_branches: 1,
+        trial_days: 30, is_active: true
+    });
 
     useEffect(() => { loadData(); }, []);
 
@@ -39,30 +43,32 @@ export default function Subscriptions() {
         }
     }
 
+    const handleNameChange = (name) => {
+        const slug = name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+        setFormData({ ...formData, name, slug });
+    };
+
     async function handleSavePlan(e) {
         e.preventDefault();
+        setError("");
+        setMessage("");
         try {
             setLoading(true);
             await api.post("/subscription-plans", formData);
             setMessage("Plan created successfully!");
             setShowForm(false);
-            setFormData({ name: '', monthly_price: '', currency: 'NGN', max_students: 100, max_staff: 10, is_active: true });
+            setFormData({
+                name: '', slug: '', description: '',
+                monthly_price: '', quarterly_price: '', half_yearly_price: '', yearly_price: '',
+                currency: 'NGN', max_students: 500, max_staff: 50, max_branches: 1,
+                trial_days: 30, is_active: true
+            });
             loadData();
         } catch (err) {
-            setError("Failed to save plan.");
+            const msg = err.response?.data?.message || "Failed to save plan. Please check all fields.";
+            setError(msg);
         } finally {
             setLoading(false);
-        }
-    }
-
-    async function handleRenew() {
-        try {
-            const res = await api.post("/payments/initialize-subscription");
-            if (res.data?.data?.authorization_url) {
-                window.location.href = res.data.data.authorization_url;
-            }
-        } catch (err) {
-            alert(err.response?.data?.message || "Renewal failed.");
         }
     }
 
@@ -72,44 +78,83 @@ export default function Subscriptions() {
         return (
             <PageContainer>
                 <PageHeader 
-                    title="Subscription Management" 
-                    subtitle="Software Owner Master Control Panel" 
-                    action={<button onClick={() => setShowForm(!showForm)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold">{showForm ? 'Cancel' : '+ Create New Plan'}</button>}
+                    title="Subscription Plans" 
+                    subtitle="Platform Master Control Panel" 
+                    action={
+                        <button 
+                            onClick={() => setShowForm(!showForm)} 
+                            style={{ backgroundColor: showForm ? '#ef4444' : '#4f46e5', color: '#fff', padding: '10px 20px', borderRadius: '10px', fontWeight: 'bold', border: 'none' }}
+                        >
+                            {showForm ? 'Cancel' : '+ Create Plan'}
+                        </button>
+                    }
                 />
 
-                {message && <div className="bg-emerald-50 text-emerald-700 p-4 rounded-xl mb-6 border border-emerald-100">{message}</div>}
-                {error && <div className="bg-rose-50 text-rose-700 p-4 rounded-xl mb-6 border border-rose-100">{error}</div>}
+                {message && <div style={{ backgroundColor: '#ecfdf5', color: '#065f46', padding: '16px', borderRadius: '12px', marginBottom: '20px', border: '1px solid #d1fae5' }}>{message}</div>}
+                {error && <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', padding: '16px', borderRadius: '12px', marginBottom: '20px', border: '1px solid #fee2e2' }}>{error}</div>}
 
                 {showForm && (
-                    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8">
-                        <h3 className="font-bold text-lg mb-4">New Subscription Plan</h3>
-                        <form onSubmit={handleSavePlan} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input className="border p-2 rounded-lg" placeholder="Plan Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
-                            <input className="border p-2 rounded-lg" type="number" placeholder="Monthly Price" value={formData.monthly_price} onChange={e => setFormData({...formData, monthly_price: e.target.value})} required />
-                            <input className="border p-2 rounded-lg" placeholder="Currency (e.g. NGN)" value={formData.currency} onChange={e => setFormData({...formData, currency: e.target.value})} required />
-                            <input className="border p-2 rounded-lg" type="number" placeholder="Max Students" value={formData.max_students} onChange={e => setFormData({...formData, max_students: e.target.value})} required />
-                            <button type="submit" className="md:col-span-2 bg-indigo-600 text-white py-2 rounded-lg font-bold">Save Plan</button>
+                    <div style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', marginBottom: '32px' }}>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '20px' }}>New Subscription Plan</h3>
+                        <form onSubmit={handleSavePlan} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '4px' }}>Plan Name</label>
+                                <input style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="e.g. Basic Plan" value={formData.name} onChange={e => handleNameChange(e.target.value)} required />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '4px' }}>Monthly Price</label>
+                                    <input type="number" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.monthly_price} onChange={e => setFormData({...formData, monthly_price: e.target.value})} required />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '4px' }}>Yearly Price</label>
+                                    <input type="number" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.yearly_price} onChange={e => setFormData({...formData, yearly_price: e.target.value})} required />
+                                </div>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '4px' }}>Quarterly Price</label>
+                                    <input type="number" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.quarterly_price} onChange={e => setFormData({...formData, quarterly_price: e.target.value})} required />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '4px' }}>Half-Yearly Price</label>
+                                    <input type="number" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.half_yearly_price} onChange={e => setFormData({...formData, half_yearly_price: e.target.value})} required />
+                                </div>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '4px' }}>Max Students</label>
+                                    <input type="number" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.max_students} onChange={e => setFormData({...formData, max_students: e.target.value})} required />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', color: '#475569', marginBottom: '4px' }}>Trial Days</label>
+                                    <input type="number" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} value={formData.trial_days} onChange={e => setFormData({...formData, trial_days: e.target.value})} required />
+                                </div>
+                            </div>
+                            <button type="submit" style={{ width: '100%', padding: '14px', borderRadius: '12px', backgroundColor: '#4f46e5', color: '#fff', fontWeight: 'bold', fontSize: '1rem', border: 'none', marginTop: '10px', cursor: 'pointer' }}>
+                                {loading ? 'Saving...' : 'Create Subscription Plan'}
+                            </button>
                         </form>
                     </div>
                 )}
 
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', overflowX: 'auto', paddingBottom: '8px' }}>
                     {["plans", "coupons", "promos"].map(tab => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '8px 16px', borderRadius: '8px', fontWeight: '600', textTransform: 'capitalize', border: '1px solid #e2e8f0', backgroundColor: activeTab === tab ? '#4f46e5' : '#ffffff', color: activeTab === tab ? '#ffffff' : '#475569', cursor: 'pointer' }}>{tab}</button>
+                        <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '10px 20px', borderRadius: '12px', fontWeight: '600', textTransform: 'capitalize', border: '1px solid #e2e8f0', backgroundColor: activeTab === tab ? '#4f46e5' : '#ffffff', color: activeTab === tab ? '#ffffff' : '#475569', cursor: 'pointer', whiteSpace: 'nowrap' }}>{tab}</button>
                     ))}
                 </div>
 
                 {activeTab === "plans" && (
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div style={{ backgroundColor: '#fff', borderRadius: '20px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                         <DataTable 
                             columns={[
-                                {key: 'name', label: 'Plan Name'}, 
-                                {key: 'monthly_price', label: 'Monthly Price', render: (row) => `${row.currency} ${row.monthly_price}`}, 
-                                {key: 'max_students', label: 'Students Limit'},
+                                {key: 'name', label: 'Plan'}, 
+                                {key: 'monthly_price', label: 'Monthly', render: (row) => `${row.currency} ${row.monthly_price}`}, 
+                                {key: 'yearly_price', label: 'Yearly', render: (row) => `${row.currency} ${row.yearly_price}`},
                                 {key: 'is_active', label: 'Status', render: (row) => row.is_active ? 'Active' : 'Inactive'}
                             ]}
                             data={plans}
-                            emptyMessage="No subscription plans found. Use the button above to create one."
+                            emptyMessage="No plans found. Create one above."
                         />
                     </div>
                 )}
@@ -129,9 +174,6 @@ export default function Subscriptions() {
                             <p className="text-slate-500">Status: <span className={`font-semibold ${mySub.status === 'active' ? 'text-green-600' : 'text-red-600'}`}>{mySub.status?.toUpperCase()}</span></p>
                             <p className="text-slate-500 text-sm mt-1">Expires on: {mySub.expiry_date ? new Date(mySub.expiry_date).toLocaleDateString() : 'N/A'}</p>
                         </div>
-                        {mySub.status !== 'exempt' && (
-                            <button onClick={handleRenew} className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700">Renew Now</button>
-                        )}
                     </div>
                 </div>
             )}

@@ -10,7 +10,7 @@ export default function Organizations() {
     const [organizations, setOrganizations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
-    const [formData, setFormData] = useState({ name: '', email: '', phone: '' });
+    const [formData, setFormData] = useState({ name: '', short_name: '', email: '', phone: '', address: '' });
 
     useEffect(() => { loadOrganizations(); }, []);
 
@@ -29,7 +29,7 @@ export default function Organizations() {
         try {
             await api.post("/organizations", formData);
             setShowForm(false);
-            setFormData({ name: '', email: '', phone: '' });
+            setFormData({ name: '', short_name: '', email: '', phone: '', address: '' });
             loadOrganizations();
         } catch (err) { alert("Failed to create organization."); }
     }
@@ -41,21 +41,24 @@ export default function Organizations() {
             <PageHeader 
                 title="Organizations" 
                 subtitle="Platform-wide organization management" 
-                action={<button onClick={() => setShowForm(!showForm)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold">{showForm ? 'Cancel' : '+ New Organization'}</button>}
+                action={<button onClick={() => setShowForm(!showForm)} style={{ backgroundColor: showForm ? '#ef4444' : '#4f46e5', color: '#fff', padding: '10px 20px', borderRadius: '10px', fontWeight: 'bold', border: 'none' }}>{showForm ? 'Cancel' : '+ New Organization'}</button>}
             />
             
             {showForm && (
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8">
-                    <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <input className="border p-2 rounded-lg" placeholder="Org Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
-                        <input className="border p-2 rounded-lg" type="email" placeholder="Email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
-                        <input className="border p-2 rounded-lg" placeholder="Phone" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required />
-                        <button type="submit" className="bg-indigo-600 text-white py-2 rounded-lg font-bold">Create</button>
+                <div style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', marginBottom: '32px' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '20px' }}>New Organization</h3>
+                    <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <input style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Full Organization Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+                        <input style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Short Name (e.g. DOONO)" value={formData.short_name} onChange={e => setFormData({...formData, short_name: e.target.value})} required />
+                        <input style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} type="email" placeholder="Contact Email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
+                        <input style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Contact Phone" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required />
+                        <textarea style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Office Address" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+                        <button type="submit" style={{ width: '100%', padding: '14px', borderRadius: '12px', backgroundColor: '#4f46e5', color: '#fff', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>Create Organization</button>
                     </form>
                 </div>
             )}
 
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div style={{ backgroundColor: '#fff', borderRadius: '20px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <DataTable 
                     columns={[
                         { key: "name", label: "Organization" },
