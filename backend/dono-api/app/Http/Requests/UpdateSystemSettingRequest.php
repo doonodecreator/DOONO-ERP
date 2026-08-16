@@ -79,6 +79,7 @@ class UpdateSystemSettingRequest extends FormRequest
 
             'stripe_enabled' => 'sometimes|boolean',
             'enforce_subscriptions' => 'sometimes|boolean',
+            'enforce_subscriptions' => 'sometimes|boolean',
 
             /*
             |--------------------------------------------------------------------------

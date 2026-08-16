@@ -42,8 +42,12 @@ export default function Settings() {
                 default_currency_id: sData.default_currency?.id || sData.default_currency_id || ""
             });
             
-            setPlans(plansRes.data?.data?.data || plansRes.data?.data || []);
-            setCurrencies(currenciesRes.data?.data || currenciesRes.data || []);
+            // Robust parsing for plans and currencies
+            const pItems = plansRes.data?.data?.data || plansRes.data?.data || plansRes.data || [];
+            setPlans(Array.isArray(pItems) ? pItems : []);
+            
+            const cItems = currenciesRes.data?.data || currenciesRes.data || [];
+            setCurrencies(Array.isArray(cItems) ? cItems : []);
         } catch (err) {
             setError("Failed to load system settings.");
         } finally {
