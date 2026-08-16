@@ -39,6 +39,7 @@ export default function StudentPortal({ setPage }) {
     const assignments = Array.isArray(data?.upcoming_assignments) ? data.upcoming_assignments : [];
     const results = Array.isArray(data?.recent_results) ? data.recent_results : [];
     const attendance = data?.attendance_summary || { present: 0, absent: 0 };
+                <div className="mt-8 flex justify-end"><button onClick={() => window.open(`${api.defaults.baseURL}/report-cards/${student.id}/download`, "_blank")} className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700">Download Latest Report Card</button></div>
 
     const openTab = (tabId) => {
         const tab = TABS.find((item) => item.id === tabId);
