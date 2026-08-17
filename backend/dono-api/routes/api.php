@@ -66,12 +66,15 @@ use App\Http\Controllers\Api\PrimaryHeadmasterController;
 use App\Http\Controllers\Api\SecondaryPrincipalController;
 use App\Http\Controllers\Api\StudentPortalController;
 use App\Http\Controllers\Api\ParentPortalController;
+use App\Http\Controllers\Api\RoleInvitationController;
 
 Route::prefix('v1')->group(function () {
     Route::post('payments/paystack/webhook', [PaymentController::class, 'webhook']);
     Route::get('payments/paystack/verify/{reference}', [PaymentController::class, 'verify']);
     Route::get('/countries', [SchoolController::class, 'countries']);
     Route::get('/roles', [\App\Http\Controllers\Api\RoleController::class, 'index'])->middleware('auth:sanctum');
+    Route::get('role-invitations/preview/{token}', [RoleInvitationController::class, 'preview']);
+    Route::post('role-invitations/accept', [RoleInvitationController::class, 'accept']);
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
 
@@ -79,8 +82,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/me/context', [AuthController::class, 'context']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/dashboard', [DashboardController::class, 'index']);
+        Route::post('role-invitations/accept-authenticated', [RoleInvitationController::class, 'acceptAuthenticated']);
+        Route::apiResource('role-invitations', RoleInvitationController::class)->except(['show', 'update']);
+        Route::post('role-invitations/{roleInvitation}/revoke', [RoleInvitationController::class, 'revoke']);
 
-        // Platform Management
         Route::middleware('role:super_admin')->group(function () {
             Route::get('system-settings', [SystemSettingController::class, 'index']);
             Route::put('system-settings', [SystemSettingController::class, 'update']);
@@ -92,16 +97,25 @@ Route::prefix('v1')->group(function () {
             Route::get('platform-owner/dashboard', [PlatformOwnerController::class, 'dashboard']);
         });
 
-        // Shared School/Org Management
         Route::apiResource('organizations', OrganizationController::class);
         Route::apiResource('schools', SchoolController::class);
         Route::get('my-subscription', [SchoolSubscriptionController::class, 'mySubscription']);
         Route::apiResource('currencies', CurrencyController::class);
 
-        // Core School Operations
         Route::middleware(['has.school', 'subscription'])->group(function () {
             Route::get('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'show']);
             Route::put('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'update']);
+            Route::get('proprietor/dashboard', [ProprietorController::class, 'dashboard']);
+            Route::get('principal/dashboard', [PrincipalController::class, 'dashboard']);
+            Route::get('vp-academic/dashboard', [VicePrincipalAcademicController::class, 'dashboard']);
+            Route::get('vp-admin/dashboard', [VicePrincipalAdminController::class, 'dashboard']);
+            Route::get('teacher/dashboard', [TeacherPortalController::class, 'dashboard']);
+            Route::get('form-teacher/dashboard', [FormTeacherPortalController::class, 'dashboard']);
+            Route::get('nursery-head/dashboard', [NurseryHeadController::class, 'dashboard']);
+            Route::get('primary-head/dashboard', [PrimaryHeadmasterController::class, 'dashboard']);
+            Route::get('secondary-head/dashboard', [SecondaryPrincipalController::class, 'dashboard']);
+            Route::get('student/dashboard', [StudentPortalController::class, 'dashboard']);
+            Route::get('parent/dashboard', [ParentPortalController::class, 'dashboard']);
             Route::apiResource('academic-sessions', AcademicSessionController::class);
             Route::apiResource('terms', TermController::class);
             Route::apiResource('divisions', DivisionController::class);
