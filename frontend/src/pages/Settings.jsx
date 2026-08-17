@@ -4,57 +4,44 @@ import { useAuth } from "../context/AuthContext";
 import PageContainer from "../components/layout/PageContainer";
 import PageHeader from "../components/layout/PageHeader";
 import LoadingSpinner from "../components/feedback/LoadingSpinner";
-
 export default function Settings() {
     const { isPlatformAdmin, school } = useAuth();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
-
-    const [settings, setSettings] = useState({
-        platform_name: "", platform_email: "", platform_phone: "", platform_logo: "",
-        trial_days: 30, default_subscription_plan_id: "", default_currency_id: "",
-        allow_school_registration: true, maintenance_mode: false,
-        enforce_subscriptions: false, paystack_enabled: true, stripe_enabled: false,
-        email_notifications: true, sms_notifications: false
-    });
-
-    const [schoolData, setSchoolData] = useState({
-        name: "", short_name: "", email: "", phone: "", address: "", school_type: "Combined",
-        motto: "", bank_name: "", account_number: "", account_name: "",
-        paystack_public_key: "", paystack_secret_key: "", paystack_subaccount_code: ""
-    });
-
+    const [settings, setSettings] = useState({ platform_name: "", platform_email: "", platform_phone: "", platform_logo: "", trial_days: 30, default_subscription_plan_id: "", default_currency_id: "", allow_school_registration: true, maintenance_mode: false, enforce_subscriptions: false, paystack_enabled: true, stripe_enabled: false, email_notifications: true, sms_notifications: false });
+    const [schoolData, setSchoolData] = useState({ name: "", short_name: "", email: "", phone: "", address: "", school_type: "Combined", motto: "", bank_name: "", account_number: "", account_name: "", paystack_public_key: "", paystack_secret_key: "", paystack_subaccount_code: "" });
     const [plans, setPlans] = useState([]);
     const [currencies, setCurrencies] = useState([]);
-
     useEffect(() => { loadData(); }, [isPlatformAdmin, school]);
-
     async function loadData() {
-        setLoading(true);
-        setError("");
+        setLoading(true); setError("");
         try {
             if (isPlatformAdmin) {
                 const [sRes, pRes, cRes] = await Promise.all([api.get("/system-settings"), api.get("/subscription-plans"), api.get("/currencies")]);
                 const sData = sRes.data?.data || sRes.data || {};
-                setSettings(prev => ({ ...prev, ...sData, default_subscription_plan_id: sData.default_subscription_plan?.id || sData.default_subscription_plan_id || "", default_currency_id: sData.default_currency?.id || sData.default_currency_id || "" }));
-                setPlans(pRes.data?.data?.data || pRes.data?.data || pRes.data || []);
-                setCurrencies(cRes.data?.data || cRes.data || []);
+                setSettings({ ...settings, ...sData, default_subscription_plan_id: sData.default_subscription_plan?.id || sData.default_subscription_plan_id || "", default_currency_id: sData.default_currency?.id || sData.default_currency_id || "" });
+                const planItems = pRes.data?.data?.data || pRes.data?.data || pRes.data || [];
+                setPlans(Array.isArray(planItems) ? planItems : []);
+                const currencyItems = cRes.data?.data || cRes.data || [];
+                setCurrencies(Array.isArray(currencyItems) ? currencyItems : []);
             } else if (school) {
                 const [profileRes, settingsRes] = await Promise.all([api.get(`/schools/${school.id}`), api.get("/school-settings")]);
                 const sInfo = profileRes.data?.data || profileRes.data || school;
                 const opsData = settingsRes.data?.data || {};
                 setSchoolData({ name: sInfo.name || "", short_name: sInfo.short_name || "", email: sInfo.email || "", phone: sInfo.phone || "", address: sInfo.address || "", school_type: sInfo.school_type || "Combined", motto: opsData.motto || "", bank_name: opsData.bank_name || "", account_number: opsData.account_number || "", account_name: opsData.account_name || "", paystack_public_key: opsData.paystack_public_key || "", paystack_secret_key: opsData.paystack_secret_key || "", paystack_subaccount_code: opsData.paystack_subaccount_code || "" });
             }
-        } catch (err) { setError("Failed to load some settings. Please try again."); } finally { setLoading(false); }
+        } catch (err) { console.error("Failed to load settings", err); setError("Failed to load some settings. Please try again."); }
+        finally { setLoading(false); }
     }
-
     async function handleSave() {
         try {
             setSaving(true); setMessage(""); setError("");
-            if (isPlatformAdmin) await api.put("/system-settings", settings);
-            else if (school) {
+            if (isPlatformAdmin) {
+                const payload = { ...settings, default_subscription_plan_id: settings.default_subscription_plan_id, default_currency_id: settings.default_currency_id };
+                await api.put("/system-settings", payload);
+            } else if (school) {
                 await Promise.all([
                     api.put(`/schools/${school.id}`, { name: schoolData.name, short_name: schoolData.short_name, email: schoolData.email, phone: schoolData.phone, address: schoolData.address, school_type: schoolData.school_type }),
                     api.put("/school-settings", { motto: schoolData.motto, bank_name: schoolData.bank_name, account_number: schoolData.account_number, account_name: schoolData.account_name, paystack_public_key: schoolData.paystack_public_key, paystack_secret_key: schoolData.paystack_secret_key, paystack_subaccount_code: schoolData.paystack_subaccount_code })
@@ -62,11 +49,10 @@ export default function Settings() {
             }
             setMessage("Settings saved successfully!");
             setTimeout(() => setMessage(""), 3000);
-        } catch (err) { setError(err.response?.data?.message || "Failed to save settings."); } finally { setSaving(false); }
+        } catch (err) { setError(err.response?.data?.message || "Failed to save settings."); }
+        finally { setSaving(false); }
     }
-
     if (loading) return <PageContainer><LoadingSpinner /></PageContainer>;
-
     if (!isPlatformAdmin) {
         return (
             <PageContainer>
@@ -100,7 +86,6 @@ export default function Settings() {
             </PageContainer>
         );
     }
-
     return (
         <PageContainer>
             <PageHeader title="System Settings" subtitle="Global SaaS Control" action={<button onClick={handleSave} disabled={saving} className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-indigo-700 disabled:opacity-50">{saving ? "Saving..." : "Save Changes"}</button>} />

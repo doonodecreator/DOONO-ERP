@@ -67,6 +67,7 @@ use App\Http\Controllers\Api\SecondaryPrincipalController;
 use App\Http\Controllers\Api\StudentPortalController;
 use App\Http\Controllers\Api\ParentPortalController;
 use App\Http\Controllers\Api\RoleInvitationController;
+use App\Http\Controllers\Api\ActivityLogController;
 
 Route::prefix('v1')->group(function () {
     Route::post('payments/paystack/webhook', [PaymentController::class, 'webhook']);
@@ -82,6 +83,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/me/context', [AuthController::class, 'context']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/dashboard', [DashboardController::class, 'index']);
+        Route::get('/activity-logs', [ActivityLogController::class, 'index']);
         Route::post('role-invitations/accept-authenticated', [RoleInvitationController::class, 'acceptAuthenticated']);
         Route::apiResource('role-invitations', RoleInvitationController::class)->except(['show', 'update']);
         Route::post('role-invitations/{roleInvitation}/revoke', [RoleInvitationController::class, 'revoke']);
