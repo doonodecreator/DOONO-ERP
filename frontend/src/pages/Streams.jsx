@@ -1,220 +1,53 @@
-import { useEffect, useState } from "react";
-import api from "../services/api";
+import React, { useState, useEffect } from 'react';
+import api from '../services/api';
+import PageContainer from "../components/layout/PageContainer";
+import PageHeader from "../components/layout/PageHeader";
+import LoadingSpinner from "../components/feedback/LoadingSpinner";
+import DataTable from "../components/tables/DataTable";
 
 export default function Streams() {
   const [streams, setStreams] = useState([]);
   const [classes, setClasses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({ class_id: '', name: '', code: '', display_order: 1 });
 
-  const [form, setForm] = useState({
-    class_id: "",
-    name: "",
-    code: "",
-    display_order: 1,
-    is_active: true,
-  });
+  useEffect(() => { loadData(); }, []);
 
-  useEffect(() => {
-    loadStreams();
-    loadClasses();
-  }, []);
-
-  const loadStreams = async () => {
+  const loadData = async () => {
     try {
-      const res = await api.get("/streams");
-      setStreams(res.data.data || []);
-    } catch (err) {
-      console.log(err);
-    }
+      setLoading(true);
+      const [sRes, cRes] = await Promise.all([api.get('/streams'), api.get('/classes')]);
+      setStreams(sRes.data?.data?.data || sRes.data?.data || []);
+      setClasses(cRes.data?.data?.data || cRes.data?.data || []);
+    } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
-  const loadClasses = async () => {
-    try {
-      const res = await api.get("/classes");
-      setClasses(res.data.data || []);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const handleChange = (e) => {
-    const { name, value, checked, type } =
-      e.target;
-
-    setForm({
-      ...form,
-      [name]:
-        type === "checkbox"
-          ? checked
-          : value,
-    });
-  };
-
-  const saveStream = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      await api.post("/streams", form);
-
-      alert("Stream saved successfully.");
-
-      setForm({
-        class_id: "",
-        name: "",
-        code: "",
-        display_order: 1,
-        is_active: true,
-      });
-
-      loadStreams();
-    } catch (err) {
-      console.log(err);
-
-      if (err.response?.data?.errors) {
-        alert(
-          JSON.stringify(
-            err.response.data.errors,
-            null,
-            2
-          )
-        );
-      } else {
-        alert("Unable to save stream.");
-      }
-    }
+      await api.post('/streams', formData);
+      setShowForm(false); setFormData({ class_id: '', name: '', code: '', display_order: 1 });
+      loadData();
+    } catch (err) { alert("Failed to save stream."); }
   };
 
   return (
-    <div>
-      <h1>Streams</h1>
-
-      <div
-        style={{
-          background: "#fff",
-          padding: "20px",
-          borderRadius: "20px",
-          marginBottom: "20px",
-        }}
-      >
-        <h3>Add Stream</h3>
-
-        <form onSubmit={saveStream}>
-          <select
-            name="class_id"
-            value={form.class_id}
-            onChange={handleChange}
-            style={inputStyle}
-          >
-            <option value="">
-              Select Class
-            </option>
-
-            {classes.map((item) => (
-              <option
-                key={item.id}
-                value={item.id}
-              >
-                {item.name}
-              </option>
-            ))}
-          </select>
-
-          <input
-            name="name"
-            placeholder="Stream Name"
-            value={form.name}
-            onChange={handleChange}
-            style={inputStyle}
-          />
-
-          <input
-            name="code"
-            placeholder="Code"
-            value={form.code}
-            onChange={handleChange}
-            style={inputStyle}
-          />
-
-          <input
-            type="number"
-            name="display_order"
-            value={form.display_order}
-            onChange={handleChange}
-            style={inputStyle}
-          />
-
-          <label>
-            <input
-              type="checkbox"
-              name="is_active"
-              checked={form.is_active}
-              onChange={handleChange}
-            />
-            Active
-          </label>
-
-          <br />
-          <br />
-
-          <button
-            type="submit"
-            style={buttonStyle}
-          >
-            Save Stream
-          </button>
-        </form>
-      </div>
-
-      <div
-        style={{
-          background: "#fff",
-          padding: "20px",
-          borderRadius: "20px",
-        }}
-      >
-        <table width="100%">
-          <thead>
-            <tr>
-              <th>Stream</th>
-              <th>Class</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {streams.map((item) => (
-              <tr key={item.id}>
-                <td>{item.name}</td>
-
-                <td>
-                  {item.class?.name || "-"}
-                </td>
-
-                <td>
-                  {item.is_active
-                    ? "Active"
-                    : "Inactive"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <PageContainer>
+      <PageHeader title="Academic Streams" subtitle="Manage class sections (e.g. Gold, Silver, A, B)" action={<button onClick={() => setShowForm(!showForm)} className="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold">{showForm ? "Cancel" : "+ New Stream"}</button>} />
+      {showForm && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <select className="w-full p-3 rounded-xl border border-slate-200" value={formData.class_id} onChange={e => setFormData({...formData, class_id: e.target.value})} required>
+              <option value="">Select Class</option>
+              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            <input className="w-full p-3 rounded-xl border border-slate-200" placeholder="Stream Name (e.g. Gold)" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+            <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold">Save Stream</button>
+          </form>
+        </div>
+      )}
+      {loading ? <LoadingSpinner /> : <DataTable columns={[{ key: "name", label: "Stream" }, { key: "class", label: "Class", render: (row) => row.class?.name || "—" }]} data={streams} emptyMessage="No streams found." />}
+    </PageContainer>
   );
 }
-
-const inputStyle = {
-  width: "100%",
-  padding: "12px",
-  marginBottom: "15px",
-  border: "1px solid #cbd5e1",
-  borderRadius: "10px",
-};
-
-const buttonStyle = {
-  background: "#2563eb",
-  color: "#fff",
-  border: "none",
-  padding: "12px 20px",
-  borderRadius: "10px",
-};
