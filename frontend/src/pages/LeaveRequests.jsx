@@ -33,11 +33,12 @@ const initialForm = {
 };
 
 export default function LeaveRequests() {
-  const { user, roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
+  const { user, roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
   const roleSlug = getPrimaryRoleSlug({
     roles,
     isPlatformAdmin,
     isOrganizationOwner,
+    school,
   });
   const isLeadership = LEADERSHIP_ROLES.includes(roleSlug);
 

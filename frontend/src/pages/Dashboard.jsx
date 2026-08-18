@@ -24,7 +24,7 @@ import {
 import "../styles/dashboard.css";
 
 export default function Dashboard() {
-  const { roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
+  const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -33,6 +33,7 @@ export default function Dashboard() {
     roles,
     isPlatformAdmin,
     isOrganizationOwner,
+    school,
   });
 
   const isSuperAdmin =

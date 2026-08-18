@@ -8,8 +8,8 @@ import { useAuth } from "../context/AuthContext";
 import { getPrimaryRoleSlug } from "../utils/role";
 
 export default function Schools() {
-    const { roles, isPlatformAdmin, isOrganizationOwner, refreshContext } = useAuth();
-    const roleSlug = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner });
+    const { roles, isPlatformAdmin, isOrganizationOwner, school, refreshContext } = useAuth();
+    const roleSlug = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
     
     const [schools, setSchools] = useState([]);
     const [loading, setLoading] = useState(true);

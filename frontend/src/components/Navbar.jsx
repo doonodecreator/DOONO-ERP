@@ -2,9 +2,9 @@ import { useAuth } from "../context/AuthContext";
 import { getPrimaryRoleSlug, formatRoleLabel } from "../utils/role";
 
 export default function Navbar({ onMenuClick }) {
-  const { user, roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
+  const { user, roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
 
-  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner });
+  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
   const roleLabel = formatRoleLabel(role);
 
   return (

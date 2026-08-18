@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { getPrimaryRoleSlug } from "../utils/role";
 
 export default function Fees({ setPage }) {
-    const { roles, isPlatformAdmin } = useAuth();
+    const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
     const [loading, setLoading] = useState(true);
     const [studentFees, setStudentFees] = useState([]);
     const [feeStructures, setFeeStructures] = useState([]);
@@ -29,7 +29,7 @@ export default function Fees({ setPage }) {
         remarks: ""
     });
 
-    const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin });
+    const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
 
     const canManageFees = ["super_admin", "proprietor", "principal", "bursar", "accountant"].includes(userRole);
 

@@ -5,11 +5,12 @@ import { getPrimaryRoleSlug } from '../utils/role';
 import PortalAccountModal from '../components/modals/PortalAccountModal';
 
 export default function Students({ setPage, setSelectedStudent }) {
-  const { roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
+  const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
   const roleSlug = getPrimaryRoleSlug({
     roles,
     isPlatformAdmin,
     isOrganizationOwner,
+    school,
   });
   const canManageAdmissions = [
     'super_admin',

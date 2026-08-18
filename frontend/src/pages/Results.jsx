@@ -4,14 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import { getPrimaryRoleSlug } from '../utils/role';
 
 export default function Results({ setPage }) {
-  const { roles, isPlatformAdmin } = useAuth();
+  const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
   const [examinations, setExaminations] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('submissions');
 
-  const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin });
+  const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
 
   const isPrincipalOrAdmin = [
     'super_admin',

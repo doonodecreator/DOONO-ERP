@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { getPrimaryRoleSlug } from '../utils/role';
 
 export default function ResultEntry({ setPage }) {
-  const { roles, isPlatformAdmin } = useAuth();
+  const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -24,7 +24,7 @@ export default function ResultEntry({ setPage }) {
   const [scores, setScores] = useState({});
   const [isLocked, setIsLocked] = useState(false);
 
-  const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin });
+  const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
 
   const isPrincipalOrAdmin = [
     'super_admin',

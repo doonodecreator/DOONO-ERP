@@ -21,9 +21,36 @@ class CurrentContextService
     public function resolve(User $user): array
     {
         $isPlatformAdmin = $user->isSuperAdmin();
-
         $school = $this->currentSchool($user);
         $organization = $this->currentOrganization($user, $school);
+        $isOrgOwner = $this->isOrganizationOwner($user);
+
+        // Resolve base roles
+        $roles = $user->roles()
+            ->get()
+            ->map(fn ($role) => [
+                'slug' => $role->slug,
+                'name' => $role->name,
+                'school_id' => $role->pivot->school_id,
+                'permissions' => $role->permissions->pluck('slug')->all(),
+            ]);
+
+        // If an Organization Owner has entered a school, grant them the Proprietor role for that school
+        if ($isOrgOwner && $school && $organization && $organization->owner_id === $user->id) {
+            $hasProprietorRole = $roles->contains(function ($r) use ($school) {
+                return $r['slug'] === 'proprietor' && (int)$r['school_id'] === (int)$school->id;
+            });
+
+            if (!$hasProprietorRole) {
+                $proprietorRole = \App\Models\Role::where('slug', 'proprietor')->first();
+                $roles->push([
+                    'slug' => 'proprietor',
+                    'name' => 'Proprietor',
+                    'school_id' => $school->id,
+                    'permissions' => $proprietorRole ? $proprietorRole->permissions->pluck('slug')->all() : [],
+                ]);
+            }
+        }
 
         return [
             'user' => [
@@ -31,26 +58,12 @@ class CurrentContextService
                 'name' => $user->name,
                 'email' => $user->email,
             ],
-
             'is_platform_admin' => $isPlatformAdmin,
-
-            'is_organization_owner' => $this->isOrganizationOwner($user),
-
+            'is_organization_owner' => $isOrgOwner,
             'organization' => $organization,
-
             'school' => $school,
-
-            'roles' => $user->roles()
-                ->get()
-                ->map(fn ($role) => [
-                    'slug' => $role->slug,
-                    'name' => $role->name,
-                    'school_id' => $role->pivot->school_id,
-                ])
-                ->values(),
-
-            'permissions' => $this->resolvePermissions($user),
-
+            'roles' => $roles->map(fn($r) => collect($r)->except('permissions')->all())->values(),
+            'permissions' => $roles->flatMap(fn($r) => $r['permissions'])->unique()->values()->all(),
             'onboarding_step' => $this->resolveOnboardingStep(
                 $isPlatformAdmin,
                 $organization,

@@ -6,11 +6,12 @@ export default function StudentProfile({
   student,
   setPage,
 }) {
-  const { roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
+  const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
   const roleSlug = getPrimaryRoleSlug({
     roles,
     isPlatformAdmin,
     isOrganizationOwner,
+    school,
   });
   const canManageAdmissions = [
     'super_admin',

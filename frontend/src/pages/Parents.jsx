@@ -5,11 +5,12 @@ import { getPrimaryRoleSlug } from '../utils/role';
 import PortalAccountModal from '../components/modals/PortalAccountModal';
 
 export default function Parents({ setPage, setSelectedParent }) {
-  const { roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
+  const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
   const roleSlug = getPrimaryRoleSlug({
     roles,
     isPlatformAdmin,
     isOrganizationOwner,
+    school,
   });
   const canManageLinks = [
     'super_admin',

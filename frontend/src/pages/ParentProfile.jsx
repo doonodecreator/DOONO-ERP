@@ -6,11 +6,12 @@ export default function ParentProfile({
   parent,
   setPage,
 }) {
-  const { roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
+  const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
   const roleSlug = getPrimaryRoleSlug({
     roles,
     isPlatformAdmin,
     isOrganizationOwner,
+    school,
   });
   const canManageLinks = [
     "super_admin",

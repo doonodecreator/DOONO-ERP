@@ -9,7 +9,7 @@ export default function Sidebar({
   closeSidebar,
 }) {
   const { roles, isPlatformAdmin, isOrganizationOwner, school, refreshContext } = useAuth();
-  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner });
+  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
 
   const backToOrganization = async () => {
     try {
