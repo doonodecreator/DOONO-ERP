@@ -109,8 +109,22 @@ class User extends Authenticatable
             $roles->wherePivot('school_id', $schoolId);
         }
 
-        return $roles
+        if ($roles
             ->whereHas('permissions', function ($query) use ($permissionSlug) {
+                $query->where('slug', $permissionSlug);
+            })
+            ->exists()) {
+            return true;
+        }
+
+        if ($schoolId === null) {
+            return false;
+        }
+
+        return SchoolSetupDelegation::query()
+            ->where('school_id', $schoolId)
+            ->where('user_id', $this->id)
+            ->whereHas('permission', function ($query) use ($permissionSlug) {
                 $query->where('slug', $permissionSlug);
             })
             ->exists();

@@ -20,6 +20,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'Manage Schools', 'slug' => 'manage_schools'],
 
             // Academic
+            ['name' => 'Manage Divisions', 'slug' => 'manage_divisions'],
             ['name' => 'Manage Academic Sessions', 'slug' => 'manage_academic_sessions'],
             ['name' => 'Manage Terms', 'slug' => 'manage_terms'],
             ['name' => 'Manage Classes', 'slug' => 'manage_classes'],

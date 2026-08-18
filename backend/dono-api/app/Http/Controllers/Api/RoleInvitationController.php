@@ -325,6 +325,7 @@ class RoleInvitationController extends Controller
             'status' => $invitation->status,
             'expires_at' => $invitation->expires_at?->toIso8601String(),
             'accepted_at' => $invitation->accepted_at?->toIso8601String(),
+            'accepted_user_id' => $invitation->accepted_user_id,
         ];
     }
 }

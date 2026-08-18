@@ -20,7 +20,7 @@ class StoreDivisionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'school_id' => 'required|exists:schools,id',
+            'school_id' => 'sometimes|exists:schools,id',
             'name' => 'required|string|max:100',
             'code' => 'nullable|string|max:20',
             'display_order' => 'nullable|integer|min:1',
@@ -34,7 +34,6 @@ class StoreDivisionRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'school_id.required' => 'School is required.',
             'school_id.exists' => 'Selected school does not exist.',
             'name.required' => 'Division name is required.',
             'display_order.integer' => 'Display order must be a valid number.',

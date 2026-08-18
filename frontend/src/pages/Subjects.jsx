@@ -1,329 +1,153 @@
-import React, { useState, useEffect } from 'react';
-import api from '../services/api';
+import { useEffect, useState } from "react";
+import api from "../services/api";
+import PageHeader from "../components/layout/PageHeader";
+import LoadingSpinner from "../components/feedback/LoadingSpinner";
+import EmptyState from "../components/feedback/EmptyState";
 
-export default function Subjects({ setPage }) {
-  const [subjects, setSubjects] = useState([]);
-  const [divisions, setDivisions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [editingId, setEditingId] = useState(null);
-
-  const [form, setForm] = useState({
-    name: '',
-    code: '',
-    category: 'Core',
-    division_id: '',
+const emptyForm = {
+    name: "",
+    code: "",
+    category: "Core",
+    division_id: "",
     pass_mark: 40,
     maximum_mark: 100,
     is_active: true,
-    description: '',
-  });
+    description: "",
+};
 
-  useEffect(() => {
-    loadData();
-  }, []);
+const listFromResponse = (response) => {
+    const value = response?.data?.data?.data ?? response?.data?.data ?? response?.data;
+    return Array.isArray(value) ? value : [];
+};
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const [subjRes, divRes] = await Promise.allSettled([
-        api.get('/subjects'),
-        api.get('/divisions'),
-      ]);
+export default function Subjects() {
+    const [subjects, setSubjects] = useState([]);
+    const [divisions, setDivisions] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [formError, setFormError] = useState("");
+    const [showModal, setShowModal] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    const [form, setForm] = useState(emptyForm);
 
-      if (subjRes.status === 'fulfilled') {
-        const sData = subjRes.value.data.data || subjRes.value.data;
-        setSubjects(Array.isArray(sData) ? sData : []);
-      }
-      if (divRes.status === 'fulfilled') {
-        const dData = divRes.value.data.data || divRes.value.data;
-        setDivisions(Array.isArray(dData) ? dData : []);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch subject list.');
-    } fontFinally: {
-      setLoading(false);
-    }
-  };
+    const loadData = async () => {
+        setLoading(true);
+        setError("");
+        try {
+            const [subjectsResponse, divisionsResponse] = await Promise.all([
+                api.get("/subjects"),
+                api.get("/divisions"),
+            ]);
+            setSubjects(listFromResponse(subjectsResponse));
+            setDivisions(listFromResponse(divisionsResponse));
+        } catch (err) {
+            setError(err.response?.data?.message || "Unable to load subjects and divisions.");
+            setSubjects([]);
+            setDivisions([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const handleOpenModal = (subj = null) => {
-    setErrors({});
-    if (subj) {
-      setEditingId(subj.id);
-      setForm({
-        name: subj.name || '',
-        code: subj.code || '',
-        category: subj.category || 'Core',
-        division_id: subj.division_id || '',
-        pass_mark: subj.pass_mark || 40,
-        maximum_mark: subj.maximum_mark || 100,
-        is_active: subj.is_active ?? true,
-        description: subj.description || '',
-      });
-    } else {
-      setEditingId(null);
-      setForm({
-        name: '',
-        code: '',
-        category: 'Core',
-        division_id: divisions[0]?.id || '',
-        pass_mark: 40,
-        maximum_mark: 100,
-        is_active: true,
-        description: '',
-      });
-    }
-    setShowModal(true);
-  };
+    useEffect(() => {
+        loadData();
+    }, []);
 
-  const handleChange = (e) => {
-    const { name, value, checked, type } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: null }));
-    }
-  };
+    const openModal = (subject = null) => {
+        setFormError("");
+        setEditingId(subject?.id || null);
+        setForm(subject ? {
+            name: subject.name || "",
+            code: subject.code || "",
+            category: subject.category || "Core",
+            division_id: subject.division_id || subject.division?.id || "",
+            pass_mark: subject.pass_mark ?? 40,
+            maximum_mark: subject.maximum_mark ?? 100,
+            is_active: subject.is_active ?? true,
+            description: subject.description || "",
+        } : { ...emptyForm, division_id: divisions[0]?.id || "" });
+        setShowModal(true);
+    };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setErrors({});
+    const handleChange = (event) => {
+        const { name, value, checked, type } = event.target;
+        setForm((current) => ({ ...current, [name]: type === "checkbox" ? checked : value }));
+    };
 
-    try {
-      if (editingId) {
-        await api.put(`/subjects/${editingId}`, form);
-      } else {
-        await api.post('/subjects', form);
-      }
-      setShowModal(false);
-      loadData();
-    } catch (err) {
-      if (err.response && err.response.status === 422) {
-        setErrors(err.response.data.errors || {});
-      } else {
-        alert(err.response?.data?.message || 'Failed to save subject.');
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    const saveSubject = async (event) => {
+        event.preventDefault();
+        setSubmitting(true);
+        setFormError("");
+        try {
+            if (editingId) {
+                await api.put(`/subjects/${editingId}`, form);
+            } else {
+                await api.post("/subjects", form);
+            }
+            setShowModal(false);
+            setForm(emptyForm);
+            await loadData();
+        } catch (err) {
+            const validationErrors = err.response?.data?.errors;
+            setFormError(validationErrors ? Object.values(validationErrors).flat().join(" ") : (err.response?.data?.message || "Unable to save subject."));
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to remove subject "${name}"?`)) return;
+    const deleteSubject = async (subject) => {
+        if (!window.confirm(`Delete ${subject.name}?`)) return;
+        try {
+            await api.delete(`/subjects/${subject.id}`);
+            await loadData();
+        } catch (err) {
+            setError(err.response?.data?.message || "Unable to delete subject.");
+        }
+    };
 
-    try {
-      await api.delete(`/subjects/${id}`);
-      loadData();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete subject.');
-    }
-  };
+    return (
+        <div className="p-6">
+            <PageHeader
+                title="Subjects"
+                subtitle="Define the curriculum subjects after divisions, classes, and streams are ready."
+                action={<button type="button" onClick={() => openModal()} className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700">Add Subject</button>}
+            />
 
-  return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Academic Subjects</h1>
-          <p className="text-sm text-gray-500">Manage curriculum subjects, pass marks, and subject categories.</p>
+            {error && <div className="mb-5 rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-700"><span>{error}</span><button type="button" onClick={loadData} className="ml-4 font-semibold underline">Retry</button></div>}
+            {loading ? <LoadingSpinner text="Loading subjects..." /> : subjects.length === 0 ? <EmptyState title="No subjects yet" message="Create the first subject for this school." /> : (
+                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <table className="min-w-full text-left text-sm">
+                        <thead className="bg-slate-50 text-slate-600"><tr><th className="px-5 py-3">Name</th><th className="px-5 py-3">Division</th><th className="px-5 py-3">Code</th><th className="px-5 py-3">Pass / Max</th><th className="px-5 py-3">Status</th><th className="px-5 py-3 text-right">Actions</th></tr></thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {subjects.map((subject) => <tr key={subject.id}>
+                                <td className="px-5 py-4 font-semibold text-slate-900">{subject.name}</td>
+                                <td className="px-5 py-4">{subject.division?.name || divisions.find((division) => String(division.id) === String(subject.division_id))?.name || "—"}</td>
+                                <td className="px-5 py-4">{subject.code || "—"}</td>
+                                <td className="px-5 py-4">{subject.pass_mark ?? 40} / {subject.maximum_mark ?? 100}</td>
+                                <td className="px-5 py-4">{subject.is_active ? "Active" : "Inactive"}</td>
+                                <td className="px-5 py-4 text-right"><button type="button" onClick={() => openModal(subject)} className="mr-3 font-semibold text-indigo-600">Edit</button><button type="button" onClick={() => deleteSubject(subject)} className="font-semibold text-rose-600">Delete</button></td>
+                            </tr>)}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {showModal && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+                <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+                    <div className="mb-5 flex items-center justify-between"><h2 className="text-xl font-bold text-slate-900">{editingId ? "Edit Subject" : "Add Subject"}</h2><button type="button" onClick={() => setShowModal(false)} className="text-slate-500">×</button></div>
+                    {formError && <div className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{formError}</div>}
+                    <form onSubmit={saveSubject} className="space-y-4">
+                        <input required name="name" value={form.name} onChange={handleChange} placeholder="Subject name" className="w-full rounded-lg border border-slate-300 px-3 py-2" />
+                        <div className="grid gap-4 sm:grid-cols-2"><input name="code" value={form.code} onChange={handleChange} placeholder="Code" className="w-full rounded-lg border border-slate-300 px-3 py-2" /><select name="category" value={form.category} onChange={handleChange} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"><option>Core</option><option>Elective</option><option>Vocational</option><option>Trade</option></select></div>
+                        <select required name="division_id" value={form.division_id} onChange={handleChange} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"><option value="">Select division</option>{divisions.map((division) => <option key={division.id} value={division.id}>{division.name}</option>)}</select>
+                        <div className="grid gap-4 sm:grid-cols-2"><input type="number" min="0" name="pass_mark" value={form.pass_mark} onChange={handleChange} placeholder="Pass mark" className="w-full rounded-lg border border-slate-300 px-3 py-2" /><input type="number" min="1" name="maximum_mark" value={form.maximum_mark} onChange={handleChange} placeholder="Maximum mark" className="w-full rounded-lg border border-slate-300 px-3 py-2" /></div>
+                        <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description (optional)" className="min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2" />
+                        <label className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} /> Active subject</label>
+                        <div className="flex justify-end gap-3 border-t border-slate-100 pt-4"><button type="button" onClick={() => setShowModal(false)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">Cancel</button><button disabled={submitting} type="submit" className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{submitting ? "Saving..." : "Save Subject"}</button></div>
+                    </form>
+                </div>
+            </div>}
         </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition shadow-sm"
-        >
-          + Add New Subject
-        </button>
-      </div>
-
-      {error && (
-        <div className="p-4 mb-6 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm flex justify-between items-center">
-          <span>{error}</span>
-          <button onClick={loadData} className="underline font-semibold">Retry</button>
-        </div>
-      )}
-
-      {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {loading ? (
-          <div className="p-12 text-center text-gray-500">Loading subject catalog...</div>
-        ) : subjects.length === 0 ? (
-          <div className="p-12 text-center text-gray-400">
-            <p className="text-base font-medium">No subjects found in curriculum.</p>
-            <p className="text-xs mt-1">Click above to add subjects like Mathematics, English, or Basic Science.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
-                <tr>
-                  <th className="px-6 py-3">Subject Name</th>
-                  <th className="px-6 py-3">Code</th>
-                  <th className="px-6 py-3">Category</th>
-                  <th className="px-6 py-3">Pass / Max Mark</th>
-                  <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {subjects.map((s) => (
-                  <tr key={s.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-gray-900">{s.name}</td>
-                    <td className="px-6 py-4 font-mono text-xs text-gray-600">{s.code || '—'}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-2.5 py-1 bg-purple-50 text-purple-700 rounded-full text-xs font-medium">
-                        {s.category || 'Core'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 font-mono text-xs">
-                      <span className="text-red-600 font-semibold">{s.pass_mark || 40}</span> / {s.maximum_mark || 100}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${
-                        s.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {s.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleOpenModal(s)}
-                        className="text-blue-600 hover:text-blue-800 font-medium text-xs"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(s.id, s.name)}
-                        className="text-red-600 hover:text-red-800 font-medium text-xs"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-800">
-                {editingId ? 'Edit Subject' : 'Add New Subject'}
-              </h2>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Subject Name *</label>
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="e.g. Mathematics"
-                  value={form.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                />
-                {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name[0]}</p>}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Subject Code</label>
-                  <input
-                    type="text"
-                    name="code"
-                    placeholder="e.g. MATH101"
-                    value={form.code}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
-                  <select
-                    name="category"
-                    value={form.category}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="Core">Core</option>
-                    <option value="Elective">Elective</option>
-                    <option value="Vocational">Vocational</option>
-                    <option value="Trade">Trade</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Pass Mark</label>
-                  <input
-                    type="number"
-                    name="pass_mark"
-                    value={form.pass_mark}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Maximum Mark</label>
-                  <input
-                    type="number"
-                    name="maximum_mark"
-                    value={form.maximum_mark}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2 pt-2">
-                <input
-                  type="checkbox"
-                  id="subj_is_active"
-                  name="is_active"
-                  checked={form.is_active}
-                  onChange={handleChange}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
-                />
-                <label htmlFor="subj_is_active" className="text-sm text-gray-700 font-medium cursor-pointer">
-                  Active Subject in Curriculum
-                </label>
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-4 border-t">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {submitting ? 'Saving...' : editingId ? 'Update Subject' : 'Create Subject'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    );
 }

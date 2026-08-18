@@ -26,6 +26,11 @@ export default function RoleInvitations({ setPage }) {
     const [revokingId, setRevokingId] = useState(null);
     const [error, setError] = useState("");
     const [createdLink, setCreatedLink] = useState("");
+    const [delegations, setDelegations] = useState([]);
+    const [availablePermissions, setAvailablePermissions] = useState([]);
+    const [delegationUserId, setDelegationUserId] = useState("");
+    const [selectedPermissionSlugs, setSelectedPermissionSlugs] = useState([]);
+    const [delegationSaving, setDelegationSaving] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -36,16 +41,22 @@ export default function RoleInvitations({ setPage }) {
         setError("");
 
         try {
-            const [rolesResponse, invitationsResponse] = await Promise.all([
+            const [rolesResponse, invitationsResponse, delegationResponse] = await Promise.all([
                 api.get("/roles"),
                 api.get("/role-invitations"),
+                api.get("/school-setup/delegations"),
             ]);
 
             const availableRoles = Array.isArray(rolesResponse?.data?.data) ? rolesResponse.data.data : [];
             const currentInvitations = Array.isArray(invitationsResponse?.data?.data) ? invitationsResponse.data.data : [];
+            const delegationPayload = delegationResponse?.data || {};
+            const currentDelegations = Array.isArray(delegationPayload.data) ? delegationPayload.data : [];
+            const permissions = Array.isArray(delegationPayload.available_permissions) ? delegationPayload.available_permissions : [];
 
             setRoles(availableRoles);
             setInvitations(currentInvitations);
+            setDelegations(currentDelegations);
+            setAvailablePermissions(permissions);
             setForm((current) => ({
                 ...current,
                 role_slug: current.role_slug || availableRoles[0]?.slug || "",
@@ -100,6 +111,45 @@ export default function RoleInvitations({ setPage }) {
         await navigator.clipboard?.writeText(createdLink);
     };
 
+    const acceptedLeaders = invitations.filter((invitation) =>
+        invitation.status === "accepted"
+        && invitation.accepted_user_id
+        && ["principal", "vice_principal_academic"].includes(invitation.role_slug)
+    );
+
+    const saveDelegation = async (event) => {
+        event.preventDefault();
+        if (!delegationUserId || selectedPermissionSlugs.length === 0) {
+            setError("Select an accepted Principal or Vice Principal Academic and at least one setup permission.");
+            return;
+        }
+        setDelegationSaving(true);
+        setError("");
+        try {
+            await api.put(`/school-setup/delegations/${delegationUserId}`, { permission_slugs: selectedPermissionSlugs });
+            setDelegationUserId("");
+            setSelectedPermissionSlugs([]);
+            await loadData();
+        } catch (err) {
+            setError(err.message || "Unable to update setup delegation.");
+        } finally {
+            setDelegationSaving(false);
+        }
+    };
+
+    const revokeDelegation = async (userId) => {
+        setDelegationSaving(true);
+        setError("");
+        try {
+            await api.delete(`/school-setup/delegations/${userId}`);
+            await loadData();
+        } catch (err) {
+            setError(err.message || "Unable to revoke setup delegation.");
+        } finally {
+            setDelegationSaving(false);
+        }
+    };
+
     if (loading) {
         return <LoadingSpinner text="Loading role invitations..." />;
     }
@@ -128,6 +178,24 @@ export default function RoleInvitations({ setPage }) {
                     </div>
                 </div>
             )}
+
+            <section className="bg-white rounded-2xl border border-indigo-200 shadow-sm p-5 mb-6">
+                <div className="mb-4">
+                    <h2 className="font-bold text-slate-900">Delegate School Setup</h2>
+                    <p className="mt-1 text-xs text-slate-500">Only an accepted Principal or Vice Principal Academic can receive these permissions. Delegation never creates an account or bypasses invitation acceptance.</p>
+                </div>
+                <form onSubmit={saveDelegation} className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-start">
+                    <select value={delegationUserId} onChange={(event) => setDelegationUserId(event.target.value)} className="px-3 py-2 border rounded-lg text-sm bg-white">
+                        <option value="">Select accepted role holder</option>
+                        {acceptedLeaders.map((leader) => <option key={leader.accepted_user_id} value={leader.accepted_user_id}>{leader.name} — {leader.role || leader.role_slug}</option>)}
+                    </select>
+                    <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {availablePermissions.map((permission) => <label key={permission.slug} className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700"><input type="checkbox" checked={selectedPermissionSlugs.includes(permission.slug)} onChange={(event) => setSelectedPermissionSlugs((current) => event.target.checked ? [...new Set([...current, permission.slug])] : current.filter((slug) => slug !== permission.slug))} />{permission.name}</label>)}
+                    </div>
+                    <button disabled={delegationSaving || acceptedLeaders.length === 0} type="submit" className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 lg:col-span-3">{delegationSaving ? "Saving delegation..." : "Save Delegation"}</button>
+                </form>
+                {delegations.length > 0 && <div className="mt-5 border-t border-slate-100 pt-4 space-y-2">{delegations.map((delegation) => <div key={delegation.user?.id} className="flex flex-col gap-2 rounded-lg bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-semibold text-slate-800">{delegation.user?.name || delegation.user?.email}</p><p className="text-xs text-slate-500">{Array.isArray(delegation.permissions) ? delegation.permissions.map((permission) => permission.name).join(", ") : "Delegated setup access"}</p></div><button type="button" disabled={delegationSaving} onClick={() => revokeDelegation(delegation.user?.id)} className="self-start rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700 disabled:opacity-50">Revoke</button></div>)}</div>}
+            </section>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 <form onSubmit={createInvitation} className="xl:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">

@@ -68,6 +68,8 @@ use App\Http\Controllers\Api\StudentPortalController;
 use App\Http\Controllers\Api\ParentPortalController;
 use App\Http\Controllers\Api\RoleInvitationController;
 use App\Http\Controllers\Api\ActivityLogController;
+use App\Http\Controllers\Api\SchoolSetupDelegationController;
+use App\Http\Controllers\Api\SchoolSetupController;
 
 Route::prefix('v1')->group(function () {
     Route::post('payments/paystack/webhook', [PaymentController::class, 'webhook']);
@@ -104,6 +106,13 @@ Route::prefix('v1')->group(function () {
         Route::get('my-subscription', [SchoolSubscriptionController::class, 'mySubscription']);
         Route::apiResource('currencies', CurrencyController::class);
 
+        Route::middleware(['has.school', 'role:proprietor'])->prefix('school-setup')->group(function () {
+            Route::get('progress', [SchoolSetupController::class, 'progress']);
+            Route::get('delegations', [SchoolSetupDelegationController::class, 'index']);
+            Route::put('delegations/{user}', [SchoolSetupDelegationController::class, 'update']);
+            Route::delete('delegations/{user}', [SchoolSetupDelegationController::class, 'destroy']);
+        });
+
         Route::middleware(['has.school', 'subscription'])->group(function () {
             Route::get('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'show']);
             Route::put('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'update']);
@@ -118,15 +127,15 @@ Route::prefix('v1')->group(function () {
             Route::get('secondary-head/dashboard', [SecondaryPrincipalController::class, 'dashboard']);
             Route::get('student/dashboard', [StudentPortalController::class, 'dashboard']);
             Route::get('parent/dashboard', [ParentPortalController::class, 'dashboard']);
-            Route::apiResource('academic-sessions', AcademicSessionController::class);
-            Route::apiResource('terms', TermController::class);
-            Route::apiResource('divisions', DivisionController::class);
-            Route::apiResource('classes', ClassController::class);
-            Route::apiResource('streams', StreamController::class);
-            Route::apiResource('subjects', SubjectController::class);
+            Route::middleware('permission:manage_academic_sessions')->apiResource('academic-sessions', AcademicSessionController::class);
+            Route::middleware('permission:manage_terms')->apiResource('terms', TermController::class);
+            Route::middleware('permission:manage_divisions')->apiResource('divisions', DivisionController::class);
+            Route::middleware('permission:manage_classes')->apiResource('classes', ClassController::class);
+            Route::middleware('permission:manage_streams')->apiResource('streams', StreamController::class);
+            Route::middleware('permission:manage_subjects')->apiResource('subjects', SubjectController::class);
             Route::apiResource('staff', StaffController::class);
-            Route::apiResource('students', StudentController::class);
-            Route::apiResource('parents', ParentController::class);
+            Route::middleware('permission:manage_students')->apiResource('students', StudentController::class);
+            Route::middleware('permission:manage_fee_categories')->apiResource('fees', FeeController::class);
             Route::apiResource('enrollments', StudentEnrollmentController::class);
             Route::apiResource('promotions', StudentPromotionController::class);
             Route::get('attendance', [AttendanceController::class, 'index']);

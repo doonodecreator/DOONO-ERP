@@ -20,7 +20,7 @@ class StoreFeeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'school_id' => 'required|exists:schools,id',
+            'school_id' => 'sometimes|exists:schools,id',
 
             'academic_session_id' => 'required|exists:academic_sessions,id',
 
@@ -48,7 +48,6 @@ class StoreFeeRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'school_id.required' => 'School is required.',
             'school_id.exists' => 'Selected school does not exist.',
 
             'academic_session_id.required' => 'Academic session is required.',

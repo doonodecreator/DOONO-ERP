@@ -33,11 +33,13 @@ export default function Classes() {
       ]);
 
       if (classRes.status === 'fulfilled') {
-        const cData = classRes.value.data.data || classRes.value.data;
+        const resData = classRes.value.data;
+        const cData = resData.data?.data || resData.data || resData;
         setClasses(Array.isArray(cData) ? cData : []);
       }
       if (divRes.status === 'fulfilled') {
-        const dData = divRes.value.data.data || divRes.value.data;
+        const resData = divRes.value.data;
+        const dData = resData.data?.data || resData.data || resData;
         setDivisions(Array.isArray(dData) ? dData : []);
       }
     } catch (err) {
@@ -119,7 +121,6 @@ export default function Classes() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Classes & Academic Streams</h1>
@@ -140,7 +141,6 @@ export default function Classes() {
         </div>
       )}
 
-      {/* Class Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-gray-500">Loading academic classes...</div>
@@ -206,7 +206,6 @@ export default function Classes() {
         )}
       </div>
 
-      {/* Create / Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">

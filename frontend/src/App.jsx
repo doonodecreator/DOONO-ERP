@@ -35,8 +35,9 @@ import Subjects from "./pages/Subjects";
 import AddSubject from "./pages/AddSubject";
 
 import Classes from "./pages/Classes";
-import Divisions from "./pages/Divisions";
 import Streams from "./pages/Streams";
+import SchoolSetup from "./pages/SchoolSetup";
+import Divisions from "./pages/Divisions";
 import AcademicSessions from "./pages/AcademicSessions";
 import Terms from "./pages/Terms";
 
@@ -224,7 +225,12 @@ function AuthenticatedApp() {
     case "add-subject":
       content = <AddSubject setPage={setPage} />;
       break;
-    case "divisions": content = <Divisions />; break;
+    case "school-setup":
+      content = <SchoolSetup setPage={setPage} />;
+      break;
+    case "divisions":
+      content = <Divisions />;
+      break;
     case "classes":
       content = <Classes />;
       break;
