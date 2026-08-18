@@ -15,7 +15,7 @@ export default function Sidebar({
     try {
       await api.post("/me/switch-school", { school_id: null });
       await refreshContext();
-      setPage("dashboard");
+      window.location.href = "/"; // Force a full reload to reset all states
     } catch (err) {
       alert("Failed to switch back to organization context.");
     }

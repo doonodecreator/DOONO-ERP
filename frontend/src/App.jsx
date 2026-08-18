@@ -116,7 +116,7 @@ const ROLE_DASHBOARDS = {
 };
 
 function AuthenticatedApp() {
-  const { onboardingStep, refreshContext, roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
+  const { onboardingStep, refreshContext, roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
 
   const [page, setPage] = useState("dashboard");
 
@@ -136,7 +136,7 @@ function AuthenticatedApp() {
     );
   }
 
-  const roleSlug = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner });
+  const roleSlug = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
   const RoleDashboard = ROLE_DASHBOARDS[roleSlug];
 
   let content = RoleDashboard ? <RoleDashboard setPage={setPage} /> : <Dashboard />;

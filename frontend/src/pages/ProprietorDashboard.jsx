@@ -31,7 +31,8 @@ export default function ProprietorDashboard({ setPage }) {
         const pageMap = {
             staff: "staff",
             leadership: "role-invitations",
-            academics: "school-setup",
+            academics: "classes",
+            school_setup: "school-setup",
             students: "students",
             finance: "fees",
             reports: "report-cards",
