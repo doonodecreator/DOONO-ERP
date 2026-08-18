@@ -32,33 +32,41 @@ export default function FeesAndPayments() {
         try {
             setLoading(true);
             setError(null);
-            const [structRes, payRes, sessRes, termRes, classRes] = await Promise.allSettled([
+            const responses = await Promise.allSettled([
                 api.get("/fees"),
-                api.get("/payment-receipts"),
+                api.get("/fee-payments"),
                 api.get("/academic-sessions"),
                 api.get("/terms"),
                 api.get("/classes")
             ]);
 
+            const [structRes, payRes, sessRes, termRes, classRes] = responses;
+            const failures = responses.filter((response) => response.status === "rejected");
+
             if (structRes.status === "fulfilled") {
-                const data = structRes.value.data.data || structRes.value.data;
+                const data = structRes.value?.data?.data?.data ?? structRes.value?.data?.data ?? structRes.value?.data ?? [];
                 setStructures(Array.isArray(data) ? data : []);
             }
             if (payRes.status === "fulfilled") {
-                const data = payRes.value.data.data || payRes.value.data;
+                const data = payRes.value?.data?.data?.data ?? payRes.value?.data?.data ?? payRes.value?.data ?? [];
                 setPayments(Array.isArray(data) ? data : []);
             }
             if (sessRes.status === "fulfilled") {
-                const data = sessRes.value.data.data || sessRes.value.data;
+                const data = sessRes.value?.data?.data?.data ?? sessRes.value?.data?.data ?? sessRes.value?.data ?? [];
                 setSessions(Array.isArray(data) ? data : []);
             }
             if (termRes.status === "fulfilled") {
-                const data = termRes.value.data.data || termRes.value.data;
+                const data = termRes.value?.data?.data?.data ?? termRes.value?.data?.data ?? termRes.value?.data ?? [];
                 setTerms(Array.isArray(data) ? data : []);
             }
             if (classRes.status === "fulfilled") {
-                const data = classRes.value.data.data || classRes.value.data;
+                const data = classRes.value?.data?.data?.data ?? classRes.value?.data?.data ?? classRes.value?.data ?? [];
                 setClasses(Array.isArray(data) ? data : []);
+            }
+
+            if (failures.length > 0) {
+                const firstFailure = failures[0].reason;
+                throw new Error(firstFailure?.response?.data?.message || firstFailure?.message || "Some fee configuration data could not be loaded.");
             }
         } catch (err) {
             setError(err.response?.data?.message || "Failed to load fee configuration data.");

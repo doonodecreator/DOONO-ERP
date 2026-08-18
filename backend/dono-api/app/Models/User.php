@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -54,7 +55,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(School::class, 'owner_id');
     }
-    
+
     public function currentSchool()
     {
         return $this->belongsTo(School::class, 'current_school_id');
@@ -123,7 +124,7 @@ class User extends Authenticatable
             return true;
         }
 
-        if ($schoolId === null) {
+        if ($schoolId === null || ! Schema::hasTable('school_setup_delegations')) {
             return false;
         }
 

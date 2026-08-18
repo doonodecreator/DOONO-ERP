@@ -11,6 +11,7 @@ use App\Models\StudentFee;
 use App\Services\CurrentContextService;
 use App\Services\Finance\PaymentService;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class FeePaymentController extends Controller
 {
@@ -38,6 +39,18 @@ class FeePaymentController extends Controller
     public function store(StoreFeePaymentRequest $request)
     {
         $data = $request->validated();
+        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+
+        $studentFee = StudentFee::whereKey($data['student_fee_id'])
+            ->whereHas('studentEnrollment.student', function ($query) use ($schoolId) {
+                $query->where('school_id', $schoolId);
+            })
+            ->first();
+
+        if (! $studentFee) {
+            throw new NotFoundHttpException('The selected student fee does not belong to the current school.');
+        }
+
         $data['staff_id'] = $request->user()->id;
 
         $payment = $this->paymentService->recordPayment($data);
@@ -47,15 +60,29 @@ class FeePaymentController extends Controller
         );
     }
 
-    public function show(FeePayment $feePayment)
+    public function show(Request $request, FeePayment $feePayment)
     {
+        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+        $feePayment->load('studentFee.studentEnrollment.student');
+
+        if ((int) $feePayment->studentFee?->studentEnrollment?->student?->school_id !== (int) $schoolId) {
+            throw new NotFoundHttpException('Payment not found in the current school.');
+        }
+
         return new FeePaymentResource(
             $feePayment->load(['studentFee.studentEnrollment.student', 'staff', 'receipt'])
         );
     }
 
-    public function destroy(FeePayment $feePayment)
+    public function destroy(Request $request, FeePayment $feePayment)
     {
+        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+        $feePayment->load('studentFee.studentEnrollment.student');
+
+        if ((int) $feePayment->studentFee?->studentEnrollment?->student?->school_id !== (int) $schoolId) {
+            throw new NotFoundHttpException('Payment not found in the current school.');
+        }
+
         $studentFee = $feePayment->studentFee;
         $feePayment->delete();
 

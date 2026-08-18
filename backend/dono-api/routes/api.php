@@ -96,7 +96,7 @@ Route::prefix('v1')->group(function () {
         Route::middleware('role:super_admin')->group(function () {
             Route::get('system-settings', [SystemSettingController::class, 'index']);
             Route::put('system-settings', [SystemSettingController::class, 'update']);
-            Route::apiResource('subscription-plans', SubscriptionPlanController::class);
+            Route::apiResource('subscription-plans', SubscriptionPlanController::class)->except(['index', 'show']);
             Route::apiResource('school-subscriptions', SchoolSubscriptionController::class);
             Route::apiResource('coupons', CouponController::class);
             Route::apiResource('promo-campaigns', PromoCampaignController::class);
@@ -104,6 +104,8 @@ Route::prefix('v1')->group(function () {
             Route::get('platform-owner/dashboard', [PlatformOwnerController::class, 'dashboard']);
         });
 
+        Route::get('subscription-plans', [SubscriptionPlanController::class, 'index']);
+        Route::get('subscription-plans/{subscriptionPlan}', [SubscriptionPlanController::class, 'show']);
         Route::apiResource('organizations', OrganizationController::class);
         Route::apiResource('schools', SchoolController::class);
         Route::get('my-subscription', [SchoolSubscriptionController::class, 'mySubscription']);
@@ -140,6 +142,8 @@ Route::prefix('v1')->group(function () {
             Route::middleware('permission:manage_students')->apiResource('students', StudentController::class);
             Route::middleware('permission:manage_fee_categories')->apiResource('fees', FeeController::class);
             Route::apiResource('enrollments', StudentEnrollmentController::class);
+            Route::apiResource('fee-payments', FeePaymentController::class)->only(['index', 'store', 'show', 'destroy']);
+            Route::apiResource('payment-receipts', PaymentReceiptController::class)->only(['index', 'show']);
             Route::apiResource('promotions', StudentPromotionController::class);
             Route::get('attendance', [AttendanceController::class, 'index']);
             Route::post('attendance/bulk', [AttendanceController::class, 'bulkStore']);

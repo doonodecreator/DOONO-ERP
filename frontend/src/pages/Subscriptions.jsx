@@ -15,7 +15,7 @@ export default function Subscriptions() {
     const [mySub, setMySub] = useState(null);
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
-    
+
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState({});
@@ -35,13 +35,12 @@ export default function Subscriptions() {
             setData(Array.isArray(items) ? items : []);
 
             if (!isPlatformAdmin && activeTab === "plans") {
-                try {
-                    const subRes = await api.get("/my-subscription");
-                    setMySub(subRes.data?.data || subRes.data || null);
-                } catch (e) { console.log("No school context."); }
+                const subRes = await api.get("/my-subscription");
+                setMySub(subRes.data?.data || subRes.data || null);
             }
         } catch (err) {
-            setError(`Failed to load ${activeTab}. Please try again.`);
+            setData([]);
+            setError(err.response?.data?.message || `Failed to load ${activeTab}. Please try again.`);
         } finally {
             setLoading(false);
         }
@@ -116,9 +115,9 @@ export default function Subscriptions() {
     if (isPlatformAdmin) {
         return (
             <PageContainer>
-                <PageHeader 
-                    title="Platform Management" 
-                    subtitle="Software Owner Control Panel" 
+                <PageHeader
+                    title="Platform Management"
+                    subtitle="Software Owner Control Panel"
                     action={
                         <button onClick={() => setShowForm(!showForm)} style={{ backgroundColor: showForm ? '#ef4444' : '#4f46e5', color: '#fff', padding: '10px 20px', borderRadius: '10px', fontWeight: 'bold', border: 'none' }}>
                             {showForm ? 'Cancel' : `+ Create ${activeTab.slice(0, -1)}`}
@@ -134,7 +133,7 @@ export default function Subscriptions() {
                         <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '20px' }}>{editingId ? 'Edit' : 'New'} {activeTab.slice(0, -1)}</h3>
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <input style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Name" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} required />
-                            
+
                             {activeTab === "plans" && (
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                     <input type="number" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Monthly Price" value={formData.monthly_price || ''} onChange={e => setFormData({...formData, monthly_price: e.target.value})} required />
@@ -217,9 +216,9 @@ export default function Subscriptions() {
                 </div>
 
                 <div style={{ backgroundColor: '#fff', borderRadius: '20px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                    <DataTable 
+                    <DataTable
                         columns={[
-                            {key: 'name', label: 'Name'}, 
+                            {key: 'name', label: 'Name'},
                             activeTab === 'plans' ? {key: 'monthly_price', label: 'Monthly', render: (row) => `${row.currency} ${row.monthly_price}`} : {key: 'discount_value', label: 'Discount', render: (row) => `${row.discount_value}${row.discount_type === 'percentage' ? '%' : ''}`},
                             {key: 'is_active', label: 'Status', render: (row) => row.is_active ? 'Active' : 'Inactive'},
                             {key: 'actions', label: 'Actions', render: (row) => (
@@ -240,6 +239,13 @@ export default function Subscriptions() {
     return (
         <PageContainer>
             <PageHeader title="Subscription" subtitle="Manage your school's access." />
+            {error && (
+                <div role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                    <span>{error}</span>
+                    <button type="button" onClick={loadData} className="ml-4 font-semibold underline">Retry</button>
+                </div>
+            )}
+            {message && <div role="status" className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{message}</div>}
             {mySub && (
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8 shadow-sm">
                     <h3 className="text-lg font-bold">Current Plan: {mySub.plan?.name}</h3>

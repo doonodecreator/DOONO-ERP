@@ -81,9 +81,13 @@ export default function Fees({ setPage }) {
         if (!selectedFee) return;
 
         try {
-            await api.post("/payment-receipts", {
+            await api.post("/fee-payments", {
                 student_fee_id: selectedFee.id,
-                ...paymentForm
+                amount_paid: paymentForm.amount_paid,
+                payment_date: paymentForm.payment_date,
+                payment_method: paymentForm.payment_method,
+                transaction_reference: paymentForm.transaction_reference,
+                remarks: paymentForm.remarks,
             });
             setSuccessMsg("Payment recorded successfully!");
             setShowPayModal(false);
