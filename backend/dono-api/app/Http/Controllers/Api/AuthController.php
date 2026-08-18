@@ -123,4 +123,37 @@ class AuthController extends Controller
     {
         return response()->json($this->context->resolve($request->user()));
     }
+
+    /**
+     * POST /api/me/switch-school — allows an Organization Owner or multi-school
+     * user to explicitly select which school context they are currently managing.
+     */
+    public function switchSchool(Request $request)
+    {
+        $request->validate([
+            'school_id' => ['nullable', 'exists:schools,id'],
+        ]);
+
+        $user = $request->user();
+        $schoolId = $request->school_id;
+
+        if ($schoolId) {
+            // Verify access before allowing the switch
+            $isOwner = DB::table('schools')->where('id', $schoolId)->where('owner_id', $user->id)->exists();
+            $hasRole = $user->roles()->wherePivot('school_id', $schoolId)->exists();
+
+            if (!$isOwner && !$hasRole) {
+                return response()->json([
+                    'message' => 'You do not have access to this school.',
+                ], 403);
+            }
+        }
+
+        $user->update(['current_school_id' => $schoolId]);
+
+        return response()->json([
+            'message' => $schoolId ? 'School context switched.' : 'Switched to organization context.',
+            ...$this->context->resolve($user),
+        ]);
+    }
 }

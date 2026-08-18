@@ -1,4 +1,5 @@
 import { useAuth } from "../context/AuthContext";
+import api from "../services/api";
 import { getPrimaryRoleSlug } from "../utils/role";
 
 export default function Sidebar({
@@ -7,8 +8,18 @@ export default function Sidebar({
   open,
   closeSidebar,
 }) {
-  const { roles, isPlatformAdmin, isOrganizationOwner } = useAuth();
+  const { roles, isPlatformAdmin, isOrganizationOwner, school, refreshContext } = useAuth();
   const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner });
+
+  const backToOrganization = async () => {
+    try {
+      await api.post("/me/switch-school", { school_id: null });
+      await refreshContext();
+      setPage("dashboard");
+    } catch (err) {
+      alert("Failed to switch back to organization context.");
+    }
+  };
 
   const platformMenuItems = [
     { name: "Dashboard", page: "dashboard" },
@@ -138,6 +149,25 @@ export default function Sidebar({
         </div>
 
         <nav style={{ padding: "10px 0" }}>
+          {isOrganizationOwner && school && (
+            <div
+              onClick={backToOrganization}
+              style={{
+                padding: "14px 20px",
+                cursor: "pointer",
+                background: "rgba(16, 185, 129, 0.15)",
+                borderBottom: "1px solid rgba(255,255,255,.15)",
+                color: "#34d399",
+                fontWeight: "700",
+                fontSize: "13px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              ← Back to Organization
+            </div>
+          )}
           {menuItems.map((item) => (
             <div
               key={item.page}

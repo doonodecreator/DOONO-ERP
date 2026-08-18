@@ -68,6 +68,21 @@ class CurrentContextService
      */
     public function currentSchool(User $user): ?School
     {
+        // 1. Explicitly selected school (stored on user profile)
+        if ($user->current_school_id) {
+            $selectedSchool = School::find($user->current_school_id);
+            if ($selectedSchool) {
+                // Ensure the user actually has access to this school
+                $isOwner = $selectedSchool->owner_id === $user->id;
+                $hasRole = $user->roles()->wherePivot('school_id', $selectedSchool->id)->exists();
+                
+                if ($isOwner || $hasRole) {
+                    return $selectedSchool;
+                }
+            }
+        }
+
+        // 2. Fallback: School attached to one of the user's roles.
         $roleWithSchool = $user->roles()
             ->wherePivotNotNull('school_id')
             ->orderByDesc('user_roles.created_at')
@@ -77,6 +92,7 @@ class CurrentContextService
             return School::find($roleWithSchool->pivot->school_id);
         }
 
+        // 3. Fallback: First school directly owned by the user.
         return $user->ownedSchools()
             ->latest()
             ->first();

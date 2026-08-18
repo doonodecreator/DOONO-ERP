@@ -2,12 +2,15 @@ import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import EmptyState from "../components/feedback/EmptyState";
 import LoadingSpinner from "../components/feedback/LoadingSpinner";
+import { useAuth } from "../context/AuthContext";
 
 export default function OrganizationOwnerDashboard({ setPage }) {
+    const { refreshContext } = useAuth();
     const [activeTab, setActiveTab] = useState("dashboard");
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(null);
     const [error, setError] = useState("");
+    const [switchingId, setSwitchingId] = useState(null);
 
     useEffect(() => {
         loadOrgData();
@@ -25,6 +28,19 @@ export default function OrganizationOwnerDashboard({ setPage }) {
             setError(err.message || "Unable to load the organization dashboard.");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const manageSchool = async (schoolId) => {
+        setSwitchingId(schoolId);
+        try {
+            await api.post("/me/switch-school", { school_id: schoolId });
+            await refreshContext();
+            window.location.href = "/"; // Navigate to dashboard
+        } catch (err) {
+            alert(err.response?.data?.message || "Failed to switch to school context.");
+        } finally {
+            setSwitchingId(null);
         }
     };
 
@@ -150,7 +166,14 @@ export default function OrganizationOwnerDashboard({ setPage }) {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <span className="bg-emerald-50 text-emerald-700 text-xs px-2.5 py-1 rounded-md font-bold">{school.status || "Unknown"}</span>
-                                            <button type="button" onClick={() => openTab("my_schools")} className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200">Manage</button>
+                                            <button 
+                                                type="button" 
+                                                disabled={switchingId === school.id}
+                                                onClick={() => manageSchool(school.id)} 
+                                                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 disabled:opacity-50"
+                                            >
+                                                {switchingId === school.id ? "Entering..." : "Manage"}
+                                            </button>
                                         </div>
                                     </div>
                                 ))}

@@ -16,6 +16,7 @@ class User extends Authenticatable
         'email',
         'password',
         'email_verified_at',
+        'current_school_id',
     ];
 
     protected $hidden = [
@@ -52,6 +53,11 @@ class User extends Authenticatable
     public function ownedSchools()
     {
         return $this->hasMany(School::class, 'owner_id');
+    }
+    
+    public function currentSchool()
+    {
+        return $this->belongsTo(School::class, 'current_school_id');
     }
 
     /*

@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
@@ -83,8 +84,10 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me/context', [AuthController::class, 'context']);
+        Route::post('/me/switch-school', [AuthController::class, 'switchSchool']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/dashboard', [DashboardController::class, 'index']);
+        Route::get('/org-owner/dashboard', [OrganizationOwnerController::class, 'dashboard']);
         Route::get('/activity-logs', [ActivityLogController::class, 'index']);
         Route::post('role-invitations/accept-authenticated', [RoleInvitationController::class, 'acceptAuthenticated']);
         Route::apiResource('role-invitations', RoleInvitationController::class)->except(['show', 'update']);
@@ -148,6 +151,23 @@ Route::prefix('v1')->group(function () {
                 Route::get('/students', [ResultEntryController::class, 'students']);
                 Route::post('/save', [ResultEntryController::class, 'save']);
             });
+            Route::apiResource('examinations', ExaminationController::class);
+            Route::apiResource('exam-scores', ExamScoreController::class);
+            Route::apiResource('timetables', TimetableController::class);
+            Route::apiResource('books', BookController::class);
+            Route::apiResource('book-loans', BookLoanController::class);
+            Route::apiResource('hostels', HostelController::class);
+            Route::apiResource('hostel-rooms', HostelRoomController::class);
+            Route::apiResource('hostel-allocations', HostelAllocationController::class);
+            Route::apiResource('expenses', ExpenseController::class);
+            Route::apiResource('medical-records', MedicalRecordController::class);
+            Route::apiResource('clinic-visits', ClinicVisitController::class);
+            Route::apiResource('vehicles', VehicleController::class);
+            Route::apiResource('transport-routes', TransportRouteController::class);
+            Route::apiResource('transport-allocations', TransportAllocationController::class);
+            Route::apiResource('visitors', VisitorController::class);
+            Route::apiResource('gate-passes', StudentGatePassController::class);
+            Route::apiResource('appointments', ReceptionAppointmentController::class);
         });
     });
 });
