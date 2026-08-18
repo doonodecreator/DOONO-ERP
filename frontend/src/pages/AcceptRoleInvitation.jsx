@@ -7,7 +7,7 @@ import { useAuth } from "../context/AuthContext";
 export default function AcceptRoleInvitation() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { isAuthenticated, login, refreshContext } = useAuth();
+    const { isAuthenticated, user, login, logout, refreshContext } = useAuth();
     const token = searchParams.get("token") || "";
     const [preview, setPreview] = useState(null);
     const [form, setForm] = useState({ email: "", password: "", password_confirmation: "" });
@@ -29,7 +29,7 @@ export default function AcceptRoleInvitation() {
                 setPreview(invitation);
                 setForm((current) => ({ ...current, email: invitation?.email || "" }));
             } catch (err) {
-                setError(err.message || "This invitation is invalid or expired.");
+                setError(err.response?.data?.message || err.message || "This invitation is invalid or expired.");
             } finally {
                 setLoading(false);
             }
@@ -49,17 +49,24 @@ export default function AcceptRoleInvitation() {
         setError("");
 
         try {
+            let acceptanceResponse;
             if (isAuthenticated) {
-                await api.post("/role-invitations/accept-authenticated", { token });
+                if (user?.email && preview?.email && user.email.toLowerCase() !== preview.email.toLowerCase()) {
+                    setError(`This invitation is for ${preview.email}. Sign out and sign in with that email before accepting it.`);
+                    return;
+                }
+                acceptanceResponse = await api.post("/role-invitations/accept-authenticated", { token });
                 await refreshContext();
             } else {
-                const response = await api.post("/role-invitations/accept", { ...form, token });
-                await login(response.data.token);
+                acceptanceResponse = await api.post("/role-invitations/accept", { ...form, token });
+                await login(acceptanceResponse.data.token);
             }
 
-            navigate("/", { replace: true });
+            const staffId = acceptanceResponse?.data?.staff_id;
+            navigate(staffId ? `/role-invitation/profile?staff_id=${encodeURIComponent(staffId)}` : "/", { replace: true });
         } catch (err) {
-            setError(err.message || "Unable to accept this invitation.");
+            const validationMessage = err.errors ? Object.values(err.errors).flat().join(" ") : "";
+            setError(err.response?.data?.message || validationMessage || err.message || "Unable to accept this invitation.");
         } finally {
             setSubmitting(false);
         }
@@ -89,8 +96,12 @@ export default function AcceptRoleInvitation() {
                                 <input required type="email" name="email" value={form.email} onChange={handleChange} placeholder="Invitation email" className="w-full px-3 py-2 border rounded-lg text-sm" />
                                 <input required minLength={8} type="password" name="password" value={form.password} onChange={handleChange} placeholder="Create your password" className="w-full px-3 py-2 border rounded-lg text-sm" />
                                 <input required minLength={8} type="password" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} placeholder="Confirm your password" className="w-full px-3 py-2 border rounded-lg text-sm" />
-                                <p className="text-xs text-slate-500">If this email already has a DONO account, sign in first and reopen this invitation link.</p>
+                                <p className="text-xs text-slate-500">Use exactly the invited email. Your staff profile will be created from the details entered by the Proprietor.</p>
+                                <button type="button" onClick={() => navigate(`/login?returnTo=${encodeURIComponent(`/role-invitation/accept?token=${token}`)}`)} className="text-left text-xs font-semibold text-indigo-600 underline">Already have an account? Sign in first</button>
                             </>
+                        )}
+                        {isAuthenticated && user?.email && preview?.email && user.email.toLowerCase() !== preview.email.toLowerCase() && (
+                            <button type="button" onClick={logout} className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Sign out and use the invited email</button>
                         )}
                         <button type="submit" disabled={submitting} className="w-full px-4 py-2.5 bg-amber-600 text-white rounded-lg font-semibold text-sm disabled:opacity-50">
                             {submitting ? "Activating Role..." : isAuthenticated ? "Accept and Activate Role" : "Create Account and Accept Role"}

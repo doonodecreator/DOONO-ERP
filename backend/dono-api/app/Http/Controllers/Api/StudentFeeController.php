@@ -9,6 +9,7 @@ use App\Http\Resources\StudentFeeResource;
 use App\Models\StudentFee;
 use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class StudentFeeController extends Controller
 {
@@ -57,6 +58,8 @@ class StudentFeeController extends Controller
 
     public function show(Request $request, StudentFee $studentFee)
     {
+        $this->assertBelongsToCurrentSchool($request, $studentFee);
+
         return new StudentFeeResource(
             $studentFee->load([
                 'studentEnrollment.student',
@@ -70,6 +73,7 @@ class StudentFeeController extends Controller
 
     public function update(UpdateStudentFeeRequest $request, StudentFee $studentFee)
     {
+        $this->assertBelongsToCurrentSchool($request, $studentFee);
         $studentFee->update($request->validated());
 
         return new StudentFeeResource(
@@ -83,12 +87,23 @@ class StudentFeeController extends Controller
         );
     }
 
-    public function destroy(StudentFee $studentFee)
+    public function destroy(Request $request, StudentFee $studentFee)
     {
+        $this->assertBelongsToCurrentSchool($request, $studentFee);
         $studentFee->delete();
 
         return response()->json([
             'message' => 'Student fee deleted successfully.',
         ]);
+    }
+
+    private function assertBelongsToCurrentSchool(Request $request, StudentFee $studentFee): void
+    {
+        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+        $studentFee->loadMissing('studentEnrollment.student');
+
+        if ((int) $studentFee->studentEnrollment?->student?->school_id !== (int) $schoolId) {
+            throw new NotFoundHttpException('Invoice not found in the current school.');
+        }
     }
 }

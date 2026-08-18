@@ -90,6 +90,7 @@ import FormTeacherDashboard from "./pages/FormTeacherDashboard";
 import OrganizationOwnerDashboard from "./pages/OrganizationOwnerDashboard";
 import RoleInvitations from "./pages/RoleInvitations";
 import AcceptRoleInvitation from "./pages/AcceptRoleInvitation";
+import InvitationProfileSetup from "./pages/InvitationProfileSetup";
 
 const ROLE_DASHBOARDS = {
   super_admin: PlatformOwnerDashboard,
@@ -274,7 +275,7 @@ function AuthenticatedApp() {
       content = <ResultEntry />;
       break;
     case "fees":
-      content = <Fees />;
+      content = <Fees setPage={setPage} />;
       break;
     case "fees-payments":
       content = <FeesAndPayments />;
@@ -336,6 +337,11 @@ export default function App() {
       <Route
         path="/role-invitation/accept"
         element={<AcceptRoleInvitation />}
+      />
+
+      <Route
+        path="/role-invitation/profile"
+        element={isAuthenticated ? <InvitationProfileSetup /> : <Navigate to="/login" replace />}
       />
 
       <Route

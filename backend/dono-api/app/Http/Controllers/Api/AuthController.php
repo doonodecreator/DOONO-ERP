@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use App\Models\Staff;
 use App\Models\User;
+use App\Http\Resources\StaffResource;
 use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -128,6 +130,34 @@ class AuthController extends Controller
      * POST /api/me/switch-school — allows an Organization Owner or multi-school
      * user to explicitly select which school context they are currently managing.
      */
+    public function staffProfile(Request $request)
+    {
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+        $staff = Staff::where('school_id', $schoolId)->where('user_id', $request->user()->id)->first();
+
+        abort_unless($staff, 404, 'No staff profile is linked to this account in the active school.');
+
+        return new StaffResource($staff->load('school'));
+    }
+
+    public function updateStaffProfile(Request $request)
+    {
+        $validated = $request->validate([
+            'phone' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string'],
+            'date_of_birth' => ['nullable', 'date'],
+            'qualification' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+        $staff = Staff::where('school_id', $schoolId)->where('user_id', $request->user()->id)->first();
+
+        abort_unless($staff, 404, 'No staff profile is linked to this account in the active school.');
+        $staff->update($validated);
+
+        return new StaffResource($staff->fresh()->load('school'));
+    }
+
     public function switchSchool(Request $request)
     {
         $request->validate([

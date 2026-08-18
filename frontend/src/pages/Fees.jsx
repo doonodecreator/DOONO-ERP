@@ -41,7 +41,7 @@ export default function Fees({ setPage }) {
         try {
             setLoading(true);
             setError("");
-            const [feeRes, structRes, sessionRes, termRes, classRes] = await Promise.allSettled([
+            const responses = await Promise.allSettled([
                 api.get("/student-fees"),
                 api.get("/fees"),
                 api.get("/academic-sessions"),
@@ -49,25 +49,18 @@ export default function Fees({ setPage }) {
                 api.get("/classes")
             ]);
 
-            if (feeRes.status === "fulfilled") {
-                const data = feeRes.value.data.data || feeRes.value.data;
-                setStudentFees(Array.isArray(data) ? data : []);
-            }
-            if (structRes.status === "fulfilled") {
-                const data = structRes.value.data.data || structRes.value.data;
-                setFeeStructures(Array.isArray(data) ? data : []);
-            }
-            if (sessionRes.status === "fulfilled") {
-                const data = sessionRes.value.data.data || sessionRes.value.data;
-                setSessions(Array.isArray(data) ? data : []);
-            }
-            if (termRes.status === "fulfilled") {
-                const data = termRes.value.data.data || termRes.value.data;
-                setTerms(Array.isArray(data) ? data : []);
-            }
-            if (classRes.status === "fulfilled") {
-                const data = classRes.value.data.data || classRes.value.data;
-                setClasses(Array.isArray(data) ? data : []);
+            const [feeRes, structRes, sessionRes, termRes, classRes] = responses;
+            const readList = (response) => response?.data?.data?.data ?? response?.data?.data ?? response?.data ?? [];
+
+            if (feeRes.status === "fulfilled") setStudentFees(Array.isArray(readList(feeRes.value)) ? readList(feeRes.value) : []);
+            if (structRes.status === "fulfilled") setFeeStructures(Array.isArray(readList(structRes.value)) ? readList(structRes.value) : []);
+            if (sessionRes.status === "fulfilled") setSessions(Array.isArray(readList(sessionRes.value)) ? readList(sessionRes.value) : []);
+            if (termRes.status === "fulfilled") setTerms(Array.isArray(readList(termRes.value)) ? readList(termRes.value) : []);
+            if (classRes.status === "fulfilled") setClasses(Array.isArray(readList(classRes.value)) ? readList(classRes.value) : []);
+
+            const failedResponse = responses.find((response) => response.status === "rejected");
+            if (failedResponse) {
+                throw new Error(failedResponse.reason?.response?.data?.message || failedResponse.reason?.message || "Some finance data could not be loaded.");
             }
         } catch (err) {
             setError(err.message || "Failed to load fee management data.");
@@ -94,7 +87,7 @@ export default function Fees({ setPage }) {
             setSelectedFee(null);
             loadFinancialData();
         } catch (err) {
-            alert(err.message || "Failed to process payment.");
+            alert(err.response?.data?.message || err.message || "Failed to process payment.");
         }
     };
 

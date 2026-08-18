@@ -7,6 +7,7 @@ export default function ProprietorDashboard({ setPage }) {
     const [activeTab, setActiveTab] = useState("dashboard");
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState(null);
+    const [setupProgress, setSetupProgress] = useState(null);
     const [error, setError] = useState("");
 
     useEffect(() => {
@@ -17,11 +18,23 @@ export default function ProprietorDashboard({ setPage }) {
         setLoading(true);
         setError("");
         try {
-            const res = await api.get("/proprietor/dashboard");
-            setData(res?.data || null);
+            const [dashboardResponse, progressResponse] = await Promise.allSettled([
+                api.get("/proprietor/dashboard"),
+                api.get("/school-setup/progress"),
+            ]);
+
+            if (dashboardResponse.status === "fulfilled") {
+                setData(dashboardResponse.value?.data || null);
+            } else {
+                throw dashboardResponse.reason;
+            }
+
+            if (progressResponse.status === "fulfilled") {
+                setSetupProgress(progressResponse.value?.data || null);
+            }
         } catch (err) {
             setData(null);
-            setError(err.message || "Unable to load the Proprietor dashboard.");
+            setError(err.response?.data?.message || err.message || "Unable to load the Proprietor dashboard.");
         } finally {
             setLoading(false);
         }
@@ -31,7 +44,7 @@ export default function ProprietorDashboard({ setPage }) {
         const pageMap = {
             staff: "staff",
             leadership: "role-invitations",
-            academics: "classes",
+            academics: "school-setup",
             school_setup: "school-setup",
             students: "students",
             finance: "fees",
@@ -63,8 +76,8 @@ export default function ProprietorDashboard({ setPage }) {
         { id: "dashboard", label: "Dashboard" },
         { id: "staff", label: "Staff Management" },
         { id: "leadership", label: "Leadership Assignment" },
-        { id: "academics", label: "Academic Management" },
-        { id: "school_setup", label: "Initial School Setup" },
+        { id: "academics", label: "Academic Setup" },
+        { id: "school_setup", label: "Setup Checklist" },
         { id: "students", label: "Student Management" },
         { id: "finance", label: "Finance Management" },
         { id: "reports", label: "Reports" },
@@ -133,6 +146,18 @@ export default function ProprietorDashboard({ setPage }) {
 
             {/* Tab Views */}
             {activeTab === "dashboard" && (
+                <>
+                <div className="mb-6 rounded-2xl border border-indigo-200 bg-indigo-50 p-5 shadow-sm">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-wider text-indigo-700">Recommended next step</p>
+                            <h2 className="mt-1 text-xl font-bold text-slate-900">Complete your school setup in order</h2>
+                            <p className="mt-1 text-sm text-slate-600">Start with sessions and terms, then create divisions before classes, streams, subjects, and fees.</p>
+                            <p className="mt-2 text-sm font-bold text-indigo-700">{Number(setupProgress?.completed_steps || 0)} of {Number(setupProgress?.total_steps || 9)} setup steps complete</p>
+                        </div>
+                        <button type="button" onClick={() => openTab("school_setup")} className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-indigo-700">Open Setup Checklist</button>
+                    </div>
+                </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Leadership Roles Summary */}
                     <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -201,6 +226,7 @@ export default function ProprietorDashboard({ setPage }) {
                         )}
                     </div>
                 </div>
+                </>
             )}
         </div>
     );

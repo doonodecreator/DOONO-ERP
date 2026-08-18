@@ -234,6 +234,8 @@ class RoleInvitationController extends Controller
             ]);
         }
 
+        $user->update(['current_school_id' => $invitation->school_id]);
+
         $conflictingStaff = Staff::query()
             ->where('school_id', $invitation->school_id)
             ->where('email', $invitation->email)

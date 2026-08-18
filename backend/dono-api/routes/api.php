@@ -84,6 +84,8 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me/context', [AuthController::class, 'context']);
+        Route::get('/me/staff-profile', [AuthController::class, 'staffProfile']);
+        Route::put('/me/staff-profile', [AuthController::class, 'updateStaffProfile']);
         Route::post('/me/switch-school', [AuthController::class, 'switchSchool']);
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/dashboard', [DashboardController::class, 'index']);
@@ -141,6 +143,7 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('staff', StaffController::class);
             Route::middleware('permission:manage_students')->apiResource('students', StudentController::class);
             Route::middleware('permission:manage_fee_categories')->apiResource('fees', FeeController::class);
+            Route::middleware('permission:manage_fee_categories')->apiResource('student-fees', StudentFeeController::class);
             Route::apiResource('enrollments', StudentEnrollmentController::class);
             Route::apiResource('fee-payments', FeePaymentController::class)->only(['index', 'store', 'show', 'destroy']);
             Route::apiResource('payment-receipts', PaymentReceiptController::class)->only(['index', 'show']);

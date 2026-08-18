@@ -1,9 +1,13 @@
 import { useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function Login() {
   const { login } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,8 +23,11 @@ export default function Login() {
     try {
       const response = await api.post("/login", { email, password });
       await login(response.data.token);
-      // No manual redirect needed — App.jsx reacts to isAuthenticated /
-      // onboardingStep changing and renders the right screen automatically.
+      if (returnTo) {
+        navigate(returnTo, { replace: true });
+      }
+      // Otherwise App.jsx reacts to isAuthenticated / onboardingStep changing
+      // and renders the right screen automatically.
     } catch (err) {
       console.log(err);
       setError(err.message || "Invalid email or password.");

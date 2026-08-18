@@ -41,15 +41,15 @@ export default function RoleInvitations({ setPage }) {
         setError("");
 
         try {
-            const [rolesResponse, invitationsResponse, delegationResponse] = await Promise.all([
+            const [rolesResponse, invitationsResponse, delegationResponse] = await Promise.allSettled([
                 api.get("/roles"),
                 api.get("/role-invitations"),
                 api.get("/school-setup/delegations"),
             ]);
 
-            const availableRoles = Array.isArray(rolesResponse?.data?.data) ? rolesResponse.data.data : [];
-            const currentInvitations = Array.isArray(invitationsResponse?.data?.data) ? invitationsResponse.data.data : [];
-            const delegationPayload = delegationResponse?.data || {};
+            const availableRoles = rolesResponse.status === "fulfilled" && Array.isArray(rolesResponse.value?.data?.data) ? rolesResponse.value.data.data : [];
+            const currentInvitations = invitationsResponse.status === "fulfilled" && Array.isArray(invitationsResponse.value?.data?.data) ? invitationsResponse.value.data.data : [];
+            const delegationPayload = delegationResponse.status === "fulfilled" ? delegationResponse.value?.data || {} : {};
             const currentDelegations = Array.isArray(delegationPayload.data) ? delegationPayload.data : [];
             const permissions = Array.isArray(delegationPayload.available_permissions) ? delegationPayload.available_permissions : [];
 
@@ -57,12 +57,17 @@ export default function RoleInvitations({ setPage }) {
             setInvitations(currentInvitations);
             setDelegations(currentDelegations);
             setAvailablePermissions(permissions);
+
+            const failedResponse = [rolesResponse, invitationsResponse, delegationResponse].find((response) => response.status === "rejected");
+            if (failedResponse) {
+                throw new Error(failedResponse.reason?.response?.data?.message || failedResponse.reason?.message || "Some leadership data could not be loaded.");
+            }
             setForm((current) => ({
                 ...current,
                 role_slug: current.role_slug || availableRoles[0]?.slug || "",
             }));
         } catch (err) {
-            setError(err.message || "Unable to load role invitations.");
+            setError(err.response?.data?.message || err.message || "Unable to load role invitations.");
         } finally {
             setLoading(false);
         }
@@ -86,7 +91,7 @@ export default function RoleInvitations({ setPage }) {
             setForm(initialForm);
             await loadData();
         } catch (err) {
-            setError(err.message || "Unable to create the role invitation.");
+            setError(err.response?.data?.message || err.message || "Unable to create the role invitation.");
         } finally {
             setSubmitting(false);
         }
@@ -100,7 +105,7 @@ export default function RoleInvitations({ setPage }) {
             await api.post(`/role-invitations/${id}/revoke`);
             await loadData();
         } catch (err) {
-            setError(err.message || "Unable to revoke the invitation.");
+            setError(err.response?.data?.message || err.message || "Unable to revoke the invitation.");
         } finally {
             setRevokingId(null);
         }
@@ -131,7 +136,7 @@ export default function RoleInvitations({ setPage }) {
             setSelectedPermissionSlugs([]);
             await loadData();
         } catch (err) {
-            setError(err.message || "Unable to update setup delegation.");
+            setError(err.response?.data?.message || err.message || "Unable to update setup delegation.");
         } finally {
             setDelegationSaving(false);
         }
@@ -144,7 +149,7 @@ export default function RoleInvitations({ setPage }) {
             await api.delete(`/school-setup/delegations/${userId}`);
             await loadData();
         } catch (err) {
-            setError(err.message || "Unable to revoke setup delegation.");
+            setError(err.response?.data?.message || err.message || "Unable to revoke setup delegation.");
         } finally {
             setDelegationSaving(false);
         }

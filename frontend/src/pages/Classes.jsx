@@ -33,14 +33,19 @@ export default function Classes() {
       ]);
 
       if (classRes.status === 'fulfilled') {
-        const resData = classRes.value.data;
-        const cData = resData.data?.data || resData.data || resData;
+        const resData = classRes.value?.data;
+        const cData = resData?.data?.data ?? resData?.data ?? resData ?? [];
         setClasses(Array.isArray(cData) ? cData : []);
       }
       if (divRes.status === 'fulfilled') {
-        const resData = divRes.value.data;
-        const dData = resData.data?.data || resData.data || resData;
+        const resData = divRes.value?.data;
+        const dData = resData?.data?.data ?? resData?.data ?? resData ?? [];
         setDivisions(Array.isArray(dData) ? dData : []);
+      }
+
+      const failedResponse = [classRes, divRes].find((response) => response.status === 'rejected');
+      if (failedResponse) {
+        throw new Error(failedResponse.reason?.response?.data?.message || failedResponse.reason?.message || 'Unable to load class setup data.');
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load class configuration.');
@@ -51,6 +56,10 @@ export default function Classes() {
 
   const handleOpenModal = (cls = null) => {
     setErrors({});
+    if (!cls && divisions.length === 0) {
+      setError('Create at least one division before creating a class.');
+      return;
+    }
     if (cls) {
       setEditingId(cls.id);
       setForm({
