@@ -82,6 +82,8 @@ class CurrentContextService
     public function currentSchool(User $user): ?School
     {
         // 1. Explicitly selected school (stored on user profile)
+        // If current_school_id is set, we use it. If it's NULL, it means the user
+        // intentionally chose the Organization context (for owners).
         if ($user->current_school_id) {
             $selectedSchool = School::find($user->current_school_id);
             if ($selectedSchool) {
@@ -95,7 +97,13 @@ class CurrentContextService
             }
         }
 
-        // 2. Fallback: School attached to one of the user's roles.
+        // 2. If the user is an Organization Owner, we don't fall back. 
+        // We let them stay in the Organization context unless they explicitly select a school.
+        if ($this->isOrganizationOwner($user)) {
+            return null;
+        }
+
+        // 3. Fallback for staff: School attached to one of the user's roles.
         $roleWithSchool = $user->roles()
             ->wherePivotNotNull('school_id')
             ->orderByDesc('user_roles.created_at')
@@ -105,7 +113,7 @@ class CurrentContextService
             return School::find($roleWithSchool->pivot->school_id);
         }
 
-        // 3. Fallback: First school directly owned by the user.
+        // 4. Final fallback: First school directly owned by the user (only if not an Org Owner).
         return $user->ownedSchools()
             ->latest()
             ->first();
@@ -176,7 +184,11 @@ class CurrentContextService
             return 'organization_setup';
         }
 
-        if (!$school) {
+        // Only force school setup if the organization has ZERO schools.
+        // If they have schools but haven't selected one (school is null),
+        // they should see the Organization Dashboard, not the setup page.
+        $hasSchools = $organization->schools()->exists();
+        if (!$hasSchools) {
             return 'school_setup';
         }
 
