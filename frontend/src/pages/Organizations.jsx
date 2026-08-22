@@ -1,74 +1,103 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import api from "../services/api";
 import PageHeader from "../components/layout/PageHeader";
+import PageContainer from "../components/layout/PageContainer";
+import SectionCard from "../components/layout/SectionCard";
 import DataTable from "../components/tables/DataTable";
 import LoadingSpinner from "../components/feedback/LoadingSpinner";
-import EmptyState from "../components/feedback/EmptyState";
-import PageContainer from "../components/layout/PageContainer";
+import Alert from "../components/feedback/Alert";
+import Button from "../components/forms/Button";
+import { FormActions, FormField } from "../components/forms/FormField";
+
+const emptyForm = { name: "", short_name: "", email: "", phone: "", address: "" };
 
 export default function Organizations() {
-    const [organizations, setOrganizations] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [showForm, setShowForm] = useState(false);
-    const [formData, setFormData] = useState({ name: '', short_name: '', email: '', phone: '', address: '' });
+  const [organizations, setOrganizations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState(emptyForm);
+  const [error, setError] = useState("");
 
-    useEffect(() => { loadOrganizations(); }, []);
+  useEffect(() => { loadOrganizations(); }, []);
 
-    async function loadOrganizations() {
-        try {
-            setLoading(true);
-            const res = await api.get("/organizations");
-            const data = res.data?.data?.data ?? res.data?.data ?? res.data ?? [];
-            setOrganizations(Array.isArray(data) ? data : []);
-        } catch (err) { console.error(err); }
-        finally { setLoading(false); }
+  async function loadOrganizations() {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await api.get("/organizations");
+      const data = response.data?.data?.data ?? response.data?.data ?? response.data ?? [];
+      setOrganizations(Array.isArray(data) ? data : []);
+    } catch (requestError) {
+      setError(requestError.message || "Organizations could not be loaded.");
+      setOrganizations([]);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    async function handleCreate(e) {
-        e.preventDefault();
-        try {
-            await api.post("/organizations", formData);
-            setShowForm(false);
-            setFormData({ name: '', short_name: '', email: '', phone: '', address: '' });
-            loadOrganizations();
-        } catch (err) { alert("Failed to create organization."); }
+  async function handleCreate(event) {
+    event.preventDefault();
+    try {
+      setSaving(true);
+      setError("");
+      await api.post("/organizations", formData);
+      setShowForm(false);
+      setFormData(emptyForm);
+      await loadOrganizations();
+    } catch (requestError) {
+      setError(requestError.message || "The organization could not be created.");
+    } finally {
+      setSaving(false);
     }
+  }
 
-    if (loading && organizations.length === 0) return <PageContainer><LoadingSpinner /></PageContainer>;
+  if (loading && organizations.length === 0) return <PageContainer><LoadingSpinner label="Loading organizations" /></PageContainer>;
 
-    return (
-        <PageContainer>
-            <PageHeader 
-                title="Organizations" 
-                subtitle="Platform-wide organization management" 
-                action={<button onClick={() => setShowForm(!showForm)} style={{ backgroundColor: showForm ? '#ef4444' : '#4f46e5', color: '#fff', padding: '10px 20px', borderRadius: '10px', fontWeight: 'bold', border: 'none' }}>{showForm ? 'Cancel' : '+ New Organization'}</button>}
-            />
-            
-            {showForm && (
-                <div style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', marginBottom: '32px' }}>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '20px' }}>New Organization</h3>
-                    <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <input style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Full Organization Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
-                        <input style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Short Name (e.g. DOONO)" value={formData.short_name} onChange={e => setFormData({...formData, short_name: e.target.value})} required />
-                        <input style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} type="email" placeholder="Contact Email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
-                        <input style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Contact Phone" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required />
-                        <textarea style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1' }} placeholder="Office Address" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
-                        <button type="submit" style={{ width: '100%', padding: '14px', borderRadius: '12px', backgroundColor: '#4f46e5', color: '#fff', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>Create Organization</button>
-                    </form>
-                </div>
-            )}
+  return (
+    <PageContainer>
+      <PageHeader title="Organizations" subtitle="Platform-wide organization management" action={<Button variant={showForm ? "danger" : "primary"} onClick={() => setShowForm((open) => !open)}>{showForm ? "Cancel" : "New organization"}</Button>} />
+      {error && <Alert variant="error" action={<Button size="sm" variant="secondary" onClick={loadOrganizations}>Retry</Button>}>{error}</Alert>}
 
-            <div style={{ backgroundColor: '#fff', borderRadius: '20px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                <DataTable 
-                    columns={[
-                        { key: "name", label: "Organization" },
-                        { key: "owner", label: "Owner", render: (row) => row.owner?.name || "—" },
-                        { key: "status", label: "Status" }
-                    ]} 
-                    data={organizations} 
-                    emptyMessage="No organizations found. Create your first one above." 
-                />
-            </div>
-        </PageContainer>
-    );
+      {showForm && (
+        <SectionCard title="Create organization" subtitle="Add the organization owner and contact details.">
+          <form onSubmit={handleCreate} className="ui-form-grid">
+            <FormField label="Organization name" htmlFor="organization-name" required>
+              <input id="organization-name" name="name" className="ui-form-control" value={formData.name} onChange={(event) => setFormData({ ...formData, name: event.target.value })} required />
+            </FormField>
+            <FormField label="Short name" htmlFor="organization-short-name" hint="For example, DOONO" required>
+              <input id="organization-short-name" name="short_name" className="ui-form-control" value={formData.short_name} onChange={(event) => setFormData({ ...formData, short_name: event.target.value })} required />
+            </FormField>
+            <FormField label="Contact email" htmlFor="organization-email" required>
+              <input id="organization-email" type="email" name="email" className="ui-form-control" value={formData.email} onChange={(event) => setFormData({ ...formData, email: event.target.value })} required />
+            </FormField>
+            <FormField label="Contact phone" htmlFor="organization-phone" required>
+              <input id="organization-phone" name="phone" className="ui-form-control" value={formData.phone} onChange={(event) => setFormData({ ...formData, phone: event.target.value })} required />
+            </FormField>
+            <FormField label="Office address" htmlFor="organization-address">
+              <textarea id="organization-address" name="address" className="ui-form-control" value={formData.address} onChange={(event) => setFormData({ ...formData, address: event.target.value })} />
+            </FormField>
+            <FormActions sticky={false}>
+              <Button variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
+              <Button type="submit" loading={saving} loadingText="Creating…">Create organization</Button>
+            </FormActions>
+          </form>
+        </SectionCard>
+      )}
+
+      <SectionCard title="Organizations" subtitle="Review organizations registered on the platform.">
+        <DataTable
+          columns={[
+            { key: "name", label: "Organization" },
+            { key: "owner", label: "Owner", render: (row) => row.owner?.name || "—" },
+            { key: "status", label: "Status" },
+          ]}
+          data={organizations}
+          loading={loading}
+          emptyTitle="No organizations found"
+          emptyMessage="Create the first organization to begin platform setup."
+        />
+      </SectionCard>
+    </PageContainer>
+  );
 }

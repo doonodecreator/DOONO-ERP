@@ -26,6 +26,7 @@ class SystemSettingResource extends JsonResource
             'paystack_enabled' => $this->paystack_enabled,
             'stripe_enabled' => $this->stripe_enabled,
             'email_notifications' => $this->email_notifications,
+            'local_email_mode' => $this->local_email_mode,
             'sms_notifications' => $this->sms_notifications,
             'updated_at' => $this->updated_at,
         ];

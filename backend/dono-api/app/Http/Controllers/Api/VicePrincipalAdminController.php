@@ -22,7 +22,7 @@ class VicePrincipalAdminController extends Controller
 
     public function dashboard(Request $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $today = now()->toDateString();
 
         $activeStaff = Staff::where('school_id', $schoolId)
@@ -96,13 +96,4 @@ class VicePrincipalAdminController extends Controller
         ]);
     }
 
-    private function currentSchoolId(Request $request): int
-    {
-        $schoolId = $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($request->user())?->id;
-
-        abort_unless($schoolId, 409, 'No active school.');
-
-        return (int) $schoolId;
-    }
 }

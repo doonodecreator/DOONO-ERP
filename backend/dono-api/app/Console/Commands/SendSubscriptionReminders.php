@@ -7,6 +7,7 @@ use App\Models\SchoolSubscription;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -19,6 +20,8 @@ class SendSubscriptionReminders extends Command
      */
     public function handle(): int
     {
+        Cache::put('dono:scheduler:heartbeat', now()->toIso8601String(), now()->addDays(2));
+
         $subscriptions = SchoolSubscription::with([
             'school',
             'subscriptionPlan',
@@ -39,11 +42,12 @@ class SendSubscriptionReminders extends Command
 
             if (
                 $daysRemaining === 7 &&
-                !$subscription->first_reminder_sent_at
+                !$subscription->first_reminder_sent_at &&
+                filled($subscription->school?->email)
             ) {
 
                 Mail::to($subscription->school->email)
-                    ->send(
+                    ->queue(
                         new SubscriptionReminderMail(
                             $subscription,
                             $daysRemaining
@@ -67,11 +71,12 @@ class SendSubscriptionReminders extends Command
 
             if (
                 $daysRemaining === 3 &&
-                !$subscription->second_reminder_sent_at
+                !$subscription->second_reminder_sent_at &&
+                filled($subscription->school?->email)
             ) {
 
                 Mail::to($subscription->school->email)
-                    ->send(
+                    ->queue(
                         new SubscriptionReminderMail(
                             $subscription,
                             $daysRemaining
@@ -95,11 +100,12 @@ class SendSubscriptionReminders extends Command
 
             if (
                 $daysRemaining === 1 &&
-                !$subscription->final_reminder_sent_at
+                !$subscription->final_reminder_sent_at &&
+                filled($subscription->school?->email)
             ) {
 
                 Mail::to($subscription->school->email)
-                    ->send(
+                    ->queue(
                         new SubscriptionReminderMail(
                             $subscription,
                             $daysRemaining

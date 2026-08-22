@@ -33,6 +33,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'feature' => \App\Http\Middleware\CheckSubscriptionFeature::class,
             'has.school' => \App\Http\Middleware\HasSchool::class,
             'staff.active' => \App\Http\Middleware\CheckStaffActive::class,
+            'password.changed' => \App\Http\Middleware\EnsurePasswordChanged::class,
+            'idempotency' => \App\Http\Middleware\EnsureIdempotency::class,
         ]);
 
     })

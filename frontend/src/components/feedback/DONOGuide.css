@@ -1,0 +1,317 @@
+.dono-guide-launcher {
+  position: fixed;
+  right: 16px;
+  bottom: 52px;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dono-guide-trigger,
+.dono-guide-tour-trigger {
+  min-height: 40px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .16);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dono-guide-tour-trigger {
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.dono-guide-trigger:hover,
+.dono-guide-trigger:focus-visible {
+  background: #1e3a8a;
+}
+
+.dono-guide-tour-trigger:hover,
+.dono-guide-tour-trigger:focus-visible {
+  background: #dbeafe;
+}
+
+.dono-guide-trigger:focus-visible,
+.dono-guide-tour-trigger:focus-visible,
+.dono-guide-close:focus-visible,
+.dono-guide-skip:focus-visible,
+.dono-guide-next:focus-visible,
+.dono-guide-inline-action:focus-visible,
+.dono-guide-tabs button:focus-visible,
+.dono-guide-module-picker input:focus-visible,
+.dono-guide-module-picker select:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, .35);
+  outline-offset: 2px;
+}
+
+.dono-guide-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.dono-guide-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: rgba(15, 23, 42, .52);
+  cursor: default;
+}
+
+.dono-guide-card {
+  position: relative;
+  width: min(100%, 460px);
+  max-height: min(720px, calc(100dvh - 32px));
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, .28);
+}
+
+.dono-guide-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dono-guide-kicker {
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.dono-guide-card h2 {
+  margin: 6px 0 0;
+  color: #1e293b;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.dono-guide-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.dono-guide-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 18px;
+  padding: 4px;
+  border-radius: 10px;
+  background: #f1f5f9;
+}
+
+.dono-guide-tabs button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dono-guide-tabs button.is-active {
+  background: #ffffff;
+  color: #1d4ed8;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .12);
+}
+
+.dono-guide-module-picker {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dono-guide-module-picker input,
+.dono-guide-module-picker select {
+  min-height: 40px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.dono-guide-purpose {
+  margin: 16px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.dono-guide-step-card {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+}
+
+.dono-guide-step-number {
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.dono-guide-step-card h3 {
+  margin: 7px 0 0;
+  color: #1e293b;
+  font-size: 16px;
+}
+
+.dono-guide-step-card p {
+  margin: 8px 0 0;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.dono-guide-inline-action {
+  min-height: 38px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border: 1px solid #93c5fd;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1d4ed8;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dono-guide-next-info {
+  margin: 14px 0 0;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dono-guide-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.dono-guide-dots {
+  display: flex;
+  max-width: 190px;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.dono-guide-dots span {
+  width: 20px;
+  height: 6px;
+  flex: 0 0 20px;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.dono-guide-dots span.is-active {
+  background: #2563eb;
+}
+
+.dono-guide-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.dono-guide-skip,
+.dono-guide-next {
+  min-height: 42px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dono-guide-skip {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+}
+
+.dono-guide-next {
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+@media (max-width: 520px) {
+  .dono-guide-launcher {
+    right: 10px;
+    bottom: 44px;
+    left: 10px;
+    justify-content: flex-end;
+  }
+
+  .dono-guide-trigger,
+  .dono-guide-tour-trigger {
+    min-height: 38px;
+    padding: 9px 11px;
+    font-size: 11px;
+  }
+
+  .dono-guide-card {
+    padding: 16px;
+  }
+
+  .dono-guide-actions {
+    flex-direction: column-reverse;
+  }
+
+  .dono-guide-skip,
+  .dono-guide-next {
+    width: 100%;
+  }
+}

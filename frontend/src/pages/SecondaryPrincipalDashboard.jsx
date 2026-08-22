@@ -9,12 +9,12 @@ const TABS = [
     { id: "classes", label: "JSS & SSS Classes", page: "classes" },
     { id: "teachers", label: "Secondary Teachers", page: "staff" },
     { id: "curriculum", label: "Curriculum & Subjects", page: "subjects" },
-    { id: "external_exams", label: "External Exams (WAEC/NECO)" },
+    { id: "external_exams", label: "External Exams (WAEC/NECO)", page: "external-exams" },
     { id: "results_approvals", label: "Results Approvals", page: "results" },
-    { id: "discipline", label: "Student Discipline" },
+    { id: "discipline", label: "Student Discipline", page: "discipline-cases" },
     { id: "graduation", label: "Promotion & Graduation", page: "promotions" },
     { id: "reports", label: "Academic Reports", page: "report-cards" },
-    { id: "communication", label: "Communication" },
+    { id: "communication", label: "Communication", page: "communication" },
 ];
 
 const displayValue = (value, fallback = "Unavailable") => (
@@ -32,7 +32,7 @@ export default function SecondaryPrincipalDashboard({ setPage }) {
             setLoading(true);
             setError("");
             try {
-                const response = await api.get("/secondary-principal/dashboard");
+                const response = await api.get("/secondary-head/dashboard");
                 setData(response?.data && typeof response.data === "object" ? response.data : null);
             } catch (requestError) {
                 setData(null);
@@ -52,10 +52,11 @@ export default function SecondaryPrincipalDashboard({ setPage }) {
 
     const openTab = (tabId) => {
         const tab = TABS.find((item) => item.id === tabId);
-        setActiveTab(tabId);
         if (tab?.page && typeof setPage === "function") {
             setPage(tab.page);
+            return;
         }
+        setActiveTab(tabId);
     };
 
     if (loading) {
@@ -87,8 +88,8 @@ export default function SecondaryPrincipalDashboard({ setPage }) {
                         {streams.length === 0 ? <EmptyState title="No secondary streams" message="Create streams and active enrollments to see the secondary overview." /> : <div className="divide-y divide-slate-100">{streams.map((stream) => <div key={stream.id || stream.name} className="flex items-center justify-between gap-4 p-4"><div><h3 className="font-semibold text-slate-800">{stream.name || "Stream unavailable"}</h3><p className="text-xs text-slate-500 mt-1">Classes: {displayValue(stream.classes_count)} • Stream Head: {stream.stream_head || "Unavailable"}</p></div><span className="rounded-md bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">{displayValue(stream.students, 0)} Students</span></div>)}</div>}
                     </section>
                     <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
-                        <div className="flex items-center justify-between border-b border-slate-100 p-5"><div><h2 className="font-bold text-slate-900">External Exams</h2><p className="text-xs text-slate-500 mt-1">External-exam integrations are not registered in the current backend.</p></div><span className="text-xs font-semibold text-slate-400">Unavailable</span></div>
-                        <EmptyState title="No external-exam integration" message={data?.external_exams_message || "WAEC, NECO, and UTME status is unavailable."} />
+                        <div className="flex items-center justify-between border-b border-slate-100 p-5"><div><h2 className="font-bold text-slate-900">External Exams</h2><p className="text-xs text-slate-500 mt-1">Plan WAEC, NECO, and other external examination activities.</p></div><button type="button" onClick={() => openTab("external_exams")} className="text-xs font-semibold text-indigo-600 hover:underline">Open workspace</button></div>
+                        <EmptyState title="No external exam activities" message="Create an external examination activity to begin tracking candidates, dates, venues, and status." />
                     </section>
                     <section className="lg:col-span-3 rounded-xl border border-slate-200 bg-white shadow-sm">
                         <div className="flex items-center justify-between border-b border-slate-100 p-5"><div><h2 className="font-bold text-slate-900">Result Submissions</h2><p className="text-xs text-slate-500 mt-1">Live secondary result-submission records.</p></div><button type="button" onClick={() => openTab("results_approvals")} className="text-xs font-semibold text-indigo-600 hover:underline">Review</button></div>
@@ -96,7 +97,7 @@ export default function SecondaryPrincipalDashboard({ setPage }) {
                     </section>
                 </div>
             ) : (
-                <section className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm"><h2 className="text-xl font-bold text-slate-900">{TABS.find((tab) => tab.id === activeTab)?.label}</h2><p className="mt-2 text-sm text-slate-500">{TABS.find((tab) => tab.id === activeTab)?.page ? "Opening the registered secondary workspace." : activeTab === "external_exams" ? data?.external_exams_message : "No verified frontend workspace is registered for this module yet; it is intentionally marked unavailable rather than displaying mock data."}</p></section>
+                <section className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm"><h2 className="text-xl font-bold text-slate-900">{TABS.find((tab) => tab.id === activeTab)?.label}</h2><p className="mt-2 text-sm text-slate-500">{TABS.find((tab) => tab.id === activeTab)?.page ? "Opening the registered secondary workspace." : activeTab === "external_exams" ? "Open the external examination planning workspace to create or review WAEC and NECO activities." : "Opening the registered workspace for this module."}</p></section>
             )}
         </div>
     );

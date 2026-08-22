@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
+import { arrayFromResponse } from "../utils/response";
 
 export default function LibrarianDashboard() {
     const [activeTab, setActiveTab] = useState("catalog");
@@ -38,9 +39,9 @@ export default function LibrarianDashboard() {
                 api.get("/students").catch(() => ({ data: { data: [] } }))
             ]);
 
-            setBooks(booksRes.data?.data || booksRes.data || []);
-            setLoans(loansRes.data?.data || loansRes.data || []);
-            setStudents(studentsRes.data?.data || studentsRes.data || []);
+            setBooks(arrayFromResponse(booksRes));
+            setLoans(arrayFromResponse(loansRes));
+            setStudents(arrayFromResponse(studentsRes));
         } catch (err) {
             console.error("Error loading library records", err);
         } finally {
@@ -91,10 +92,10 @@ export default function LibrarianDashboard() {
                         <p className="text-sm text-gray-500 mt-1">Catalog school texts, track active student borrowings, process returns, and manage overdue or lost book fines.</p>
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={() => setShowBookModal(true)} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        <button type="button" onClick={() => setShowBookModal(true)} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
                             + Add Book
                         </button>
-                        <button onClick={() => setShowLoanModal(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        <button type="button" onClick={() => setShowLoanModal(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
                             Borrow / Issue Book
                         </button>
                     </div>
@@ -102,7 +103,7 @@ export default function LibrarianDashboard() {
 
                 <div className="flex gap-2 border-b border-gray-100 mt-6 overflow-x-auto pb-px">
                     {["catalog", "borrowed", "reports"].map((tab) => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-amber-600 text-amber-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
+                        <button type="button" key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-amber-600 text-amber-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
                             {tab === "catalog" ? "Book Catalog" : tab === "borrowed" ? "Active Loans & Returns" : tab}
                         </button>
                     ))}
@@ -181,8 +182,8 @@ export default function LibrarianDashboard() {
                                                 <td className="p-4 text-center space-x-2">
                                                     {l.status === 'Borrowed' && (
                                                         <>
-                                                            <button onClick={() => handleUpdateLoanStatus(l.id, 'Returned')} className="text-emerald-600 hover:underline text-xs font-semibold">Mark Returned</button>
-                                                            <button onClick={() => handleUpdateLoanStatus(l.id, 'Lost')} className="text-red-500 hover:underline text-xs font-semibold">Mark Lost</button>
+                                                            <button type="button" onClick={() => handleUpdateLoanStatus(l.id, 'Returned')} className="text-emerald-600 hover:underline text-xs font-semibold">Mark Returned</button>
+                                                            <button type="button" onClick={() => handleUpdateLoanStatus(l.id, 'Lost')} className="text-red-500 hover:underline text-xs font-semibold">Mark Lost</button>
                                                         </>
                                                     )}
                                                     {l.status !== 'Borrowed' && <span className="text-xs text-gray-400">Completed</span>}
@@ -203,7 +204,7 @@ export default function LibrarianDashboard() {
                     <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-900">Add New Book to Catalog</h3>
-                            <button onClick={() => setShowBookModal(false)} className="text-gray-400">×</button>
+                            <button type="button" onClick={() => setShowBookModal(false)} className="text-gray-400">×</button>
                         </div>
                         <form onSubmit={handleSaveBook} className="p-5 space-y-4">
                             <div>
@@ -245,7 +246,7 @@ export default function LibrarianDashboard() {
                     <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-900">Issue Book Loan to Student</h3>
-                            <button onClick={() => setShowLoanModal(false)} className="text-gray-400">×</button>
+                            <button type="button" onClick={() => setShowLoanModal(false)} className="text-gray-400">×</button>
                         </div>
                         <form onSubmit={handleIssueLoan} className="p-5 space-y-4">
                             <div>

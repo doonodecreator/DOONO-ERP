@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
+import { arrayFromResponse } from '../utils/response';
 import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/layout/PageHeader';
 import DataTable from '../components/tables/DataTable';
@@ -21,14 +22,9 @@ const initialForm = () => ({
 });
 
 function collectionFrom(response, label) {
-  const payload = response?.data;
-  const collection = Array.isArray(payload)
-    ? payload
-    : Array.isArray(payload?.data)
-      ? payload.data
-      : null;
+  const collection = arrayFromResponse(response);
 
-  if (!collection) {
+  if (!Array.isArray(collection)) {
     throw new Error(`The ${label} response is not a valid collection.`);
   }
 
@@ -74,7 +70,7 @@ export default function StudentEnrollments() {
           api.get('/streams'),
           api.get('/academic-sessions'),
           api.get('/terms'),
-          api.get('/student-enrollments', { params: { per_page: 100 } }),
+          api.get('/enrollments', { params: { per_page: 100 } }),
         ]);
 
       setOptions({
@@ -198,9 +194,9 @@ export default function StudentEnrollments() {
 
     try {
       if (editingId) {
-        await api.put(`/student-enrollments/${editingId}`, form);
+        await api.put(`/enrollments/${editingId}`, form);
       } else {
-        await api.post('/student-enrollments', form);
+        await api.post('/enrollments', form);
       }
 
       resetForm();

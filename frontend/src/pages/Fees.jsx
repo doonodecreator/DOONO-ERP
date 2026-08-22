@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { getPrimaryRoleSlug } from "../utils/role";
 
 export default function Fees({ setPage }) {
-    const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
+    const { roles, permissions, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
     const [loading, setLoading] = useState(true);
     const [studentFees, setStudentFees] = useState([]);
     const [feeStructures, setFeeStructures] = useState([]);
@@ -31,7 +31,9 @@ export default function Fees({ setPage }) {
 
     const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
 
-    const canManageFees = ["super_admin", "proprietor", "principal", "bursar", "accountant"].includes(userRole);
+    const canViewFinance = userRole === "super_admin" || permissions.includes("view_finance_reports") || ["proprietor", "bursar", "accountant"].includes(userRole);
+    const canManageFees = permissions.includes("manage_fee_categories") && ["super_admin", "proprietor", "bursar"].includes(userRole);
+    const canRecordPayments = permissions.includes("receive_payments") && ["super_admin", "proprietor", "bursar", "accountant"].includes(userRole);
 
     useEffect(() => {
         loadFinancialData();
@@ -41,22 +43,22 @@ export default function Fees({ setPage }) {
         try {
             setLoading(true);
             setError("");
+            if (!canViewFinance) {
+                setStudentFees([]);
+                setFeeStructures([]);
+                return;
+            }
+
             const responses = await Promise.allSettled([
                 api.get("/student-fees"),
-                api.get("/fees"),
-                api.get("/academic-sessions"),
-                api.get("/terms"),
-                api.get("/classes")
+                api.get("/fees")
             ]);
 
-            const [feeRes, structRes, sessionRes, termRes, classRes] = responses;
+            const [feeRes, structRes] = responses;
             const readList = (response) => response?.data?.data?.data ?? response?.data?.data ?? response?.data ?? [];
 
             if (feeRes.status === "fulfilled") setStudentFees(Array.isArray(readList(feeRes.value)) ? readList(feeRes.value) : []);
             if (structRes.status === "fulfilled") setFeeStructures(Array.isArray(readList(structRes.value)) ? readList(structRes.value) : []);
-            if (sessionRes.status === "fulfilled") setSessions(Array.isArray(readList(sessionRes.value)) ? readList(sessionRes.value) : []);
-            if (termRes.status === "fulfilled") setTerms(Array.isArray(readList(termRes.value)) ? readList(termRes.value) : []);
-            if (classRes.status === "fulfilled") setClasses(Array.isArray(readList(classRes.value)) ? readList(classRes.value) : []);
 
             const failedResponse = responses.find((response) => response.status === "rejected");
             if (failedResponse) {
@@ -107,7 +109,7 @@ export default function Fees({ setPage }) {
                 </div>
                 {canManageFees && (
                     <div className="flex space-x-2">
-                        <button
+                        <button type="button"
                             onClick={() => setPage && setPage("fees-payments")}
                             className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 text-sm transition shadow-sm"
                         >
@@ -120,13 +122,13 @@ export default function Fees({ setPage }) {
             {successMsg && (
                 <div className="p-4 mb-4 bg-green-50 text-green-700 rounded-lg border border-green-200 text-sm flex justify-between">
                     <span>{successMsg}</span>
-                    <button onClick={() => setSuccessMsg("")} className="font-bold">✕</button>
+                    <button type="button" onClick={() => setSuccessMsg("")} className="font-bold">✕</button>
                 </div>
             )}
             {error && (
                 <div className="p-4 mb-4 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm flex justify-between">
                     <span>{error}</span>
-                    <button onClick={loadFinancialData} className="underline font-semibold">Retry</button>
+                    <button type="button" onClick={loadFinancialData} className="underline font-semibold">Retry</button>
                 </div>
             )}
 
@@ -193,8 +195,8 @@ export default function Fees({ setPage }) {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            {canManageFees && (fee.status || "").toLowerCase() !== "paid" && (
-                                                <button
+                                            {canRecordPayments && (fee.status || "").toLowerCase() !== "paid" && (
+                                                <button type="button"
                                                     onClick={() => {
                                                         setSelectedFee(fee);
                                                         setPaymentForm((prev) => ({

@@ -24,7 +24,7 @@ export default function StudentProfile({
       <div>
         <h1>No student selected.</h1>
 
-        <button
+        <button type="button"
           onClick={() =>
             setPage("students")
           }
@@ -37,7 +37,7 @@ export default function StudentProfile({
 
   return (
     <div>
-      <button
+      <button type="button"
         onClick={() =>
           setPage("students")
         }
@@ -63,13 +63,10 @@ export default function StudentProfile({
             "0 10px 30px rgba(0,0,0,0.08)",
         }}
       >
-        <h1
-          style={{
-            marginBottom: "20px",
-          }}
-        >
-          {student.full_name}
-        </h1>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "20px" }}>
+          {(student.photo_url || student.photo) && <img src={student.photo_url || student.photo} alt={`${student.full_name} profile`} style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover", border: "2px solid #dbeafe" }} />}
+          <h1 style={{ margin: 0 }}>{student.full_name}</h1>
+        </div>
 
         {canManageAdmissions && (
           <div
@@ -77,7 +74,7 @@ export default function StudentProfile({
               marginBottom: "30px",
             }}
           >
-            <button
+            <button type="button"
               onClick={() =>
                 setPage("edit-student")
               }
@@ -94,7 +91,7 @@ export default function StudentProfile({
               Edit Student
             </button>
 
-            <button
+            <button type="button"
               onClick={async () => {
                 if (!window.confirm("Are you sure you want to delete this student?")) {
                   return;

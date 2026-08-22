@@ -17,10 +17,6 @@ class AcademicSessionController extends Controller
         private readonly CurrentContextService $context
     ) {}
 
-    private function currentSchoolId(User $user): ?int
-    {
-        return $this->context->currentSchool($user)?->id;
-    }
     public function index()
     {
         $user = auth()->user();
@@ -28,7 +24,7 @@ class AcademicSessionController extends Controller
         $query = AcademicSession::query();
 
         if (!$user->isSuperAdmin()) {
-            $schoolId = $this->currentSchoolId($user);
+            $schoolId = $this->context->currentSchool($user)?->id;
             $query->where('school_id', $schoolId);
         }
 
@@ -45,7 +41,7 @@ class AcademicSessionController extends Controller
             $data = $request->validated();
 
             if (!$user->isSuperAdmin()) {
-                $data['school_id'] = $this->currentSchoolId($user);
+                $data['school_id'] = $this->context->currentSchool($user)?->id;
             }
 
             if (!empty($data['is_current']) && $data['is_current'] === true) {
@@ -67,7 +63,7 @@ class AcademicSessionController extends Controller
 
         if (
             !$user->isSuperAdmin() &&
-            $academicSession->school_id !== $this->currentSchoolId($user)
+            $academicSession->school_id !== $this->context->currentSchool($user)?->id
         ) {
             abort(403, 'Unauthorized access to this academic session.');
         }
@@ -83,7 +79,7 @@ class AcademicSessionController extends Controller
 
         if (
             !$user->isSuperAdmin() &&
-            $academicSession->school_id !== $this->currentSchoolId($user)
+            $academicSession->school_id !== $this->context->currentSchool($user)?->id
         ) {
             abort(403, 'Unauthorized access to update this academic session.');
         }
@@ -109,7 +105,7 @@ class AcademicSessionController extends Controller
 
         if (
             !$user->isSuperAdmin() &&
-            $academicSession->school_id !== $this->currentSchoolId($user)
+            $academicSession->school_id !== $this->context->currentSchool($user)?->id
         ) {
             abort(403, 'Unauthorized access to delete this academic session.');
         }

@@ -12,12 +12,13 @@ use Illuminate\Validation\ValidationException;
 class AdmissionService
 {
     public function __construct(
-        private readonly CurrentContextService $context
+        private readonly CurrentContextService $context,
+        private readonly SubscriptionQuotaService $quotas,
     ) {}
 
     public function admit(Request $request, array $data): StudentEnrollment
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->context->currentSchool($request->user())?->id;
 
         if (! $schoolId) {
             throw ValidationException::withMessages([
@@ -26,6 +27,8 @@ class AdmissionService
         }
 
         return DB::transaction(function () use ($data, $schoolId) {
+            $this->quotas->assertCanAddStudent($schoolId);
+
             $studentData = Arr::except($data, [
                 'term_id',
                 'enrollment_date',
@@ -50,14 +53,4 @@ class AdmissionService
         });
     }
 
-    private function currentSchoolId(Request $request): ?int
-    {
-        $schoolId = $request->attributes->get('current_school_id');
-
-        if ($schoolId) {
-            return (int) $schoolId;
-        }
-
-        return $this->context->currentSchool($request->user())?->id;
-    }
 }

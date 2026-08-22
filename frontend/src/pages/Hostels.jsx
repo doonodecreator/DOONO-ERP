@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import { arrayFromResponse } from '../utils/response';
 import { useAuth } from '../context/AuthContext';
 
 export default function Hostels({ setPage }) {
@@ -14,7 +15,7 @@ export default function Hostels({ setPage }) {
 
   // Modal / Form state
   const [showHostelModal, setShowHostelModal] = useState(false);
-  const [hostelForm, setHostelForm] = useState({ name: '', type: 'Boys', description: '' });
+  const [hostelForm, setHostelForm] = useState({ name: '', type: 'Boys', warden_name: '', capacity: '' });
 
   useEffect(() => {
     loadHostelData();
@@ -26,16 +27,13 @@ export default function Hostels({ setPage }) {
       setError('');
       if (activeTab === 'hostels') {
         const res = await api.get('/hostels');
-        const data = res.data.data || res.data || [];
-        setHostels(Array.isArray(data) ? data : []);
+        setHostels(arrayFromResponse(res));
       } else if (activeTab === 'rooms') {
         const res = await api.get('/hostel-rooms');
-        const data = res.data.data || res.data || [];
-        setRooms(Array.isArray(data) ? data : []);
+        setRooms(arrayFromResponse(res));
       } else if (activeTab === 'allocations') {
         const res = await api.get('/hostel-allocations');
-        const data = res.data.data || res.data || [];
-        setAllocations(Array.isArray(data) ? data : []);
+        setAllocations(arrayFromResponse(res));
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch hostel management data.');
@@ -50,7 +48,7 @@ export default function Hostels({ setPage }) {
       await api.post('/hostels', hostelForm);
       setMessage('Hostel created successfully!');
       setShowHostelModal(false);
-      setHostelForm({ name: '', type: 'Boys', description: '' });
+      setHostelForm({ name: '', type: 'Boys', warden_name: '', capacity: '' });
       loadHostelData();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create hostel.');
@@ -67,7 +65,7 @@ export default function Hostels({ setPage }) {
         </div>
         <div>
           {activeTab === 'hostels' && (
-            <button
+            <button type="button"
               onClick={() => setShowHostelModal(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 text-sm transition shadow-sm"
             >
@@ -80,20 +78,20 @@ export default function Hostels({ setPage }) {
       {message && (
         <div className="p-4 mb-6 bg-green-50 text-green-700 rounded-lg border border-green-200 text-sm flex justify-between items-center">
           <span>{message}</span>
-          <button onClick={() => setMessage('')} className="font-bold">✕</button>
+          <button type="button" onClick={() => setMessage('')} className="font-bold">✕</button>
         </div>
       )}
 
       {error && (
         <div className="p-4 mb-6 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm flex justify-between items-center">
           <span>{error}</span>
-          <button onClick={loadHostelData} className="underline font-semibold">Retry</button>
+          <button type="button" onClick={loadHostelData} className="underline font-semibold">Retry</button>
         </div>
       )}
 
       {/* Tabs */}
       <div className="flex border-b border-gray-200 mb-6 bg-white rounded-xl p-1 shadow-sm">
-        <button
+        <button type="button"
           onClick={() => setActiveTab('hostels')}
           className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition ${
             activeTab === 'hostels' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'
@@ -101,7 +99,7 @@ export default function Hostels({ setPage }) {
         >
           Hostels
         </button>
-        <button
+        <button type="button"
           onClick={() => setActiveTab('rooms')}
           className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition ${
             activeTab === 'rooms' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'
@@ -109,7 +107,7 @@ export default function Hostels({ setPage }) {
         >
           Rooms & Beds
         </button>
-        <button
+        <button type="button"
           onClick={() => setActiveTab('allocations')}
           className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition ${
             activeTab === 'allocations' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'
@@ -147,7 +145,7 @@ export default function Hostels({ setPage }) {
                           {h.type}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-500">{h.description || '—'}</td>
+                      <td className="px-6 py-4 text-gray-500">{h.warden_name || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -200,7 +198,7 @@ export default function Hostels({ setPage }) {
                   {allocations.map((a) => (
                     <tr key={a.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 font-semibold text-gray-900">{a.student?.full_name || 'Student #' + a.student_id}</td>
-                      <td className="px-6 py-4">{a.hostel_room?.room_number || 'Room #' + a.hostel_room_id}</td>
+                      <td className="px-6 py-4">{a.room?.room_number || 'Room #' + a.hostel_room_id}</td>
                       <td className="px-6 py-4 font-mono">{a.bed_space || '—'}</td>
                       <td className="px-6 py-4 text-xs text-gray-500">{a.allocated_date || '—'}</td>
                       <td className="px-6 py-4">
@@ -247,14 +245,12 @@ export default function Hostels({ setPage }) {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Description</label>
-                <textarea
-                  value={hostelForm.description}
-                  onChange={(e) => setHostelForm({ ...hostelForm, description: e.target.value })}
-                  placeholder="Optional details..."
-                  rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                ></textarea>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Warden Name</label>
+                <input value={hostelForm.warden_name} onChange={(e) => setHostelForm({ ...hostelForm, warden_name: e.target.value })} placeholder="Optional warden name" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Capacity (students) *</label>
+                <input required type="number" min="1" value={hostelForm.capacity} onChange={(e) => setHostelForm({ ...hostelForm, capacity: e.target.value })} placeholder="100" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
               </div>
               <div className="flex justify-end space-x-3 pt-2">
                 <button

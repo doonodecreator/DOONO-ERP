@@ -2,128 +2,81 @@ import { useState } from "react";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import PublicShell from "../components/layout/PublicShell";
+import "./PublicAuth.css";
 
 export default function PublicRegister() {
-    const navigate = useNavigate();
-    const { login } = useAuth();
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    code: "",
+    admin_name: "",
+    email: "",
+    phone: "",
+    password: "",
+    password_confirmation: "",
+  });
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+  function handleChange(event) {
+    const { name, value } = event.target;
+    setFormData((current) => ({ ...current, [name]: value }));
+  }
 
-    const [formData, setFormData] = useState({
-        name: "",
-        code: "",
-        admin_name: "",
-        email: "",
-        phone: "",
-        password: "",
-        password_confirmation: "",
-    });
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
 
-    function handleChange(e) {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+    try {
+      const response = await api.post("/register", formData);
+      if (response?.data?.verification_required) {
+        navigate(`/verify-email?email=${encodeURIComponent(response.data.email || formData.email)}`, { replace: true });
+        return;
+      }
+      if (response?.data?.token) await login(response.data.token);
+      navigate("/");
+    } catch (requestError) {
+      setError(requestError.message || "Registration failed.");
+    } finally {
+      setLoading(false);
     }
+  }
 
-    async function handleSubmit(e) {
-        e.preventDefault();
+  return (
+    <PublicShell current="register" className="dono-auth-shell" footerTheme="dark">
+      <section className="dono-auth-section" aria-labelledby="register-title">
+        <form className="dono-auth-card dono-register-card" onSubmit={handleSubmit}>
+          <div className="dono-auth-heading">
+            <span className="dono-auth-kicker">Start your school workspace</span>
+            <h1 id="register-title">Create your organization</h1>
+            <p>Set up the owner account first. You can configure the school and invite staff after verification.</p>
+          </div>
 
-        setLoading(true);
-        setError("");
+          {error && <div className="dono-auth-error" role="alert">{error}</div>}
 
-        try {
-            const response = await api.post("/register", formData);
+          <div className="dono-auth-fields dono-register-fields">
+            <label htmlFor="organization-name">Organization name</label>
+            <input id="organization-name" name="name" value={formData.name} onChange={handleChange} required autoComplete="organization" />
+            <label htmlFor="organization-code">Organization code <span>(optional)</span></label>
+            <input id="organization-code" name="code" value={formData.code} onChange={handleChange} autoComplete="off" />
+            <label htmlFor="administrator-name">Administrator name</label>
+            <input id="administrator-name" name="admin_name" value={formData.admin_name} onChange={handleChange} required autoComplete="name" />
+            <label htmlFor="registration-email">Email address</label>
+            <input id="registration-email" type="email" name="email" value={formData.email} onChange={handleChange} required autoComplete="email" />
+            <label htmlFor="registration-phone">Phone number <span>(optional)</span></label>
+            <input id="registration-phone" type="tel" name="phone" value={formData.phone} onChange={handleChange} autoComplete="tel" />
+            <label htmlFor="registration-password">Password</label>
+            <input id="registration-password" type="password" name="password" value={formData.password} onChange={handleChange} required autoComplete="new-password" />
+            <label htmlFor="registration-password-confirmation">Confirm password</label>
+            <input id="registration-password-confirmation" type="password" name="password_confirmation" value={formData.password_confirmation} onChange={handleChange} required autoComplete="new-password" />
+          </div>
 
-            // Establish real auth state before navigating anywhere —
-            // this is what was missing before, and why users landed back
-            // on the register form after a successful registration.
-            await login(response.data.token);
-
-            navigate("/");
-
-        } catch (err) {
-            setError(err.message || "Registration failed.");
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    const inputStyle = {
-        width: "100%",
-        padding: "12px",
-        marginTop: "6px",
-        background: "#0f172a",
-        color: "#fff",
-        border: "1px solid #334155",
-        borderRadius: "8px",
-        boxSizing: "border-box",
-    };
-
-    return (
-        <div
-            style={{
-                minHeight: "100vh",
-                background: "#090d16",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                padding: 20,
-            }}
-        >
-            <form
-                onSubmit={handleSubmit}
-                style={{
-                    width: 600,
-                    background: "#1e293b",
-                    padding: 35,
-                    borderRadius: 16,
-                    color: "#fff",
-                }}
-            >
-                <h2>Create Organization</h2>
-
-                {error && (
-                    <div style={{ color: "#ffb4b4", marginBottom: 20 }}>{error}</div>
-                )}
-
-                <label>Organization Name</label>
-                <input name="name" value={formData.name} onChange={handleChange} required style={inputStyle} />
-
-                <label style={{ marginTop: 15, display: "block" }}>Organization Code</label>
-                <input name="code" value={formData.code} onChange={handleChange} style={inputStyle} />
-
-                <label style={{ marginTop: 15, display: "block" }}>Administrator Name</label>
-                <input name="admin_name" value={formData.admin_name} onChange={handleChange} required style={inputStyle} />
-
-                <label style={{ marginTop: 15, display: "block" }}>Email</label>
-                <input type="email" name="email" value={formData.email} onChange={handleChange} required style={inputStyle} />
-
-                <label style={{ marginTop: 15, display: "block" }}>Phone</label>
-                <input name="phone" value={formData.phone} onChange={handleChange} style={inputStyle} />
-
-                <label style={{ marginTop: 15, display: "block" }}>Password</label>
-                <input type="password" name="password" value={formData.password} onChange={handleChange} required style={inputStyle} />
-
-                <label style={{ marginTop: 15, display: "block" }}>Confirm Password</label>
-                <input type="password" name="password_confirmation" value={formData.password_confirmation} onChange={handleChange} required style={inputStyle} />
-
-                <button
-                    type="submit"
-                    disabled={loading}
-                    style={{
-                        width: "100%",
-                        marginTop: 25,
-                        padding: 14,
-                        background: "#2563eb",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: 10,
-                        fontWeight: "bold",
-                    }}
-                >
-                    {loading ? "Creating Organization..." : "Continue"}
-                </button>
-            </form>
-        </div>
-    );
+          <button type="submit" disabled={loading} className="dono-auth-submit">{loading ? "Creating organization…" : "Create organization"}</button>
+        </form>
+      </section>
+    </PublicShell>
+  );
 }

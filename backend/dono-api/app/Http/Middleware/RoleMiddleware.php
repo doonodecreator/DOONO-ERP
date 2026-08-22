@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\School;
 use App\Services\CurrentContextService;
 use Closure;
 use Illuminate\Http\Request;
@@ -39,6 +40,16 @@ class RoleMiddleware
 
         foreach ($roles as $role) {
             if ($role !== 'super_admin' && $user->hasRole($role, (int) $schoolId)) {
+                return $next($request);
+            }
+
+            if ($role === 'proprietor' && School::query()
+                ->whereKey($schoolId)
+                ->where(function ($query) use ($user) {
+                    $query->where('owner_id', $user->id)
+                        ->orWhereHas('organization', fn ($organization) => $organization->where('owner_id', $user->id));
+                })
+                ->exists()) {
                 return $next($request);
             }
         }

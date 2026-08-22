@@ -79,11 +79,19 @@ img {
 ========================================== */
 
 button {
+    min-height: 40px;
+    border-radius: var(--radius-md);
     font: inherit;
+    font-weight: 600;
+    line-height: 1.2;
     cursor: pointer;
     border: none;
     outline: none;
     transition: all var(--transition-fast);
+}
+
+button:disabled {
+    cursor: not-allowed;
 }
 
 /* ==========================================

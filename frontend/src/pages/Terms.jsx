@@ -1,75 +1,21 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import PageContainer from "../components/layout/PageContainer";
 import PageHeader from "../components/layout/PageHeader";
-import LoadingSpinner from "../components/feedback/LoadingSpinner";
-import EmptyState from "../components/feedback/EmptyState";
+import DataTable from "../components/tables/DataTable";
+import Modal from "../components/modals/Modal";
+import Button from "../components/forms/Button";
+import { FormField, FormActions } from "../components/forms/FormField";
+import Alert from "../components/feedback/Alert";
 
 const emptyForm = { academic_session_id: "", name: "", start_date: "", end_date: "", is_current: true, status: "active" };
-const listFromResponse = (response) => {
-    const value = response?.data?.data?.data ?? response?.data?.data ?? response?.data;
-    return Array.isArray(value) ? value : [];
-};
+const listFromResponse = (response) => { const value = response?.data?.data?.data ?? response?.data?.data ?? response?.data; return Array.isArray(value) ? value : []; };
 
 export default function Terms() {
-    const [terms, setTerms] = useState([]);
-    const [sessions, setSessions] = useState([]);
-    const [form, setForm] = useState(emptyForm);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
-    const [submitting, setSubmitting] = useState(false);
-
-    const loadData = async () => {
-        setLoading(true);
-        setError("");
-        try {
-            const [termsResponse, sessionsResponse] = await Promise.all([api.get("/terms"), api.get("/academic-sessions")]);
-            setTerms(listFromResponse(termsResponse));
-            setSessions(listFromResponse(sessionsResponse));
-        } catch (err) {
-            setError(err.response?.data?.message || "Unable to load terms and academic sessions.");
-            setTerms([]);
-            setSessions([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => { loadData(); }, []);
-
-    const handleChange = (event) => {
-        const { name, value, checked, type } = event.target;
-        setForm((current) => ({ ...current, [name]: type === "checkbox" ? checked : value }));
-    };
-
-    const saveTerm = async (event) => {
-        event.preventDefault();
-        setSubmitting(true);
-        try {
-            await api.post("/terms", form);
-            setForm(emptyForm);
-            await loadData();
-        } catch (err) {
-            setError(err.response?.data?.message || "Unable to save term.");
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    return <div className="p-6">
-        <PageHeader title="Terms" subtitle="Create the terms that belong to an academic session." />
-        {error && <div className="mb-5 rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-700"><span>{error}</span><button type="button" onClick={loadData} className="ml-4 font-semibold underline">Retry</button></div>}
-        <div className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="mb-4 text-lg font-bold text-slate-900">Add Term</h2>
-            <form onSubmit={saveTerm} className="grid gap-4 md:grid-cols-2">
-                <select required name="academic_session_id" value={form.academic_session_id} onChange={handleChange} className="rounded-lg border border-slate-300 bg-white px-3 py-2"><option value="">Select academic session</option>{sessions.map((session) => <option key={session.id} value={session.id}>{session.name}</option>)}</select>
-                <select required name="name" value={form.name} onChange={handleChange} className="rounded-lg border border-slate-300 bg-white px-3 py-2"><option value="">Select term</option><option>First Term</option><option>Second Term</option><option>Third Term</option></select>
-                <input required type="date" name="start_date" value={form.start_date} onChange={handleChange} className="rounded-lg border border-slate-300 px-3 py-2" />
-                <input required type="date" name="end_date" value={form.end_date} onChange={handleChange} className="rounded-lg border border-slate-300 px-3 py-2" />
-                <select name="status" value={form.status} onChange={handleChange} className="rounded-lg border border-slate-300 bg-white px-3 py-2"><option value="active">Active</option><option value="closed">Closed</option></select>
-                <label className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm"><input type="checkbox" name="is_current" checked={form.is_current} onChange={handleChange} /> Current term</label>
-                <button disabled={submitting} type="submit" className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white disabled:opacity-50 md:col-span-2 md:w-fit">{submitting ? "Saving..." : "Save Term"}</button>
-            </form>
-        </div>
-        {loading ? <LoadingSpinner text="Loading terms..." /> : terms.length === 0 ? <EmptyState title="No terms yet" message="Create a term after adding an academic session." /> : <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm"><table className="min-w-full text-left text-sm"><thead className="bg-slate-50 text-slate-600"><tr><th className="px-5 py-3">Session</th><th className="px-5 py-3">Term</th><th className="px-5 py-3">Start</th><th className="px-5 py-3">End</th><th className="px-5 py-3">Status</th></tr></thead><tbody className="divide-y divide-slate-100">{terms.map((term) => <tr key={term.id}><td className="px-5 py-4">{term.academic_session?.name || "—"}</td><td className="px-5 py-4 font-semibold">{term.name}</td><td className="px-5 py-4">{term.start_date || "—"}</td><td className="px-5 py-4">{term.end_date || "—"}</td><td className="px-5 py-4">{term.is_current ? "Current" : term.status || "Inactive"}</td></tr>)}</tbody></table></div>}
-    </div>;
+  const [terms, setTerms] = useState([]); const [sessions, setSessions] = useState([]); const [form, setForm] = useState(emptyForm); const [loading, setLoading] = useState(true); const [error, setError] = useState(""); const [submitting, setSubmitting] = useState(false); const [showModal, setShowModal] = useState(false);
+  const loadData = async () => { setLoading(true); setError(""); try { const [termsResponse, sessionsResponse] = await Promise.all([api.get("/terms"), api.get("/academic-sessions")]); setTerms(listFromResponse(termsResponse)); setSessions(listFromResponse(sessionsResponse)); } catch (err) { setError(err.response?.data?.message || "Unable to load terms and academic sessions."); setTerms([]); setSessions([]); } finally { setLoading(false); } };
+  useEffect(() => { loadData(); }, []);
+  const saveTerm = async (event) => { event.preventDefault(); setSubmitting(true); setError(""); try { await api.post("/terms", form); setForm(emptyForm); setShowModal(false); await loadData(); } catch (err) { setError(err.response?.data?.message || "Unable to save term."); } finally { setSubmitting(false); } };
+  const columns = [{ key: "session", label: "Session", render: (term) => term.academic_session?.name || "—" }, { key: "name", label: "Term", render: (term) => <span className="font-semibold">{term.name}</span> }, { key: "start_date", label: "Start", render: (term) => term.start_date || "—" }, { key: "end_date", label: "End", render: (term) => term.end_date || "—" }, { key: "status", label: "Status", render: (term) => <span className={`status-badge ${term.is_current ? "status-badge-success" : "status-badge-muted"}`}>{term.is_current ? "Current" : term.status || "Inactive"}</span> }];
+  return <PageContainer><PageHeader title="Terms" subtitle="Create the terms that belong to an academic session." action={<Button onClick={() => setShowModal(true)}>Add term</Button>} />{error && <Alert variant="error" action={<button type="button" onClick={loadData}>Retry</button>}>{error}</Alert>}<DataTable columns={columns} data={terms} loading={loading} emptyTitle="No terms yet" emptyMessage="Create a term after adding an academic session." /><Modal open={showModal} title="Add term" description="Set the dates and current status for this term." onClose={() => setShowModal(false)} footer={<FormActions sticky={false}><Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button><Button type="submit" form="term-form" loading={submitting}>Save term</Button></FormActions>}><form id="term-form" onSubmit={saveTerm} className="ui-form-grid"><FormField label="Academic session" htmlFor="term-session" required><select id="term-session" name="academic_session_id" value={form.academic_session_id} onChange={(event) => setForm({ ...form, academic_session_id: event.target.value })} required className="ui-form-control"><option value="">Select academic session</option>{sessions.map((session) => <option key={session.id} value={session.id}>{session.name}</option>)}</select></FormField><FormField label="Term" htmlFor="term-name" required><select id="term-name" name="name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required className="ui-form-control"><option value="">Select term</option><option>First Term</option><option>Second Term</option><option>Third Term</option></select></FormField><FormField label="Start date" htmlFor="term-start" required><input id="term-start" type="date" name="start_date" value={form.start_date} onChange={(event) => setForm({ ...form, start_date: event.target.value })} required className="ui-form-control" /></FormField><FormField label="End date" htmlFor="term-end" required><input id="term-end" type="date" name="end_date" value={form.end_date} onChange={(event) => setForm({ ...form, end_date: event.target.value })} required className="ui-form-control" /></FormField><FormField label="Status" htmlFor="term-status"><select id="term-status" name="status" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })} className="ui-form-control"><option value="active">Active</option><option value="closed">Closed</option></select></FormField><label className="ui-form-field flex items-center gap-2"><input type="checkbox" name="is_current" checked={form.is_current} onChange={(event) => setForm({ ...form, is_current: event.target.checked })} /><span className="ui-form-label mb-0">Current term</span></label></form></Modal></PageContainer>;
 }

@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { getPrimaryRoleSlug } from '../utils/role';
+import { arrayFromResponse } from '../utils/response';
 
 export default function Attendance() {
+  const { permissions = [], roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
+  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+  const canManageAttendance = permissions.includes('manage_attendance');
   const [classes, setClasses] = useState([]);
+  const [sessions, setSessions] = useState([]);
+  const [terms, setTerms] = useState([]);
   const [selectedClassId, setSelectedClassId] = useState('');
+  const [selectedSessionId, setSelectedSessionId] = useState('');
+  const [selectedTermId, setSelectedTermId] = useState('');
   const [attendanceDate, setAttendanceDate] = useState(
     new Date().toISOString().split('T')[0]
   );
@@ -19,29 +29,44 @@ export default function Attendance() {
   const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
-    loadClasses();
+    loadAcademicFilters();
   }, []);
 
   useEffect(() => {
-    if (selectedClassId) {
+    if (selectedClassId && selectedSessionId && selectedTermId) {
       loadClassAttendance();
     } else {
       setStudents([]);
     }
-  }, [selectedClassId, attendanceDate]);
+  }, [selectedClassId, selectedSessionId, selectedTermId, attendanceDate]);
 
-  const loadClasses = async () => {
+  const loadAcademicFilters = async () => {
     try {
       setLoadingClasses(true);
-      const res = await api.get('/classes');
-      const data = res.data.data || res.data;
-      const classList = Array.isArray(data) ? data : [];
+      setError(null);
+      const [classRes, sessionRes, termRes] = await Promise.all([
+        role === 'teacher' ? api.get('/teacher/dashboard') : api.get('/classes'),
+        api.get('/academic-sessions'),
+        api.get('/terms'),
+      ]);
+      const classList = role === 'teacher'
+        ? (Array.isArray(classRes?.data?.my_classes) ? classRes.data.my_classes : [])
+        : arrayFromResponse(classRes);
+      const sessionList = arrayFromResponse(sessionRes);
+      const termList = arrayFromResponse(termRes);
       setClasses(classList);
-      if (classList.length > 0) {
-        setSelectedClassId(classList[0].id);
-      }
+      setSessions(sessionList);
+      setTerms(termList);
+      if (classList.length > 0) setSelectedClassId(classList[0].id);
+      const currentSession = sessionList.find((item) => item.is_current) || sessionList[0];
+      const currentTerm = termList.find((item) => item.is_current) || termList[0];
+      if (currentSession) setSelectedSessionId(currentSession.id);
+      if (currentTerm) setSelectedTermId(currentTerm.id);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load classes list.');
+      setError(err.response?.data?.message || 'Failed to load academic classes, sessions, and terms.');
+      setClasses([]);
+      setSessions([]);
+      setTerms([]);
     } finally {
       setLoadingClasses(false);
     }
@@ -55,13 +80,14 @@ export default function Attendance() {
 
       const res = await api.get('/attendance/class-list', {
         params: {
+          academic_session_id: selectedSessionId,
+          term_id: selectedTermId,
           class_id: selectedClassId,
-          date: attendanceDate,
         },
       });
 
-      const list = res.data.data || res.data || [];
-      setStudents(Array.isArray(list) ? list : []);
+      const list = arrayFromResponse(res);
+      setStudents(list);
 
       // Initialize status and remarks map
       const initialStatus = {};
@@ -69,7 +95,7 @@ export default function Attendance() {
 
       (Array.isArray(list) ? list : []).forEach((item) => {
         const studentId = item.id || item.student_id || item.student_enrollment_id;
-        initialStatus[studentId] = item.attendance_status || item.status || 'present';
+        initialStatus[studentId] = String(item.attendance_status || item.attendance?.status || 'Present').toLowerCase();
         initialRemarks[studentId] = item.remarks || '';
       });
 
@@ -116,12 +142,14 @@ export default function Attendance() {
     const payload = {
       class_id: selectedClassId,
       attendance_date: attendanceDate,
-      attendances: students.map((s) => {
+      academic_session_id: selectedSessionId,
+      term_id: selectedTermId,
+      records: students.map((s) => {
         const id = s.id || s.student_id || s.student_enrollment_id;
+        const status = attendanceMap[id] || 'present';
         return {
           student_enrollment_id: s.student_enrollment_id || id,
-          student_id: s.student_id || id,
-          status: attendanceMap[id] || 'present',
+          status: status.charAt(0).toUpperCase() + status.slice(1),
           remarks: remarksMap[id] || '',
         };
       }),
@@ -152,8 +180,8 @@ export default function Attendance() {
           <h1 className="text-2xl font-bold text-gray-800">Daily Student Attendance</h1>
           <p className="text-sm text-gray-500">Take roll call, monitor absenteeism, and log student class presence.</p>
         </div>
-        {students.length > 0 && (
-          <button
+        {canManageAttendance && students.length > 0 && (
+          <button type="button"
             onClick={handleSaveAttendance}
             disabled={submitting}
             className="inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition shadow-sm disabled:opacity-50 text-sm"
@@ -167,18 +195,18 @@ export default function Attendance() {
       {successMsg && (
         <div className="p-4 mb-6 bg-green-50 text-green-700 rounded-lg border border-green-200 text-sm flex justify-between items-center">
           <span>{successMsg}</span>
-          <button onClick={() => setSuccessMsg('')} className="font-bold text-gray-500">✕</button>
+          <button type="button" onClick={() => setSuccessMsg('')} className="font-bold text-gray-500">✕</button>
         </div>
       )}
       {error && (
         <div className="p-4 mb-6 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm flex justify-between items-center">
           <span>{error}</span>
-          <button onClick={loadClassAttendance} className="underline font-semibold">Retry</button>
+          <button type="button" onClick={loadClassAttendance} className="underline font-semibold">Retry</button>
         </div>
       )}
 
       {/* Filters Bar */}
-      <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1">Select Academic Class</label>
           {loadingClasses ? (
@@ -189,6 +217,7 @@ export default function Attendance() {
               onChange={(e) => setSelectedClassId(e.target.value)}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
             >
+              <option value="">Select class</option>
               {classes.map((cls) => (
                 <option key={cls.id} value={cls.id}>
                   {cls.name} {cls.division?.name ? `(${cls.division.name})` : ''}
@@ -199,6 +228,20 @@ export default function Attendance() {
         </div>
 
         <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Academic Session</label>
+          <select value={selectedSessionId} onChange={(e) => setSelectedSessionId(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+            <option value="">Select session</option>
+            {sessions.map((session) => <option key={session.id} value={session.id}>{session.name || session.session_year}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Term</label>
+          <select value={selectedTermId} onChange={(e) => setSelectedTermId(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+            <option value="">Select term</option>
+            {terms.map((term) => <option key={term.id} value={term.id}>{term.name}</option>)}
+          </select>
+        </div>
+        <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1">Attendance Date</label>
           <input
             type="date"
@@ -208,23 +251,23 @@ export default function Attendance() {
           />
         </div>
 
-        <div className="flex flex-col justify-end">
+          <div className="flex flex-col justify-end">
           <label className="block text-xs font-semibold text-gray-600 mb-1">Quick Bulk Actions</label>
           <div className="flex space-x-2">
-            <button
+            {canManageAttendance && <button
               type="button"
               onClick={() => handleMarkAll('present')}
               className="px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded text-xs font-medium border border-green-200 flex-1"
             >
               All Present
-            </button>
-            <button
+            </button>}
+            {canManageAttendance && <button
               type="button"
               onClick={() => handleMarkAll('absent')}
               className="px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded text-xs font-medium border border-red-200 flex-1"
             >
               All Absent
-            </button>
+            </button>}
           </div>
         </div>
       </div>
@@ -279,14 +322,15 @@ export default function Attendance() {
               <tbody className="divide-y divide-gray-100">
                 {students.map((st, idx) => {
                   const studentId = st.id || st.student_id || st.student_enrollment_id;
-                  const fullName = st.full_name || `${st.first_name || ''} ${st.last_name || ''}`.trim() || 'Student';
+                  const student = st.student || {};
+                  const fullName = st.full_name || student.full_name || `${st.first_name || student.first_name || ''} ${st.last_name || student.last_name || ''}`.trim() || 'Student';
                   const currentStatus = attendanceMap[studentId] || 'present';
 
                   return (
                     <tr key={studentId} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 font-mono text-xs text-gray-400">{idx + 1}</td>
                       <td className="px-6 py-4 font-semibold text-gray-900">{fullName}</td>
-                      <td className="px-6 py-4 font-mono text-xs text-gray-500">{st.admission_number || '—'}</td>
+                      <td className="px-6 py-4 font-mono text-xs text-gray-500">{st.admission_number || student.admission_number || '—'}</td>
                       <td className="px-6 py-4">
                         <div className="inline-flex rounded-lg border border-gray-200 p-1 bg-gray-50 space-x-1">
                           {[
@@ -299,6 +343,7 @@ export default function Attendance() {
                               key={opt.key}
                               type="button"
                               onClick={() => handleStatusChange(studentId, opt.key)}
+                              disabled={!canManageAttendance}
                               className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${
                                 currentStatus === opt.key
                                   ? opt.color
@@ -316,6 +361,7 @@ export default function Attendance() {
                           placeholder="Add optional note..."
                           value={remarksMap[studentId] || ''}
                           onChange={(e) => handleRemarkChange(studentId, e.target.value)}
+                          readOnly={!canManageAttendance}
                           className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
                         />
                       </td>

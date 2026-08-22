@@ -13,7 +13,7 @@ const TABS = [
     { id: "attendance", label: "Attendance", page: "attendance" },
     { id: "timetable", label: "Timetable", page: "timetable" },
     { id: "reports", label: "Reports", page: "report-cards" },
-    { id: "communication", label: "Communication" },
+    { id: "communication", label: "Communication", page: "communication" },
 ];
 
 const displayValue = (value, fallback = "Unavailable") => (
@@ -51,10 +51,11 @@ export default function NurseryHeadDashboard({ setPage }) {
 
     const openTab = (tabId) => {
         const tab = TABS.find((item) => item.id === tabId);
-        setActiveTab(tabId);
         if (tab?.page && typeof setPage === "function") {
             setPage(tab.page);
+            return;
         }
+        setActiveTab(tabId);
     };
 
     if (loading) {
@@ -91,7 +92,7 @@ export default function NurseryHeadDashboard({ setPage }) {
                     </section>
                 </div>
             ) : (
-                <section className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm"><h2 className="text-xl font-bold text-slate-900">{TABS.find((tab) => tab.id === activeTab)?.label}</h2><p className="mt-2 text-sm text-slate-500">{TABS.find((tab) => tab.id === activeTab)?.page ? "Opening the registered nursery workspace." : "No verified communication workspace is registered yet; this control is intentionally unavailable."}</p></section>
+                <section className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm"><h2 className="text-xl font-bold text-slate-900">{TABS.find((tab) => tab.id === activeTab)?.label}</h2><p className="mt-2 text-sm text-slate-500">{TABS.find((tab) => tab.id === activeTab)?.page ? "Opening the registered nursery workspace." : "Select a registered nursery module from the navigation above."}</p></section>
             )}
         </div>
     );

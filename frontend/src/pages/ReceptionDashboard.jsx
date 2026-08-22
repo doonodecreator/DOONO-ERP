@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
+import { arrayFromResponse } from "../utils/response";
 
 export default function ReceptionDashboard() {
     const [activeTab, setActiveTab] = useState("visitors");
@@ -26,15 +27,15 @@ export default function ReceptionDashboard() {
         try {
             const [visitorsRes, passesRes, appointmentsRes, studentsRes] = await Promise.all([
                 api.get("/visitors").catch(() => ({ data: { data: [] } })),
-                api.get("/student-gate-passes").catch(() => ({ data: { data: [] } })),
-                api.get("/reception-appointments").catch(() => ({ data: { data: [] } })),
+                api.get("/gate-passes").catch(() => ({ data: { data: [] } })),
+                api.get("/appointments").catch(() => ({ data: { data: [] } })),
                 api.get("/students").catch(() => ({ data: { data: [] } }))
             ]);
 
-            setVisitors(visitorsRes.data?.data || visitorsRes.data || []);
-            setPasses(passesRes.data?.data || passesRes.data || []);
-            setAppointments(appointmentsRes.data?.data || appointmentsRes.data || []);
-            setStudents(studentsRes.data?.data || studentsRes.data || []);
+            setVisitors(arrayFromResponse(visitorsRes));
+            setPasses(arrayFromResponse(passesRes));
+            setAppointments(arrayFromResponse(appointmentsRes));
+            setStudents(arrayFromResponse(studentsRes));
         } catch (err) {
             console.error("Error loading reception data", err);
         } finally {
@@ -66,7 +67,7 @@ export default function ReceptionDashboard() {
     const handleSavePass = async (e) => {
         e.preventDefault();
         try {
-            await api.post("/student-gate-passes", passForm);
+            await api.post("/gate-passes", passForm);
             setShowPassModal(false);
             setPassForm({ student_id: "", type: "Early Departure", authorized_by: "", reason: "" });
             loadReceptionData();
@@ -78,7 +79,7 @@ export default function ReceptionDashboard() {
     const handleSaveAppointment = async (e) => {
         e.preventDefault();
         try {
-            await api.post("/reception-appointments", appointmentForm);
+            await api.post("/appointments", appointmentForm);
             setShowAppointmentModal(false);
             setAppointmentForm({ visitor_name: "", phone_number: "", host_staff: "", appointment_date: "", notes: "" });
             loadReceptionData();
@@ -96,13 +97,13 @@ export default function ReceptionDashboard() {
                         <p className="text-sm text-gray-500 mt-1">Track visitor check-ins, issue student gate passes, and manage appointments.</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <button onClick={() => setShowVisitorModal(true)} className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        <button type="button" onClick={() => setShowVisitorModal(true)} className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
                             + Check-in Visitor
                         </button>
-                        <button onClick={() => setShowPassModal(true)} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        <button type="button" onClick={() => setShowPassModal(true)} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
                             + Issue Gate Pass
                         </button>
-                        <button onClick={() => setShowAppointmentModal(true)} className="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        <button type="button" onClick={() => setShowAppointmentModal(true)} className="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
                             + Book Appointment
                         </button>
                     </div>
@@ -110,7 +111,7 @@ export default function ReceptionDashboard() {
 
                 <div className="flex gap-2 border-b border-gray-100 mt-6 overflow-x-auto pb-px">
                     {["visitors", "passes", "appointments"].map((tab) => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-teal-600 text-teal-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
+                        <button type="button" key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-teal-600 text-teal-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
                             {tab === "visitors" ? "Visitors Log" : tab === "passes" ? "Student Gate Passes" : "Appointments"}
                         </button>
                     ))}
@@ -149,7 +150,7 @@ export default function ReceptionDashboard() {
                                             <td className="p-4 text-xs text-gray-500">{new Date(v.check_in_time).toLocaleString()}</td>
                                             <td className="p-4">
                                                 {v.status === 'Checked In' ? (
-                                                    <button onClick={() => handleCheckoutVisitor(v.id)} className="bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-1 rounded-lg text-xs font-semibold transition-colors">
+                                                    <button type="button" onClick={() => handleCheckoutVisitor(v.id)} className="bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-1 rounded-lg text-xs font-semibold transition-colors">
                                                         Check Out
                                                     </button>
                                                 ) : (
@@ -230,7 +231,7 @@ export default function ReceptionDashboard() {
                     <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-900">Check-in Visitor</h3>
-                            <button onClick={() => setShowVisitorModal(false)} className="text-gray-400">×</button>
+                            <button type="button" onClick={() => setShowVisitorModal(false)} className="text-gray-400">×</button>
                         </div>
                         <form onSubmit={handleSaveVisitor} className="p-5 space-y-4">
                             <div>
@@ -264,7 +265,7 @@ export default function ReceptionDashboard() {
                     <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-900">Issue Student Gate Pass</h3>
-                            <button onClick={() => setShowPassModal(false)} className="text-gray-400">×</button>
+                            <button type="button" onClick={() => setShowPassModal(false)} className="text-gray-400">×</button>
                         </div>
                         <form onSubmit={handleSavePass} className="p-5 space-y-4">
                             <div>
@@ -304,7 +305,7 @@ export default function ReceptionDashboard() {
                     <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-900">Book Reception Appointment</h3>
-                            <button onClick={() => setShowAppointmentModal(false)} className="text-gray-400">×</button>
+                            <button type="button" onClick={() => setShowAppointmentModal(false)} className="text-gray-400">×</button>
                         </div>
                         <form onSubmit={handleSaveAppointment} className="p-5 space-y-4">
                             <div>

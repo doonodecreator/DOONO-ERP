@@ -14,7 +14,7 @@ const TABS = [
     { id: "results", label: "Results", page: "results" },
     { id: "promotion", label: "Promotion", page: "promotions" },
     { id: "reports", label: "Reports", page: "report-cards" },
-    { id: "communication", label: "Communication" },
+    { id: "communication", label: "Communication", page: "communication" },
 ];
 
 const displayValue = (value, fallback = "Unavailable") => (
@@ -32,7 +32,7 @@ export default function PrimaryHeadmasterDashboard({ setPage }) {
             setLoading(true);
             setError("");
             try {
-                const response = await api.get("/primary-headmaster/dashboard");
+                const response = await api.get("/primary-head/dashboard");
                 setData(response?.data && typeof response.data === "object" ? response.data : null);
             } catch (requestError) {
                 setData(null);
@@ -52,10 +52,11 @@ export default function PrimaryHeadmasterDashboard({ setPage }) {
 
     const openTab = (tabId) => {
         const tab = TABS.find((item) => item.id === tabId);
-        setActiveTab(tabId);
         if (tab?.page && typeof setPage === "function") {
             setPage(tab.page);
+            return;
         }
+        setActiveTab(tabId);
     };
 
     if (loading) {
@@ -92,7 +93,7 @@ export default function PrimaryHeadmasterDashboard({ setPage }) {
                     </section>
                 </div>
             ) : (
-                <section className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm"><h2 className="text-xl font-bold text-slate-900">{TABS.find((tab) => tab.id === activeTab)?.label}</h2><p className="mt-2 text-sm text-slate-500">{activeTab === "promotion" ? data?.promotion_status?.message || "The promotion workflow has no pending approval state in the current contract." : TABS.find((tab) => tab.id === activeTab)?.page ? "Opening the registered primary workspace." : "No verified communication workspace is registered yet; this control is intentionally unavailable."}</p></section>
+                <section className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm"><h2 className="text-xl font-bold text-slate-900">{TABS.find((tab) => tab.id === activeTab)?.label}</h2><p className="mt-2 text-sm text-slate-500">{activeTab === "promotion" ? data?.promotion_status?.message || "The promotion workflow has no pending approval state in the current contract." : TABS.find((tab) => tab.id === activeTab)?.page ? "Opening the registered primary workspace." : "Select a registered primary module from the navigation above."}</p></section>
             )}
         </div>
     );

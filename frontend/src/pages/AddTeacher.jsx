@@ -1,232 +1,40 @@
-import { useState, useEffect } from "react";
-import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { getPrimaryRoleSlug } from "../utils/role";
 
 export default function AddTeacher({ setPage }) {
-  const [schools, setSchools] = useState([]);
-
-  const [form, setForm] = useState({
-    school_id: "",
-    staff_number: "",
-    first_name: "",
-    middle_name: "",
-    last_name: "",
-    gender: "",
-    phone: "",
-    email: "",
-    address: "",
-    designation: "",
-    department: "",
-    employment_date: "",
-    qualification: "",
-    basic_salary: "",
-    employment_status: "Active",
-  });
-
-  useEffect(() => {
-    fetchSchools();
-  }, []);
-
-  const fetchSchools = async () => {
-    try {
-      const res = await api.get("/schools");
-
-      setSchools(
-        res.data.data || res.data
-      );
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]:
-        e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      await api.post("/staff", form);
-
-      alert(
-        "Teacher added successfully."
-      );
-
-      setPage("teachers");
-    } catch (error) {
-      console.log(error);
-
-      alert(
-        error?.response?.data?.message ||
-          "Unable to save teacher."
-      );
-    }
-  };
+  const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
+  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+  const canInviteStaff = isPlatformAdmin || role === "proprietor";
 
   return (
-    <div>
-      <h1>Add Teacher</h1>
+    <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <h1 className="text-2xl font-bold text-slate-900">Teacher onboarding</h1>
+      <p className="mt-2 text-sm leading-6 text-slate-600">
+        DONO creates staff accounts through a secure, school-scoped role invitation. A direct staff form is not used because it can create an account without a verified role, school, or email-bound invitation.
+      </p>
 
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          background: "#fff",
-          padding: "30px",
-          borderRadius: "20px",
-          boxShadow:
-            "0 10px 30px rgba(0,0,0,0.08)",
-          marginTop: "20px",
-        }}
-      >
-        <select
-          name="school_id"
-          value={form.school_id}
-          onChange={handleChange}
-          style={inputStyle}
-        >
-          <option value="">
-            Select School
-          </option>
+      <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+        {canInviteStaff
+          ? "Open Role Invitations to invite a Principal, teacher, or other school staff member. The invitee will create or connect their DONO account using the invitation email."
+          : "Only the Proprietor or Software Owner can issue school role invitations. You can view existing teachers from the Teachers page."}
+      </div>
 
-          {schools.map((school) => (
-            <option
-              key={school.id}
-              value={school.id}
-            >
-              {school.name}
-            </option>
-          ))}
-        </select>
-
-        <input
-          name="staff_number"
-          placeholder="Staff Number"
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <input
-          name="first_name"
-          placeholder="First Name"
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <input
-          name="middle_name"
-          placeholder="Middle Name"
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <input
-          name="last_name"
-          placeholder="Last Name"
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <select
-          name="gender"
-          onChange={handleChange}
-          style={inputStyle}
-        >
-          <option value="">
-            Gender
-          </option>
-
-          <option value="Male">
-            Male
-          </option>
-
-          <option value="Female">
-            Female
-          </option>
-        </select>
-
-        <input
-          name="phone"
-          placeholder="Phone"
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <input
-          name="email"
-          placeholder="Email"
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <input
-          name="address"
-          placeholder="Address"
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <input
-          name="designation"
-          placeholder="Designation"
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <input
-          name="department"
-          placeholder="Department"
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <input
-          type="date"
-          name="employment_date"
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <input
-          name="qualification"
-          placeholder="Qualification"
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
-        <input
-          type="number"
-          name="basic_salary"
-          placeholder="Salary"
-          onChange={handleChange}
-          style={inputStyle}
-        />
-
+      <div className="mt-6 flex flex-wrap gap-3">
         <button
-          type="submit"
-          style={{
-            background: "#2563eb",
-            color: "#fff",
-            border: "none",
-            padding: "12px 20px",
-            borderRadius: "10px",
-            cursor: "pointer",
-          }}
+          type="button"
+          onClick={() => setPage?.(canInviteStaff ? "role-invitations" : "teachers")}
+          className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
         >
-          Save Teacher
+          {canInviteStaff ? "Open Role Invitations" : "Back to Teachers"}
         </button>
-      </form>
+        <button
+          type="button"
+          onClick={() => setPage?.("teachers")}
+          className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        >
+          View Teachers
+        </button>
+      </div>
     </div>
   );
 }
-
-const inputStyle = {
-  width: "100%",
-  padding: "12px",
-  marginBottom: "15px",
-  border: "1px solid #cbd5e1",
-  borderRadius: "10px",
-};

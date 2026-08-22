@@ -27,6 +27,13 @@ class PromotionService
             ];
         }
 
+        if (!$config->automatic_promotion) {
+            return [
+                'status' => 'Promotion Pending',
+                'promoted' => false,
+            ];
+        }
+
         if ($config->promote_final_term_only && ! $isFinalTerm) {
             return [
                 'status' => 'Promotion Pending',

@@ -4,14 +4,17 @@ import axios from "axios";
 |--------------------------------------------------------------------------
 | DONO SCHOOL ERP API
 |--------------------------------------------------------------------------
-| Production Laravel backend hosted on Railway.
+| The API origin is configurable for Railway, local testing, or a shared tunnel.
 |
-| Do not change this URL unless the Railway backend URL changes.
+| Prefer VITE_API_URL for separate frontend/backend deployments; leave it empty
+| when the frontend and Laravel API share the same origin.
 |
 */
 
 const API_URL =
-    "https://doono-erp-production.up.railway.app/api/v1";
+    import.meta.env.VITE_API_URL ||
+    (typeof window !== "undefined" && window.__DOONO_API_URL__) ||
+    "/api/v1";
 
 const api = axios.create({
     baseURL: API_URL,
@@ -41,6 +44,11 @@ api.interceptors.request.use(
             config.headers.Authorization = `Bearer ${token}`;
         }
 
+        if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+            config.headers = config.headers || {};
+            delete config.headers["Content-Type"];
+        }
+
         return config;
     },
     (error) => {
@@ -65,14 +73,14 @@ api.interceptors.response.use(
         | NETWORK ERROR
         |--------------------------------------------------------------------------
         | No response means the browser could not communicate with
-        | the Railway Laravel backend.
+        | the configured Laravel API origin.
         |--------------------------------------------------------------------------
         */
 
         if (!error.response) {
             const networkError = new Error(
-                "Unable to connect to the DONO School ERP server. " +
-                "Please check the Railway backend connection."
+                `Unable to connect to the DOONO De Creator ERP API at ${API_URL}. ` +
+                "Check the backend URL, tunnel, or network connection."
             );
 
             networkError.code = error.code || "NETWORK_ERROR";
@@ -108,6 +116,22 @@ api.interceptors.response.use(
 
         if (data.message) {
             error.message = data.message;
+        }
+
+        if (data.requires_subscription || data.requested_feature) {
+            error.requiresSubscription = true;
+            error.requestedFeature = data.requested_feature || null;
+            error.requestedFeatureLabel = data.requested_feature_label || null;
+            error.currentPlan = data.current_plan || null;
+            error.upgradeUrl = data.upgrade_url || "/dashboard/subscription/upgrade";
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("dono:subscription-required", {
+                    detail: {
+                        feature: data.requested_feature_label || data.requested_feature || "This feature",
+                        message: data.message,
+                    },
+                }));
+            }
         }
 
         /*
@@ -194,5 +218,25 @@ api.interceptors.response.use(
 */
 
 export const getApiBaseUrl = () => API_URL;
+
+export const resolveMediaUrl = (value) => {
+    if (!value || typeof value !== "string") return "";
+    if (/^(blob:|data:)/i.test(value)) return value;
+
+    const browserOrigin = typeof window !== "undefined" ? window.location.origin : "http://localhost";
+    const configuredApiUrl = new URL(API_URL, browserOrigin);
+    const mediaUrl = new URL(value, browserOrigin);
+    const isLocalPlaceholder = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/i.test(mediaUrl.hostname);
+    const isStoragePath = mediaUrl.pathname.startsWith("/storage/");
+
+    // APP_URL is often left as localhost during local/tunnel testing. The browser
+    // can reach the API origin, not the backend machine's localhost address.
+    if (isLocalPlaceholder || (isStoragePath && configuredApiUrl.origin !== browserOrigin && !/^https?:\/\//i.test(value))) {
+        mediaUrl.protocol = configuredApiUrl.protocol;
+        mediaUrl.host = configuredApiUrl.host;
+    }
+
+    return mediaUrl.toString();
+};
 
 export default api;

@@ -8,6 +8,11 @@ use App\Models\User;
 
 class CurrentContextService
 {
+    public function __construct(
+        protected TenantPartitionService $tenantPartitions,
+        protected MediaStorageService $media,
+    ) {}
+
     /**
      * Resolve the authenticated user's complete platform context.
      *
@@ -25,8 +30,9 @@ class CurrentContextService
         $organization = $this->currentOrganization($user, $school);
         $isOrgOwner = $this->isOrganizationOwner($user);
 
-        // Resolve base roles
-        $roles = $user->roles()
+        // Resolve every membership for context switching, then derive the
+        // active-school role set used by the frontend and permission checks.
+        $allRoles = $user->roles()
             ->get()
             ->map(fn ($role) => [
                 'slug' => $role->slug,
@@ -34,6 +40,8 @@ class CurrentContextService
                 'school_id' => $role->pivot->school_id,
                 'permissions' => $role->permissions->pluck('slug')->all(),
             ]);
+
+        $roles = $allRoles->values();
 
         // If an Organization Owner has entered a school, grant them the Proprietor role for that school
         if ($isOrgOwner && $school && $organization && $organization->owner_id === $user->id) {
@@ -57,13 +65,19 @@ class CurrentContextService
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'avatar' => $user->avatar,
+                'avatar_url' => $this->media->url($user->avatar),
+                'must_change_password' => (bool) $user->must_change_password,
+                'password_changed_at' => $user->password_changed_at,
             ],
             'is_platform_admin' => $isPlatformAdmin,
             'is_organization_owner' => $isOrgOwner,
             'organization' => $organization,
             'school' => $school,
-            'roles' => $roles->map(fn($r) => collect($r)->except('permissions')->all())->values(),
-            'permissions' => $roles->flatMap(fn($r) => $r['permissions'])->unique()->values()->all(),
+            'tenant_partition' => $this->tenantPartitions->forSchool($school),
+            'roles' => $this->presentRoles($roles, $school?->id, $isPlatformAdmin),
+            'all_roles' => $roles->map(fn($r) => collect($r)->except('permissions')->all())->values(),
+            'permissions' => $this->activePermissions($roles, $school?->id, $isPlatformAdmin),
             'onboarding_step' => $this->resolveOnboardingStep(
                 $isPlatformAdmin,
                 $organization,
@@ -90,14 +104,14 @@ class CurrentContextService
                 // Ensure the user actually has access to this school
                 $isOwner = $selectedSchool->owner_id === $user->id;
                 $hasRole = $user->roles()->wherePivot('school_id', $selectedSchool->id)->exists();
-                
+
                 if ($isOwner || $hasRole) {
                     return $selectedSchool;
                 }
             }
         }
 
-        // 2. If the user is an Organization Owner, we don't fall back. 
+        // 2. If the user is an Organization Owner, we don't fall back.
         // We let them stay in the Organization context unless they explicitly select a school.
         if ($this->isOrganizationOwner($user)) {
             return null;
@@ -153,16 +167,30 @@ class CurrentContextService
         return $user->isSuperAdmin() || $organization->owner_id === $user->id;
     }
 
-    /**
-     * Resolve all permissions inherited through the user's roles.
-     */
-    private function resolvePermissions(User $user): array
+    private function presentRoles($roles, ?int $schoolId, bool $isPlatformAdmin): array
     {
-        return $user->roles()
-            ->with('permissions')
-            ->get()
-            ->flatMap(fn ($role) => $role->permissions)
-            ->pluck('slug')
+        $visible = $isPlatformAdmin
+            ? $roles
+            : ($schoolId === null
+                ? $roles->filter(fn ($role) => $role['school_id'] === null)
+                : $roles->filter(fn ($role) => (int) $role['school_id'] === $schoolId));
+
+        return $visible
+            ->map(fn ($role) => collect($role)->except('permissions')->all())
+            ->values()
+            ->all();
+    }
+
+    private function activePermissions($roles, ?int $schoolId, bool $isPlatformAdmin): array
+    {
+        $visible = $isPlatformAdmin
+            ? $roles
+            : ($schoolId === null
+                ? $roles->filter(fn ($role) => $role['school_id'] === null)
+                : $roles->filter(fn ($role) => (int) $role['school_id'] === $schoolId));
+
+        return $visible
+            ->flatMap(fn ($role) => $role['permissions'])
             ->unique()
             ->values()
             ->all();

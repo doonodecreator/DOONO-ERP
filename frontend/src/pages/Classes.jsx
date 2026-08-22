@@ -1,7 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import api from '../services/api';
+import { useEffect, useState } from "react";
+import api from "../services/api";
+import PageContainer from "../components/layout/PageContainer";
+import PageHeader from "../components/layout/PageHeader";
+import DataTable from "../components/tables/DataTable";
+import Modal from "../components/modals/Modal";
+import Button from "../components/forms/Button";
+import { FormField, FormActions } from "../components/forms/FormField";
+import Alert from "../components/feedback/Alert";
+import { useAuth } from "../context/AuthContext";
 
-export default function Classes() {
+export default function Classes({ teacherOnly = false }) {
+  const { permissions = [] } = useAuth();
+  const canManageClasses = !teacherOnly && permissions.includes("manage_classes");
   const [classes, setClasses] = useState([]);
   const [divisions, setDivisions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10,108 +20,57 @@ export default function Classes() {
   const [errors, setErrors] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
-
-  const [form, setForm] = useState({
-    division_id: '',
-    name: '',
-    code: '',
-    display_order: 1,
-    is_active: true,
-  });
-
-  useEffect(() => {
-    loadClassesAndDivisions();
-  }, []);
+  const [form, setForm] = useState({ division_id: "", name: "", code: "", display_order: 1, is_active: true });
 
   const loadClassesAndDivisions = async () => {
     try {
       setLoading(true);
       setError(null);
-      const [classRes, divRes] = await Promise.allSettled([
-        api.get('/classes'),
-        api.get('/divisions'),
-      ]);
-
-      if (classRes.status === 'fulfilled') {
-        const resData = classRes.value?.data;
-        const cData = resData?.data?.data ?? resData?.data ?? resData ?? [];
-        setClasses(Array.isArray(cData) ? cData : []);
+      if (teacherOnly) {
+        const response = await api.get("/teacher/dashboard");
+        const payload = response?.data;
+        setClasses(Array.isArray(payload?.my_classes) ? payload.my_classes : []);
+        setDivisions([]);
+        return;
       }
-      if (divRes.status === 'fulfilled') {
-        const resData = divRes.value?.data;
-        const dData = resData?.data?.data ?? resData?.data ?? resData ?? [];
-        setDivisions(Array.isArray(dData) ? dData : []);
-      }
-
-      const failedResponse = [classRes, divRes].find((response) => response.status === 'rejected');
-      if (failedResponse) {
-        throw new Error(failedResponse.reason?.response?.data?.message || failedResponse.reason?.message || 'Unable to load class setup data.');
-      }
+      const [classRes, divRes] = await Promise.all([api.get("/classes"), api.get("/divisions")]);
+      const classData = classRes.data?.data?.data ?? classRes.data?.data ?? classRes.data ?? [];
+      const divisionData = divRes.data?.data?.data ?? divRes.data?.data ?? divRes.data ?? [];
+      setClasses(Array.isArray(classData) ? classData : []);
+      setDivisions(Array.isArray(divisionData) ? divisionData : []);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load class configuration.');
+      setError(err.response?.data?.message || "Failed to load class configuration.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOpenModal = (cls = null) => {
+  useEffect(() => { loadClassesAndDivisions(); }, []);
+
+  const handleOpenModal = (classRecord = null) => {
+    if (!canManageClasses) return;
     setErrors({});
-    if (!cls && divisions.length === 0) {
-      setError('Create at least one division before creating a class.');
+    if (!classRecord && divisions.length === 0) {
+      setError("Create at least one division before creating a class.");
       return;
     }
-    if (cls) {
-      setEditingId(cls.id);
-      setForm({
-        division_id: cls.division_id || '',
-        name: cls.name || '',
-        code: cls.code || '',
-        display_order: cls.display_order || 1,
-        is_active: cls.is_active ?? true,
-      });
-    } else {
-      setEditingId(null);
-      setForm({
-        division_id: divisions[0]?.id || '',
-        name: '',
-        code: '',
-        display_order: classes.length + 1,
-        is_active: true,
-      });
-    }
+    setEditingId(classRecord?.id || null);
+    setForm(classRecord ? { division_id: classRecord.division_id || "", name: classRecord.name || "", code: classRecord.code || "", display_order: classRecord.display_order || 1, is_active: classRecord.is_active ?? true } : { division_id: divisions[0]?.id || "", name: "", code: "", display_order: classes.length + 1, is_active: true });
     setShowModal(true);
   };
 
-  const handleChange = (e) => {
-    const { name, value, checked, type } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: null }));
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setSubmitting(true);
     setErrors({});
-
     try {
-      if (editingId) {
-        await api.put(`/classes/${editingId}`, form);
-      } else {
-        await api.post('/classes', form);
-      }
+      if (editingId) await api.put(`/classes/${editingId}`, form);
+      else await api.post("/classes", form);
       setShowModal(false);
-      loadClassesAndDivisions();
+      await loadClassesAndDivisions();
     } catch (err) {
-      if (err.response && err.response.status === 422) {
-        setErrors(err.response.data.errors || {});
-      } else {
-        alert(err.response?.data?.message || 'Failed to save class.');
-      }
+      if (err.response?.status === 422) setErrors(err.response.data.errors || {});
+      else setError(err.response?.data?.message || "Failed to save class.");
     } finally {
       setSubmitting(false);
     }
@@ -119,202 +78,36 @@ export default function Classes() {
 
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Are you sure you want to delete class "${name}"?`)) return;
-
-    try {
-      await api.delete(`/classes/${id}`);
-      loadClassesAndDivisions();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete class.');
-    }
+    try { await api.delete(`/classes/${id}`); await loadClassesAndDivisions(); } catch (err) { setError(err.response?.data?.message || "Failed to delete class."); }
   };
 
-  return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Classes & Academic Streams</h1>
-          <p className="text-sm text-gray-500">Define academic levels, grade sections, and stream allocations.</p>
-        </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition shadow-sm"
-        >
-          + Add New Class
-        </button>
-      </div>
+  const fieldError = (name) => Array.isArray(errors[name]) ? errors[name][0] : errors[name];
+  const columns = teacherOnly ? [
+    { key: "name", label: "Assigned class", render: (item) => <span className="font-semibold">{item.name || "Class"}</span> },
+    { key: "students", label: "Students", render: (item) => item.student_count ?? 0 },
+    { key: "assignment", label: "Assignment", render: () => <span className="status-badge status-badge-muted">Read-only</span> },
+  ] : [
+    { key: "display_order", label: "Order", render: (item) => <span className="font-mono text-xs">{item.display_order || "—"}</span> },
+    { key: "name", label: "Class", render: (item) => <span className="font-semibold">{item.name}</span> },
+    { key: "code", label: "Code", render: (item) => <span className="font-mono text-xs">{item.code || "—"}</span> },
+    { key: "division", label: "Division", render: (item) => item.division?.name || "—" },
+    { key: "streams", label: "Streams", render: (item) => <span className="status-badge status-badge-muted">{item.streams?.length || 0}</span> },
+    { key: "status", label: "Status", render: (item) => <span className={`status-badge ${item.is_active ? "status-badge-success" : "status-badge-muted"}`}>{item.is_active ? "Active" : "Inactive"}</span> },
+    ...(canManageClasses ? [{ key: "actions", label: "Actions", align: "right", render: (item) => <div className="table-actions"><Button size="sm" variant="ghost" onClick={() => handleOpenModal(item)}>Edit</Button><Button size="sm" variant="danger" onClick={() => handleDelete(item.id, item.name)}>Delete</Button></div> }] : []),
+  ];
 
-      {error && (
-        <div className="p-4 mb-6 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm flex justify-between items-center">
-          <span>{error}</span>
-          <button onClick={loadClassesAndDivisions} className="underline font-semibold">Retry</button>
-        </div>
-      )}
-
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {loading ? (
-          <div className="p-12 text-center text-gray-500">Loading academic classes...</div>
-        ) : classes.length === 0 ? (
-          <div className="p-12 text-center text-gray-400">
-            <p className="text-base font-medium">No academic classes defined.</p>
-            <p className="text-xs mt-1">Click above to add your school's first class (e.g., JSS 1 or Primary 1).</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
-                <tr>
-                  <th className="px-6 py-3">Order</th>
-                  <th className="px-6 py-3">Class Name</th>
-                  <th className="px-6 py-3">Code</th>
-                  <th className="px-6 py-3">Division</th>
-                  <th className="px-6 py-3">Streams Count</th>
-                  <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {classes.map((cls) => (
-                  <tr key={cls.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 font-mono text-xs font-semibold text-gray-500">
-                      {cls.display_order || '—'}
-                    </td>
-                    <td className="px-6 py-4 font-semibold text-gray-900">{cls.name}</td>
-                    <td className="px-6 py-4 font-mono text-xs text-gray-600">{cls.code || '—'}</td>
-                    <td className="px-6 py-4">{cls.division?.name || '—'}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium">
-                        {cls.streams?.length || 0} Streams
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${
-                        cls.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {cls.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleOpenModal(cls)}
-                        className="text-blue-600 hover:text-blue-800 font-medium text-xs"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(cls.id, cls.name)}
-                        className="text-red-600 hover:text-red-800 font-medium text-xs"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-800">
-                {editingId ? 'Edit Academic Class' : 'Add New Class'}
-              </h2>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Division / Level *</label>
-                <select
-                  name="division_id"
-                  value={form.division_id}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Division...</option>
-                  {divisions.map((d) => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
-                  ))}
-                </select>
-                {errors.division_id && <p className="text-xs text-red-500 mt-1">{errors.division_id[0]}</p>}
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Class Name *</label>
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="e.g. Primary 1, JSS 2, SS 3"
-                  value={form.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                />
-                {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name[0]}</p>}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Class Code</label>
-                  <input
-                    type="text"
-                    name="code"
-                    placeholder="e.g. PR1"
-                    value={form.code}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Display Order</label>
-                  <input
-                    type="number"
-                    name="display_order"
-                    value={form.display_order}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2 pt-2">
-                <input
-                  type="checkbox"
-                  id="is_active"
-                  name="is_active"
-                  checked={form.is_active}
-                  onChange={handleChange}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
-                />
-                <label htmlFor="is_active" className="text-sm text-gray-700 font-medium cursor-pointer">
-                  Active Academic Class
-                </label>
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-4 border-t">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {submitting ? 'Saving...' : editingId ? 'Update Class' : 'Create Class'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return <PageContainer>
+    <PageHeader title="Classes & Academic Streams" subtitle={canManageClasses ? "Define academic levels, grade sections, and stream allocations." : "View the school classes configured by authorized school administrators."} action={canManageClasses ? <Button onClick={() => handleOpenModal()}>Add class</Button> : null} />
+    {error && <Alert variant="error" action={<button type="button" onClick={loadClassesAndDivisions}>Retry</button>}>{error}</Alert>}
+    <DataTable columns={columns} data={classes} loading={loading} emptyTitle="No academic classes defined" emptyMessage="Create a division first, then add your school’s first class." />
+    {canManageClasses && <Modal open={showModal} title={editingId ? "Edit academic class" : "Add academic class"} description="Classes belong to a division and can later receive streams." onClose={() => setShowModal(false)} footer={<FormActions sticky={false}><Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button><Button type="submit" form="class-form" loading={submitting}>{editingId ? "Update class" : "Create class"}</Button></FormActions>}>
+      <form id="class-form" onSubmit={handleSubmit} className="ui-form-grid">
+        <FormField label="Division / level" htmlFor="class-division" required error={fieldError("division_id")}><select id="class-division" name="division_id" value={form.division_id} onChange={(event) => setForm({ ...form, division_id: event.target.value })} required className="ui-form-control" aria-invalid={!!fieldError("division_id")}><option value="">Select division</option>{divisions.map((division) => <option key={division.id} value={division.id}>{division.name}</option>)}</select></FormField>
+        <FormField label="Class name" htmlFor="class-name" required error={fieldError("name")}><input id="class-name" name="name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. Primary 1 or JSS 2" required className="ui-form-control" aria-invalid={!!fieldError("name")} /></FormField>
+        <FormField label="Class code" htmlFor="class-code"><input id="class-code" name="code" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} placeholder="e.g. PR1" className="ui-form-control" /></FormField>
+        <FormField label="Display order" htmlFor="class-order"><input id="class-order" name="display_order" type="number" min="1" value={form.display_order} onChange={(event) => setForm({ ...form, display_order: event.target.value })} className="ui-form-control" /></FormField>
+        <label className="ui-form-field flex items-center gap-2"><input type="checkbox" name="is_active" checked={form.is_active} onChange={(event) => setForm({ ...form, is_active: event.target.checked })} /><span className="ui-form-label mb-0">Active academic class</span></label>
+      </form>
+    </Modal>}
+  </PageContainer>;
 }

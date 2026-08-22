@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 
 class CurrencyController extends Controller
@@ -33,6 +34,14 @@ class CurrencyController extends Controller
         ]);
 
         $currency = Currency::create($validated);
+
+        ActivityLogService::log(
+            module: 'currencies',
+            action: 'created',
+            description: "Currency \"{$currency->code}\" was created.",
+            subject: $currency,
+            properties: ['changed_fields' => array_keys($validated)],
+        );
 
         return response()->json([
             'message' => 'Currency created successfully.',
@@ -66,6 +75,14 @@ class CurrencyController extends Controller
 
         $currency->update($validated);
 
+        ActivityLogService::log(
+            module: 'currencies',
+            action: 'updated',
+            description: "Currency \"{$currency->code}\" was updated.",
+            subject: $currency,
+            properties: ['changed_fields' => array_keys($validated)],
+        );
+
         return response()->json([
             'message' => 'Currency updated successfully.',
             'data' => $currency
@@ -77,7 +94,16 @@ class CurrencyController extends Controller
      */
     public function destroy(Currency $currency)
     {
+        $currencyCode = $currency->code;
+        $currencyId = $currency->id;
         $currency->delete();
+
+        ActivityLogService::log(
+            module: 'currencies',
+            action: 'deleted',
+            description: "Currency \"{$currencyCode}\" was deleted.",
+            properties: ['currency_id' => $currencyId],
+        );
 
         return response()->json([
             'message' => 'Currency deleted successfully.'

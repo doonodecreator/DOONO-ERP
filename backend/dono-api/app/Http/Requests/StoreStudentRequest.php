@@ -58,7 +58,7 @@ class StoreStudentRequest extends FormRequest
             ],
             'date_of_birth' => 'nullable|date',
             'admission_date' => 'nullable|date',
-            'photo' => 'nullable|string',
+            'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
             'religion' => 'nullable|string|max:255',
             'nationality' => 'nullable|string|max:255',
             'state_of_origin' => 'nullable|string|max:255',

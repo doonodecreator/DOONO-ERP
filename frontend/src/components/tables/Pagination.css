@@ -1,0 +1,38 @@
+.dono-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 0;
+  color: var(--text-muted);
+  font-size: var(--font-xs);
+}
+
+.dono-pagination-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dono-pagination-page {
+  min-width: 86px;
+  color: var(--text-primary);
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .dono-pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dono-pagination-actions {
+    justify-content: space-between;
+  }
+
+  .dono-pagination-actions .ui-button {
+    min-width: 92px;
+  }
+}

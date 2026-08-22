@@ -52,8 +52,9 @@ export default function PlatformOwnerDashboard() {
 
     const stats = dashboard.system_stats || {};
 
-    const organizations =
-        dashboard.organizations || [];
+    const organizations = Array.isArray(dashboard.organizations)
+        ? dashboard.organizations
+        : [];
 
     const columns = [
         {
@@ -79,7 +80,7 @@ export default function PlatformOwnerDashboard() {
 
             <PageHeader
                 title="Platform Owner Dashboard"
-                subtitle="Manage every organization, school and subscription on the DONO platform."
+                subtitle="Manage every organization, school and subscription on the DOONO platform."
             />
 
             <DashboardGrid>
@@ -106,6 +107,18 @@ export default function PlatformOwnerDashboard() {
                     title="Revenue"
                     value={stats.mrr || "₦0"}
                     color="#9333ea"
+                />
+
+                <StatCard
+                    title="Pending payments"
+                    value={stats.pending_payments || 0}
+                    color="#d97706"
+                />
+
+                <StatCard
+                    title="Failed payments"
+                    value={stats.failed_payments || 0}
+                    color="#dc2626"
                 />
 
             </DashboardGrid>

@@ -7,6 +7,7 @@ use App\Http\Requests\StorePromoCampaignRequest;
 use App\Http\Requests\UpdatePromoCampaignRequest;
 use App\Http\Resources\PromoCampaignResource;
 use App\Models\PromoCampaign;
+use App\Services\ActivityLogService;
 use Illuminate\Support\Facades\DB;
 
 class PromoCampaignController extends Controller
@@ -44,6 +45,14 @@ class PromoCampaignController extends Controller
 
             return $campaign;
         });
+
+        ActivityLogService::log(
+            module: 'promo_campaigns',
+            action: 'created',
+            description: "Promo campaign \"{$campaign->name}\" was created.",
+            subject: $campaign,
+            properties: ['changed_fields' => array_keys($request->validated())],
+        );
 
         return (new PromoCampaignResource(
             $campaign->load('subscriptionPlans')
@@ -89,6 +98,14 @@ class PromoCampaignController extends Controller
             $promoCampaign->update($data);
         });
 
+        ActivityLogService::log(
+            module: 'promo_campaigns',
+            action: 'updated',
+            description: "Promo campaign \"{$promoCampaign->name}\" was updated.",
+            subject: $promoCampaign,
+            properties: ['changed_fields' => array_keys($request->validated())],
+        );
+
         return new PromoCampaignResource(
             $promoCampaign
                 ->fresh()
@@ -103,7 +120,16 @@ class PromoCampaignController extends Controller
     {
         $promoCampaign->subscriptionPlans()->detach();
 
+        $campaignId = $promoCampaign->id;
+        $campaignName = $promoCampaign->name;
         $promoCampaign->delete();
+
+        ActivityLogService::log(
+            module: 'promo_campaigns',
+            action: 'deleted',
+            description: "Promo campaign \"{$campaignName}\" was deleted.",
+            properties: ['campaign_id' => $campaignId],
+        );
 
         return response()->json([
             'message' => 'Promo campaign deleted successfully.',

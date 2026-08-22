@@ -41,7 +41,7 @@ class DisciplineCaseController extends Controller
 
     public function index(Request $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $isManagement = $this->isManagement($request, $schoolId);
 
         abort_unless($isManagement || $this->mayReport($request, $schoolId), 403);
@@ -67,7 +67,7 @@ class DisciplineCaseController extends Controller
 
     public function options(Request $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $isManagement = $this->isManagement($request, $schoolId);
 
         abort_unless($isManagement || $this->mayReport($request, $schoolId), 403);
@@ -99,7 +99,7 @@ class DisciplineCaseController extends Controller
 
     public function store(StoreDisciplineCaseRequest $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         abort_unless($this->mayReport($request, $schoolId), 403);
 
@@ -124,7 +124,7 @@ class DisciplineCaseController extends Controller
 
     public function show(Request $request, DisciplineCase $disciplineCase)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $this->ensureVisibleToReporterOrManagement($request, $disciplineCase, $schoolId);
 
         return new DisciplineCaseResource(
@@ -136,7 +136,7 @@ class DisciplineCaseController extends Controller
         ReviewDisciplineCaseRequest $request,
         DisciplineCase $disciplineCase
     ) {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         abort_unless($this->isManagement($request, $schoolId), 403);
         abort_unless($disciplineCase->school_id === $schoolId, 403);
@@ -224,15 +224,6 @@ class DisciplineCaseController extends Controller
         });
     }
 
-    private function currentSchoolId(Request $request): int
-    {
-        $schoolId = $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($request->user())?->id;
-
-        abort_unless($schoolId, 409, 'No active school.');
-
-        return (int) $schoolId;
-    }
 
     private function perPage(Request $request): int
     {

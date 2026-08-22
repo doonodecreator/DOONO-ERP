@@ -18,6 +18,9 @@ class TimetableResource extends JsonResource
 
             'school_id' => $this->school_id,
             'school' => $this->whenLoaded('school'),
+            'entry_type' => $this->entry_type ?? 'lesson',
+            'schedule_mode' => $this->schedule_mode ?? 'weekly',
+            'target_type' => $this->target_type ?? 'class',
 
             'academic_session_id' => $this->academic_session_id,
             'academic_session' => $this->whenLoaded('academicSession'),
@@ -36,6 +39,8 @@ class TimetableResource extends JsonResource
 
             'subject_id' => $this->subject_id,
             'subject' => $this->whenLoaded('subject'),
+            'title' => $this->title,
+            'description' => $this->description,
 
             'staff_id' => $this->staff_id,
             'staff' => $this->whenLoaded('staff'),
@@ -45,6 +50,9 @@ class TimetableResource extends JsonResource
             'start_time' => $this->start_time,
 
             'end_time' => $this->end_time,
+            'event_date' => $this->event_date?->toDateString(),
+            'effective_from' => $this->effective_from?->toDateString(),
+            'effective_until' => $this->effective_until?->toDateString(),
 
             'room' => $this->room,
 

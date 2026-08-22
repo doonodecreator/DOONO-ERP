@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { arrayFromResponse } from "../utils/response";
 
 const STATUS_OPTIONS = [
     "Promoted",
@@ -12,6 +13,7 @@ export default function Promotions() {
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [actionError, setActionError] = useState("");
 
     const [records, setRecords] = useState([]);
 
@@ -70,7 +72,7 @@ export default function Promotions() {
                 classRes,
                 streamRes,
             ] = await Promise.all([
-                api.get("/student-promotions"),
+                api.get("/promotions"),
                 api.get("/students"),
                 api.get("/academic-sessions"),
                 api.get("/divisions"),
@@ -78,15 +80,15 @@ export default function Promotions() {
                 api.get("/streams"),
             ]);
 
-            const promotionData = promotionRes.data.data ?? [];
+            const promotionData = arrayFromResponse(promotionRes);
 
             setRecords(promotionData);
 
-            setStudents(studentRes.data.data ?? []);
-            setSessions(sessionRes.data.data ?? []);
-            setDivisions(divisionRes.data.data ?? []);
-            setClasses(classRes.data.data ?? []);
-            setStreams(streamRes.data.data ?? []);
+            setStudents(arrayFromResponse(studentRes));
+            setSessions(arrayFromResponse(sessionRes));
+            setDivisions(arrayFromResponse(divisionRes));
+            setClasses(arrayFromResponse(classRes));
+            setStreams(arrayFromResponse(streamRes));
 
             calculateStats(promotionData);
 
@@ -209,6 +211,17 @@ export default function Promotions() {
 
     }
 
+    async function deleteRecord(record) {
+        if (!record?.id || !window.confirm("Delete this promotion record? This action cannot be undone.")) return;
+        try {
+            setActionError("");
+            await api.delete(`/promotions/${record.id}`);
+            await loadData();
+        } catch (error) {
+            setActionError(error.message || "The promotion record could not be deleted.");
+        }
+    }
+
     if (loading) {
 
         return (
@@ -230,6 +243,8 @@ export default function Promotions() {
     return (
 
         <div className="min-h-screen bg-gray-100 p-6">
+
+            {actionError && <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{actionError}</div>}
 
             <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
 
@@ -290,7 +305,7 @@ export default function Promotions() {
 
                         </select>
 
-                        <button
+                        <button type="button"
                             onClick={openCreateModal}
                             className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold"
                         >
@@ -531,7 +546,7 @@ export default function Promotions() {
 
                                     <div className="flex justify-center gap-2">
 
-                                        <button
+                                        <button type="button"
                                             onClick={() =>
                                                 openEditModal(record)
                                             }
@@ -542,7 +557,8 @@ export default function Promotions() {
 
                                         </button>
 
-                                        <button
+                                        <button type="button"
+                                            onClick={() => deleteRecord(record)}
                                             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
                                         >
 
@@ -580,7 +596,7 @@ export default function Promotions() {
 
                             </h2>
 
-                            <button
+                            <button type="button"
                                 onClick={closeModal}
                                 className="text-red-600 text-xl font-bold"
                             >
@@ -1029,7 +1045,7 @@ export default function Promotions() {
 
                         <div className="flex justify-end gap-3 mt-8">
 
-                            <button
+                            <button type="button"
                                 onClick={closeModal}
                                 className="px-6 py-3 rounded-lg bg-gray-300 hover:bg-gray-400 font-semibold"
                             >
@@ -1038,7 +1054,7 @@ export default function Promotions() {
 
                             </button>
 
-                            <button
+                            <button type="button"
                                 disabled={saving}
                                 onClick={savePromotion}
                                 className="px-6 py-3 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold"
@@ -1073,14 +1089,14 @@ export default function Promotions() {
             if (editingId) {
 
                 await api.put(
-                    `/student-promotions/${editingId}`,
+                    `/promotions/${editingId}`,
                     form
                 );
 
             } else {
 
                 await api.post(
-                    "/student-promotions",
+                    "/promotions",
                     form
                 );
 

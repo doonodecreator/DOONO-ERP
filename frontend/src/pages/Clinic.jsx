@@ -35,7 +35,7 @@ export default function Clinic() {
       {error && (
         <div className="p-4 mb-6 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm flex justify-between items-center">
           <span>{error}</span>
-          <button onClick={loadClinicVisits} className="underline font-semibold">Retry</button>
+          <button type="button" onClick={loadClinicVisits} className="underline font-semibold">Retry</button>
         </div>
       )}
 

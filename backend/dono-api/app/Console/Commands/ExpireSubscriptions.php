@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\SchoolSubscription;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class ExpireSubscriptions extends Command
@@ -23,6 +24,8 @@ class ExpireSubscriptions extends Command
      */
     public function handle(): int
     {
+        Cache::put('dono:scheduler:heartbeat', now()->toIso8601String(), now()->addDays(2));
+
         $subscriptions = SchoolSubscription::where('is_current', true)
             ->whereIn('status', ['active', 'trial'])
             ->whereDate('expiry_date', '<', now())

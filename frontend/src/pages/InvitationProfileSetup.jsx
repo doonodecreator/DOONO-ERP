@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import LoadingSpinner from "../components/feedback/LoadingSpinner";
 
 export default function InvitationProfileSetup() {
     const navigate = useNavigate();
+    const { refreshContext } = useAuth();
     const [staff, setStaff] = useState(null);
     const [form, setForm] = useState({
         phone: "",
@@ -37,7 +39,7 @@ export default function InvitationProfileSetup() {
         };
 
         loadStaff();
-    }, [staffId]);
+    }, []);
 
     const handleChange = (event) => {
         const { name, value } = event.target;
@@ -52,7 +54,8 @@ export default function InvitationProfileSetup() {
 
         try {
             await api.put("/me/staff-profile", form);
-            setMessage("Your staff profile has been updated successfully.");
+            await refreshContext();
+            navigate("/");
         } catch (err) {
             const validationMessage = err.errors ? Object.values(err.errors).flat().join(" ") : "";
             setError(err.response?.data?.message || validationMessage || err.message || "Unable to save your profile.");

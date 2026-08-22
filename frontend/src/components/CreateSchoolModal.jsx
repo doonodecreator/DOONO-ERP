@@ -51,7 +51,7 @@ export default function CreateSchoolModal({ onClose, onSuccess }) {
             <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
                 <div className="flex items-center justify-between pb-4 border-b">
                     <h2 className="text-xl font-bold text-gray-800">Create School</h2>
-                    <button 
+                    <button type="button"
                         onClick={onClose}
                         className="text-gray-500 hover:text-gray-700 font-bold text-lg"
                     >

@@ -2,294 +2,77 @@ import { useEffect, useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { getPrimaryRoleSlug } from "../utils/role";
+import PageContainer from "../components/layout/PageContainer";
+import PageHeader from "../components/layout/PageHeader";
+import SectionCard from "../components/layout/SectionCard";
+import DashboardGrid from "../components/dashboard/DashboardGrid";
+import StatCard from "../components/dashboard/StatCard";
+import LoadingSpinner from "../components/feedback/LoadingSpinner";
+import EmptyState from "../components/feedback/EmptyState";
+import Alert from "../components/feedback/Alert";
+import Button from "../components/forms/Button";
 
-import {
-  FaBuilding,
-  FaSchool,
-  FaUserGraduate,
-  FaChalkboardTeacher,
-  FaUsers,
-  FaBook,
-  FaLayerGroup,
-  FaProjectDiagram,
-  FaMoneyBillWave,
-  FaWallet,
-  FaClock,
-  FaCheckCircle,
-  FaClipboardCheck,
-  FaFileAlt,
-  FaChartLine,
-} from "react-icons/fa";
-
-import "../styles/dashboard.css";
+const numberValue = (value) => Number(value ?? 0).toLocaleString();
+const moneyValue = (value) => `₦${numberValue(value)}`;
 
 export default function Dashboard() {
   const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  const userRole = getPrimaryRoleSlug({
-    roles,
-    isPlatformAdmin,
-    isOrganizationOwner,
-    school,
-  });
-
-  const isSuperAdmin =
-    userRole === "super_admin" || stats?.dashboard_type === "super_admin";
-
-  const isSchoolAdmin = [
-    "proprietor",
-    "principal",
-    "vice_principal_academic",
-    "vice_principal_admin",
-    "bursar",
-  ].includes(userRole);
-
-  useEffect(() => {
-    loadDashboard();
-  }, []);
+  const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school }) || "user";
+  const isSuperAdmin = userRole === "super_admin" || stats?.dashboard_type === "super_admin";
+  const isSchoolAdmin = ["proprietor", "principal", "vice_principal_academic", "vice_principal_admin", "bursar"].includes(userRole);
 
   async function loadDashboard() {
     try {
       setLoading(true);
       setError("");
-
       const response = await api.get("/dashboard");
-      const data = response?.data?.data || response?.data || {};
-      setStats(data);
+      setStats(response?.data?.data || response?.data || {});
     } catch (err) {
-      console.error("Dashboard error:", err);
-      setError(
-        err?.message ||
-        err?.data?.message ||
-        "Unable to load dashboard metrics. Please check your network or backend connection."
-      );
+      setError(err?.message || err?.data?.message || "Unable to load dashboard metrics. Please check your network or backend connection.");
     } finally {
       setLoading(false);
     }
   }
 
+  useEffect(() => { loadDashboard(); }, []);
+
+  if (loading) return <PageContainer><PageHeader title="DOONO De Creator ERP" subtitle="Your role-based operational overview." /><LoadingSpinner text="Loading dashboard analytics..." /></PageContainer>;
+
+  const roleLabel = isSuperAdmin ? "Software Owner" : userRole.replace(/_/g, " ");
   const cards = [
-    {
-      title: "Organizations",
-      value: stats?.organizations,
-      icon: <FaBuilding />,
-      color: "#1d4ed8",
-      show: isSuperAdmin,
-    },
-    {
-      title: "Schools",
-      value: stats?.schools,
-      icon: <FaSchool />,
-      color: "#2563eb",
-      show: isSuperAdmin,
-    },
-    {
-      title: "Students",
-      value: stats?.students,
-      icon: <FaUserGraduate />,
-      color: "#0f766e",
-      show: isSuperAdmin || isSchoolAdmin,
-    },
-    {
-      title: "Staff",
-      value: stats?.staff,
-      icon: <FaChalkboardTeacher />,
-      color: "#16a34a",
-      show: isSuperAdmin || isSchoolAdmin,
-    },
-    {
-      title: "Parents",
-      value: stats?.parents,
-      icon: <FaUsers />,
-      color: "#9333ea",
-      show: isSuperAdmin || isSchoolAdmin,
-    },
-    {
-      title: "Subjects",
-      value: stats?.subjects,
-      icon: <FaBook />,
-      color: "#ea580c",
-      show: isSuperAdmin || isSchoolAdmin,
-    },
-    {
-      title: "Classes",
-      value: stats?.classes,
-      icon: <FaLayerGroup />,
-      color: "#0f766e",
-      show: isSuperAdmin || isSchoolAdmin,
-    },
-    {
-      title: "Streams",
-      value: stats?.streams,
-      icon: <FaProjectDiagram />,
-      color: "#475569",
-      show: isSuperAdmin || isSchoolAdmin,
-    },
-    {
-      title: "Fee Categories",
-      value: stats?.fee_categories,
-      icon: <FaMoneyBillWave />,
-      color: "#b45309",
-      show: isSuperAdmin || isSchoolAdmin,
-    },
-    {
-      title: "Student Fees",
-      value: stats?.student_fees,
-      icon: <FaWallet />,
-      color: "#dc2626",
-      show: isSuperAdmin || isSchoolAdmin,
-    },
-    {
-      title: "Pending Fees",
-      value: stats?.pending_fees,
-      icon: <FaClock />,
-      color: "#ca8a04",
-      show: isSuperAdmin || isSchoolAdmin,
-    },
-    {
-      title: "Partial Fees",
-      value: stats?.partial_fees,
-      icon: <FaClipboardCheck />,
-      color: "#0891b2",
-      show: isSuperAdmin || isSchoolAdmin,
-    },
-    {
-      title: "Paid Fees",
-      value: stats?.paid_fees,
-      icon: <FaCheckCircle />,
-      color: "#16a34a",
-      show: isSuperAdmin || isSchoolAdmin,
-    },
-    {
-      title: "Examinations",
-      value: stats?.examinations,
-      icon: <FaFileAlt />,
-      color: "#7c3aed",
-      show: true,
-    },
-    {
-      title: "Attendance",
-      value: stats?.attendance_records,
-      icon: <FaChartLine />,
-      color: "#1e40af",
-      show: true,
-    },
+    ["Organizations", stats?.organizations, "primary", isSuperAdmin],
+    ["Schools", stats?.schools, "info", isSuperAdmin],
+    ["Students", stats?.students, "success", isSuperAdmin || isSchoolAdmin],
+    ["Staff", stats?.staff, "success", isSuperAdmin || isSchoolAdmin],
+    ["Parents", stats?.parents, "purple", isSuperAdmin || isSchoolAdmin],
+    ["Subjects", stats?.subjects, "warning", isSuperAdmin || isSchoolAdmin],
+    ["Classes", stats?.classes, "info", isSuperAdmin || isSchoolAdmin],
+    ["Streams", stats?.streams, "neutral", isSuperAdmin || isSchoolAdmin],
+    ["Fee categories", stats?.fee_categories, "warning", isSuperAdmin || isSchoolAdmin],
+    ["Student fees", stats?.student_fees, "danger", isSuperAdmin || isSchoolAdmin],
+    ["Pending fees", stats?.pending_fees, "warning", isSuperAdmin || isSchoolAdmin],
+    ["Partial fees", stats?.partial_fees, "info", isSuperAdmin || isSchoolAdmin],
+    ["Paid fees", stats?.paid_fees, "success", isSuperAdmin || isSchoolAdmin],
+    ["Examinations", stats?.examinations, "purple", true],
+    ["Attendance records", stats?.attendance_records, "primary", true],
   ];
 
-  if (loading) {
-    return (
-      <div className="dashboard-loading" style={{ padding: "40px", textAlign: "center" }}>
-        <p style={{ color: "#64748b", fontWeight: "500" }}>Loading dashboard analytics...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="dashboard-error" style={{ padding: "30px", textAlign: "center" }}>
-        <p style={{ color: "#dc2626", fontWeight: "600", marginBottom: "15px" }}>{error}</p>
-        <button
-          onClick={loadDashboard}
-          style={{
-            background: "#2563eb",
-            color: "#ffffff",
-            border: "none",
-            padding: "8px 18px",
-            borderRadius: "6px",
-            fontWeight: "600",
-            cursor: "pointer",
-          }}
-        >
-          Retry Connection
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="dashboard-page">
-      <div className="dashboard-header">
-        <div className="dashboard-title">
-          <h1>DONO School ERP</h1>
-          <p>
-            {isSuperAdmin
-              ? "Software Owner / Platform Administrator Dashboard"
-              : isSchoolAdmin
-              ? "School Administrator Dashboard"
-              : `${userRole.replace(/_/g, " ").toUpperCase()} Dashboard`}
-          </p>
-        </div>
-      </div>
-
-      <div className="dashboard-grid">
-        {cards
-          .filter((card) => card.show)
-          .map((card) => (
-            <div key={card.title} className="dashboard-card">
-              <div className="dashboard-card-top">
-                <div
-                  className="dashboard-card-icon"
-                  style={{ background: card.color }}
-                >
-                  {card.icon}
-                </div>
-              </div>
-
-              <div className="dashboard-card-title">{card.title}</div>
-
-              <div className="dashboard-card-value">
-                {Number(card.value ?? 0).toLocaleString()}
-              </div>
-            </div>
-          ))}
-      </div>
-
-      {(isSuperAdmin || isSchoolAdmin) && (
-        <div className="dashboard-two-columns">
-          <div className="dashboard-section">
-            <h2>Finance Summary</h2>
-
-            <div className="dashboard-list">
-              <div className="dashboard-list-item">
-                <span>Payments Received</span>
-                <strong>
-                  ₦{Number(stats?.payments_received ?? 0).toLocaleString()}
-                </strong>
-              </div>
-
-              <div className="dashboard-list-item">
-                <span>Outstanding Fees</span>
-                <strong>
-                  ₦{Number(stats?.outstanding_fees ?? 0).toLocaleString()}
-                </strong>
-              </div>
-            </div>
-          </div>
-
-          <div className="dashboard-section">
-            <h2>System & Access Status</h2>
-
-            <div className="dashboard-list">
-              <div className="dashboard-list-item">
-                <span>Your Active Role</span>
-                <span className="dashboard-badge" style={{ background: "#dbeafe", color: "#1e40af" }}>
-                  {isSuperAdmin ? "Software Owner" : userRole.replace(/_/g, " ")}
-                </span>
-              </div>
-
-              <div className="dashboard-list-item">
-                <span>System Health</span>
-                <span className="dashboard-badge" style={{ background: "#dcfce7", color: "#166534" }}>
-                  Online
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return <PageContainer>
+    <PageHeader title="DOONO De Creator ERP" subtitle={`${roleLabel} dashboard · Live school and platform metrics.`} />
+    {error && <Alert variant="error" action={<Button variant="secondary" size="sm" onClick={loadDashboard}>Retry connection</Button>}>{error}</Alert>}
+    {!error && <>
+      <DashboardGrid>{cards.filter(([, , , show]) => show).map(([title, value, color]) => <StatCard key={title} title={title} value={numberValue(value)} color={color} />)}</DashboardGrid>
+      {(isSuperAdmin || isSchoolAdmin) ? <div className="dashboard-section-grid">
+        <SectionCard title="Finance summary" subtitle="Current payment and fee position for the active scope.">
+          <div className="dashboard-list"><div className="dashboard-list-row"><span className="dashboard-list-title">Payments received</span><strong>{moneyValue(stats?.payments_received)}</strong></div><div className="dashboard-list-row"><span className="dashboard-list-title">Outstanding fees</span><strong>{moneyValue(stats?.outstanding_fees)}</strong></div></div>
+        </SectionCard>
+        <SectionCard title="System and access status" subtitle="The current account context and service availability.">
+          <div className="dashboard-list"><div className="dashboard-list-row"><span className="dashboard-list-title">Active role</span><span className="status-badge status-badge-info">{roleLabel}</span></div><div className="dashboard-list-row"><span className="dashboard-list-title">System health</span><span className="status-badge status-badge-success">Online</span></div></div>
+        </SectionCard>
+      </div> : <SectionCard title="Dashboard scope" subtitle="Your dashboard only displays information available to the authenticated role and context."><EmptyState title="Role-specific workspace" message="Open a role workspace from the navigation to manage the records assigned to you." /></SectionCard>}
+    </>}
+  </PageContainer>;
 }

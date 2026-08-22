@@ -21,7 +21,7 @@ class StoreAssessmentStructureRequest extends FormRequest
     {
         return [
 
-            'school_id' => 'required|exists:schools,id',
+            'school_id' => 'nullable|integer|exists:schools,id',
 
             'name' => 'required|string|max:100',
 

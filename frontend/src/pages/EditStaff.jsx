@@ -5,6 +5,8 @@ const EditStaff = ({ staff, setPage }) => {
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
+    const [photo, setPhoto] = useState(null);
+    const [photoPreview, setPhotoPreview] = useState(staff?.photo_url || staff?.photo || '');
 
     const [formData, setFormData] = useState({
         staff_number: staff?.staff_number || '',
@@ -52,11 +54,22 @@ const EditStaff = ({ staff, setPage }) => {
                 qualification: data.qualification || '',
                 employment_status: data.employment_status || 'active'
             });
+            setPhotoPreview(data.photo_url || data.photo || '');
         } catch (err) {
             console.error('Failed to fetch full staff profile:', err);
         } finally {
             setLoading(false);
         }
+    };
+
+    useEffect(() => () => {
+        if (photoPreview?.startsWith('blob:')) URL.revokeObjectURL(photoPreview);
+    }, [photoPreview]);
+
+    const handlePhoto = (event) => {
+        const nextPhoto = event.target.files?.[0] || null;
+        setPhoto(nextPhoto);
+        setPhotoPreview(nextPhoto ? URL.createObjectURL(nextPhoto) : '');
     };
 
     const handleChange = (e) => {
@@ -73,7 +86,11 @@ const EditStaff = ({ staff, setPage }) => {
         setErrors({});
 
         try {
-            await api.put(`/staff/${staff.id}`, formData);
+            const payload = new FormData();
+            payload.append('_method', 'PUT');
+            Object.entries(formData).forEach(([key, value]) => payload.append(key, value ?? ''));
+            if (photo) payload.append('photo', photo);
+            await api.post(`/staff/${staff.id}`, payload, { headers: { 'Content-Type': 'multipart/form-data' } });
             setPage('staff');
         } catch (err) {
             if (err.response && err.response.status === 422) {
@@ -114,6 +131,11 @@ const EditStaff = ({ staff, setPage }) => {
                 <div>
                     <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Personal Details</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Staff Photo</label>
+                            <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePhoto} className="w-full text-sm" />
+                            {photoPreview && <img src={photoPreview} alt="Staff preview" className="mt-2 h-16 w-16 rounded-full object-cover" />}
+                        </div>
                         <div>
                             <label className="block text-xs font-semibold text-gray-600 mb-1">First Name *</label>
                             <input

@@ -7,6 +7,7 @@ use App\Models\StudentEnrollment;
 use App\Models\StudentFee;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class FeeService
 {
@@ -96,9 +97,11 @@ class FeeService
      */
     public function recalculateStatus(StudentFee $studentFee): string
     {
-        $totalPaid = DB::table('fee_payments')
-            ->where('student_fee_id', $studentFee->id)
-            ->sum('amount_paid');
+        $paymentsQuery = DB::table('fee_payments')->where('student_fee_id', $studentFee->id);
+        if (Schema::hasColumn('fee_payments', 'reversed_at')) {
+            $paymentsQuery->whereNull('reversed_at');
+        }
+        $totalPaid = $paymentsQuery->sum('amount_paid');
 
         $amountDue = $studentFee->amount_due;
 

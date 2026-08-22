@@ -41,6 +41,17 @@ class StoreRoleInvitationRequest extends FormRequest
                     'proprietor',
                 ]),
             ],
+            'form_class_id' => [
+                'nullable',
+                'integer',
+                Rule::requiredIf(fn () => $this->input('role_slug') === 'form_teacher'),
+                Rule::exists('classes', 'id'),
+            ],
+            'form_stream_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('streams', 'id'),
+            ],
         ];
     }
 }

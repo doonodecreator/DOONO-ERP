@@ -1,0 +1,55 @@
+.dono-permission-option {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  color: #334155;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.dono-permission-option input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #4f46e5;
+}
+
+.dono-permission-option span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.dono-delegation-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.dono-delegation-row > div {
+  min-width: 0;
+}
+
+.dono-delegation-row button {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 640px) {
+  .dono-delegation-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dono-delegation-row button {
+    align-self: stretch;
+  }
+}

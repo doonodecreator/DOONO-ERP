@@ -4,20 +4,31 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Schema;
+use App\Mail\PasswordResetMail;
+use App\Services\EmailDeliveryService;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmailContract
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, MustVerifyEmailTrait;
 
     protected $fillable = [
         'name',
         'email',
+        'avatar',
         'password',
+        'must_change_password',
+        'password_changed_at',
         'email_verified_at',
         'current_school_id',
+    ];
+
+    protected $appends = [
+        'avatar_url',
     ];
 
     protected $hidden = [
@@ -25,11 +36,18 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return app(\App\Services\MediaStorageService::class)->url($this->avatar);
+    }
+
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'must_change_password' => 'boolean',
+            'password_changed_at' => 'datetime',
         ];
     }
 
@@ -38,6 +56,21 @@ class User extends Authenticatable
     | Relationships
     |--------------------------------------------------------------------------
     */
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $frontendUrl = rtrim((string) env('FRONTEND_URL', config('app.url')), '/');
+        $resetUrl = $frontendUrl.'/forgot-password/reset?token='.urlencode($token).'&email='.urlencode($this->email);
+        app(EmailDeliveryService::class)->deliverOne(
+            user: $this,
+            email: $this->email,
+            messageType: 'password_reset',
+            subject: 'Reset your DONO School ERP password',
+            bodyText: "Hello {$this->name},\n\nReset your password here:\n{$resetUrl}\n\nIf you did not request this, ignore this message.",
+            actionData: ['action_url' => $resetUrl, 'action_label' => 'Reset password'],
+            mailable: new PasswordResetMail($this, $token),
+        );
+    }
 
     public function roles()
     {

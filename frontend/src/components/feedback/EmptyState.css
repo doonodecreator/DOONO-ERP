@@ -1,21 +1,38 @@
 .empty-state {
-    text-align: center;
-    padding: 60px 20px;
+  display: flex;
+  min-height: 220px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-5);
+  text-align: center;
 }
 
 .empty-icon {
-    font-size: 60px;
-    margin-bottom: 20px;
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-round);
+  background: #eff6ff;
+  color: var(--color-primary-light);
+  font-size: 28px;
 }
 
 .empty-state h2 {
-    margin-bottom: 10px;
-    color: #111827;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-lg);
+  font-weight: 700;
 }
 
+.empty-action { margin-top: var(--space-4); }
+
 .empty-state p {
-    color: #6b7280;
-    max-width: 400px;
-    margin: auto;
-    line-height: 1.6;
+  max-width: 440px;
+  margin: var(--space-2) auto 0;
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  line-height: 1.6;
 }

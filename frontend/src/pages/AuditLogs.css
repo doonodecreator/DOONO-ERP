@@ -1,0 +1,12 @@
+.dono-audit-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+@media (max-width: 640px) {
+  .dono-audit-tabs .ui-button {
+    flex: 1 1 150px;
+  }
+}

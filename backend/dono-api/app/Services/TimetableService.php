@@ -4,14 +4,9 @@ namespace App\Services;
 
 use App\Models\Timetable;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use ValidationException;
 
 class TimetableService
 {
-    /**
-     * Check for schedule collisions before assigning a slot.
-     */
     public function detectCollisions(
         int $schoolId,
         int $sessionId,
@@ -19,50 +14,43 @@ class TimetableService
         string $dayOfWeek,
         string $startTime,
         string $endTime,
-        int $staffId,
+        ?int $staffId,
         int $classId,
         ?int $ignoreId = null
     ): array {
         $conflicts = [];
+        $overlap = fn ($query) => $query
+            ->where('start_time', '<', $endTime)
+            ->where('end_time', '>', $startTime);
 
-        // 1. Teacher Collision Check: Is the teacher teaching another class during this time?
-        $teacherConflict = Timetable::where('school_id', $schoolId)
-            ->where('academic_session_id', $sessionId)
-            ->where('term_id', $termId)
-            ->where('day_of_week', $dayOfWeek)
-            ->where('staff_id', $staffId)
-            ->where('is_active', true)
-            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
-            ->where(function ($query) use ($startTime, $endTime) {
-                $query->whereBetween('start_time', [$startTime, $endTime])
-                    ->orWhereBetween('end_time', [$startTime, $endTime])
-                    ->orWhere(function ($q) use ($startTime, $endTime) {
-                        $q->where('start_time', '<=', $startTime)
-                          ->where('end_time', '>=', $endTime);
-                    });
-            })
-            ->first();
+        if ($staffId) {
+            $teacherConflict = Timetable::query()
+                ->where('school_id', $schoolId)
+                ->where('academic_session_id', $sessionId)
+                ->where('term_id', $termId)
+                ->where('entry_type', 'lesson')
+                ->where('day_of_week', $dayOfWeek)
+                ->where('staff_id', $staffId)
+                ->where('is_active', true)
+                ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
+                ->where($overlap)
+                ->first();
 
-        if ($teacherConflict) {
-            $conflicts[] = "Teacher is already scheduled in another class between {$teacherConflict->start_time} and {$teacherConflict->end_time}.";
+            if ($teacherConflict) {
+                $conflicts[] = "Teacher is already scheduled in another class between {$teacherConflict->start_time} and {$teacherConflict->end_time}.";
+            }
         }
 
-        // 2. Class Collision Check: Does this class already have a subject scheduled at this time?
-        $classConflict = Timetable::where('school_id', $schoolId)
+        $classConflict = Timetable::query()
+            ->where('school_id', $schoolId)
             ->where('academic_session_id', $sessionId)
             ->where('term_id', $termId)
+            ->where('entry_type', 'lesson')
             ->where('day_of_week', $dayOfWeek)
             ->where('class_id', $classId)
             ->where('is_active', true)
-            ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
-            ->where(function ($query) use ($startTime, $endTime) {
-                $query->whereBetween('start_time', [$startTime, $endTime])
-                    ->orWhereBetween('end_time', [$startTime, $endTime])
-                    ->orWhere(function ($q) use ($startTime, $endTime) {
-                        $q->where('start_time', '<=', $startTime)
-                          ->where('end_time', '>=', $endTime);
-                    });
-            })
+            ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
+            ->where($overlap)
             ->first();
 
         if ($classConflict) {
@@ -70,51 +58,56 @@ class TimetableService
         }
 
         return [
-            'has_collision' => count($conflicts) > 0,
+            'has_collision' => $conflicts !== [],
             'errors' => $conflicts,
         ];
     }
 
-    /**
-     * Create a timetable period entry with safety checks.
-     */
     public function createSchedule(array $data): Timetable
     {
-        $collision = $this->detectCollisions(
-            $data['school_id'],
-            $data['academic_session_id'],
-            $data['term_id'],
-            $data['day_of_week'],
-            $data['start_time'],
-            $data['end_time'],
-            $data['staff_id'],
-            $data['class_id']
-        );
+        $entryType = $data['entry_type'] ?? 'lesson';
+        if ($entryType === 'lesson') {
+            $collision = $this->detectCollisions(
+                (int) $data['school_id'],
+                (int) $data['academic_session_id'],
+                (int) $data['term_id'],
+                $data['day_of_week'],
+                $data['start_time'],
+                $data['end_time'],
+                isset($data['staff_id']) ? (int) $data['staff_id'] : null,
+                (int) $data['class_id'],
+            );
 
-        if ($collision['has_collision']) {
-            throw new \InvalidArgumentException(implode(' ', $collision['errors']));
+            if ($collision['has_collision']) {
+                throw new \InvalidArgumentException(implode(' ', $collision['errors']));
+            }
         }
 
         return Timetable::create([
             'school_id' => $data['school_id'],
+            'entry_type' => $entryType,
+            'schedule_mode' => $data['schedule_mode'] ?? 'weekly',
+            'target_type' => $data['target_type'] ?? 'class',
             'academic_session_id' => $data['academic_session_id'],
             'term_id' => $data['term_id'],
             'division_id' => $data['division_id'] ?? null,
-            'class_id' => $data['class_id'],
+            'class_id' => $data['class_id'] ?? null,
             'stream_id' => $data['stream_id'] ?? null,
-            'subject_id' => $data['subject_id'],
-            'staff_id' => $data['staff_id'],
-            'day_of_week' => $data['day_of_week'],
-            'start_time' => $data['start_time'],
-            'end_time' => $data['end_time'],
+            'subject_id' => $data['subject_id'] ?? null,
+            'title' => $data['title'] ?? null,
+            'description' => $data['description'] ?? null,
+            'staff_id' => $data['staff_id'] ?? null,
+            'day_of_week' => $data['day_of_week'] ?? null,
+            'start_time' => $data['start_time'] ?? null,
+            'end_time' => $data['end_time'] ?? null,
+            'event_date' => $data['event_date'] ?? null,
+            'effective_from' => $data['effective_from'] ?? null,
+            'effective_until' => $data['effective_until'] ?? null,
             'room' => $data['room'] ?? null,
-            'is_active' => true,
+            'is_active' => $data['is_active'] ?? true,
         ]);
     }
 
-    /**
-     * Fetch complete weekly timetable for a class.
-     */
     public function getClassTimetable(int $classId, int $sessionId, int $termId): Collection
     {
         return Timetable::with(['subject', 'staff'])
@@ -122,7 +115,7 @@ class TimetableService
             ->where('academic_session_id', $sessionId)
             ->where('term_id', $termId)
             ->where('is_active', true)
-            ->orderBy('day_of_week')
+            ->orderByRaw("FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')")
             ->orderBy('start_time')
             ->get();
     }

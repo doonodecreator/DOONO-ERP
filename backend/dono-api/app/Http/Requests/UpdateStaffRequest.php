@@ -11,6 +11,22 @@ class UpdateStaffRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('employment_status')) {
+            $status = strtolower(str_replace(['-', '_'], ' ', (string) $this->input('employment_status')));
+            $map = [
+                'active' => 'Active',
+                'on leave' => 'On Leave',
+                'suspended' => 'Suspended',
+                'retired' => 'Retired',
+                'resigned' => 'Resigned',
+                'terminated' => 'Terminated',
+            ];
+            $this->merge(['employment_status' => $map[$status] ?? $this->input('employment_status')]);
+        }
+    }
+
     public function rules(): array
     {
         $staffId = $this->route('staff')->id;
@@ -62,10 +78,10 @@ class UpdateStaffRequest extends FormRequest
                 'nullable|string|max:255',
 
             'photo' =>
-                'nullable|string|max:255',
+                ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
 
             'employment_status' =>
-                'sometimes|required|in:Active,Suspended,Retired,Resigned,Terminated',
+                'sometimes|required|in:Active,On Leave,Suspended,Retired,Resigned,Terminated',
         ];
     }
 

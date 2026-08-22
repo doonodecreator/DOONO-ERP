@@ -26,13 +26,24 @@ export default function Sidebar({
     { name: "Organizations", page: "organizations" },
     { name: "Schools", page: "schools" },
     { name: "Subscriptions", page: "subscriptions" },
+    { name: "Plans & Features", page: "subscriptions" },
+    { name: "Payments & Invoices", page: "platform-payments" },
     { name: "System Settings", page: "settings" },
+    { name: "Countries / Currency", page: "countries-currency" },
+    { name: "Email & SMS Settings", page: "email-sms-settings" },
+    { name: "Backups & Logs", page: "backups-logs" },
     { name: "Audit Logs", page: "audit-logs" },
+    { name: "System Health", page: "system-health" },
   ];
 
   const organizationOwnerMenuItems = [
     { name: "Dashboard", page: "dashboard" },
+    { name: "Create School", page: "add-school" },
     { name: "My Schools", page: "schools" },
+    { name: "Organization Users", page: "organization-users" },
+    { name: "Organization Profile", page: "organization-profile" },
+    { name: "Billing & Subscription", page: "subscriptions" },
+    { name: "Organization Reports", page: "organization-reports" },
   ];
 
   // Proprietor (School Owner) - exactly 10 core modules per architecture diagram
@@ -48,39 +59,133 @@ export default function Sidebar({
     { name: "Finance Management", page: "fees" },
     { name: "Reports", page: "report-cards" },
     { name: "School Settings", page: "settings" },
+    { name: "School Branding & Report Cards", page: "school-branding" },
     { name: "Subscriptions", page: "subscriptions" },
     { name: "Audit Logs", page: "audit-logs" },
+    { name: "Communication", page: "communication" },
+    { name: "CBT Oversight", page: "cbt-assessments" },
+    { name: "Assessment Structure", page: "assessment-structures" },
   ];
 
-  const allMenuItems = [
-    { name: "Dashboard", page: "dashboard", roles: ["all"] },
-    { name: "Staff Management", page: "staff", roles: ["principal", "vice_principal_academic", "vice_principal_admin"] },
-    { name: "Staff Attendance", page: "staff-attendance", roles: ["principal", "vice_principal_admin"] },
-    { name: "Leave Requests", page: "leave-requests", roles: ["principal", "vice_principal_academic", "vice_principal_admin", "nursery_head", "primary_headmaster", "secondary_principal", "teacher", "form_teacher", "bursar", "accountant", "librarian", "nurse", "hostel_master", "hostel_mistress", "transport_manager", "receptionist"] },
-    { name: "Student Discipline", page: "discipline-cases", roles: ["principal", "vice_principal_admin", "nursery_head", "primary_headmaster", "secondary_principal", "teacher", "form_teacher"] },
-    { name: "Safety Incidents", page: "safety-incidents", roles: ["principal", "vice_principal_admin", "teacher", "form_teacher", "nurse", "receptionist", "transport_manager", "hostel_master", "hostel_mistress"] },
-    { name: "Asset Register", page: "asset-register", roles: ["principal", "vice_principal_admin"] },
-    { name: "School Events", page: "school-events", roles: ["principal", "vice_principal_admin"] },
-    { name: "Facilities", page: "school-facilities", roles: ["principal", "vice_principal_admin"] },
-    { name: "Students", page: "students", roles: ["principal", "vice_principal_academic", "vice_principal_admin", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "bursar", "accountant", "receptionist"] },
-    { name: "Admissions", page: "admissions", roles: ["principal", "vice_principal_admin"] },
-    { name: "Enrollment & Placement", page: "student-enrollments", roles: ["principal", "vice_principal_academic", "vice_principal_admin"] },
-    { name: "Parents", page: "parents", roles: ["principal", "vice_principal_academic", "vice_principal_admin", "receptionist", "bursar", "accountant"] },
-    { name: "Teachers", page: "teachers", roles: ["principal", "vice_principal_academic", "vice_principal_admin", "secondary_principal", "primary_headmaster", "nursery_head"] },
-    { name: "Subjects", page: "subjects", roles: ["principal", "vice_principal_academic", "secondary_principal", "primary_headmaster", "teacher", "form_teacher"] },
-    { name: "Classes", page: "classes", roles: ["principal", "vice_principal_academic", "vice_principal_admin", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "form_teacher"] },
-    { name: "Streams", page: "streams", roles: ["principal", "vice_principal_academic", "vice_principal_admin"] },
-    { name: "Academic Sessions", page: "academic-sessions", roles: ["principal", "vice_principal_academic"] },
-    { name: "Terms", page: "terms", roles: ["principal", "vice_principal_academic"] },
-    { name: "Attendance", page: "attendance", roles: ["principal", "vice_principal_academic", "vice_principal_admin", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "form_teacher"] },
-    { name: "Results & Exams", page: "results", roles: ["principal", "vice_principal_academic", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "student", "parent"] },
-    { name: "Fees & Payments", page: "fees", roles: ["principal", "bursar", "accountant", "parent", "student"] },
-    { name: "Timetable", page: "timetable", roles: ["principal", "vice_principal_academic", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "student", "parent"] },
-    { name: "Report Cards", page: "report-cards", roles: ["principal", "vice_principal_academic", "secondary_principal", "primary_headmaster", "nursery_head", "teacher", "parent", "student"] },
-    { name: "Promotion & Graduation", page: "promotions", roles: ["principal", "vice_principal_academic", "secondary_principal", "primary_headmaster"] },
-    { name: "Subscriptions", page: "subscriptions", roles: [] },
-    { name: "Settings", page: "settings", roles: ["principal"] },
+  const principalMenuItems = [
+    { name: "Dashboard", page: "dashboard" },
+    { name: "Manage Teachers", page: "teachers" },
+    { name: "Manage Students", page: "students" },
+    { name: "Review Admissions & Placement", page: "student-enrollments" },
+    { name: "Approve Results", page: "results" },
+    { name: "Approve Timetable", page: "timetable" },
+    { name: "Approve Promotions", page: "promotions" },
+    { name: "View Attendance", page: "attendance" },
+    { name: "View Finance", page: "fees" },
+    { name: "Reports", page: "report-cards" },
+    { name: "CBT Question Review", page: "cbt" },
+    { name: "CBT Assessments", page: "cbt-assessments" },
+    { name: "Communication", page: "communication" },
   ];
+
+  const parentMenuItems = [
+    { name: "Dashboard", page: "dashboard" },
+    { name: "My Children", page: "dashboard" },
+    { name: "Attendance", page: "attendance" },
+    { name: "Fees & Payments", page: "fees-payments" },
+    { name: "Results", page: "report-cards" },
+    { name: "Assignments", page: "assignments" },
+    { name: "Timetable", page: "timetable" },
+    { name: "School Notices", page: "notices" },
+    { name: "Messages / Chat", page: "messages" },
+    { name: "Apply for Leave", page: "leave-application" },
+    { name: "Transport Tracking", page: "transport-tracking" },
+  ];
+
+  const studentMenuItems = [
+    { name: "Dashboard", page: "dashboard" },
+    { name: "My Timetable", page: "timetable" },
+    { name: "Attendance", page: "attendance" },
+    { name: "Assignments", page: "assignments" },
+    { name: "My Results", page: "results" },
+    { name: "Fees", page: "fees-payments" },
+    { name: "Library", page: "books" },
+    { name: "CBT / Exams", page: "cbt" },
+    { name: "Messages", page: "messages" },
+    { name: "Notices", page: "notices" },
+    { name: "Transport Tracking", page: "transport-tracking" },
+    { name: "Apply for Leave", page: "leave-application" },
+  ];
+
+  const roleMenuItems = {
+    vice_principal_academic: [
+      { name: "Dashboard", page: "dashboard" }, { name: "Subjects", page: "subjects" }, { name: "Assign Teachers", page: "teachers" },
+      { name: "Timetable", page: "timetable" }, { name: "Examinations", page: "examinations" }, { name: "CBT Question Bank", page: "cbt" }, { name: "CBT Assessments", page: "cbt-assessments" }, { name: "Results Management", page: "results" },
+      { name: "Promotion", page: "promotions" }, { name: "Academic Reports", page: "report-cards" }, { name: "Communication", page: "communication" },
+    ],
+    vice_principal_admin: [
+      { name: "Dashboard", page: "dashboard" }, { name: "Staff Management", page: "staff" }, { name: "Staff Attendance", page: "staff-attendance" },
+      { name: "Leave Management", page: "leave-requests" }, { name: "Discipline / Behaviour", page: "discipline-cases" }, { name: "Inventory / Assets", page: "asset-register" },
+      { name: "Events Management", page: "school-events" }, { name: "Health & Safety", page: "safety-incidents" }, { name: "Facilities Management", page: "school-facilities" },
+      { name: "Reports", page: "report-cards" },
+    ],
+    nursery_head: [
+      { name: "Dashboard", page: "dashboard" }, { name: "Nursery Pupils", page: "students" }, { name: "Nursery Teachers", page: "teachers" },
+      { name: "Nursery Classes", page: "classes" }, { name: "Assessment", page: "results" }, { name: "Attendance", page: "attendance" },
+      { name: "Timetable", page: "timetable" }, { name: "Reports", page: "report-cards" }, { name: "Communication", page: "communication" },
+    ],
+    primary_headmaster: [
+      { name: "Dashboard", page: "dashboard" }, { name: "Primary Classes", page: "classes" }, { name: "Primary Teachers", page: "teachers" },
+      { name: "Subjects", page: "subjects" }, { name: "Attendance", page: "attendance" }, { name: "CBT Question Bank", page: "cbt" }, { name: "CBT Assessments", page: "cbt-assessments" }, { name: "Assessment", page: "results" },
+      { name: "Promotion", page: "promotions" }, { name: "Reports", page: "report-cards" }, { name: "Communication", page: "communication" },
+    ],
+    secondary_principal: [
+      { name: "Dashboard", page: "dashboard" }, { name: "JSS Management", page: "classes" }, { name: "SSS Management", page: "classes" },
+      { name: "Subjects", page: "subjects" }, { name: "Teachers", page: "teachers" }, { name: "Examinations", page: "examinations" }, { name: "CBT Question Bank", page: "cbt" }, { name: "CBT Assessments", page: "cbt-assessments" }, { name: "External Exams (WAEC/NECO)", page: "external-exams" }, { name: "Practicals", page: "practicals" },
+      { name: "Results", page: "results" }, { name: "Promotion", page: "promotions" }, { name: "Graduation & Alumni", page: "graduation" }, { name: "Reports", page: "report-cards" }, { name: "Communication", page: "communication" },
+    ],
+    teacher: [
+      { name: "Dashboard", page: "dashboard" }, { name: "My Classes", page: "classes" }, { name: "My Subjects", page: "subjects" },
+      { name: "Take Attendance", page: "attendance" }, { name: "Assignments", page: "assignments" }, { name: "CBT Question Bank", page: "cbt" }, { name: "Upload CA Scores", page: "result-entry" },
+      { name: "Upload Exam Scores", page: "result-entry" }, { name: "View Students", page: "students" }, { name: "Class Timetable", page: "timetable" }, { name: "Messages", page: "messages" },
+    ],
+    form_teacher: [
+      { name: "Dashboard", page: "dashboard" }, { name: "My Class", page: "classes" }, { name: "Class Attendance", page: "attendance" },
+      { name: "Behaviour Reports", page: "discipline-cases" }, { name: "Student Profiles", page: "students" }, { name: "Recommend Promotion", page: "promotions" },
+      { name: "Assignments", page: "assignments" }, { name: "Parent Communication", page: "communication" }, { name: "Messages", page: "messages" },
+    ],
+    bursar: [
+      { name: "Dashboard", page: "dashboard" }, { name: "Receive Payments", page: "fees-payments" }, { name: "Invoices / Receipts", page: "fees-payments" },
+      { name: "Pending Payments", page: "fees-payments" }, { name: "Outstanding Fees", page: "fees" }, { name: "Discounts / Scholarships", page: "fee-discounts" }, { name: "Reverse Payment", page: "reverse-payment" }, { name: "Payment Reports", page: "payment-reports" },
+    ],
+    cashier: [
+      { name: "Dashboard", page: "dashboard" }, { name: "Receive Payments", page: "fees-payments" }, { name: "Invoices / Receipts", page: "fees-payments" },
+      { name: "Pending Payments", page: "fees-payments" }, { name: "Outstanding Fees", page: "fees" }, { name: "Discounts / Scholarships", page: "fee-discounts" }, { name: "Reverse Payment", page: "reverse-payment" }, { name: "Payment Reports", page: "payment-reports" },
+    ],
+    accountant: [
+      { name: "Dashboard", page: "dashboard" }, { name: "Income", page: "fees-payments" }, { name: "Expenses", page: "expenses" },
+      { name: "Payroll", page: "payroll" }, { name: "Budget", page: "expenses" }, { name: "Profit / Loss", page: "profit-loss" }, { name: "Tax Reports", page: "tax-reports" }, { name: "Financial Reports", page: "financial-reports" },
+    ],
+    librarian: [
+      { name: "Dashboard", page: "dashboard" }, { name: "Books", page: "books" }, { name: "Borrow Books", page: "books" }, { name: "Return Books", page: "books" },
+      { name: "Lost Books", page: "books" }, { name: "Fines", page: "books" }, { name: "Members", page: "library-members" }, { name: "Reports", page: "library-reports" },
+    ],
+    nurse: [
+      { name: "Dashboard", page: "dashboard" }, { name: "Medical Records", page: "clinic" }, { name: "Clinic Visits", page: "clinic" },
+      { name: "Medication", page: "clinic" }, { name: "Allergies", page: "clinic" }, { name: "Emergency Contacts", page: "clinic" }, { name: "Health Reports", page: "clinic" },
+    ],
+    hostel_master: [
+      { name: "Dashboard", page: "dashboard" }, { name: "Hostels", page: "hostels" }, { name: "Rooms", page: "hostels" }, { name: "Bed Allocation", page: "hostels" },
+      { name: "Hostel Attendance", page: "hostels" }, { name: "Visitors", page: "visitors" }, { name: "Reports", page: "hostel-reports" },
+    ],
+    hostel_mistress: [
+      { name: "Dashboard", page: "dashboard" }, { name: "Hostels", page: "hostels" }, { name: "Rooms", page: "hostels" }, { name: "Bed Allocation", page: "hostels" },
+      { name: "Hostel Attendance", page: "hostels" }, { name: "Visitors", page: "visitors" }, { name: "Reports", page: "hostel-reports" },
+    ],
+    transport_manager: [
+      { name: "Dashboard", page: "dashboard" }, { name: "Vehicles", page: "transport" }, { name: "Drivers", page: "transport" }, { name: "Routes", page: "transport" },
+      { name: "Student Allocation", page: "transport" }, { name: "Fuel Records", page: "transport-fuel" }, { name: "Maintenance", page: "transport-maintenance" }, { name: "Reports", page: "transport-reports" },
+    ],
+    receptionist: [
+      { name: "Dashboard", page: "dashboard" }, { name: "Visitors Log", page: "visitors" }, { name: "Student Check-in/out", page: "visitors" },
+      { name: "Staff Check-in", page: "staff-check-in" }, { name: "Appointments", page: "visitors" }, { name: "Calls / Messages", page: "reception-calls" }, { name: "Reports", page: "reception-reports" },
+    ],
+  };
 
   const menuItems =
     role === "super_admin"
@@ -89,9 +194,13 @@ export default function Sidebar({
         ? organizationOwnerMenuItems
         : role === "proprietor"
           ? proprietorMenuItems
-          : allMenuItems.filter(
-              (item) => item.roles.includes("all") || item.roles.includes(role)
-            );
+          : role === "principal"
+            ? principalMenuItems
+            : role === "parent"
+              ? parentMenuItems
+              : role === "student"
+                ? studentMenuItems
+                : roleMenuItems[role] || [{ name: "Dashboard", page: "dashboard" }];
 
   return (
     <>
@@ -107,7 +216,7 @@ export default function Sidebar({
         />
       )}
 
-      <aside
+      <aside id="dono-sidebar"
         style={{
           width: 260,
           background: "#1e3a8a",
@@ -115,7 +224,9 @@ export default function Sidebar({
           position: "fixed",
           top: 0,
           left: open ? 0 : -280,
-          height: "100vh",
+          height: "100dvh",
+          maxHeight: "100dvh",
+          paddingBottom: "max(16px, env(safe-area-inset-bottom))",
           transition: "left 0.3s ease-in-out",
           zIndex: 1002,
           overflowY: "auto",
@@ -133,8 +244,8 @@ export default function Sidebar({
             alignItems: "center",
           }}
         >
-          <span>DONO ERP</span>
-          <button
+          <span>DOONO De Creator</span>
+          <button type="button"
             onClick={closeSidebar}
             style={{
               background: "transparent",

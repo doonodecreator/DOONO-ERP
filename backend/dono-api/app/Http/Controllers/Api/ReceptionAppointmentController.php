@@ -10,9 +10,10 @@ class ReceptionAppointmentController extends Controller
 {
     public function index(Request $request)
     {
-        $schoolId = auth()->user()->school_id ?? null;
+        $schoolId = $this->requireSchool($request);
+
         return response()->json(
-            ReceptionAppointment::when($schoolId, fn($q) => $q->where('school_id', $schoolId))
+            ReceptionAppointment::where('school_id', $schoolId)
                 ->latest()
                 ->paginate(15)
         );
@@ -20,6 +21,8 @@ class ReceptionAppointmentController extends Controller
 
     public function store(Request $request)
     {
+        $schoolId = $this->requireSchool($request);
+
         $validated = $request->validate([
             'visitor_name' => 'required|string|max:255',
             'phone_number' => 'required|string|max:50',
@@ -28,12 +31,11 @@ class ReceptionAppointmentController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        if (auth()->check() && auth()->user()->school_id) {
-            $validated['school_id'] = auth()->user()->school_id;
-        }
+        $appointment = ReceptionAppointment::create($validated + ['school_id' => $schoolId]);
 
-        $appointment = ReceptionAppointment::create($validated);
-        return response()->json(['message' => 'Appointment scheduled successfully.', 'data' => $appointment], 201);
+        return response()->json([
+            'message' => 'Appointment scheduled successfully.',
+            'data' => $appointment,
+        ], 201);
     }
 }
-

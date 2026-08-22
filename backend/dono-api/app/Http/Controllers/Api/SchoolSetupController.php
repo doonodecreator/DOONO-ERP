@@ -8,6 +8,7 @@ use App\Models\ClassModel;
 use App\Models\Division;
 use App\Models\Fee;
 use App\Models\School;
+use App\Models\RoleInvitation;
 use App\Models\Stream;
 use App\Models\Subject;
 use App\Models\Term;
@@ -26,6 +27,16 @@ class SchoolSetupController extends Controller
         abort_unless($schoolId, 409, 'No active school.');
 
         $school = School::findOrFail($schoolId);
+        $leadershipComplete = RoleInvitation::query()
+            ->where('school_id', $schoolId)
+            ->where('status', 'accepted')
+            ->whereNotNull('accepted_user_id')
+            ->whereHas('acceptedUser.roles', function ($query) use ($schoolId) {
+                $query->whereIn('roles.slug', ['principal', 'vice_principal_academic', 'vice_principal_admin'])
+                    ->where('user_roles.school_id', $schoolId);
+            })
+            ->exists();
+
         $counts = [
             'profile' => 1,
             'academic_sessions' => AcademicSession::where('school_id', $schoolId)->count(),
@@ -35,6 +46,7 @@ class SchoolSetupController extends Controller
             'streams' => Stream::whereHas('class.division', fn ($query) => $query->where('school_id', $schoolId))->count(),
             'subjects' => Subject::where('school_id', $schoolId)->count(),
             'fees' => Fee::where('school_id', $schoolId)->count(),
+            'leadership' => $leadershipComplete ? 1 : 0,
         ];
 
         $steps = [
@@ -46,7 +58,7 @@ class SchoolSetupController extends Controller
             ['key' => 'streams', 'label' => 'Streams', 'page' => 'streams', 'complete' => $counts['streams'] > 0],
             ['key' => 'subjects', 'label' => 'Subjects', 'page' => 'subjects', 'complete' => $counts['subjects'] > 0],
             ['key' => 'fees', 'label' => 'Fee structure', 'page' => 'fees', 'complete' => $counts['fees'] > 0],
-            ['key' => 'leadership', 'label' => 'Leadership assignment', 'page' => 'role-invitations', 'complete' => false],
+            ['key' => 'leadership', 'label' => 'Leadership assignment', 'page' => 'role-invitations', 'complete' => $leadershipComplete],
         ];
 
         $completed = collect($steps)->where('complete', true)->count();

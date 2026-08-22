@@ -7,26 +7,39 @@ use App\Http\Requests\StoreSubscriptionPlanRequest;
 use App\Http\Requests\UpdateSubscriptionPlanRequest;
 use App\Http\Resources\SubscriptionPlanResource;
 use App\Models\SubscriptionPlan;
+use App\Services\ActivityLogService;
+use Illuminate\Support\Facades\DB;
 
 class SubscriptionPlanController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         return SubscriptionPlanResource::collection(
-            SubscriptionPlan::latest()->paginate(10)
+            SubscriptionPlan::with(['featureModels' => fn ($query) => $query->wherePivot('is_enabled', true)])
+                ->latest()
+                ->paginate(10)
         );
     }
 
-    /**
-     * Store a newly created resource.
-     */
     public function store(StoreSubscriptionPlanRequest $request)
     {
-        $plan = SubscriptionPlan::create(
-            $request->validated()
+        $validated = $request->validated();
+        $featureIds = array_values($validated['feature_ids'] ?? []);
+        unset($validated['feature_ids']);
+
+        $plan = DB::transaction(function () use ($validated, $featureIds) {
+            $plan = SubscriptionPlan::create($validated);
+            $plan->featureModels()->syncWithPivotValues($featureIds, ['is_enabled' => true]);
+
+            return $plan->load(['featureModels' => fn ($query) => $query->wherePivot('is_enabled', true)]);
+        });
+
+        ActivityLogService::log(
+            module: 'subscription_plans',
+            action: 'created',
+            description: "Subscription plan \"{$plan->name}\" was created.",
+            subject: $plan,
+            properties: ['plan_id' => $plan->id, 'feature_ids' => $featureIds],
         );
 
         return (new SubscriptionPlanResource($plan))
@@ -34,42 +47,63 @@ class SubscriptionPlanController extends Controller
             ->setStatusCode(201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(SubscriptionPlan $subscriptionPlan)
     {
-        return new SubscriptionPlanResource(
-            $subscriptionPlan
-        );
+        return new SubscriptionPlanResource($subscriptionPlan->load(['featureModels' => fn ($query) => $query->wherePivot('is_enabled', true)]));
     }
 
-    /**
-     * Update the specified resource.
-     */
     public function update(
         UpdateSubscriptionPlanRequest $request,
         SubscriptionPlan $subscriptionPlan
     ) {
-        $subscriptionPlan->update(
-            $request->validated()
+        $validated = $request->validated();
+        $featureIdsProvided = array_key_exists('feature_ids', $validated);
+        $featureIds = array_values($validated['feature_ids'] ?? []);
+        unset($validated['feature_ids']);
+
+        DB::transaction(function () use ($validated, $featureIdsProvided, $featureIds, $subscriptionPlan) {
+            $subscriptionPlan->update($validated);
+
+            if ($featureIdsProvided) {
+                $subscriptionPlan->featureModels()->syncWithPivotValues($featureIds, ['is_enabled' => true]);
+            }
+        });
+
+        $subscriptionPlan->load(['featureModels' => fn ($query) => $query->wherePivot('is_enabled', true)]);
+
+        ActivityLogService::log(
+            module: 'subscription_plans',
+            action: 'updated',
+            description: "Subscription plan \"{$subscriptionPlan->name}\" was updated.",
+            subject: $subscriptionPlan,
+            properties: [
+                'changed_fields' => array_keys($validated),
+                ...($featureIdsProvided ? ['feature_ids' => $featureIds] : []),
+            ],
         );
 
-        return new SubscriptionPlanResource(
-            $subscriptionPlan
-        );
+        return new SubscriptionPlanResource($subscriptionPlan);
     }
 
-    /**
-     * Remove the specified resource.
-     */
-    public function destroy(
-        SubscriptionPlan $subscriptionPlan
-    ) {
-        $subscriptionPlan->delete();
+    public function destroy(SubscriptionPlan $subscriptionPlan)
+    {
+        $planId = $subscriptionPlan->id;
+        $planName = $subscriptionPlan->name;
+
+        DB::transaction(function () use ($subscriptionPlan) {
+            $subscriptionPlan->featureModels()->detach();
+            $subscriptionPlan->delete();
+        });
+
+        ActivityLogService::log(
+            module: 'subscription_plans',
+            action: 'deleted',
+            description: "Subscription plan \"{$planName}\" was deleted.",
+            properties: ['plan_id' => $planId],
+        );
 
         return response()->json([
-            'message' => 'Subscription plan deleted successfully.'
+            'message' => 'Subscription plan deleted successfully.',
         ]);
     }
 }

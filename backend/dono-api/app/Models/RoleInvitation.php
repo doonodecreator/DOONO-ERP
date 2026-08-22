@@ -10,6 +10,8 @@ class RoleInvitation extends Model
     protected $fillable = [
         'school_id',
         'role_id',
+        'form_class_id',
+        'form_stream_id',
         'invited_by',
         'accepted_user_id',
         'staff_id',
@@ -50,6 +52,16 @@ class RoleInvitation extends Model
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
+    }
+
+    public function formClass(): BelongsTo
+    {
+        return $this->belongsTo(ClassModel::class, 'form_class_id');
+    }
+
+    public function formStream(): BelongsTo
+    {
+        return $this->belongsTo(Stream::class, 'form_stream_id');
     }
 
     public function inviter(): BelongsTo

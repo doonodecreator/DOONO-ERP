@@ -49,7 +49,7 @@ export default function ParentProfile({
 
   return (
     <div>
-      <button
+      <button type="button"
         onClick={() =>
           setPage("parents")
         }
@@ -58,7 +58,7 @@ export default function ParentProfile({
         ← Back
       </button>
 
-      <button
+      <button type="button"
         onClick={() =>
           setPage("edit-parent")
         }
@@ -72,7 +72,7 @@ export default function ParentProfile({
       </button>
 
       {canManageLinks && (
-        <button
+        <button type="button"
           onClick={() =>
             setPage(
               "link-student-parent"
@@ -88,7 +88,7 @@ export default function ParentProfile({
         </button>
       )}
 
-      <button
+      <button type="button"
         onClick={deleteParent}
         style={{
           ...buttonStyle,

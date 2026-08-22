@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Organization;
+use App\Models\PaymentTransaction;
 use App\Models\School;
 use App\Models\SchoolSubscription;
 use App\Models\SubscriptionPlan;
@@ -26,7 +27,12 @@ class PlatformOwnerController extends Controller
 
         $totalOrganizations = Organization::count();
         $totalSchools = School::count();
-        $activeSubscriptions = SchoolSubscription::where('status', 'active')->count();
+        $activeSubscriptions = SchoolSubscription::where('status', 'active')
+            ->where('is_current', true)
+            ->whereDate('expiry_date', '>=', now()->toDateString())
+            ->count();
+        $pendingPayments = PaymentTransaction::where('status', 'pending')->count();
+        $failedPayments = PaymentTransaction::where('status', 'failed')->count();
 
         $organizations = Organization::withCount('schools')
             ->latest()
@@ -75,6 +81,8 @@ class PlatformOwnerController extends Controller
                 'total_organizations' => $totalOrganizations,
                 'total_schools' => $totalSchools,
                 'active_subscriptions' => $activeSubscriptions,
+                'pending_payments' => $pendingPayments,
+                'failed_payments' => $failedPayments,
             ],
             'organizations' => $organizations,
             'subscription_plans' => $subscriptionPlans,

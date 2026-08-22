@@ -7,6 +7,7 @@ use App\Http\Requests\StoreCouponRequest;
 use App\Http\Requests\UpdateCouponRequest;
 use App\Http\Resources\CouponResource;
 use App\Models\Coupon;
+use App\Services\ActivityLogService;
 use Illuminate\Support\Facades\DB;
 
 class CouponController extends Controller
@@ -63,6 +64,14 @@ class CouponController extends Controller
 
             return $coupon;
         });
+
+        ActivityLogService::log(
+            module: 'coupons',
+            action: 'created',
+            description: "Coupon \"{$coupon->code}\" was created.",
+            subject: $coupon,
+            properties: ['changed_fields' => array_keys($request->validated())],
+        );
 
         return (new CouponResource(
 
@@ -127,6 +136,14 @@ class CouponController extends Controller
             }
         });
 
+        ActivityLogService::log(
+            module: 'coupons',
+            action: 'updated',
+            description: "Coupon \"{$coupon->code}\" was updated.",
+            subject: $coupon,
+            properties: ['changed_fields' => array_keys($request->validated())],
+        );
+
         return new CouponResource(
 
             $coupon->fresh()->load([
@@ -142,7 +159,16 @@ class CouponController extends Controller
      */
     public function destroy(Coupon $coupon)
     {
+        $couponCode = $coupon->code;
+        $couponId = $coupon->id;
         $coupon->delete();
+
+        ActivityLogService::log(
+            module: 'coupons',
+            action: 'deleted',
+            description: "Coupon \"{$couponCode}\" was deleted.",
+            properties: ['coupon_id' => $couponId],
+        );
 
         return response()->json([
             'message' => 'Coupon deleted successfully.',

@@ -22,6 +22,7 @@ class SchoolSettingController extends Controller
             return response()->json(['success' => false, 'message' => 'No active school.'], 409);
         }
 
+        $this->authorizeProprietorSettings($request, (int) $schoolId);
         $settings = DB::table('school_settings')->where('school_id', $schoolId)->first();
 
         return response()->json([
@@ -39,6 +40,7 @@ class SchoolSettingController extends Controller
             return response()->json(['success' => false, 'message' => 'No active school.'], 409);
         }
 
+        $this->authorizeProprietorSettings($request, (int) $schoolId);
         $validated = $request->validate([
             'bank_name' => 'nullable|string|max:255',
             'account_number' => 'nullable|string|max:50',
@@ -61,6 +63,23 @@ class SchoolSettingController extends Controller
             'message' => 'School Settings updated successfully.',
             'data' => DB::table('school_settings')->where('school_id', $schoolId)->first(),
         ]);
+    }
+
+    private function authorizeProprietorSettings(Request $request, int $schoolId): void
+    {
+        $user = $request->user();
+        $school = $this->context->currentSchool($user);
+
+        abort_unless(
+            $school && (int) $school->id === $schoolId,
+            409,
+            'No active school.'
+        );
+
+        $isOwner = (int) $school->owner_id === (int) $user->id;
+        $isProprietor = $user->isSuperAdmin() || $user->hasRole('proprietor', $schoolId);
+
+        abort_unless($isOwner || $isProprietor, 403, 'Only the Proprietor may manage school settings.');
     }
 }
 

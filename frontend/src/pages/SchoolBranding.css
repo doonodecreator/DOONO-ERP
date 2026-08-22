@@ -1,0 +1,212 @@
+.school-branding-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, .85fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.school-branding-editor {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.school-branding-file-grid,
+.school-branding-form-grid,
+.school-branding-switch-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.school-branding-file-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.school-branding-form-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 18px;
+}
+
+.school-branding-number-grid {
+  max-width: 720px;
+}
+
+.school-branding-switch-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.school-branding-switch {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.school-branding-switch input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  accent-color: #4f46e5;
+}
+
+.school-branding-upload-preview {
+  display: block;
+  width: 100%;
+  max-width: 150px;
+  height: 82px;
+  margin-top: 9px;
+  padding: 5px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  object-fit: contain;
+  background: #f8fafc;
+}
+
+.school-branding-feedback {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.school-branding-feedback-error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.school-branding-feedback-success {
+  border: 1px solid #a7f3d0;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.school-branding-preview {
+  position: sticky;
+  top: 92px;
+  min-width: 0;
+}
+
+.school-branding-preview-card {
+  overflow: hidden;
+  padding: 20px;
+  border: 1px solid var(--preview-primary, #1e40af);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .1);
+  text-align: center;
+}
+
+.school-branding-preview-card > img {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 10px;
+  object-fit: contain;
+}
+
+.school-branding-preview-placeholder {
+  display: grid;
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 10px;
+  place-items: center;
+  border-radius: 10px;
+  background: #e2e8f0;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.school-branding-preview-school {
+  margin: 0;
+  color: var(--preview-primary, #1e40af);
+  font-size: 17px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.school-branding-preview-title {
+  margin: 5px 0 16px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.school-branding-preview-student,
+.school-branding-preview-table {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 7px 10px;
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.school-branding-preview-student span,
+.school-branding-preview-table span {
+  color: #64748b;
+  font-size: 10px;
+}
+
+.school-branding-preview-student strong,
+.school-branding-preview-table b {
+  color: #1e293b;
+  font-size: 11px;
+}
+
+.school-branding-preview-table {
+  grid-template-columns: 1.6fr .7fr .7fr;
+  margin-top: 10px;
+}
+
+.school-branding-preview-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 11px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--preview-primary, #1e40af) 10%, white);
+  color: var(--preview-primary, #1e40af);
+  font-size: 11px;
+}
+
+.school-branding-preview-card small {
+  display: block;
+  margin-top: 14px;
+  color: #94a3b8;
+  font-size: 9px;
+}
+
+.school-branding-preview-note {
+  margin: 10px 2px 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 960px) {
+  .school-branding-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .school-branding-preview {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .school-branding-file-grid,
+  .school-branding-form-grid,
+  .school-branding-switch-grid {
+    grid-template-columns: 1fr;
+  }
+}

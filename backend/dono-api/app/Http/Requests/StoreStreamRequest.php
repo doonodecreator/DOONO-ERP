@@ -23,8 +23,10 @@ class StoreStreamRequest extends FormRequest
             'class_id' => [
                 'required',
                 Rule::exists('classes', 'id')->where(function ($query) use ($schoolId) {
-                    $query->whereHas('division', function ($q) use ($schoolId) {
-                        $q->where('school_id', $schoolId);
+                    $query->whereIn('division_id', function ($divisionQuery) use ($schoolId) {
+                        $divisionQuery->select('id')
+                            ->from('divisions')
+                            ->where('school_id', $schoolId);
                     });
                 }),
             ],

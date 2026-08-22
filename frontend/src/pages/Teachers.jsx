@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { getPrimaryRoleSlug } from "../utils/role";
+import { arrayFromResponse } from "../utils/response";
 
 export default function Teachers({
   setPage,
   setSelectedTeacher,
 }) {
+  const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
+  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+  const canCreateStaff = isPlatformAdmin || role === "proprietor";
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -16,7 +22,7 @@ export default function Teachers({
   const loadTeachers = async () => {
     try {
       const response = await api.get("/staff");
-      setTeachers(response.data.data || []);
+      setTeachers(arrayFromResponse(response));
     } catch (error) {
       console.log(error);
     } finally {
@@ -105,19 +111,21 @@ export default function Teachers({
             }}
           />
 
-          <button
-            onClick={() => setPage("add-teacher")}
-            style={{
-              background: "#2563eb",
-              color: "#fff",
-              border: "none",
-              padding: "12px 20px",
-              borderRadius: "12px",
-              cursor: "pointer",
-            }}
-          >
-            + Add Staff
-          </button>
+          {canCreateStaff && (
+            <button type="button"
+              onClick={() => setPage("add-teacher")}
+              style={{
+                background: "#2563eb",
+                color: "#fff",
+                border: "none",
+                padding: "12px 20px",
+                borderRadius: "12px",
+                cursor: "pointer",
+              }}
+            >
+              + Add Staff
+            </button>
+          )}
         </div>
 
         {loading ? (

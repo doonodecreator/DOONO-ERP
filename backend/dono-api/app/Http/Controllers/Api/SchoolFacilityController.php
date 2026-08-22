@@ -21,7 +21,7 @@ class SchoolFacilityController extends Controller
 
     public function index(Request $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         $query = SchoolFacility::with($this->resourceRelationships())
             ->where('school_id', $schoolId)
@@ -43,7 +43,7 @@ class SchoolFacilityController extends Controller
 
     public function options(Request $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $search = trim((string) $request->input('search'));
 
         $staff = Staff::where('school_id', $schoolId)
@@ -70,7 +70,7 @@ class SchoolFacilityController extends Controller
 
     public function store(StoreSchoolFacilityRequest $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $facility = SchoolFacility::create([
             ...$request->validated(),
             'school_id' => $schoolId,
@@ -119,21 +119,12 @@ class SchoolFacilityController extends Controller
 
     private function ensureSchoolFacility(Request $request, SchoolFacility $schoolFacility): int
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         abort_unless($schoolFacility->school_id === $schoolId, 403);
 
         return $schoolId;
     }
 
-    private function currentSchoolId(Request $request): int
-    {
-        $schoolId = $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($request->user())?->id;
-
-        abort_unless($schoolId, 409, 'No active school.');
-
-        return (int) $schoolId;
-    }
 
     private function resourceRelationships(): array
     {

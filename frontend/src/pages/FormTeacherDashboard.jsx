@@ -8,8 +8,11 @@ const TABS = [
     { id: "dashboard", label: "Dashboard" },
     { id: "my_class", label: "My Class", page: "classes" },
     { id: "attendance", label: "Attendance", page: "attendance" },
-    { id: "behaviour", label: "Behaviour", page: "discipline" },
+    { id: "behaviour", label: "Behaviour", page: "discipline-cases" },
     { id: "parents", label: "Parents", page: "parents" },
+    { id: "communication", label: "Communication", page: "communication" },
+    { id: "messages", label: "Messages", page: "messages" },
+    { id: "assignments", label: "Assignments", page: "assignments" },
     { id: "recommendations", label: "Recommendations", page: "promotions" },
 ];
 
@@ -41,13 +44,15 @@ export default function FormTeacherDashboard({ setPage }) {
     const students = Array.isArray(data?.class_students) ? data.class_students : [];
     const tasks = data?.pending_tasks || { behaviour_reports: 0, parent_messages: 0 };
     const logs = Array.isArray(data?.recent_behaviour_logs) ? data.recent_behaviour_logs : [];
+    const assignments = Array.isArray(data?.recent_assignments) ? data.recent_assignments : [];
 
     const openTab = (tabId) => {
         const tab = TABS.find((item) => item.id === tabId);
-        setActiveTab(tabId);
         if (tab?.page && typeof setPage === "function") {
             setPage(tab.page);
+            return;
         }
+        setActiveTab(tabId);
     };
 
     if (loading) {
@@ -90,7 +95,7 @@ export default function FormTeacherDashboard({ setPage }) {
                         {tasks.parent_messages > 0 && (
                             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex justify-between items-center">
                                 <div className="flex items-center gap-3"><span className="text-blue-600 text-xl">💬</span><p className="font-semibold text-blue-900 text-sm">{tasks.parent_messages} unread messages from parents.</p></div>
-                                <button type="button" onClick={() => openTab("parents")} className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Inbox</button>
+                                <button type="button" onClick={() => openTab("messages")} className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Inbox</button>
                             </div>
                         )}
                     </div>
@@ -108,6 +113,11 @@ export default function FormTeacherDashboard({ setPage }) {
                     </div>
 
                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div className="p-5 border-b border-slate-100"><h3 className="font-bold text-slate-900">Recent Assignments</h3></div>
+                        {assignments.length === 0 ? <EmptyState title="No assignments yet" message="Assignments created for your class will appear here." /> : <div className="divide-y divide-slate-100">{assignments.map((assignment) => <div key={assignment.id} className="p-4"><p className="font-semibold text-slate-800 text-sm">{assignment.title}</p><p className="text-xs text-slate-500">{assignment.subject} · {assignment.class}</p></div>)}</div>}
+                    </div>
+
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                         <div className="p-5 border-b border-slate-100"><h3 className="font-bold text-slate-900">Recent Behaviour Logs</h3></div>
                         {logs.length === 0 ? <EmptyState title="No recent logs" message="Recent student behaviour incidents will appear here." /> : (
                             <div className="divide-y divide-slate-100">{logs.map((log, idx) => (
@@ -122,7 +132,7 @@ export default function FormTeacherDashboard({ setPage }) {
             ) : (
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
                     <h3 className="text-xl font-bold text-slate-900 mb-2 capitalize">{activeTab.replace("_", " ")}</h3>
-                    <p className="text-slate-500 max-w-sm mx-auto">{TABS.find(t => t.id === activeTab)?.page ? "Opening the registered form-teacher workspace." : "This module is intentionally marked unavailable rather than displaying mock data."}</p>
+                    <p className="text-slate-500 max-w-sm mx-auto">{TABS.find(t => t.id === activeTab)?.page ? "Opening the registered form-teacher workspace." : "Select a registered form-teacher module from the navigation above."}</p>
                 </div>
             )}
         </div>

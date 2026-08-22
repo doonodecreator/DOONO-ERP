@@ -1,0 +1,130 @@
+.schools-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.school-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .06);
+}
+
+.school-card-main {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.school-card-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.school-card-eyebrow {
+  margin: 0 0 4px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.school-card-title {
+  margin: 0;
+  color: #1e293b;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.school-card-owner {
+  margin: 12px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.school-card-owner strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.school-status {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.school-status-active {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.school-status-inactive {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.school-card-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  align-items: center;
+}
+
+.schools-feedback {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.schools-feedback-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+}
+
+.schools-feedback-success {
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  color: #16a34a;
+}
+
+@media (max-width: 767px) {
+  .school-card {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .school-card-heading {
+    gap: 10px;
+  }
+
+  .school-card-title {
+    font-size: 18px;
+  }
+
+  .school-card-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .school-card-actions .ui-button {
+    flex: 1 1 140px;
+  }
+}

@@ -11,7 +11,7 @@ class SystemSetting extends Model
         'platform_name', 'platform_email', 'platform_phone', 'platform_logo',
         'trial_days', 'default_subscription_plan_id', 'default_currency_id',
         'allow_school_registration', 'maintenance_mode', 'enforce_subscriptions',
-        'paystack_enabled', 'stripe_enabled', 'email_notifications', 'sms_notifications',
+        'paystack_enabled', 'stripe_enabled', 'email_notifications', 'local_email_mode', 'sms_notifications',
     ];
 
     protected $casts = [
@@ -21,6 +21,7 @@ class SystemSetting extends Model
         'paystack_enabled' => 'boolean',
         'stripe_enabled' => 'boolean',
         'email_notifications' => 'boolean',
+        'local_email_mode' => 'boolean',
         'sms_notifications' => 'boolean',
     ];
 

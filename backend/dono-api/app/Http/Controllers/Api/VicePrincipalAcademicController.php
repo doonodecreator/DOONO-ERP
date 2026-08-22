@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AcademicSession;
+use App\Models\CbtQuestion;
 use App\Models\Examination;
 use App\Models\Result;
 use App\Models\ResultSubmission;
@@ -35,10 +36,15 @@ class VicePrincipalAcademicController extends Controller
         $currentSession = AcademicSession::query()
             ->where('school_id', $schoolId)
             ->where('is_current', true)
-            ->first();
+            ->first()
+            ?? AcademicSession::query()
+                ->where('school_id', $schoolId)
+                ->latest('start_date')
+                ->first();
 
         $currentTerm = $currentSession
-            ? $currentSession->terms()->where('is_current', true)->first()
+            ? ($currentSession->terms()->where('is_current', true)->first()
+                ?? $currentSession->terms()->orderBy('start_date')->first())
             : null;
 
         $totalSubjects = Subject::query()
@@ -59,7 +65,7 @@ class VicePrincipalAcademicController extends Controller
             ->count();
         $caSubmissionPercentage = $submissionCount > 0
             ? round(($completedSubmissionCount / $submissionCount) * 100)
-            : null;
+            : 0;
 
         $pendingResultsReview = (clone $submissionQuery)
             ->where('status', 'submitted')
@@ -75,6 +81,11 @@ class VicePrincipalAcademicController extends Controller
             })
             ->count();
 
+        $cbtQuestionsCount = CbtQuestion::query()
+            ->where('school_id', $schoolId)
+            ->where('is_active', true)
+            ->count();
+
         $subjectAssignments = Subject::query()
             ->with(['classes:id,name'])
             ->where('school_id', $schoolId)
@@ -86,7 +97,7 @@ class VicePrincipalAcademicController extends Controller
                 'subject' => $subject->name,
                 'classes' => $subject->classes->pluck('name')->filter()->implode(', ') ?: 'No classes linked',
                 'assigned_teacher' => null,
-                'status' => 'Teacher allocation unavailable',
+                'status' => 'Not assigned',
             ])
             ->values();
 
@@ -116,7 +127,7 @@ class VicePrincipalAcademicController extends Controller
                 'total_subjects' => $totalSubjects,
                 'active_teachers' => $activeTeachers,
                 'ca_submissions_pct' => $caSubmissionPercentage,
-                'cbt_questions_count' => null,
+                'cbt_questions_count' => $cbtQuestionsCount,
                 'pending_results_review' => $pendingResultsReview,
                 'pending_raw_results' => $pendingRawResults,
             ],

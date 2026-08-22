@@ -41,6 +41,10 @@ class ReportCardResource extends JsonResource
             'teacher_comment' => $this->teacher_comment,
 
             'principal_comment' => $this->principal_comment,
+            'class_teacher_name' => $this->class_teacher_name,
+            'principal_name' => $this->principal_name,
+            'next_term_begins' => $this->next_term_begins,
+            'promotion_status' => $this->promotion_status,
 
             'is_published' => $this->is_published,
 

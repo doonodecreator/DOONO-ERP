@@ -11,6 +11,7 @@ use App\Models\ParentModel;
 use App\Models\Student;
 use App\Services\ActivityLogService;
 use App\Services\CurrentContextService;
+use App\Services\EmailVerificationService;
 use App\Services\PortalAccountService;
 use Illuminate\Http\Request;
 
@@ -18,7 +19,8 @@ class PortalAccountController extends Controller
 {
     public function __construct(
         private readonly CurrentContextService $context,
-        private readonly PortalAccountService $portalAccounts
+        private readonly PortalAccountService $portalAccounts,
+        private readonly EmailVerificationService $verification
     ) {
     }
 
@@ -32,6 +34,7 @@ class PortalAccountController extends Controller
             $request->validated(),
             $schoolId
         );
+        $verificationSent = $this->verification->send($linkedStudent->user);
 
         ActivityLogService::log(
             module: 'portal_accounts',
@@ -41,13 +44,16 @@ class PortalAccountController extends Controller
             schoolId: $schoolId,
         );
 
-        return new StudentResource($linkedStudent->load([
+        return response()->json([
+            'data' => new StudentResource($linkedStudent->load([
             'school',
             'division',
             'class',
             'stream',
             'academicSession',
-        ]));
+        ])),
+            'verification_email_sent' => $verificationSent,
+        ]);
     }
 
     public function linkParent(
@@ -60,6 +66,7 @@ class PortalAccountController extends Controller
             $request->validated(),
             $schoolId
         );
+        $verificationSent = $this->verification->send($guardian->user);
 
         ActivityLogService::log(
             module: 'portal_accounts',
@@ -69,11 +76,14 @@ class PortalAccountController extends Controller
             schoolId: $schoolId,
         );
 
-        return new ParentResource($parent->load([
+        return response()->json([
+            'data' => new ParentResource($parent->load([
             'school',
             'students',
             'guardian.user',
-        ]));
+        ])),
+            'verification_email_sent' => $verificationSent,
+        ]);
     }
 
     private function ensureSchool(Request $request, int $recordSchoolId): int

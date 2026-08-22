@@ -24,6 +24,7 @@ class UpdateSystemSettingRequest extends FormRequest
             'paystack_enabled' => 'sometimes|boolean',
             'stripe_enabled' => 'sometimes|boolean',
             'email_notifications' => 'sometimes|boolean',
+            'local_email_mode' => 'sometimes|boolean',
             'sms_notifications' => 'sometimes|boolean',
         ];
     }

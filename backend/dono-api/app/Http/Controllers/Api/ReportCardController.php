@@ -18,7 +18,10 @@ class ReportCardController extends Controller
 
     public function index(Request $request)
     {
-        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+        if (!$schoolId) {
+            return response()->json(['success' => false, 'message' => 'Select an active school before viewing report cards.'], 409);
+        }
 
         $query = ReportCard::with([
             'school',
@@ -28,15 +31,17 @@ class ReportCardController extends Controller
             'term',
         ]);
 
-        if ($schoolId) {
-            $query->where('school_id', $schoolId);
-        }
+        $query->where('school_id', $schoolId);
 
         return ReportCardResource::collection($query->latest()->paginate(15));
     }
 
     public function show(Request $request, ReportCard $reportCard)
     {
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+        abort_unless($schoolId && (int) $reportCard->school_id === (int) $schoolId, 404);
+        abort_unless($reportCard->studentEnrollment && (int) $reportCard->studentEnrollment->school_id === (int) $schoolId, 404);
+
         $generated = $this->reportCardService->generatePayload(
             $reportCard->studentEnrollment,
             $reportCard->academic_session_id,
@@ -50,8 +55,12 @@ class ReportCardController extends Controller
         ]);
     }
 
-    public function downloadPdf(ReportCard $reportCard)
+    public function downloadPdf(Request $request, ReportCard $reportCard)
     {
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+        abort_unless($schoolId && (int) $reportCard->school_id === (int) $schoolId, 404);
+        abort_unless($reportCard->studentEnrollment && (int) $reportCard->studentEnrollment->school_id === (int) $schoolId, 404);
+
         return $this->reportCardService->downloadPdf(
             $reportCard->studentEnrollment,
             $reportCard->academic_session_id,

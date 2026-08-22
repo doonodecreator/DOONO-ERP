@@ -47,7 +47,7 @@ alert(err.response?.data?.message || 'Failed to record expense.');
 <h1 className="text-2xl font-bold text-gray-800">School Expenses & Accounts</h1>
 <p className="text-sm text-gray-500">Track institutional expenditures, maintenance costs, and operational outflows.</p>
 </div>
-<button
+<button type="button"
 onClick={() => setShowModal(true)}
 className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 text-sm transition shadow-sm"
 >
@@ -57,7 +57,7 @@ className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue
 ​{error && (
 <div className="p-4 mb-6 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm flex justify-between items-center">
 <span>{error}</span>
-<button onClick={loadExpenses} className="underline font-semibold">Retry</button>
+<button type="button" onClick={loadExpenses} className="underline font-semibold">Retry</button>
 </div>
 )}
 ​{/* Metric Card */}

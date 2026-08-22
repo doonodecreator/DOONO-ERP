@@ -4,6 +4,8 @@ import api from '../services/api';
 export default function EditStudent({ student, setPage }) {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const [photo, setPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(student?.photo_url || student?.photo || "");
 
   const [form, setForm] = useState({
     admission_number: student?.admission_number || '',
@@ -53,9 +55,20 @@ export default function EditStudent({ student, setPage }) {
         medical_notes: data.medical_notes || prev.medical_notes,
         status: data.status || prev.status,
       }));
+      setPhotoPreview(data.photo_url || data.photo || "");
     } catch (err) {
       console.error('Failed to fetch full student record:', err);
     }
+  };
+
+  useEffect(() => () => {
+    if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
+  }, [photoPreview]);
+
+  const handlePhoto = (event) => {
+    const nextPhoto = event.target.files?.[0] || null;
+    setPhoto(nextPhoto);
+    setPhotoPreview(nextPhoto ? URL.createObjectURL(nextPhoto) : "");
   };
 
   const handleChange = (e) => {
@@ -73,7 +86,11 @@ export default function EditStudent({ student, setPage }) {
     setErrors({});
 
     try {
-      await api.put(`/students/${student.id}`, form);
+      const payload = new FormData();
+      payload.append("_method", "PUT");
+      Object.entries(form).forEach(([key, value]) => payload.append(key, value ?? ""));
+      if (photo) payload.append("photo", photo);
+      await api.post(`/students/${student.id}`, payload, { headers: { "Content-Type": "multipart/form-data" } });
       if (setPage) setPage('students');
     } catch (err) {
       if (err.response && err.response.status === 422) {
@@ -107,6 +124,11 @@ export default function EditStudent({ student, setPage }) {
         <div>
           <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Personal Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Student Photo</label>
+              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePhoto} className="w-full text-sm" />
+              {photoPreview && <img src={photoPreview} alt="Student preview" className="mt-2 h-16 w-16 rounded-full object-cover" />}
+            </div>
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">First Name *</label>
               <input

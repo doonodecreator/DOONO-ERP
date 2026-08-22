@@ -166,10 +166,10 @@ export default function OrganizationOwnerDashboard({ setPage }) {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <span className="bg-emerald-50 text-emerald-700 text-xs px-2.5 py-1 rounded-md font-bold">{school.status || "Unknown"}</span>
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 disabled={switchingId === school.id}
-                                                onClick={() => manageSchool(school.id)} 
+                                                onClick={() => manageSchool(school.id)}
                                                 className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 disabled:opacity-50"
                                             >
                                                 {switchingId === school.id ? "Entering..." : "Manage"}

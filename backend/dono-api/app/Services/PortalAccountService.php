@@ -8,7 +8,6 @@ use App\Models\Role;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class PortalAccountService
@@ -120,8 +119,10 @@ class PortalAccountService
 
         $user = User::create([
             'name' => $name,
-            'email' => $email,
-            'password' => Hash::make($password),
+            'email' => strtolower(trim($email)),
+            'password' => $password,
+            'must_change_password' => true,
+            'password_changed_at' => null,
         ]);
 
         $user->roles()->attach($role->id, [

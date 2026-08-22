@@ -30,14 +30,14 @@ export default function PrincipalDashboard({ setPage }) {
 
     const openTab = (tabId) => {
         const pageMap = {
-            manage_teachers: "staff",
+            manage_teachers: "teachers",
             manage_students: "students",
-            approve_admissions: "admissions",
+            approve_admissions: "student-enrollments",
             approve_results: "results",
             approve_timetable: "timetable",
             approve_promotions: "promotions",
             view_attendance: "attendance",
-            view_finance: "fees-payments",
+            view_finance: "fees",
             reports: "report-cards",
         };
 

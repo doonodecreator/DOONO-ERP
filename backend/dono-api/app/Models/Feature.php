@@ -31,7 +31,10 @@ class Feature extends Model
     public function subscriptionPlans(): BelongsToMany
     {
         return $this->belongsToMany(
-            SubscriptionPlan::class
+            SubscriptionPlan::class,
+            'feature_subscription_plan',
+            'feature_id',
+            'subscription_plan_id'
         )
         ->withPivot('is_enabled')
         ->withTimestamps();

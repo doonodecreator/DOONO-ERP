@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\TransportRoute;
+use App\Models\Vehicle;
 use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
 
@@ -13,31 +14,28 @@ class TransportRouteController extends Controller
 
     public function index(Request $request)
     {
-        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+        $schoolId = $this->requireSchool($request);
 
         return response()->json(
-            TransportRoute::when($schoolId, fn($q) => $q->where('school_id', $schoolId))
-            ->with(['vehicle'])
-            ->latest()
-            ->paginate(10)
+            TransportRoute::where('school_id', $schoolId)
+                ->with(['vehicle'])
+                ->latest()
+                ->paginate(10)
         );
     }
 
     public function store(Request $request)
     {
+        $schoolId = $this->requireSchool($request);
         $validated = $request->validate([
             'route_name' => 'required|string|max:255',
             'vehicle_id' => 'required|exists:vehicles,id',
-            'pickup_points' => 'required|string',
-            'fare' => 'required|numeric|min:0',
+            'description' => 'nullable|string|max:1000',
+            'fare_amount' => 'required|numeric|min:0',
         ]);
 
-        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
-        if ($schoolId) {
-            $validated['school_id'] = $schoolId;
-        }
-
-        $route = TransportRoute::create($validated);
+        abort_unless(Vehicle::whereKey($validated['vehicle_id'])->where('school_id', $schoolId)->exists(), 403, 'The selected vehicle does not belong to this school.');
+        $route = TransportRoute::create([...$validated, 'school_id' => $schoolId]);
 
         return response()->json([
             'message' => 'Transport route created successfully.',
@@ -45,34 +43,42 @@ class TransportRouteController extends Controller
         ], 201);
     }
 
-    public function show(TransportRoute $transportRoute)
+    public function show(Request $request, TransportRoute $transportRoute)
     {
+        $this->ensureSchoolRoute($request, $transportRoute);
         return response()->json($transportRoute->load(['vehicle']));
     }
 
     public function update(Request $request, TransportRoute $transportRoute)
     {
+        $schoolId = $this->ensureSchoolRoute($request, $transportRoute);
         $validated = $request->validate([
             'route_name' => 'sometimes|string|max:255',
             'vehicle_id' => 'sometimes|exists:vehicles,id',
-            'pickup_points' => 'sometimes|string',
-            'fare' => 'sometimes|numeric|min:0',
+            'description' => 'sometimes|nullable|string|max:1000',
+            'fare_amount' => 'sometimes|numeric|min:0',
         ]);
 
+        if (isset($validated['vehicle_id'])) {
+            abort_unless(Vehicle::whereKey($validated['vehicle_id'])->where('school_id', $schoolId)->exists(), 403, 'The selected vehicle does not belong to this school.');
+        }
         $transportRoute->update($validated);
 
-        return response()->json([
-            'message' => 'Route updated successfully.',
-            'data' => $transportRoute->load(['vehicle'])
-        ]);
+        return response()->json(['message' => 'Route updated successfully.', 'data' => $transportRoute->load(['vehicle'])]);
     }
 
-    public function destroy(TransportRoute $transportRoute)
+    public function destroy(Request $request, TransportRoute $transportRoute)
     {
+        $this->ensureSchoolRoute($request, $transportRoute);
         $transportRoute->delete();
+        return response()->json(['message' => 'Transport route deleted successfully.']);
+    }
 
-        return response()->json([
-            'message' => 'Route deleted successfully.'
-        ]);
+
+    private function ensureSchoolRoute(Request $request, TransportRoute $transportRoute): int
+    {
+        $schoolId = $this->requireSchool($request);
+        abort_unless((int) $transportRoute->school_id === $schoolId, 403);
+        return $schoolId;
     }
 }

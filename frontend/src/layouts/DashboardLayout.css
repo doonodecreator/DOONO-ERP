@@ -1,0 +1,30 @@
+.dono-app-shell {
+  display: flex;
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: #f1f5f9;
+}
+
+.dono-app-column {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.dono-dashboard-main {
+  min-width: 0;
+  flex: 0 0 auto;
+  padding: 20px 20px calc(76px + env(safe-area-inset-bottom));
+  overflow: visible;
+  overscroll-behavior: auto;
+}
+
+@media (max-width: 767px) {
+  .dono-dashboard-main {
+    padding: 16px 16px calc(58px + env(safe-area-inset-bottom));
+  }
+}

@@ -135,4 +135,62 @@ class OrganizationOwnerController extends Controller
             'leadership_staff' => $leadership,
         ]);
     }
+
+    public function workspace(Request $request)
+    {
+        $user = $request->user();
+        $organization = $this->context->currentOrganization($user);
+
+        abort_unless(
+            $organization && $this->context->canManageOrganization($user, $organization),
+            403,
+            'No owned organization is available.'
+        );
+
+        $schools = $organization->schools()->orderBy('name')->get();
+        $schoolIds = $schools->modelKeys();
+        $users = Staff::query()
+            ->with(['school', 'user'])
+            ->whereIn('school_id', $schoolIds)
+            ->orderBy('first_name')
+            ->get()
+            ->map(fn (Staff $staff) => [
+                'id' => $staff->id,
+                'name' => $staff->full_name,
+                'email' => $staff->user?->email ?: $staff->email,
+                'designation' => $staff->designation,
+                'employment_status' => $staff->employment_status,
+                'school' => $staff->school?->name,
+                'school_id' => $staff->school_id,
+            ])->values();
+
+        $incomeBySchool = FeePayment::query()
+            ->whereHas('studentFee.studentEnrollment', fn ($query) => $query->whereIn('school_id', $schoolIds))
+            ->join('student_fees', 'fee_payments.student_fee_id', '=', 'student_fees.id')
+            ->join('student_enrollments', 'student_fees.student_enrollment_id', '=', 'student_enrollments.id')
+            ->select('student_enrollments.school_id', DB::raw('SUM(fee_payments.amount_paid) as total'))
+            ->groupBy('student_enrollments.school_id')
+            ->pluck('total', 'school_id');
+
+        return response()->json([
+            'organization' => $organization->only([
+                'id', 'name', 'short_name', 'registration_number', 'email', 'phone',
+                'alternative_phone', 'website', 'country', 'state', 'lga', 'address', 'status',
+            ]),
+            'schools' => $schools->map(fn ($school) => [
+                'id' => $school->id,
+                'name' => $school->name,
+                'status' => $school->status,
+                'school_type' => $school->school_type,
+                'income' => round((float) ($incomeBySchool[$school->id] ?? 0), 2),
+            ])->values(),
+            'users' => $users,
+            'reports' => [
+                'school_count' => $schools->count(),
+                'user_count' => $users->count(),
+                'active_users' => $users->where('employment_status', 'Active')->count(),
+                'income' => round((float) $incomeBySchool->sum(), 2),
+            ],
+        ]);
+    }
 }

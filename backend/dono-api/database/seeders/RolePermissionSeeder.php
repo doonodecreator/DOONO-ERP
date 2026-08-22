@@ -12,17 +12,17 @@ class RolePermissionSeeder extends Seeder
     {
         $map = [
             'super_admin' => ['manage_organizations', 'manage_schools', 'manage_subscriptions', 'manage_system_settings', 'view_audit_logs'],
-            'proprietor' => ['view_dashboard', 'manage_schools', 'manage_staff', 'assign_roles', 'manage_divisions', 'manage_academic_sessions', 'manage_terms', 'manage_classes', 'manage_streams', 'manage_subjects', 'manage_students', 'view_students', 'manage_parents', 'manage_attendance', 'manage_examinations', 'manage_exam_scores', 'manage_assessments', 'manage_results', 'view_results', 'manage_promotions', 'manage_report_cards', 'manage_timetable', 'view_timetable', 'approve_admissions', 'approve_results', 'approve_promotions', 'approve_timetable', 'manage_fee_categories', 'manage_student_fees', 'receive_payments', 'view_revenue', 'manage_payroll', 'manage_budget', 'view_finance_reports', 'send_communication', 'view_communication', 'manage_library', 'manage_hostel', 'manage_transport', 'manage_clinic', 'manage_inventory', 'manage_discipline', 'manage_front_desk'],
-            'principal' => ['view_dashboard', 'manage_staff', 'manage_students', 'view_students', 'manage_attendance', 'manage_examinations', 'manage_exam_scores', 'manage_results', 'view_results', 'manage_promotions', 'manage_report_cards', 'manage_timetable', 'view_timetable', 'approve_admissions', 'approve_results', 'approve_promotions', 'approve_timetable', 'send_communication', 'view_communication', 'manage_discipline'],
-            'vice_principal_academic' => ['view_dashboard', 'view_students', 'manage_attendance', 'manage_examinations', 'manage_assessments', 'manage_results', 'view_results', 'manage_promotions', 'manage_report_cards', 'view_timetable', 'view_communication'],
-            'vice_principal_admin' => ['view_dashboard', 'manage_staff', 'view_students', 'manage_attendance', 'manage_discipline', 'manage_inventory', 'manage_front_desk', 'view_communication'],
-            'nursery_head' => ['view_dashboard', 'manage_staff', 'manage_students', 'view_students', 'manage_attendance', 'manage_assessments', 'manage_results', 'view_results', 'manage_timetable', 'view_timetable', 'send_communication', 'view_communication'],
-            'primary_headmaster' => ['view_dashboard', 'manage_staff', 'manage_students', 'view_students', 'manage_attendance', 'manage_assessments', 'manage_examinations', 'manage_results', 'view_results', 'manage_promotions', 'manage_timetable', 'view_timetable', 'send_communication', 'view_communication'],
-            'secondary_principal' => ['view_dashboard', 'manage_staff', 'manage_students', 'view_students', 'manage_attendance', 'manage_assessments', 'manage_examinations', 'manage_exam_scores', 'manage_results', 'view_results', 'manage_promotions', 'manage_timetable', 'view_timetable', 'send_communication', 'view_communication'],
-            'teacher' => ['view_dashboard', 'view_students', 'manage_attendance', 'manage_assessments', 'manage_exam_scores', 'view_results', 'view_timetable', 'view_communication'],
-            'form_teacher' => ['view_dashboard', 'view_students', 'manage_attendance', 'manage_assessments', 'manage_exam_scores', 'view_results', 'view_timetable', 'send_communication', 'view_communication'],
+            'proprietor' => ['view_dashboard', 'manage_schools', 'manage_staff', 'view_staff', 'assign_roles', 'manage_cbt_questions', 'view_cbt_questions', 'manage_divisions', 'manage_academic_sessions', 'manage_terms', 'manage_classes', 'manage_streams', 'manage_subjects', 'manage_students', 'view_students', 'manage_parents', 'manage_attendance', 'manage_examinations', 'manage_exam_scores', 'manage_assessments', 'manage_results', 'view_results', 'manage_promotions', 'manage_report_cards', 'manage_timetable', 'view_timetable', 'approve_admissions', 'approve_results', 'approve_promotions', 'approve_timetable', 'manage_fee_categories', 'manage_student_fees', 'receive_payments', 'view_revenue', 'manage_payroll', 'manage_budget', 'view_finance_reports', 'send_communication', 'view_communication', 'manage_library', 'manage_hostel', 'manage_transport', 'manage_clinic', 'manage_inventory', 'manage_discipline', 'manage_front_desk'],
+            'principal' => ['view_dashboard', 'view_staff', 'manage_cbt_questions', 'view_cbt_questions', 'manage_students', 'view_students', 'view_results', 'manage_promotions', 'view_timetable', 'approve_admissions', 'approve_results', 'approve_promotions', 'approve_timetable', 'send_communication', 'view_communication', 'view_finance_reports'],
+            'vice_principal_academic' => ['view_dashboard', 'view_staff', 'view_students', 'manage_cbt_questions', 'view_cbt_questions', 'manage_attendance', 'manage_examinations', 'manage_assessments', 'manage_results', 'view_results', 'manage_promotions', 'manage_report_cards', 'view_timetable', 'view_communication'],
+            'vice_principal_admin' => ['view_dashboard', 'view_staff', 'view_students', 'manage_attendance', 'manage_discipline', 'manage_inventory', 'manage_front_desk', 'manage_events', 'manage_facilities', 'view_communication'],
+            'nursery_head' => ['view_dashboard', 'view_staff', 'manage_students', 'view_students', 'manage_attendance', 'manage_assessments', 'manage_results', 'view_results', 'manage_timetable', 'view_timetable', 'send_communication', 'view_communication'],
+            'primary_headmaster' => ['view_dashboard', 'manage_cbt_questions', 'view_cbt_questions', 'view_staff', 'manage_students', 'view_students', 'manage_attendance', 'manage_assessments', 'manage_examinations', 'manage_results', 'view_results', 'manage_promotions', 'manage_timetable', 'view_timetable', 'send_communication', 'view_communication'],
+            'secondary_principal' => ['view_dashboard', 'manage_cbt_questions', 'view_cbt_questions', 'view_staff', 'manage_students', 'view_students', 'manage_attendance', 'manage_assessments', 'manage_examinations', 'manage_exam_scores', 'manage_results', 'view_results', 'manage_promotions', 'manage_timetable', 'view_timetable', 'send_communication', 'view_communication'],
+            'teacher' => ['view_dashboard', 'view_students', 'manage_cbt_questions', 'view_cbt_questions', 'manage_attendance', 'manage_assessments', 'manage_exam_scores', 'view_results', 'view_timetable', 'view_assignments', 'manage_assignments', 'view_communication'],
+            'form_teacher' => ['view_dashboard', 'view_students', 'manage_attendance', 'manage_assessments', 'manage_exam_scores', 'view_results', 'view_timetable', 'view_assignments', 'manage_assignments', 'send_communication', 'view_communication'],
             'bursar' => ['view_dashboard', 'manage_fee_categories', 'manage_student_fees', 'receive_payments', 'view_revenue', 'manage_payroll', 'manage_budget', 'view_finance_reports'],
-            'accountant' => ['view_dashboard', 'receive_payments', 'view_revenue', 'manage_payroll', 'manage_budget', 'view_finance_reports'],
+            'accountant' => ['view_dashboard', 'view_revenue', 'manage_payroll', 'manage_budget', 'view_finance_reports'],
             'librarian' => ['view_dashboard', 'manage_library'],
             'nurse' => ['view_dashboard', 'manage_clinic', 'view_students'],
             'hostel_master' => ['view_dashboard', 'manage_hostel'],
@@ -34,8 +34,8 @@ class RolePermissionSeeder extends Seeder
             'ict_administrator' => ['view_dashboard', 'manage_system_settings', 'view_communication'],
             'guidance_counselor' => ['view_dashboard', 'manage_discipline', 'view_students'],
             'security_officer' => ['view_dashboard', 'manage_front_desk'],
-            'parent' => ['portal_parent_access', 'view_communication', 'receive_payments'],
-            'student' => ['portal_student_access'],
+            'parent' => ['portal_parent_access', 'view_communication'],
+            'student' => ['portal_student_access', 'view_communication', 'view_cbt_questions'],
         ];
 
         foreach ($map as $roleSlug => $permissionSlugs) {
@@ -46,7 +46,7 @@ class RolePermissionSeeder extends Seeder
             }
 
             $permissionIds = Permission::whereIn('slug', $permissionSlugs)->pluck('id');
-            $role->permissions()->syncWithoutDetaching($permissionIds);
+            $role->permissions()->sync($permissionIds);
         }
     }
 }

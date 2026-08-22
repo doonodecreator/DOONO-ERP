@@ -2,78 +2,70 @@
 
 namespace App\Services\Academic;
 
-use App\Models\AssessmentStructure;
-use App\Models\ResultComponent;
+use App\Models\Result;
+use Illuminate\Validation\ValidationException;
 
 class AssessmentComputationService
 {
     /**
-     * Calculate weighted score.
+     * Calculate a component's contribution to the normalized 100-point result.
      */
     public function calculateWeightedScore(
         float $score,
         float $maximumMarks,
         float $percentage
     ): float {
-
         if ($maximumMarks <= 0) {
-            return 0;
+            throw ValidationException::withMessages([
+                'assessment_structure' => 'Every assessment structure must have maximum marks greater than zero.',
+            ]);
         }
 
-        return round(
-            ($score / $maximumMarks) * $percentage,
-            2
-        );
+        if ($percentage < 0 || $percentage > 100) {
+            throw ValidationException::withMessages([
+                'assessment_structure' => 'Assessment structure percentages must be between 0 and 100.',
+            ]);
+        }
+
+        if ($score < 0 || $score > $maximumMarks) {
+            throw ValidationException::withMessages([
+                'score' => "A score must be between 0 and {$maximumMarks}.",
+            ]);
+        }
+
+        return round(($score / $maximumMarks) * $percentage, 2);
     }
 
     /**
-     * Compute subject total.
+     * Compute all component weights for one school-scoped result.
      */
-    public function computeSubjectTotal(
-        int $resultId
-    ): float {
+    public function computeComponents(Result $result): void
+    {
+        $result->loadMissing('components.assessmentStructure');
 
-        $components = ResultComponent::where(
-            'result_id',
-            $resultId
-        )->get();
+        foreach ($result->components as $component) {
+            $structure = $component->assessmentStructure;
 
-        return round(
-            $components->sum('weighted_score'),
-            2
-        );
-    }
-
-    /**
-     * Calculate every component.
-     */
-    public function computeComponents(
-        int $resultId
-    ): void {
-
-        $components = ResultComponent::where(
-            'result_id',
-            $resultId
-        )->get();
-
-        foreach ($components as $component) {
-
-            $structure = AssessmentStructure::find(
-                $component->assessment_structure_id
-            );
-
-            if (!$structure) {
-                continue;
+            if (!$structure || (int) $structure->school_id !== (int) $result->school_id) {
+                throw ValidationException::withMessages([
+                    'assessment_structure' => 'A result component references an invalid assessment structure for this school.',
+                ]);
             }
 
-            $component->weighted_score =
-                $this->calculateWeightedScore(
-                    $component->score,
-                    $structure->maximum_marks,
-                    $structure->percentage
-                );
-
+            $component->weighted_score = $this->calculateWeightedScore(
+                (float) $component->score,
+                (float) $structure->maximum_marks,
+                (float) $structure->percentage
+            );
             $component->save();
         }
+    }
+
+    /**
+     * Compute the normalized subject total for one school-scoped result.
+     */
+    public function computeSubjectTotal(Result $result): float
+    {
+        return round((float) $result->components()->sum('weighted_score'), 2);
     }
 }

@@ -18,10 +18,6 @@ class TermController extends Controller
         private readonly CurrentContextService $context
     ) {}
 
-    private function currentSchoolId(User $user): ?int
-    {
-        return $this->context->currentSchool($user)?->id;
-    }
     public function index()
     {
         $user = auth()->user();
@@ -30,7 +26,7 @@ class TermController extends Controller
 
         if (!$user->isSuperAdmin()) {
 
-            $schoolId = $this->currentSchoolId($user);
+            $schoolId = $this->context->currentSchool($user)?->id;
 
             $query->whereHas('academicSession', function ($q) use ($schoolId) {
                 $q->where('school_id', $schoolId);
@@ -54,7 +50,7 @@ class TermController extends Controller
 
             if (
                 !$user->isSuperAdmin() &&
-                $academicSession->school_id !== $this->currentSchoolId($user)
+                $academicSession->school_id !== $this->context->currentSchool($user)?->id
             ) {
                 abort(403, 'You cannot create a term for another school.');
             }
@@ -89,7 +85,7 @@ class TermController extends Controller
 
         if (
             !$user->isSuperAdmin() &&
-            $term->academicSession->school_id !== $this->currentSchoolId($user)
+            $term->academicSession->school_id !== $this->context->currentSchool($user)?->id
         ) {
             abort(403);
         }
@@ -107,7 +103,7 @@ class TermController extends Controller
 
         if (
             !$user->isSuperAdmin() &&
-            $term->academicSession->school_id !== $this->currentSchoolId($user)
+            $term->academicSession->school_id !== $this->context->currentSchool($user)?->id
         ) {
             abort(403);
         }
@@ -147,7 +143,7 @@ class TermController extends Controller
 
         if (
             !$user->isSuperAdmin() &&
-            $term->academicSession->school_id !== $this->currentSchoolId($user)
+            $term->academicSession->school_id !== $this->context->currentSchool($user)?->id
         ) {
             abort(403);
         }

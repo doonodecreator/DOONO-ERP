@@ -135,7 +135,7 @@ export default function VicePrincipalAdminDashboard({ setPage }) {
             {/* Navigation Bar (10 Sub-Modules) */}
             <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-thin">
                 {tabs.map((tab) => (
-                    <button
+                    <button type="button"
                         key={tab.id}
                         onClick={() => openTab(tab.id)}
                         className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
@@ -178,7 +178,7 @@ export default function VicePrincipalAdminDashboard({ setPage }) {
                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                         <div className="p-5 border-b border-slate-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-900">Upcoming Events</h3>
-                            <button onClick={() => setActiveTab('events')} className="text-xs font-semibold text-cyan-700 hover:underline">Schedule</button>
+                            <button type="button" onClick={() => setActiveTab('events')} className="text-xs font-semibold text-cyan-700 hover:underline">Schedule</button>
                         </div>
                         <div className="divide-y divide-slate-100">
                             {Array.isArray(events) && events.map((ev) => (

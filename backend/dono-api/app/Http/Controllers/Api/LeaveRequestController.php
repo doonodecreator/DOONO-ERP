@@ -30,7 +30,7 @@ class LeaveRequestController extends Controller
 
     public function index(Request $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $staff = $this->currentStaff($request, $schoolId);
         $isLeadership = $this->isLeadership($request, $schoolId);
 
@@ -53,7 +53,7 @@ class LeaveRequestController extends Controller
 
     public function options(Request $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $staff = $this->currentStaff($request, $schoolId);
         $isLeadership = $this->isLeadership($request, $schoolId);
 
@@ -81,7 +81,7 @@ class LeaveRequestController extends Controller
 
     public function store(StoreLeaveRequest $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $currentStaff = $this->currentStaff($request, $schoolId);
         $isLeadership = $this->isLeadership($request, $schoolId);
         $data = $request->validated();
@@ -112,7 +112,7 @@ class LeaveRequestController extends Controller
 
     public function show(Request $request, LeaveRequest $leaveRequest)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $this->ensureVisibleToRequesterOrLeadership($request, $leaveRequest, $schoolId);
 
         return new LeaveRequestResource(
@@ -124,7 +124,7 @@ class LeaveRequestController extends Controller
         ReviewLeaveRequest $request,
         LeaveRequest $leaveRequest
     ) {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         abort_unless($this->isLeadership($request, $schoolId), 403);
         abort_unless($leaveRequest->school_id === $schoolId, 403);
@@ -166,7 +166,7 @@ class LeaveRequestController extends Controller
 
     public function cancel(Request $request, LeaveRequest $leaveRequest)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $this->ensureVisibleToRequesterOrLeadership($request, $leaveRequest, $schoolId);
 
         if ($leaveRequest->status !== 'Pending') {
@@ -229,15 +229,6 @@ class LeaveRequestController extends Controller
         });
     }
 
-    private function currentSchoolId(Request $request): int
-    {
-        $schoolId = $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($request->user())?->id;
-
-        abort_unless($schoolId, 409, 'No active school.');
-
-        return (int) $schoolId;
-    }
 
     private function perPage(Request $request): int
     {

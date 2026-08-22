@@ -23,7 +23,7 @@ class AssetController extends Controller
 
     public function index(Request $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         $query = Asset::with($this->resourceRelationships())
             ->where('school_id', $schoolId)
@@ -48,7 +48,7 @@ class AssetController extends Controller
 
     public function options(Request $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         $search = trim((string) $request->input('search'));
 
@@ -75,7 +75,7 @@ class AssetController extends Controller
 
     public function store(StoreAssetRequest $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         $asset = $this->assetService->create([
             ...$request->validated(),
@@ -127,21 +127,12 @@ class AssetController extends Controller
 
     private function ensureSchoolAsset(Request $request, Asset $asset): int
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         abort_unless($asset->school_id === $schoolId, 403);
 
         return $schoolId;
     }
 
-    private function currentSchoolId(Request $request): int
-    {
-        $schoolId = $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($request->user())?->id;
-
-        abort_unless($schoolId, 409, 'No active school.');
-
-        return (int) $schoolId;
-    }
 
     private function resourceRelationships(): array
     {

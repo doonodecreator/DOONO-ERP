@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
+import { arrayFromResponse } from "../utils/response";
 
 export default function CashierDashboard() {
     const [activeTab, setActiveTab] = useState("receive");
@@ -35,8 +36,8 @@ export default function CashierDashboard() {
                 api.get("/fee-payments").catch(() => ({ data: { data: [] } }))
             ]);
 
-            setStudentBills(billsRes.data?.data || billsRes.data || []);
-            setPayments(paymentsRes.data?.data || paymentsRes.data || []);
+            setStudentBills(arrayFromResponse(billsRes));
+            setPayments(arrayFromResponse(paymentsRes));
         } catch (err) {
             console.error("Error loading cashier records", err);
         } finally {
@@ -83,7 +84,7 @@ export default function CashierDashboard() {
 
                 <div className="flex gap-2 border-b border-gray-100 mt-6 overflow-x-auto pb-px">
                     {["receive", "pending", "history", "reports"].map((tab) => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-blue-600 text-blue-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
+                        <button type="button" key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-blue-600 text-blue-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
                             {tab === "receive" ? "Receive Payment" : tab === "pending" ? "Pending / Outstanding" : tab}
                         </button>
                     ))}

@@ -18,10 +18,14 @@ class FeePayment extends Model
         'transaction_reference',
         'bank_name',
         'remarks',
+        'reversed_at',
+        'reversed_by',
+        'reversal_reason',
     ];
 
     protected $casts = [
         'payment_date' => 'date',
+        'reversed_at' => 'datetime',
     ];
 
     public function studentFee(): BelongsTo
@@ -37,5 +41,10 @@ class FeePayment extends Model
     public function receipt(): HasOne
     {
         return $this->hasOne(PaymentReceipt::class);
+    }
+
+    public function reversedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reversed_by');
     }
 }

@@ -1,153 +1,38 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import PageContainer from "../components/layout/PageContainer";
 import PageHeader from "../components/layout/PageHeader";
-import LoadingSpinner from "../components/feedback/LoadingSpinner";
-import EmptyState from "../components/feedback/EmptyState";
+import DataTable from "../components/tables/DataTable";
+import Modal from "../components/modals/Modal";
+import Button from "../components/forms/Button";
+import { FormField, FormActions } from "../components/forms/FormField";
+import Alert from "../components/feedback/Alert";
+import { useAuth } from "../context/AuthContext";
 
-const emptyForm = {
-    name: "",
-    code: "",
-    category: "Core",
-    division_id: "",
-    pass_mark: 40,
-    maximum_mark: 100,
-    is_active: true,
-    description: "",
-};
+const emptyForm = { name: "", code: "", category: "Core", division_id: "", pass_mark: 40, maximum_mark: 100, is_active: true, description: "" };
+const listFromResponse = (response) => { const value = response?.data?.data?.data ?? response?.data?.data ?? response?.data; return Array.isArray(value) ? value : []; };
 
-const listFromResponse = (response) => {
-    const value = response?.data?.data?.data ?? response?.data?.data ?? response?.data;
-    return Array.isArray(value) ? value : [];
-};
-
-export default function Subjects() {
-    const [subjects, setSubjects] = useState([]);
-    const [divisions, setDivisions] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
-    const [formError, setFormError] = useState("");
-    const [showModal, setShowModal] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
-    const [editingId, setEditingId] = useState(null);
-    const [form, setForm] = useState(emptyForm);
-
-    const loadData = async () => {
-        setLoading(true);
-        setError("");
-        try {
-            const [subjectsResponse, divisionsResponse] = await Promise.all([
-                api.get("/subjects"),
-                api.get("/divisions"),
-            ]);
-            setSubjects(listFromResponse(subjectsResponse));
-            setDivisions(listFromResponse(divisionsResponse));
-        } catch (err) {
-            setError(err.response?.data?.message || "Unable to load subjects and divisions.");
-            setSubjects([]);
-            setDivisions([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const openModal = (subject = null) => {
-        setFormError("");
-        setEditingId(subject?.id || null);
-        setForm(subject ? {
-            name: subject.name || "",
-            code: subject.code || "",
-            category: subject.category || "Core",
-            division_id: subject.division_id || subject.division?.id || "",
-            pass_mark: subject.pass_mark ?? 40,
-            maximum_mark: subject.maximum_mark ?? 100,
-            is_active: subject.is_active ?? true,
-            description: subject.description || "",
-        } : { ...emptyForm, division_id: divisions[0]?.id || "" });
-        setShowModal(true);
-    };
-
-    const handleChange = (event) => {
-        const { name, value, checked, type } = event.target;
-        setForm((current) => ({ ...current, [name]: type === "checkbox" ? checked : value }));
-    };
-
-    const saveSubject = async (event) => {
-        event.preventDefault();
-        setSubmitting(true);
-        setFormError("");
-        try {
-            if (editingId) {
-                await api.put(`/subjects/${editingId}`, form);
-            } else {
-                await api.post("/subjects", form);
-            }
-            setShowModal(false);
-            setForm(emptyForm);
-            await loadData();
-        } catch (err) {
-            const validationErrors = err.response?.data?.errors;
-            setFormError(validationErrors ? Object.values(validationErrors).flat().join(" ") : (err.response?.data?.message || "Unable to save subject."));
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const deleteSubject = async (subject) => {
-        if (!window.confirm(`Delete ${subject.name}?`)) return;
-        try {
-            await api.delete(`/subjects/${subject.id}`);
-            await loadData();
-        } catch (err) {
-            setError(err.response?.data?.message || "Unable to delete subject.");
-        }
-    };
-
-    return (
-        <div className="p-6">
-            <PageHeader
-                title="Subjects"
-                subtitle="Define the curriculum subjects after divisions, classes, and streams are ready."
-                action={<button type="button" onClick={() => openModal()} className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700">Add Subject</button>}
-            />
-
-            {error && <div className="mb-5 rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-700"><span>{error}</span><button type="button" onClick={loadData} className="ml-4 font-semibold underline">Retry</button></div>}
-            {loading ? <LoadingSpinner text="Loading subjects..." /> : subjects.length === 0 ? <EmptyState title="No subjects yet" message="Create the first subject for this school." /> : (
-                <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-                    <table className="min-w-full text-left text-sm">
-                        <thead className="bg-slate-50 text-slate-600"><tr><th className="px-5 py-3">Name</th><th className="px-5 py-3">Division</th><th className="px-5 py-3">Code</th><th className="px-5 py-3">Pass / Max</th><th className="px-5 py-3">Status</th><th className="px-5 py-3 text-right">Actions</th></tr></thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {subjects.map((subject) => <tr key={subject.id}>
-                                <td className="px-5 py-4 font-semibold text-slate-900">{subject.name}</td>
-                                <td className="px-5 py-4">{subject.division?.name || divisions.find((division) => String(division.id) === String(subject.division_id))?.name || "—"}</td>
-                                <td className="px-5 py-4">{subject.code || "—"}</td>
-                                <td className="px-5 py-4">{subject.pass_mark ?? 40} / {subject.maximum_mark ?? 100}</td>
-                                <td className="px-5 py-4">{subject.is_active ? "Active" : "Inactive"}</td>
-                                <td className="px-5 py-4 text-right"><button type="button" onClick={() => openModal(subject)} className="mr-3 font-semibold text-indigo-600">Edit</button><button type="button" onClick={() => deleteSubject(subject)} className="font-semibold text-rose-600">Delete</button></td>
-                            </tr>)}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-
-            {showModal && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-                <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
-                    <div className="mb-5 flex items-center justify-between"><h2 className="text-xl font-bold text-slate-900">{editingId ? "Edit Subject" : "Add Subject"}</h2><button type="button" onClick={() => setShowModal(false)} className="text-slate-500">×</button></div>
-                    {formError && <div className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{formError}</div>}
-                    <form onSubmit={saveSubject} className="space-y-4">
-                        <input required name="name" value={form.name} onChange={handleChange} placeholder="Subject name" className="w-full rounded-lg border border-slate-300 px-3 py-2" />
-                        <div className="grid gap-4 sm:grid-cols-2"><input name="code" value={form.code} onChange={handleChange} placeholder="Code" className="w-full rounded-lg border border-slate-300 px-3 py-2" /><select name="category" value={form.category} onChange={handleChange} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"><option>Core</option><option>Elective</option><option>Vocational</option><option>Trade</option></select></div>
-                        <select required name="division_id" value={form.division_id} onChange={handleChange} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2"><option value="">Select division</option>{divisions.map((division) => <option key={division.id} value={division.id}>{division.name}</option>)}</select>
-                        <div className="grid gap-4 sm:grid-cols-2"><input type="number" min="0" name="pass_mark" value={form.pass_mark} onChange={handleChange} placeholder="Pass mark" className="w-full rounded-lg border border-slate-300 px-3 py-2" /><input type="number" min="1" name="maximum_mark" value={form.maximum_mark} onChange={handleChange} placeholder="Maximum mark" className="w-full rounded-lg border border-slate-300 px-3 py-2" /></div>
-                        <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description (optional)" className="min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2" />
-                        <label className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} /> Active subject</label>
-                        <div className="flex justify-end gap-3 border-t border-slate-100 pt-4"><button type="button" onClick={() => setShowModal(false)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">Cancel</button><button disabled={submitting} type="submit" className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{submitting ? "Saving..." : "Save Subject"}</button></div>
-                    </form>
-                </div>
-            </div>}
-        </div>
-    );
+export default function Subjects({ teacherOnly = false }) {
+  const { permissions = [] } = useAuth();
+  const canManageSubjects = !teacherOnly && permissions.includes("manage_subjects");
+  const [subjects, setSubjects] = useState([]); const [divisions, setDivisions] = useState([]); const [loading, setLoading] = useState(true); const [error, setError] = useState(""); const [formError, setFormError] = useState(""); const [showModal, setShowModal] = useState(false); const [submitting, setSubmitting] = useState(false); const [editingId, setEditingId] = useState(null); const [form, setForm] = useState(emptyForm);
+  const loadData = async () => { setLoading(true); setError(""); try { if (teacherOnly) { const response = await api.get("/teacher/dashboard"); const payload = response?.data; setSubjects(Array.isArray(payload?.my_subjects) ? payload.my_subjects : []); setDivisions([]); return; } const [subjectsResponse, divisionsResponse] = await Promise.all([api.get("/subjects"), api.get("/divisions")]); setSubjects(listFromResponse(subjectsResponse)); setDivisions(listFromResponse(divisionsResponse)); } catch (err) { setError(err.response?.data?.message || "Unable to load subjects and divisions."); setSubjects([]); setDivisions([]); } finally { setLoading(false); } };
+  useEffect(() => { loadData(); }, []);
+  const openModal = (subject = null) => { if (!canManageSubjects) return; setFormError(""); setEditingId(subject?.id || null); setForm(subject ? { name: subject.name || "", code: subject.code || "", category: subject.category || "Core", division_id: subject.division_id || subject.division?.id || "", pass_mark: subject.pass_mark ?? 40, maximum_mark: subject.maximum_mark ?? 100, is_active: subject.is_active ?? true, description: subject.description || "" } : { ...emptyForm, division_id: divisions[0]?.id || "" }); setShowModal(true); };
+  const handleChange = (event) => { const { name, value, checked, type } = event.target; setForm((current) => ({ ...current, [name]: type === "checkbox" ? checked : value })); };
+  const saveSubject = async (event) => { event.preventDefault(); setSubmitting(true); setFormError(""); try { if (editingId) await api.put(`/subjects/${editingId}`, form); else await api.post("/subjects", form); setShowModal(false); setForm(emptyForm); await loadData(); } catch (err) { const validationErrors = err.response?.data?.errors; setFormError(validationErrors ? Object.values(validationErrors).flat().join(" ") : (err.response?.data?.message || "Unable to save subject.")); } finally { setSubmitting(false); } };
+  const deleteSubject = async (subject) => { if (!window.confirm(`Delete ${subject.name}?`)) return; try { await api.delete(`/subjects/${subject.id}`); await loadData(); } catch (err) { setError(err.response?.data?.message || "Unable to delete subject."); } };
+  const columns = teacherOnly ? [
+    { key: "name", label: "Assigned subject", render: (subject) => <span className="font-semibold">{subject.name || "Subject"}</span> },
+    { key: "class", label: "Class", render: (subject) => subject.class || "—" },
+    { key: "assignment", label: "Assignment", render: () => <span className="status-badge status-badge-muted">Read-only</span> },
+  ] : [
+    { key: "name", label: "Name", render: (subject) => <span className="font-semibold">{subject.name}</span> },
+    { key: "division", label: "Division", render: (subject) => subject.division?.name || divisions.find((division) => String(division.id) === String(subject.division_id))?.name || "—" },
+    { key: "code", label: "Code", render: (subject) => subject.code || "—" },
+    { key: "marks", label: "Pass / Max", render: (subject) => `${subject.pass_mark ?? 40} / ${subject.maximum_mark ?? 100}` },
+    { key: "status", label: "Status", render: (subject) => <span className={`status-badge ${subject.is_active ? "status-badge-success" : "status-badge-muted"}`}>{subject.is_active ? "Active" : "Inactive"}</span> },
+    ...(canManageSubjects ? [{ key: "actions", label: "Actions", align: "right", render: (subject) => <div className="table-actions"><Button size="sm" variant="ghost" onClick={() => openModal(subject)}>Edit</Button><Button size="sm" variant="danger" onClick={() => deleteSubject(subject)}>Delete</Button></div> }] : []),
+  ];
+  return <PageContainer><PageHeader title="Subjects" subtitle={canManageSubjects ? "Define curriculum subjects after divisions, classes, and streams are ready." : "View the subjects configured by authorized school administrators."} action={canManageSubjects ? <Button onClick={() => openModal()}>Add subject</Button> : null} />{error && <Alert variant="error" action={<button type="button" onClick={loadData}>Retry</button>}>{error}</Alert>}<DataTable columns={columns} data={subjects} loading={loading} emptyTitle="No subjects yet" emptyMessage="Create the first subject for this school." />{canManageSubjects && <Modal open={showModal} title={editingId ? "Edit subject" : "Add subject"} onClose={() => setShowModal(false)} footer={<FormActions sticky={false}><Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button><Button type="submit" form="subject-form" loading={submitting}>Save subject</Button></FormActions>}><form id="subject-form" onSubmit={saveSubject} className="ui-form-grid">{formError && <div className="ui-form-full"><Alert variant="error">{formError}</Alert></div>}<FormField label="Subject name" htmlFor="subject-name" required><input id="subject-name" name="name" value={form.name} onChange={handleChange} required className="ui-form-control" /></FormField><FormField label="Code" htmlFor="subject-code"><input id="subject-code" name="code" value={form.code} onChange={handleChange} className="ui-form-control" /></FormField><FormField label="Category" htmlFor="subject-category"><select id="subject-category" name="category" value={form.category} onChange={handleChange} className="ui-form-control"><option>Core</option><option>Elective</option><option>Vocational</option><option>Trade</option></select></FormField><FormField label="Division" htmlFor="subject-division" required><select id="subject-division" name="division_id" value={form.division_id} onChange={handleChange} required className="ui-form-control"><option value="">Select division</option>{divisions.map((division) => <option key={division.id} value={division.id}>{division.name}</option>)}</select></FormField><FormField label="Pass mark" htmlFor="subject-pass"><input id="subject-pass" type="number" min="0" name="pass_mark" value={form.pass_mark} onChange={handleChange} className="ui-form-control" /></FormField><FormField label="Maximum mark" htmlFor="subject-max"><input id="subject-max" type="number" min="1" name="maximum_mark" value={form.maximum_mark} onChange={handleChange} className="ui-form-control" /></FormField><FormField label="Description" htmlFor="subject-description"><textarea id="subject-description" name="description" value={form.description} onChange={handleChange} className="ui-form-control" /></FormField><label className="ui-form-field flex items-center gap-2"><input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} /><span className="ui-form-label mb-0">Active subject</span></label></form></Modal>}</PageContainer>;
 }

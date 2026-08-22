@@ -25,6 +25,7 @@ class StudentResource extends JsonResource
             'date_of_birth' => $this->date_of_birth,
             'admission_date' => $this->admission_date,
             'photo' => $this->photo,
+            'photo_url' => app(\App\Services\MediaStorageService::class)->url($this->photo),
             'religion' => $this->religion,
             'nationality' => $this->nationality,
             'state_of_origin' => $this->state_of_origin,

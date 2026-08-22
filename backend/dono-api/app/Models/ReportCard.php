@@ -19,12 +19,17 @@ class ReportCard extends Model
         'overall_remark',
         'teacher_comment',
         'principal_comment',
+        'class_teacher_name',
+        'principal_name',
+        'next_term_begins',
+        'promotion_status',
         'is_published',
     ];
 
     protected $casts = [
         'total_score' => 'decimal:2',
         'average_score' => 'decimal:2',
+        'next_term_begins' => 'date',
         'is_published' => 'boolean',
     ];
 

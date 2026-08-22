@@ -42,7 +42,7 @@ class ResultSubmission extends Model
      */
     public function class(): BelongsTo
     {
-        return $this->belongsTo(SchoolClass::class, 'class_id');
+        return $this->belongsTo(ClassModel::class, 'class_id');
     }
 
     /**

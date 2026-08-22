@@ -24,3 +24,8 @@ Schedule::command('subscriptions:expire')
     ->dailyAt('00:00')
     ->withoutOverlapping()
     ->runInBackground();
+
+Schedule::command('subscriptions:reminders')
+    ->dailyAt('00:30')
+    ->withoutOverlapping()
+    ->runInBackground();

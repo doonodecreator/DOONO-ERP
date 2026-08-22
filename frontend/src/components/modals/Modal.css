@@ -1,0 +1,96 @@
+.ui-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background: rgba(15, 23, 42, 0.58);
+}
+
+.ui-modal {
+  display: flex;
+  width: 100%;
+  max-height: min(760px, calc(100vh - 48px));
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-lg);
+}
+
+.ui-modal-sm { max-width: 420px; }
+.ui-modal-md { max-width: 640px; }
+.ui-modal-lg { max-width: 920px; }
+
+.ui-modal-header,
+.ui-modal-footer {
+  flex: 0 0 auto;
+  padding: var(--space-5) var(--space-6);
+}
+
+.ui-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.ui-modal-title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--font-xl);
+  font-weight: 700;
+}
+
+.ui-modal-description {
+  margin: var(--space-2) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  line-height: 1.5;
+}
+
+.ui-modal-body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-6);
+}
+
+.ui-modal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-hover);
+}
+
+.ui-icon-button {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.ui-icon-button:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+@media (max-width: 640px) {
+  .ui-modal-backdrop { align-items: flex-end; padding: 0; }
+  .ui-modal { max-height: 94vh; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+  .ui-modal-header,
+  .ui-modal-body,
+  .ui-modal-footer { padding: var(--space-4); }
+  .ui-modal-footer { position: sticky; bottom: 0; }
+}

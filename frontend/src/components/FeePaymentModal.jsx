@@ -1,11 +1,12 @@
 import { useState } from "react";
 import api from "../services/api";
+import Modal from "./modals/Modal";
+import Button from "./forms/Button";
+import Alert from "./feedback/Alert";
 
-export default function FeePaymentModal({ isOpen, onClose, studentId, feeCategoryId, feeName, amount }) {
+export default function FeePaymentModal({ isOpen, onClose, studentId, studentFeeId, feeCategoryId, feeName, amount }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  if (!isOpen) return null;
 
   async function handlePayment() {
     setLoading(true);
@@ -13,10 +14,10 @@ export default function FeePaymentModal({ isOpen, onClose, studentId, feeCategor
     try {
       const response = await api.post("/payments/paystack/initialize", {
         student_id: studentId,
-        amount: amount,
+        amount,
         fee_category_id: feeCategoryId,
+        student_fee_id: studentFeeId,
       });
-
       const authUrl = response?.data?.data?.authorization_url;
       if (authUrl) {
         window.location.href = authUrl;
@@ -24,55 +25,33 @@ export default function FeePaymentModal({ isOpen, onClose, studentId, feeCategor
         setError("Could not retrieve payment authorization URL.");
         setLoading(false);
       }
-    } catch (err) {
-      setError(err?.response?.data?.message || "Failed to initialize payment.");
+    } catch (requestError) {
+      setError(requestError?.response?.data?.message || "Failed to initialize payment.");
       setLoading(false);
     }
   }
 
   return (
-    <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-      <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content shadow border-0">
-          <div className="modal-header bg-white py-3">
-            <h5 className="modal-title font-weight-bold text-primary" style={{ fontSize: "18px" }}>
-              Secure Online Fee Payment
-            </h5>
-            <button type="button" className="btn-close" onClick={onClose} disabled={loading}></button>
-          </div>
-          <div className="modal-body p-4">
-            {error && <div className="alert alert-danger mb-3">{error}</div>}
-            
-            <div className="mb-3">
-              <span className="text-muted small d-block">Fee Description</span>
-              <strong className="text-dark" style={{ fontSize: "16px" }}>{feeName || "School Fee Payment"}</strong>
-            </div>
-
-            <div className="mb-4 bg-light p-3 rounded">
-              <span className="text-muted small d-block">Total Payable Amount</span>
-              <h3 className="text-success font-weight-bold mb-0">₦{Number(amount || 0).toLocaleString()}</h3>
-            </div>
-
-            <div className="alert alert-info small mb-0">
-              You will be redirected to Paystack to complete your payment securely. Funds will route directly to the school's designated account.
-            </div>
-          </div>
-          <div className="modal-footer bg-white py-3">
-            <button type="button" className="btn btn-outline-secondary px-4" onClick={onClose} disabled={loading}>
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary px-4 font-weight-bold"
-              onClick={handlePayment}
-              disabled={loading}
-              style={{ background: "#2563eb", border: "none" }}
-            >
-              {loading ? "Initializing..." : "Proceed to Paystack"}
-            </button>
-          </div>
+    <Modal
+      open={isOpen}
+      onClose={loading ? undefined : onClose}
+      title="Secure online fee payment"
+      description="You will be redirected to Paystack to complete this payment securely."
+      size="md"
+      footer={<div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><Button variant="secondary" onClick={onClose} disabled={loading}>Cancel</Button><Button onClick={handlePayment} loading={loading}>Proceed to Paystack</Button></div>}
+    >
+      {error && <Alert variant="error">{error}</Alert>}
+      <div className="space-y-4">
+        <div>
+          <p className="ui-form-label">Fee description</p>
+          <p className="text-base font-semibold text-slate-900">{feeName || "School fee payment"}</p>
         </div>
+        <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Total payable amount</p>
+          <p className="mt-1 text-2xl font-bold text-emerald-800">₦{Number(amount || 0).toLocaleString()}</p>
+        </div>
+        <p className="text-sm text-slate-600">The payment will be attached to this exact student fee invoice. If your connection drops after authorization, you can safely return to the payment page and verify the same reference without creating a duplicate ledger entry.</p>
       </div>
-    </div>
+    </Modal>
   );
 }

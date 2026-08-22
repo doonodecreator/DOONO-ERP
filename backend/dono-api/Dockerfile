@@ -18,4 +18,15 @@ RUN composer install --no-dev --optimize-autoloader
 
 EXPOSE 8000
 
-CMD php artisan serve --host=0.0.0.0 --port=$PORT
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD php -r '$port = getenv("PORT") ?: "8000"; $body = @file_get_contents("http://127.0.0.1:" . $port . "/up"); exit($body === false ? 1 : 0);'
+
+# Set PROCESS_ROLE=web (default), queue, or scheduler per Railway service.
+# Keeping these roles separate prevents queued mail and scheduled billing jobs
+# from competing with the HTTP worker in the same process.
+CMD if [ "${PROCESS_ROLE:-web}" = "queue" ]; then \
+        php artisan queue:work --sleep=3 --tries=3 --timeout=120 --max-time=3600; \
+    elif [ "${PROCESS_ROLE:-web}" = "scheduler" ]; then \
+        php artisan schedule:work; \
+    else \
+        php artisan serve --host=0.0.0.0 --port=${PORT:-8000}; \
+    fi

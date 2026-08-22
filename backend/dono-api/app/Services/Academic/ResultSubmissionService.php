@@ -5,11 +5,17 @@ namespace App\Services\Academic;
 use App\Models\Result;
 use App\Models\ResultSubmission;
 use App\Models\StudentEnrollment;
+use App\Models\StudentResultSummary;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ResultSubmissionService
 {
+    public function __construct(
+        protected ResultProcessingService $processingService
+    ) {
+    }
+
     /**
      * Create a new submission.
      */
@@ -31,8 +37,11 @@ class ResultSubmissionService
      */
     public function createDraftResults(ResultSubmission $submission): Collection
     {
-        $students = StudentEnrollment::where('class_id', $submission->class_id)
+        $students = StudentEnrollment::where('school_id', $submission->school_id)
+            ->where('class_id', $submission->class_id)
             ->where('academic_session_id', $submission->academic_session_id)
+            ->where('term_id', $submission->term_id)
+            ->where('status', 'Active')
             ->get();
 
         foreach ($students as $student) {
@@ -116,6 +125,8 @@ class ResultSubmissionService
                     'locked_at' => now(),
                 ]);
 
+            $this->summaryQuery($submission)->update(['approved_by' => $approvedBy, 'approved_at' => now()]);
+
             return $submission;
         });
     }
@@ -142,6 +153,9 @@ class ResultSubmissionService
                     'published_by' => $publishedBy ?? $submission->approved_by,
                     'published_at' => $now,
                 ]);
+
+            $this->summaryQuery($submission)->update(['is_published' => true, 'published_at' => $now]);
+            $this->processingService->syncReportCardsForSubmission($submission);
 
             return $submission;
         });
@@ -170,8 +184,20 @@ class ResultSubmissionService
                     'locked_at' => null,
                 ]);
 
+            $this->summaryQuery($submission)->update(['is_published' => false, 'published_at' => null, 'approved_by' => null, 'approved_at' => null]);
+            $this->processingService->syncReportCardsForSubmission($submission);
+
             return $submission;
         });
+    }
+
+    private function summaryQuery(ResultSubmission $submission)
+    {
+        $enrollmentIds = Result::where('result_submission_id', $submission->id)->pluck('student_enrollment_id');
+        return StudentResultSummary::where('school_id', $submission->school_id)
+            ->whereIn('student_enrollment_id', $enrollmentIds)
+            ->where('academic_session_id', $submission->academic_session_id)
+            ->where('term_id', $submission->term_id);
     }
 
     /**

@@ -8,6 +8,9 @@ use App\Http\Requests\StoreClassRequest;
 use App\Http\Requests\UpdateClassRequest;
 use App\Http\Resources\ClassResource;
 use App\Models\ClassModel;
+use App\Models\FormTeacherAssignment;
+use App\Models\Staff;
+use App\Models\Timetable;
 use Illuminate\Http\Request;
 
 class ClassController extends Controller
@@ -30,16 +33,34 @@ class ClassController extends Controller
             'streams',
         ])->orderBy('display_order');
 
+        $schoolId = $this->currentContextSchoolId($request);
+
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin()
         ) {
-            $query->whereHas('division', function ($q) use ($request) {
-                $q->where(
-                    'school_id',
-                    $this->currentContextSchoolId($request)
-                );
+            $query->whereHas('division', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
             });
+
+            $staffId = Staff::query()
+                ->where('school_id', $schoolId)
+                ->where('user_id', $request->user()->id)
+                ->value('id');
+
+            if ($staffId && $request->user()->hasRole('teacher', $schoolId)) {
+                $query->whereIn('id', Timetable::query()
+                    ->where('school_id', $schoolId)
+                    ->where('staff_id', $staffId)
+                    ->where('entry_type', 'lesson')
+                    ->pluck('class_id'));
+            } elseif ($staffId && $request->user()->hasRole('form_teacher', $schoolId)) {
+                $query->whereIn('id', FormTeacherAssignment::query()
+                    ->where('school_id', $schoolId)
+                    ->where('staff_id', $staffId)
+                    ->where('is_active', true)
+                    ->pluck('class_id'));
+            }
         }
 
         return ClassResource::collection(

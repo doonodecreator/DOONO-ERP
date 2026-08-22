@@ -1,356 +1,163 @@
-import React, { useEffect, useState } from 'react';
-import api from '../services/api';
-import { useAuth } from '../context/AuthContext';
-import { getPrimaryRoleSlug } from '../utils/role';
+import { useEffect, useMemo, useState } from "react";
+import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { getPrimaryRoleSlug } from "../utils/role";
+import { arrayFromResponse } from "../utils/response";
+import PageContainer from "../components/layout/PageContainer";
+import PageHeader from "../components/layout/PageHeader";
+import LoadingSpinner from "../components/feedback/LoadingSpinner";
+import EmptyState from "../components/feedback/EmptyState";
 
-export default function ResultEntry({ setPage }) {
+const listFrom = (response) => arrayFromResponse(response);
+
+export default function ResultEntry() {
   const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+  const [loading, setLoading] = useState(true);
+  const [loadingRoster, setLoadingRoster] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [classes, setClasses] = useState([]);
+  const [assignedSubjects, setAssignedSubjects] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [terms, setTerms] = useState([]);
-
-  const [selectedClass, setSelectedClass] = useState('');
-  const [selectedSubject, setSelectedSubject] = useState('');
-  const [selectedSession, setSelectedSession] = useState('');
-  const [selectedTerm, setSelectedTerm] = useState('');
-
+  const [structures, setStructures] = useState([]);
+  const [gradingRules, setGradingRules] = useState([]);
   const [students, setStudents] = useState([]);
   const [scores, setScores] = useState({});
-  const [isLocked, setIsLocked] = useState(false);
-
-  const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
-
-  const isPrincipalOrAdmin = [
-    'super_admin',
-    'school_admin',
-    'admin',
-    'principal',
-    'proprietor',
-  ].includes(userRole);
+  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [selectedSession, setSelectedSession] = useState("");
+  const [selectedTerm, setSelectedTerm] = useState("");
+  const [submissionId, setSubmissionId] = useState(null);
 
   useEffect(() => {
-    loadDropdowns();
+    async function loadClasses() {
+      try {
+        setLoading(true); setError("");
+        const response = role === "teacher" ? await api.get("/teacher/dashboard") : await api.get("/classes");
+        if (role === "teacher") {
+          const payload = response?.data;
+          setClasses(Array.isArray(payload?.my_classes) ? payload.my_classes : []);
+          setAssignedSubjects(Array.isArray(payload?.my_subjects) ? payload.my_subjects : []);
+        } else {
+          setClasses(listFrom(response));
+          setAssignedSubjects([]);
+        }
+      } catch (requestError) {
+        setError(requestError?.response?.data?.message || "Unable to load classes.");
+      } finally { setLoading(false); }
+    }
+    loadClasses();
   }, []);
 
   useEffect(() => {
-    if (selectedClass && selectedSubject && selectedSession && selectedTerm) {
-      loadStudentScores();
+    if (!selectedClass) {
+              setStudents([]); setSubjects([]); setSessions([]); setTerms([]); setStructures([]); setGradingRules([]); setSubmissionId(null);
+
+      return;
     }
-  }, [selectedClass, selectedSubject, selectedSession, selectedTerm]);
-
-  const loadDropdowns = async () => {
-    try {
-      setLoading(true);
-      const [classRes, subjRes, sessRes, termRes] = await Promise.allSettled([
-        api.get('/classes'),
-        api.get('/subjects'),
-        api.get('/academic-sessions'),
-        api.get('/terms'),
-      ]);
-
-      if (classRes.status === 'fulfilled') {
-        const data = classRes.value.data.data || classRes.value.data;
-        setClasses(Array.isArray(data) ? data : []);
-      }
-      if (subjRes.status === 'fulfilled') {
-        const data = subjRes.value.data.data || subjRes.value.data;
-        setSubjects(Array.isArray(data) ? data : []);
-      }
-      if (sessRes.status === 'fulfilled') {
-        const data = sessRes.value.data.data || sessRes.value.data;
-        const sessList = Array.isArray(data) ? data : [];
-        setSessions(sessList);
-        if (sessList.length > 0) setSelectedSession(sessList[0].id);
-      }
-      if (termRes.status === 'fulfilled') {
-        const data = termRes.value.data.data || termRes.value.data;
-        const termList = Array.isArray(data) ? data : [];
-        setTerms(termList);
-        if (termList.length > 0) setSelectedTerm(termList[0].id);
-      }
-    } catch (err) {
-      setError(err.message || 'Failed to initialize entry options.');
-    } finally {
-      setLoading(false);
+    async function loadRoster() {
+      try {
+        setLoadingRoster(true); setError(""); setMessage("");
+        const response = await api.get("/result-entry/students", { params: { class_id: selectedClass } });
+        const payload = response?.data || {};
+        const subjectListFromApi = Array.isArray(payload.subjects) ? payload.subjects : [];
+        const assignedSubjectIds = role === "teacher"
+          ? assignedSubjects.filter((item) => String(item.class_id) === String(selectedClass)).map((item) => String(item.subject_id))
+          : [];
+        const subjectList = role === "teacher" && assignedSubjectIds.length > 0
+          ? subjectListFromApi.filter((item) => assignedSubjectIds.includes(String(item.id)))
+          : subjectListFromApi;
+        const sessionList = Array.isArray(payload.sessions) ? payload.sessions : [];
+        const termList = Array.isArray(payload.terms) ? payload.terms : [];
+        const structureList = Array.isArray(payload.structures) ? payload.structures.filter((item) => item?.is_active !== false) : [];
+        const gradingRuleList = Array.isArray(payload.grading_rules) ? payload.grading_rules : [];
+        const enrollmentList = Array.isArray(payload.students) ? payload.students : [];
+        setSubjects(subjectList); setSessions(sessionList); setTerms(termList); setStructures(structureList); setGradingRules(gradingRuleList); setStudents(enrollmentList); setSubmissionId(null);
+        setSelectedSubject((current) => subjectList.some((item) => String(item.id) === String(current)) ? current : String(subjectList[0]?.id || ""));
+        setSelectedSession((current) => sessionList.some((item) => String(item.id) === String(current)) ? current : String(sessionList[0]?.id || ""));
+        setSelectedTerm((current) => termList.some((item) => String(item.id) === String(current)) ? current : String(termList[0]?.id || ""));
+        const initialScores = {};
+        enrollmentList.forEach((enrollment) => { initialScores[enrollment.id] = {}; structureList.forEach((structure) => { initialScores[enrollment.id][structure.id] = 0; }); });
+        setScores(initialScores);
+      } catch (requestError) {
+        setStudents([]); setError(requestError?.response?.data?.message || "Unable to load the class result sheet.");
+      } finally { setLoadingRoster(false); }
     }
-  };
+    loadRoster();
+  }, [selectedClass]);
 
-  const loadStudentScores = async () => {
+  const selectedClassName = classes.find((item) => String(item.id) === String(selectedClass))?.name || "";
+  const selectedSubjectName = subjects.find((item) => String(item.id) === String(selectedSubject))?.name || "";
+  const totalMaximum = useMemo(() => structures.reduce((sum, structure) => sum + Number(structure.maximum_marks || 0), 0), [structures]);
+
+  function updateScore(enrollmentId, structureId, value) {
+    const structure = structures.find((item) => String(item.id) === String(structureId));
+    const maximum = Number(structure?.maximum_marks || 100);
+    const score = Math.max(0, Math.min(maximum, Number(value) || 0));
+    setScores((current) => ({ ...current, [enrollmentId]: { ...(current[enrollmentId] || {}), [structureId]: score } }));
+  }
+
+  function totalFor(enrollmentId) {
+    return structures.reduce((sum, structure) => sum + Number(scores[enrollmentId]?.[structure.id] || 0), 0);
+  }
+
+  function gradeFor(total) {
+    const percentage = totalMaximum > 0 ? (total / totalMaximum) * 100 : 0;
+    const matchingRule = gradingRules.find((rule) => percentage >= Number(rule.minimum_score) && percentage <= Number(rule.maximum_score));
+    return matchingRule?.grade || "N/A";
+  }
+
+  async function saveScores(event) {
+    event.preventDefault();
+    if (!selectedClass || !selectedSubject || !selectedSession || !selectedTerm || !structures.length || !students.length) return;
     try {
-      setLoading(true);
-      setError('');
-      setMessage('');
-
-      const response = await api.get('/results', {
-        params: {
-          class_id: selectedClass,
-          subject_id: selectedSubject,
-          academic_session_id: selectedSession,
-          term_id: selectedTerm,
-        },
+      setSaving(true); setError(""); setMessage("");
+      let activeSubmissionId = submissionId;
+      if (!activeSubmissionId) {
+        const submissionResponse = await api.post("/result-submissions", {
+          class_id: Number(selectedClass),
+          subject_id: Number(selectedSubject),
+          academic_session_id: Number(selectedSession),
+          term_id: Number(selectedTerm),
+        });
+        activeSubmissionId = submissionResponse?.data?.submission?.id || submissionResponse?.data?.data?.id;
+        if (!activeSubmissionId) throw new Error("The result submission could not be created.");
+        setSubmissionId(activeSubmissionId);
+      }
+      await api.post("/result-entry/save", {
+        result_submission_id: Number(activeSubmissionId),
+        subject_id: Number(selectedSubject),
+        academic_session_id: Number(selectedSession),
+        term_id: Number(selectedTerm),
+        students: students.map((enrollment) => ({
+          student_enrollment_id: enrollment.id,
+          components: structures.map((structure) => ({ assessment_structure_id: structure.id, score: Number(scores[enrollment.id]?.[structure.id] || 0) })),
+        })),
       });
+      await api.post(`/result-submissions/${activeSubmissionId}/submit`);
+      setMessage("Scores saved successfully and submitted for principal approval.");
+    } catch (requestError) {
+      const validation = requestError?.response?.data?.errors;
+      setError(validation ? Object.values(validation).flat().join(" ") : requestError?.response?.data?.message || "Unable to save the result sheet.");
+    } finally { setSaving(false); }
+  }
 
-      const resData = response.data.data || response.data || [];
-      const studentList = resData.students || resData || [];
-      setStudents(Array.isArray(studentList) ? studentList : []);
-
-      const initialScores = {};
-      (Array.isArray(studentList) ? studentList : []).forEach((st) => {
-        const stId = st.id || st.student_id || st.student_enrollment_id;
-        initialScores[stId] = {
-          ca_score: st.ca_score ?? st.result?.ca_score ?? 0,
-          exam_score: st.exam_score ?? st.result?.exam_score ?? 0,
-        };
-      });
-
-      setScores(initialScores);
-      setIsLocked(resData.is_locked || false);
-    } catch (err) {
-      setError(err.message || 'Failed to fetch score matrix.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleScoreChange = (studentId, field, value) => {
-    const numericValue = Math.max(0, Math.min(field === 'ca_score' ? 40 : 60, Number(value) || 0));
-    setScores((prev) => ({
-      ...prev,
-      [studentId]: {
-        ...prev[studentId],
-        [field]: numericValue,
-      },
-    }));
-  };
-
-  const calculateTotal = (ca, exam) => {
-    return (Number(ca) || 0) + (Number(exam) || 0);
-  };
-
-  const calculateGrade = (total) => {
-    if (total >= 70) return { grade: 'A', remark: 'Excellent' };
-    if (total >= 60) return { grade: 'B', remark: 'Very Good' };
-    if (total >= 50) return { grade: 'C', remark: 'Credit' };
-    if (total >= 45) return { grade: 'D', remark: 'Pass' };
-    if (total >= 40) return { grade: 'E', remark: 'Fair' };
-    return { grade: 'F', remark: 'Fail' };
-  };
-
-  const handleSaveScores = async (e) => {
-    e.preventDefault();
-    if (!selectedClass || !selectedSubject) return;
-
-    setSaving(true);
-    setError('');
-    setMessage('');
-
-    const payload = {
-      class_id: selectedClass,
-      subject_id: selectedSubject,
-      academic_session_id: selectedSession,
-      term_id: selectedTerm,
-      results: students.map((st) => {
-        const stId = st.id || st.student_id || st.student_enrollment_id;
-        const sc = scores[stId] || { ca_score: 0, exam_score: 0 };
-        const total = calculateTotal(sc.ca_score, sc.exam_score);
-        const { grade, remark } = calculateGrade(total);
-
-        return {
-          student_enrollment_id: st.student_enrollment_id || stId,
-          student_id: st.student_id || stId,
-          ca_score: sc.ca_score,
-          exam_score: sc.exam_score,
-          total_score: total,
-          grade: grade,
-          remark: remark,
-        };
-      }),
-    };
-
-    try {
-      await api.post('/results', payload);
-      setMessage('Scores successfully saved and computed!');
-    } catch (err) {
-      setError(err.message || 'Failed to submit score sheet.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Class Result Entry Sheet</h1>
-          <p className="text-sm text-gray-500">Record CA test marks and exam scores with real-time grade calculations.</p>
-        </div>
-        {students.length > 0 && !isLocked && (
-          <button
-            onClick={handleSaveScores}
-            disabled={saving}
-            className="inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition shadow-sm disabled:opacity-50 text-sm"
-          >
-            {saving ? 'Saving Sheet...' : 'Save & Submit Scores'}
-          </button>
-        )}
+  return <PageContainer>
+    <PageHeader title="Class Result Entry" subtitle="Enter continuous assessment and examination components using the school’s configured assessment structure." action={<button type="button" onClick={saveScores} disabled={saving || !students.length || !structures.length} className="btn-primary disabled:opacity-50">{saving ? "Saving..." : "Save & Submit Scores"}</button>} />
+    {message && <div role="status" className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{message}</div>}
+    {error && <div role="alert" className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</div>}
+    {loading ? <LoadingSpinner text="Loading classes..." /> : <>
+      <div className="mb-6 grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-4">
+        <label className="flex min-w-0 flex-col text-sm font-semibold text-slate-700">Class<select value={selectedClass} onChange={(event) => setSelectedClass(event.target.value)} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm"><option value="">Select class</option>{classes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+        <label className="flex min-w-0 flex-col text-sm font-semibold text-slate-700">Subject<select value={selectedSubject} onChange={(event) => setSelectedSubject(event.target.value)} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm"><option value="">Select subject</option>{subjects.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+        <label className="flex min-w-0 flex-col text-sm font-semibold text-slate-700">Academic session<select value={selectedSession} onChange={(event) => setSelectedSession(event.target.value)} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm"><option value="">Select session</option>{sessions.map((item) => <option key={item.id} value={item.id}>{item.name || item.session_year}</option>)}</select></label>
+        <label className="flex min-w-0 flex-col text-sm font-semibold text-slate-700">Term<select value={selectedTerm} onChange={(event) => setSelectedTerm(event.target.value)} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm"><option value="">Select term</option>{terms.filter((item) => !selectedSession || String(item.academic_session_id) === String(selectedSession)).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       </div>
-
-      {message && (
-        <div className="p-4 mb-6 bg-green-50 text-green-700 rounded-lg border border-green-200 text-sm flex justify-between items-center">
-          <span>{message}</span>
-          <button onClick={() => setMessage('')} className="font-bold">✕</button>
-        </div>
-      )}
-      {error && (
-        <div className="p-4 mb-6 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm flex justify-between items-center">
-          <span>{error}</span>
-          <button onClick={loadStudentScores} className="underline font-semibold">Retry</button>
-        </div>
-      )}
-
-      <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Class *</label>
-          <select
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select Class...</option>
-            {classes.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Subject *</label>
-          <select
-            value={selectedSubject}
-            onChange={(e) => setSelectedSubject(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select Subject...</option>
-            {subjects.map((s) => (
-              <option key={s.id} value={s.id}>{s.name} ({s.code || 'CORE'})</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Academic Session</label>
-          <select
-            value={selectedSession}
-            onChange={(e) => setSelectedSession(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500"
-          >
-            {sessions.map((s) => (
-              <option key={s.id} value={s.id}>{s.name || s.session_year}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Academic Term</label>
-          <select
-            value={selectedTerm}
-            onChange={(e) => setSelectedTerm(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500"
-          >
-            {terms.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {loading ? (
-          <div className="p-12 text-center text-gray-500">Loading student roster and scores...</div>
-        ) : !selectedClass || !selectedSubject ? (
-          <div className="p-12 text-center text-gray-400">
-            <p className="text-base font-medium">Please select a Class and Subject to open the score sheet.</p>
-          </div>
-        ) : students.length === 0 ? (
-          <div className="p-12 text-center text-gray-400">
-            <p className="text-base font-medium">No students enrolled in this class.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
-                <tr>
-                  <th className="px-6 py-3">#</th>
-                  <th className="px-6 py-3">Student Name</th>
-                  <th className="px-6 py-3">Admission No</th>
-                  <th className="px-6 py-3">CA Score (Max 40)</th>
-                  <th className="px-6 py-3">Exam Score (Max 60)</th>
-                  <th className="px-6 py-3">Total (100)</th>
-                  <th className="px-6 py-3">Grade</th>
-                  <th className="px-6 py-3">Remark</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {students.map((st, idx) => {
-                  const stId = st.id || st.student_id || st.student_enrollment_id;
-                  const fullName = st.full_name || `${st.first_name || ''} ${st.last_name || ''}`.trim();
-                  const currentScores = scores[stId] || { ca_score: 0, exam_score: 0 };
-                  const total = calculateTotal(currentScores.ca_score, currentScores.exam_score);
-                  const { grade, remark } = calculateGrade(total);
-
-                  return (
-                    <tr key={stId} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 font-mono text-xs text-gray-400">{idx + 1}</td>
-                      <td className="px-6 py-4 font-semibold text-gray-900">{fullName}</td>
-                      <td className="px-6 py-4 font-mono text-xs text-gray-500">{st.admission_number || '—'}</td>
-                      <td className="px-6 py-4">
-                        <input
-                          type="number"
-                          max="40"
-                          min="0"
-                          disabled={isLocked}
-                          value={currentScores.ca_score}
-                          onChange={(e) => handleScoreChange(stId, 'ca_score', e.target.value)}
-                          className="w-24 px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-mono font-semibold focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <input
-                          type="number"
-                          max="60"
-                          min="0"
-                          disabled={isLocked}
-                          value={currentScores.exam_score}
-                          onChange={(e) => handleScoreChange(stId, 'exam_score', e.target.value)}
-                          className="w-24 px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-mono font-semibold focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                        />
-                      </td>
-                      <td className="px-6 py-4 font-mono font-bold text-gray-900 text-base">{total}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 text-xs rounded-full font-bold ${
-                          grade === 'A' ? 'bg-green-100 text-green-700' :
-                          grade === 'B' ? 'bg-blue-100 text-blue-700' :
-                          grade === 'C' ? 'bg-indigo-100 text-indigo-700' :
-                          grade === 'D' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
-                        }`}>
-                          {grade}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-xs font-medium text-gray-600">{remark}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+      {loadingRoster ? <LoadingSpinner text="Loading enrolled students and assessment structures..." /> : !selectedClass ? <EmptyState title="Select a class" message="Choose a class to open its real enrolled-student score sheet." /> : !structures.length ? <EmptyState title="Assessment structure not configured" message="Create assessment structures before entering scores." /> : !students.length ? <EmptyState title="No enrolled students" message={`${selectedClassName} has no students for result entry.`} /> : <section className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-100 p-4"><h2 className="font-bold text-slate-900">{selectedClassName} {selectedSubjectName ? `· ${selectedSubjectName}` : ""}</h2><p className="text-xs text-slate-500">Maximum total: {totalMaximum}</p></div><table className="min-w-[760px] w-full text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="p-3">Student</th>{structures.map((structure) => <th className="p-3" key={structure.id}>{structure.name}<span className="block normal-case">Max {structure.maximum_marks}</span></th>)}<th className="p-3">Total</th><th className="p-3">Grade</th></tr></thead><tbody className="divide-y">{students.map((enrollment) => { const student = enrollment.student || {}; const name = student.full_name || `${student.first_name || ""} ${student.last_name || ""}`.trim() || `Student #${enrollment.id}`; const total = totalFor(enrollment.id); return <tr key={enrollment.id}><td className="p-3 font-semibold">{name}<span className="block text-xs font-normal text-slate-500">{student.admission_number || ""}</span></td>{structures.map((structure) => <td className="p-3" key={structure.id}><input type="number" min="0" max={structure.maximum_marks} value={scores[enrollment.id]?.[structure.id] ?? 0} onChange={(event) => updateScore(enrollment.id, structure.id, event.target.value)} className="min-h-10 w-24 rounded-lg border border-slate-300 px-2" /></td>)}<td className="p-3 font-bold">{total}</td><td className="p-3"><span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold">{gradeFor(total)}</span></td></tr>; })}</tbody></table></section>}
+    </>}
+  </PageContainer>;
 }

@@ -7,18 +7,23 @@ use App\Http\Requests\StoreAssessmentStructureRequest;
 use App\Http\Requests\UpdateAssessmentStructureRequest;
 use App\Http\Resources\AssessmentStructureResource;
 use App\Models\AssessmentStructure;
+use App\Models\CbtAssessment;
+use App\Models\ResultComponent;
+use Illuminate\Http\Request;
 
 class AssessmentStructureController extends Controller
 {
     /**
      * Display a listing.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $schoolId = $this->requireSchool($request);
         return AssessmentStructureResource::collection(
-            AssessmentStructure::with('school')
+            AssessmentStructure::where('school_id', $schoolId)
+                ->with('school')
                 ->orderBy('display_order')
-                ->paginate(20)
+                ->paginate(100)
         );
     }
 
@@ -27,9 +32,13 @@ class AssessmentStructureController extends Controller
      */
     public function store(StoreAssessmentStructureRequest $request)
     {
-        $structure = AssessmentStructure::create(
-            $request->validated()
-        );
+        $data = $request->validated();
+        $data['school_id'] = $this->requireSchool($request);
+        $activeWeight = (float) AssessmentStructure::where('school_id', $data['school_id'])->where('is_active', true)->sum('percentage');
+        if (($data['is_active'] ?? false) && $activeWeight + (float) $data['percentage'] > 100) {
+            abort(422, 'Active assessment weights for a school cannot exceed 100%.');
+        }
+        $structure = AssessmentStructure::create($data);
 
         return (new AssessmentStructureResource(
             $structure->load('school')
@@ -41,12 +50,10 @@ class AssessmentStructureController extends Controller
     /**
      * Show.
      */
-    public function show(
-        AssessmentStructure $assessmentStructure
-    ) {
-        return new AssessmentStructureResource(
-            $assessmentStructure->load('school')
-        );
+    public function show(Request $request, AssessmentStructure $assessmentStructure)
+    {
+        abort_unless((int) $assessmentStructure->school_id === $this->requireSchool($request), 404);
+        return new AssessmentStructureResource($assessmentStructure->load('school'));
     }
 
     /**
@@ -56,9 +63,22 @@ class AssessmentStructureController extends Controller
         UpdateAssessmentStructureRequest $request,
         AssessmentStructure $assessmentStructure
     ) {
-        $assessmentStructure->update(
-            $request->validated()
-        );
+        abort_unless((int) $assessmentStructure->school_id === $this->requireSchool($request), 404);
+        $data = $request->validated();
+        unset($data['school_id']);
+        if ($assessmentStructure->is_active && array_key_exists('is_active', $data) && !$data['is_active']) {
+            abort_unless(!ResultComponent::where('assessment_structure_id', $assessmentStructure->id)->exists() && !CbtAssessment::where('assessment_structure_id', $assessmentStructure->id)->exists(), 409, 'This assessment structure is already used by results or CBT assessments and cannot be deactivated.');
+        }
+        if (($data['is_active'] ?? $assessmentStructure->is_active)) {
+            $activeWeight = (float) AssessmentStructure::where('school_id', $assessmentStructure->school_id)
+                ->where('is_active', true)
+                ->where('id', '!=', $assessmentStructure->id)
+                ->sum('percentage');
+            if ($activeWeight + (float) ($data['percentage'] ?? $assessmentStructure->percentage) > 100) {
+                abort(422, 'Active assessment weights for a school cannot exceed 100%.');
+            }
+        }
+        $assessmentStructure->update($data);
 
         return new AssessmentStructureResource(
             $assessmentStructure->load('school')
@@ -68,9 +88,10 @@ class AssessmentStructureController extends Controller
     /**
      * Delete.
      */
-    public function destroy(
-        AssessmentStructure $assessmentStructure
-    ) {
+    public function destroy(Request $request, AssessmentStructure $assessmentStructure)
+    {
+        abort_unless((int) $assessmentStructure->school_id === $this->requireSchool($request), 404);
+        abort_unless(!ResultComponent::where('assessment_structure_id', $assessmentStructure->id)->exists() && !CbtAssessment::where('assessment_structure_id', $assessmentStructure->id)->exists(), 409, 'This assessment structure is already used by results or CBT assessments and cannot be deleted. Deactivate it only after all dependent records are archived.');
         $assessmentStructure->delete();
 
         return response()->json([

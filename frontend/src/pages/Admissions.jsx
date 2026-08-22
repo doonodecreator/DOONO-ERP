@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
+import { arrayFromResponse } from '../utils/response';
 import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/layout/PageHeader';
 import LoadingSpinner from '../components/feedback/LoadingSpinner';
@@ -36,14 +37,9 @@ const initialForm = () => ({
 });
 
 function collectionFrom(response, label) {
-  const payload = response?.data;
-  const collection = Array.isArray(payload)
-    ? payload
-    : Array.isArray(payload?.data)
-      ? payload.data
-      : null;
+  const collection = arrayFromResponse(response);
 
-  if (!collection) {
+  if (!Array.isArray(collection)) {
     throw new Error(`The ${label} response is not a valid collection.`);
   }
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
+import { arrayFromResponse } from "../utils/response";
 
 export default function NurseDashboard() {
     const [activeTab, setActiveTab] = useState("visits");
@@ -42,9 +43,9 @@ export default function NurseDashboard() {
                 api.get("/students").catch(() => ({ data: { data: [] } }))
             ]);
 
-            setVisits(visitsRes.data?.data || visitsRes.data || []);
-            setRecords(recordsRes.data?.data || recordsRes.data || []);
-            setStudents(studentsRes.data?.data || studentsRes.data || []);
+            setVisits(arrayFromResponse(visitsRes));
+            setRecords(arrayFromResponse(recordsRes));
+            setStudents(arrayFromResponse(studentsRes));
         } catch (err) {
             console.error("Error loading clinic records", err);
         } finally {
@@ -99,10 +100,10 @@ export default function NurseDashboard() {
                         <p className="text-sm text-gray-500 mt-1">Manage student health profiles, monitor dispensary visit logs, track allergies, and view emergency contact details.</p>
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={() => setShowRecordModal(true)} className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        <button type="button" onClick={() => setShowRecordModal(true)} className="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
                             + Medical Profile
                         </button>
-                        <button onClick={() => setShowVisitModal(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        <button type="button" onClick={() => setShowVisitModal(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
                             + Log Clinic Visit
                         </button>
                     </div>
@@ -110,7 +111,7 @@ export default function NurseDashboard() {
 
                 <div className="flex gap-2 border-b border-gray-100 mt-6 overflow-x-auto pb-px">
                     {["visits", "records"].map((tab) => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-rose-600 text-rose-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
+                        <button type="button" key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-rose-600 text-rose-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
                             {tab === "visits" ? "Clinic Visits Log" : "Student Medical Records"}
                         </button>
                     ))}
@@ -202,7 +203,7 @@ export default function NurseDashboard() {
                     <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl overflow-hidden">
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-900">Log Dispensary / Clinic Visit</h3>
-                            <button onClick={() => setShowVisitModal(false)} className="text-gray-400">×</button>
+                            <button type="button" onClick={() => setShowVisitModal(false)} className="text-gray-400">×</button>
                         </div>
                         <form onSubmit={handleSaveVisit} className="p-5 space-y-4">
                             <div>
@@ -247,7 +248,7 @@ export default function NurseDashboard() {
                     <div className="bg-white w-full max-w-lg rounded-2xl shadow-xl overflow-hidden">
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-900">Add Student Medical & Emergency Profile</h3>
-                            <button onClick={() => setShowRecordModal(false)} className="text-gray-400">×</button>
+                            <button type="button" onClick={() => setShowRecordModal(false)} className="text-gray-400">×</button>
                         </div>
                         <form onSubmit={handleSaveRecord} className="p-5 space-y-4">
                             <div>

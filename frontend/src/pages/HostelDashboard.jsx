@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
+import { arrayFromResponse } from "../utils/response";
 
 export default function HostelDashboard() {
     const [activeTab, setActiveTab] = useState("allocations");
@@ -29,9 +30,9 @@ export default function HostelDashboard() {
                 api.get("/students").catch(() => ({ data: { data: [] } }))
             ]);
 
-            setHostels(hostelsRes.data?.data || hostelsRes.data || []);
-            setAllocations(allocationsRes.data?.data || allocationsRes.data || []);
-            setStudents(studentsRes.data?.data || studentsRes.data || []);
+            setHostels(arrayFromResponse(hostelsRes));
+            setAllocations(arrayFromResponse(allocationsRes));
+            setStudents(arrayFromResponse(studentsRes));
         } catch (err) {
             console.error("Error loading hostel data", err);
         } finally {
@@ -86,13 +87,13 @@ export default function HostelDashboard() {
                         <p className="text-sm text-gray-500 mt-1">Manage boarding housing blocks, configure room capacities, and allocate student bed spaces.</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <button onClick={() => setShowHostelModal(true)} className="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        <button type="button" onClick={() => setShowHostelModal(true)} className="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
                             + Add Hostel
                         </button>
-                        <button onClick={() => setShowRoomModal(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        <button type="button" onClick={() => setShowRoomModal(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
                             + Add Room
                         </button>
-                        <button onClick={() => setShowAllocationModal(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        <button type="button" onClick={() => setShowAllocationModal(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
                             + Allocate Bed
                         </button>
                     </div>
@@ -100,7 +101,7 @@ export default function HostelDashboard() {
 
                 <div className="flex gap-2 border-b border-gray-100 mt-6 overflow-x-auto pb-px">
                     {["allocations", "hostels"].map((tab) => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-sky-600 text-sky-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
+                        <button type="button" key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-sky-600 text-sky-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
                             {tab === "allocations" ? "Active Bed Allocations" : "Hostel Blocks & Rooms"}
                         </button>
                     ))}
@@ -188,7 +189,7 @@ export default function HostelDashboard() {
                     <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-900">Add Hostel Block</h3>
-                            <button onClick={() => setShowHostelModal(false)} className="text-gray-400">×</button>
+                            <button type="button" onClick={() => setShowHostelModal(false)} className="text-gray-400">×</button>
                         </div>
                         <form onSubmit={handleSaveHostel} className="p-5 space-y-4">
                             <div>
@@ -222,7 +223,7 @@ export default function HostelDashboard() {
                     <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-900">Add Room to Hostel</h3>
-                            <button onClick={() => setShowRoomModal(false)} className="text-gray-400">×</button>
+                            <button type="button" onClick={() => setShowRoomModal(false)} className="text-gray-400">×</button>
                         </div>
                         <form onSubmit={handleSaveRoom} className="p-5 space-y-4">
                             <div>
@@ -257,7 +258,7 @@ export default function HostelDashboard() {
                     <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-900">Allocate Bed Space to Student</h3>
-                            <button onClick={() => setShowAllocationModal(false)} className="text-gray-400">×</button>
+                            <button type="button" onClick={() => setShowAllocationModal(false)} className="text-gray-400">×</button>
                         </div>
                         <form onSubmit={handleAllocateStudent} className="p-5 space-y-4">
                             <div>

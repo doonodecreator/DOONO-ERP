@@ -52,6 +52,7 @@ class PermissionSeeder extends Seeder
 
             // Users
             ['name' => 'Manage Users', 'slug' => 'manage_users'],
+            ['name' => 'View Staff', 'slug' => 'view_staff'],
             ['name' => 'Assign Roles', 'slug' => 'assign_roles'],
 
             // --- Added to complete the full role-based architecture ---
@@ -93,6 +94,12 @@ class PermissionSeeder extends Seeder
             ['name' => 'Manage Inventory', 'slug' => 'manage_inventory'],
             ['name' => 'Manage Discipline', 'slug' => 'manage_discipline'],
             ['name' => 'Manage Front Desk', 'slug' => 'manage_front_desk'],
+            ['name' => 'Manage Events', 'slug' => 'manage_events'],
+            ['name' => 'Manage Facilities', 'slug' => 'manage_facilities'],
+            ['name' => 'View Assignments', 'slug' => 'view_assignments'],
+            ['name' => 'Manage Assignments', 'slug' => 'manage_assignments'],
+            ['name' => 'Manage CBT Questions', 'slug' => 'manage_cbt_questions'],
+            ['name' => 'View CBT Questions', 'slug' => 'view_cbt_questions'],
 
             // Portals
             ['name' => 'Parent Portal Access', 'slug' => 'portal_parent_access'],

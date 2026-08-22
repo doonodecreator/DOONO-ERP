@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
+import { arrayFromResponse } from "../utils/response";
 
 export default function TransportDashboard() {
     const [activeTab, setActiveTab] = useState("allocations");
@@ -31,10 +32,10 @@ export default function TransportDashboard() {
                 api.get("/students").catch(() => ({ data: { data: [] } }))
             ]);
 
-            setVehicles(vehiclesRes.data?.data || vehiclesRes.data || []);
-            setRoutes(routesRes.data?.data || routesRes.data || []);
-            setAllocations(allocationsRes.data?.data || allocationsRes.data || []);
-            setStudents(studentsRes.data?.data || studentsRes.data || []);
+            setVehicles(arrayFromResponse(vehiclesRes));
+            setRoutes(arrayFromResponse(routesRes));
+            setAllocations(arrayFromResponse(allocationsRes));
+            setStudents(arrayFromResponse(studentsRes));
         } catch (err) {
             console.error("Error loading transport data", err);
         } finally {
@@ -87,13 +88,13 @@ export default function TransportDashboard() {
                         <p className="text-sm text-gray-500 mt-1">Manage bus fleets, define route schedules, assign drivers, and allocate student bus passes.</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <button onClick={() => setShowVehicleModal(true)} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        <button type="button" onClick={() => setShowVehicleModal(true)} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
                             + Add Vehicle
                         </button>
-                        <button onClick={() => setShowRouteModal(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        <button type="button" onClick={() => setShowRouteModal(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
                             + Add Route
                         </button>
-                        <button onClick={() => setShowAllocationModal(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        <button type="button" onClick={() => setShowAllocationModal(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
                             + Allocate Student
                         </button>
                     </div>
@@ -101,7 +102,7 @@ export default function TransportDashboard() {
 
                 <div className="flex gap-2 border-b border-gray-100 mt-6 overflow-x-auto pb-px">
                     {["allocations", "routes", "vehicles"].map((tab) => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-amber-600 text-amber-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
+                        <button type="button" key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-amber-600 text-amber-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
                             {tab === "allocations" ? "Student Allocations" : tab === "routes" ? "Bus Routes" : "Vehicle Fleet"}
                         </button>
                     ))}
@@ -214,7 +215,7 @@ export default function TransportDashboard() {
                     <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-900">Register Vehicle</h3>
-                            <button onClick={() => setShowVehicleModal(false)} className="text-gray-400">×</button>
+                            <button type="button" onClick={() => setShowVehicleModal(false)} className="text-gray-400">×</button>
                         </div>
                         <form onSubmit={handleSaveVehicle} className="p-5 space-y-4">
                             <div className="grid grid-cols-2 gap-4">
@@ -264,7 +265,7 @@ export default function TransportDashboard() {
                     <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-900">Create Bus Route</h3>
-                            <button onClick={() => setShowRouteModal(false)} className="text-gray-400">×</button>
+                            <button type="button" onClick={() => setShowRouteModal(false)} className="text-gray-400">×</button>
                         </div>
                         <form onSubmit={handleSaveRoute} className="p-5 space-y-4">
                             <div>
@@ -303,7 +304,7 @@ export default function TransportDashboard() {
                     <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
                         <div className="p-5 border-b border-gray-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-900">Allocate Student to Transport Route</h3>
-                            <button onClick={() => setShowAllocationModal(false)} className="text-gray-400">×</button>
+                            <button type="button" onClick={() => setShowAllocationModal(false)} className="text-gray-400">×</button>
                         </div>
                         <form onSubmit={handleAllocateStudent} className="p-5 space-y-4">
                             <div>

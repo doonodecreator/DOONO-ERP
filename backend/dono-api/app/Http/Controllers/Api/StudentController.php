@@ -7,13 +7,18 @@ use App\Services\CurrentContextService;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Http\Resources\StudentResource;
+use App\Models\FormTeacherAssignment;
+use App\Models\Staff;
 use App\Models\Student;
+use App\Models\Timetable;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
     public function __construct(
-        private readonly CurrentContextService $context
+        private readonly CurrentContextService $context,
+        private readonly \App\Services\MediaStorageService $media,
+        private readonly \App\Services\SubscriptionQuotaService $quotas,
     ) {}
 
     private function currentContextSchoolId(Request $request): ?int
@@ -36,14 +41,16 @@ class StudentController extends Controller
             'academicSession',
         ]);
 
+        $schoolId = $this->currentContextSchoolId($request);
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin()
         ) {
-            $query->where(
-                'school_id',
-                $this->currentContextSchoolId($request)
-            );
+            $query->where('school_id', $schoolId);
+            $assignedClassIds = $this->assignedClassIds($request, $schoolId);
+            if ($assignedClassIds !== null) {
+                $query->whereIn('class_id', $assignedClassIds);
+            }
         }
 
         $search = trim((string) ($validated['search'] ?? ''));
@@ -100,12 +107,21 @@ class StudentController extends Controller
     public function store(StoreStudentRequest $request)
     {
         $data = $request->validated();
+        $schoolId = $this->currentContextSchoolId($request);
 
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin()
         ) {
-            $data['school_id'] = $this->currentContextSchoolId($request);
+            $data['school_id'] = $schoolId;
+        }
+
+        if ($schoolId) {
+            $this->quotas->assertCanAddStudent((int) $schoolId);
+        }
+
+        if ($request->hasFile('photo')) {
+            $data['photo'] = $this->media->storeImage($request->file('photo'), 'schools/' . $schoolId . '/students');
         }
 
         $student = Student::create($data);
@@ -125,12 +141,16 @@ class StudentController extends Controller
 
     public function show(Request $request, Student $student)
     {
+        $schoolId = $this->currentContextSchoolId($request);
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
-            ! $request->user()->isSuperAdmin() &&
-            $student->school_id !== $this->currentContextSchoolId($request)
+            ! $request->user()->isSuperAdmin()
         ) {
-            abort(403, 'Unauthorized.');
+            abort_unless((int) $student->school_id === (int) $schoolId, 403, 'Unauthorized.');
+            $assignedClassIds = $this->assignedClassIds($request, $schoolId);
+            if ($assignedClassIds !== null) {
+                abort_unless(in_array((int) $student->class_id, $assignedClassIds, true), 403, 'You may only view students in your assigned classes.');
+            }
         }
 
         return new StudentResource(
@@ -142,6 +162,33 @@ class StudentController extends Controller
                 'academicSession',
             ])
         );
+    }
+
+    private function assignedClassIds(Request $request, ?int $schoolId): ?array
+    {
+        if (! $schoolId) {
+            return [];
+        }
+
+        $user = $request->user();
+        if (! $user->hasRole('teacher', $schoolId) && ! $user->hasRole('form_teacher', $schoolId)) {
+            return null;
+        }
+
+        $staffId = Staff::query()
+            ->where('school_id', $schoolId)
+            ->where('user_id', $user->id)
+            ->value('id');
+
+        if (! $staffId) {
+            return [];
+        }
+
+        $query = $user->hasRole('teacher', $schoolId)
+            ? Timetable::query()->where('school_id', $schoolId)->where('staff_id', $staffId)->where('entry_type', 'lesson')
+            : FormTeacherAssignment::query()->where('school_id', $schoolId)->where('staff_id', $staffId)->where('is_active', true);
+
+        return $query->pluck('class_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
     }
 
     public function update(
@@ -163,6 +210,10 @@ class StudentController extends Controller
             ! $request->user()->isSuperAdmin()
         ) {
             $data['school_id'] = $student->school_id;
+        }
+
+        if ($request->hasFile('photo')) {
+            $data['photo'] = $this->media->storeImage($request->file('photo'), 'schools/' . $student->school_id . '/students', $student->photo);
         }
 
         $student->update($data);

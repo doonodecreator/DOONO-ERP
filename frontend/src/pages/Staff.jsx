@@ -1,171 +1,73 @@
-import React, { useState, useEffect } from 'react';
-import api from '../services/api';
+import { useEffect, useState } from "react";
+import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { getPrimaryRoleSlug } from "../utils/role";
+import { arrayFromResponse } from "../utils/response";
+import PageContainer from "../components/layout/PageContainer";
+import PageHeader from "../components/layout/PageHeader";
+import SectionCard from "../components/layout/SectionCard";
+import DataTable from "../components/tables/DataTable";
+import Button from "../components/forms/Button";
+import Alert from "../components/feedback/Alert";
 
-const Staff = ({ setPage, setSelectedStaff }) => {
-    const [staffList, setStaffList] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
+export default function Staff({ setPage, setSelectedStaff }) {
+  const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
+  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+  const canManageEmployment = role === "proprietor";
+  const [staffList, setStaffList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-    useEffect(() => {
-        fetchStaff();
-    }, []);
+  const fetchStaff = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/staff");
+      setStaffList(arrayFromResponse(response));
+      setError(null);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load staff records.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const fetchStaff = async () => {
-        try {
-            setLoading(true);
-            const response = await api.get('/staff');
-            const data = response.data.data || response.data;
-            setStaffList(Array.isArray(data) ? data : []);
-            setError(null);
-        } catch (err) {
-            setError(err.response?.data?.message || 'Failed to load staff records.');
-        } finally {
-            setLoading(false);
-        }
-    };
+  useEffect(() => { fetchStaff(); }, []);
 
-    const handleDelete = async (id, name) => {
-        if (!window.confirm(`Are you sure you want to remove ${name} from staff?`)) return;
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to remove ${name} from staff?`)) return;
+    try {
+      await api.delete(`/staff/${id}`);
+      await fetchStaff();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete staff member.");
+    }
+  };
 
-        try {
-            await api.delete(`/staff/${id}`);
-            fetchStaff();
-        } catch (err) {
-            alert(err.response?.data?.message || 'Failed to delete staff member.');
-        }
-    };
+  const filteredStaff = staffList.filter((staff) => {
+    const fullName = `${staff.first_name || ""} ${staff.last_name || ""}`.toLowerCase();
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = fullName.includes(term) || (staff.staff_number || "").toLowerCase().includes(term) || (staff.department || "").toLowerCase().includes(term);
+    const matchesStatus = statusFilter === "all" || String(staff.employment_status || "").toLowerCase().replaceAll(" ", "_") === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
-    const handleEdit = (staffMember) => {
-        if (setSelectedStaff) setSelectedStaff(staffMember);
-        setPage('edit-staff');
-    };
+  const columns = [
+    { key: "staff_number", label: "Staff ID", render: (staff) => <span className="font-mono text-xs font-semibold">{staff.staff_number || "N/A"}</span> },
+    { key: "name", label: "Name", render: (staff) => <span className="font-semibold">{[staff.first_name, staff.middle_name, staff.last_name].filter(Boolean).join(" ") || "Unnamed staff"}</span> },
+    { key: "designation", label: "Designation / Department", render: (staff) => <span>{staff.designation || "Unassigned"}<small className="table-secondary-text">{staff.department || "General"}</small></span> },
+    { key: "contact", label: "Phone / Email", render: (staff) => <span>{staff.phone || "—"}<small className="table-secondary-text">{staff.email || "—"}</small></span> },
+    { key: "employment_status", label: "Status", render: (staff) => { const value = String(staff.employment_status || "Active"); const variant = value.toLowerCase() === "active" ? "status-badge-success" : value.toLowerCase().includes("leave") ? "status-badge-warning" : "status-badge-danger"; return <span className={`status-badge ${variant}`}>{value}</span>; } },
+    { key: "actions", label: "Actions", align: "right", render: (staff) => canManageEmployment ? <div className="table-actions"><Button size="sm" variant="ghost" onClick={() => { setSelectedStaff?.(staff); setPage("edit-staff"); }}>Edit employment</Button><Button size="sm" variant="danger" onClick={() => handleDelete(staff.id, `${staff.first_name || ""} ${staff.last_name || ""}`)}>Terminate</Button></div> : <span className="table-muted-text">View only</span> },
+  ];
 
-    const filteredStaff = staffList.filter((s) => {
-        const fullName = `${s.first_name || ''} ${s.last_name || ''}`.toLowerCase();
-        const matchesSearch = fullName.includes(searchTerm.toLowerCase()) || 
-                              (s.staff_number && s.staff_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                              (s.department && s.department.toLowerCase().includes(searchTerm.toLowerCase()));
-        
-        const matchesStatus = statusFilter === 'all' || s.employment_status === statusFilter;
-        return matchesSearch && matchesStatus;
-    });
-
-    return (
-        <div className="p-6 bg-gray-50 min-h-screen">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Staff Directory</h1>
-                    <p className="text-sm text-gray-500">Manage school teachers, administrators, and non-teaching personnel.</p>
-                </div>
-                <button
-                    onClick={() => setPage('add-staff')}
-                    className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition shadow-sm"
-                >
-                    + Add New Staff
-                </button>
-            </div>
-
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-4">
-                <input
-                    type="text"
-                    placeholder="Search by name, staff ID, or department..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                />
-                <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
-                >
-                    <option value="all">All Employment Statuses</option>
-                    <option value="active">Active</option>
-                    <option value="on_leave">On Leave</option>
-                    <option value="terminated">Terminated</option>
-                </select>
-            </div>
-
-            {error && (
-                <div className="p-4 mb-6 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm flex justify-between items-center">
-                    <span>{error}</span>
-                    <button onClick={fetchStaff} className="underline font-semibold">Retry</button>
-                </div>
-            )}
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                {loading ? (
-                    <div className="p-12 text-center text-gray-500">Loading staff records...</div>
-                ) : filteredStaff.length === 0 ? (
-                    <div className="p-12 text-center text-gray-400">
-                        <p className="text-base font-medium">No staff members found.</p>
-                        <p className="text-xs mt-1">Try adjusting your search query or add a new staff member.</p>
-                    </div>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-gray-600">
-                            <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-100">
-                                <tr>
-                                    <th className="px-6 py-3">Staff ID</th>
-                                    <th className="px-6 py-3">Name</th>
-                                    <th className="px-6 py-3">Designation / Dept</th>
-                                    <th className="px-6 py-3">Phone / Email</th>
-                                    <th className="px-6 py-3">Status</th>
-                                    <th className="px-6 py-3 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {filteredStaff.map((staff) => (
-                                    <tr key={staff.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4 font-mono text-xs font-semibold text-gray-700">
-                                            {staff.staff_number || 'N/A'}
-                                        </td>
-                                        <td className="px-6 py-4 font-medium text-gray-900">
-                                            {staff.first_name} {staff.middle_name ? staff.middle_name + ' ' : ''}{staff.last_name}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-gray-800">{staff.designation || 'Unassigned'}</div>
-                                            <div className="text-xs text-gray-400">{staff.department || 'General'}</div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div>{staff.phone || '—'}</div>
-                                            <div className="text-xs text-gray-400">{staff.email || '—'}</div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${
-                                                staff.employment_status === 'active' 
-                                                    ? 'bg-green-100 text-green-700' 
-                                                    : staff.employment_status === 'on_leave'
-                                                    ? 'bg-yellow-100 text-yellow-700'
-                                                    : 'bg-red-100 text-red-700'
-                                            }`}>
-                                                {staff.employment_status || 'active'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right space-x-2">
-                                            <button
-                                                onClick={() => handleEdit(staff)}
-                                                className="text-blue-600 hover:text-blue-800 font-medium text-xs"
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(staff.id, `${staff.first_name} ${staff.last_name}`)}
-                                                className="text-red-600 hover:text-red-800 font-medium text-xs"
-                                            >
-                                                Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
-
-export default Staff;
+  return <PageContainer>
+    <PageHeader title="Staff Directory" subtitle="Manage school teachers, administrators, and non-teaching personnel." action={canManageEmployment ? <Button onClick={() => setPage("add-staff")}>Add staff</Button> : null} />
+    {error && <Alert variant="error" action={<button type="button" onClick={fetchStaff}>Retry</button>}>{error}</Alert>}
+    <SectionCard title="Find staff" subtitle={`${filteredStaff.length} of ${staffList.length} records`}>
+      <div className="ui-form-grid"><input type="search" aria-label="Search staff" placeholder="Search by name, staff ID, or department" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} className="ui-form-control" /><select aria-label="Filter staff by employment status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="ui-form-control"><option value="all">All employment statuses</option><option value="active">Active</option><option value="on_leave">On leave</option><option value="suspended">Suspended</option><option value="retired">Retired</option><option value="resigned">Resigned</option><option value="terminated">Terminated</option></select></div>
+    </SectionCard>
+    <DataTable columns={columns} data={filteredStaff} loading={loading} emptyTitle="No staff members found" emptyMessage="Try adjusting your search or add a new staff member." />
+  </PageContainer>;
+}

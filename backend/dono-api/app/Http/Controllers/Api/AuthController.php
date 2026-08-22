@@ -8,6 +8,9 @@ use App\Models\Staff;
 use App\Models\User;
 use App\Http\Resources\StaffResource;
 use App\Services\CurrentContextService;
+use App\Services\EmailVerificationService;
+use App\Services\MediaStorageService;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -15,8 +18,11 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function __construct(private CurrentContextService $context)
-    {
+    public function __construct(
+        private CurrentContextService $context,
+        private EmailVerificationService $verification,
+        private MediaStorageService $media,
+    ) {
     }
 
     /**
@@ -37,12 +43,15 @@ class AuthController extends Controller
             'password' => 'required|confirmed|min:8',
         ]);
 
+        $validated['email'] = strtolower(trim($validated['email']));
+
         try {
             $result = DB::transaction(function () use ($validated) {
                 $user = User::create([
                     'name' => $validated['admin_name'],
                     'email' => $validated['email'],
-                    'password' => Hash::make($validated['password']),
+                    'password' => $validated['password'],
+                    'email_verified_at' => null,
                 ]);
 
                 $organization = Organization::create([
@@ -62,18 +71,18 @@ class AuthController extends Controller
                     'status' => 'active',
                 ]);
 
-                $token = $user->createToken('api-token')->plainTextToken;
-
-                return [$user, $token];
+                return [$user];
             });
 
-            [$user, $token] = $result;
+            [$user] = $result;
+            $verificationSent = $this->verification->send($user);
 
             return response()->json([
-                'message' => 'Registration successful.',
-                'token' => $token,
-                ...$this->context->resolve($user),
-            ], 201);
+                'message' => 'Registration successful. Check your email to verify the account before signing in.',
+                'verification_required' => true,
+                'verification_email_sent' => $verificationSent,
+                'email' => $user->email,
+            ], 202);
 
         } catch (\Throwable $e) {
             return response()->json([
@@ -90,12 +99,21 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $email = strtolower(trim((string) $request->input('email')));
+        $user = User::where('email', $email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['Invalid email or password.'],
             ]);
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Verify your email address before signing in.',
+                'code' => 'EMAIL_VERIFICATION_REQUIRED',
+                'email' => $user->email,
+            ], 403);
         }
 
         $user->tokens()->delete();
@@ -105,6 +123,32 @@ class AuthController extends Controller
             'message' => 'Login successful.',
             'token' => $token,
             ...$this->context->resolve($user),
+        ]);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8', 'confirmed', 'different:current_password'],
+        ]);
+
+        $user = $request->user();
+        if (! Hash::check($validated['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['The current password is incorrect.'],
+            ]);
+        }
+
+        $user->update([
+            'password' => $validated['password'],
+            'must_change_password' => false,
+            'password_changed_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Password changed successfully.',
+            ...$this->context->resolve($user->fresh()),
         ]);
     }
 
@@ -124,6 +168,46 @@ class AuthController extends Controller
     public function context(Request $request)
     {
         return response()->json($this->context->resolve($request->user()));
+    }
+
+    public function profile(Request $request)
+    {
+        $user = $request->user();
+        $validated = $request->validate([
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'remove_avatar' => ['sometimes', 'boolean'],
+        ]);
+
+        if (array_key_exists('name', $validated)) {
+            $user->name = $validated['name'];
+        }
+
+        if (($validated['remove_avatar'] ?? false) === true) {
+            $this->media->delete($user->avatar);
+            $user->avatar = null;
+        } elseif ($request->hasFile('avatar')) {
+            $user->avatar = $this->media->storeImage(
+                $request->file('avatar'),
+                'users/' . $user->id,
+                $user->avatar,
+            );
+        }
+
+        $user->save();
+
+        ActivityLogService::log(
+            module: 'profile',
+            action: 'updated',
+            description: "User profile updated for {$user->email}.",
+            schoolId: $this->context->currentSchool($user)?->id,
+            properties: ['name_changed' => array_key_exists('name', $validated), 'avatar_changed' => $request->hasFile('avatar') || ($validated['remove_avatar'] ?? false)],
+        );
+
+        return response()->json([
+            'message' => 'Profile updated successfully.',
+            ...$this->context->resolve($user->fresh()),
+        ]);
     }
 
     /**

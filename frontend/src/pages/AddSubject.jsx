@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { arrayFromResponse } from "../utils/response";
 
 export default function AddSubject({ setPage }) {
   const [divisions, setDivisions] = useState([]);
@@ -23,9 +24,7 @@ export default function AddSubject({ setPage }) {
     try {
       const res = await api.get("/divisions");
 
-      if (res.data.data) {
-        setDivisions(res.data.data);
-      }
+      setDivisions(arrayFromResponse(res));
     } catch (err) {
       console.log(err);
     }

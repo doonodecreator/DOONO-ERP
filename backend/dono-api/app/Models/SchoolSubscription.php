@@ -86,14 +86,18 @@ class SchoolSubscription extends Model
             return false;
         }
 
-        return now()->greaterThan($this->expiry_date);
+        // Date-cast values represent midnight. Keep the plan valid through the
+        // entire configured expiry day, then deny access without waiting for the
+        // scheduled expiry command.
+        return now()->greaterThan($this->expiry_date->copy()->endOfDay());
     }
 
     public function isTrial(): bool
     {
         return $this->status === 'trial'
             && $this->trial_ends_at
-            && now()->lessThanOrEqualTo($this->trial_ends_at);
+            && ! $this->isExpired()
+            && now()->lessThanOrEqualTo($this->trial_ends_at->copy()->endOfDay());
     }
 
     public function isActive(): bool
@@ -102,8 +106,11 @@ class SchoolSubscription extends Model
             return true;
         }
 
-        return $this->status === 'active'
-            || $this->isTrial();
+        if ($this->status === 'active') {
+            return (bool) $this->expiry_date && ! $this->isExpired();
+        }
+
+        return $this->isTrial();
     }
 
     public function daysRemaining(): int

@@ -39,20 +39,31 @@ class CheckStaffActive
             return $next($request);
         }
 
-        // Check if user is still active in the school's staff records
-        $isStaffActive = false;
-
+        // A staff record is authoritative for school access. On-leave staff may
+        // still sign in, but suspended, retired, resigned, and terminated staff
+        // must be blocked immediately. Eloquent attributes are accessed through
+        // getAttribute(), not property_exists(), because employment_status is a
+        // database column rather than a declared PHP property.
         $staffRecord = \App\Models\Staff::where('user_id', $user->id)
             ->where('school_id', $schoolId)
             ->first();
 
-        if ($staffRecord) {
-            $isStaffActive = property_exists($staffRecord, 'is_active') ? $staffRecord->is_active : true;
-        } else {
-            if ($this->context->currentSchool($user)?->id === (int) $schoolId) {
-                $isStaffActive = true;
-            }
-        }
+        $employmentStatus = strtolower(trim((string) $staffRecord?->getAttribute('employment_status')));
+        $staffRoleSlugs = [
+            'principal', 'vice_principal', 'vice_principal_academic',
+            'vice_principal_admin', 'nursery_head', 'primary_head',
+            'secondary_head', 'teacher', 'form_teacher', 'bursar',
+            'cashier', 'accountant', 'librarian', 'nurse', 'hostel_master',
+            'hostel_mistress', 'transport_manager', 'receptionist',
+        ];
+        $hasStaffRole = $user->roles()
+            ->wherePivot('school_id', $schoolId)
+            ->whereIn('slug', $staffRoleSlugs)
+            ->exists();
+
+        $isStaffActive = $staffRecord
+            ? in_array($employmentStatus, ['active', 'on leave', 'on_leave'], true)
+            : ! $hasStaffRole && $this->context->currentSchool($user)?->id === (int) $schoolId;
 
         if (! $isStaffActive) {
             // Instantly revoke all active API tokens so they cannot make further requests

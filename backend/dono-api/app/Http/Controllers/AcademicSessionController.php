@@ -4,14 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\AcademicSession;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-
 class AcademicSessionController extends Controller
 {
     public function index(Request $request)
     {
         // Only fetch sessions for the currently authenticated user's school
-        $sessions = AcademicSession::where('school_id', $request->user()->school_id)
+        $schoolId = $this->requireSchool($request);
+        $sessions = AcademicSession::where('school_id', $schoolId)
             ->orderBy('start_date', 'desc')
             ->get();
 
@@ -29,7 +28,7 @@ class AcademicSessionController extends Controller
 
         // Automatically assign the school_id based on the logged-in user
         $session = AcademicSession::create([
-            'school_id' => $request->user()->school_id,
+            'school_id' => $this->requireSchool($request),
             'name' => $request->name,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,

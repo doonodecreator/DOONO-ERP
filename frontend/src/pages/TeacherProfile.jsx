@@ -41,7 +41,7 @@ export default function TeacherProfile({
 
   return (
     <div>
-      <button
+      <button type="button"
         onClick={() =>
           setPage("teachers")
         }
@@ -50,7 +50,7 @@ export default function TeacherProfile({
         ← Back
       </button>
 
-      <button
+      <button type="button"
         onClick={() =>
           setPage(
             "edit-teacher"
@@ -67,7 +67,7 @@ export default function TeacherProfile({
         Edit Teacher
       </button>
 
-      <button
+      <button type="button"
         onClick={
           deleteTeacher
         }

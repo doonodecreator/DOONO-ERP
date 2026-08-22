@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { getPrimaryRoleSlug } from "../utils/role";
 import PageContainer from "../components/layout/PageContainer";
 import PageHeader from "../components/layout/PageHeader";
 import LoadingSpinner from "../components/feedback/LoadingSpinner";
 
-export default function Settings() {
-    const { isPlatformAdmin, school } = useAuth();
+export default function Settings({ setPage }) {
+    const { isPlatformAdmin, isOrganizationOwner, roles, school } = useAuth();
+    const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+    const canManageSchoolSettings = role === "proprietor";
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState("");
@@ -29,7 +32,7 @@ export default function Settings() {
     const [plans, setPlans] = useState([]);
     const [currencies, setCurrencies] = useState([]);
 
-    useEffect(() => { loadData(); }, [isPlatformAdmin, school]);
+    useEffect(() => { loadData();     }, [isPlatformAdmin, school, canManageSchoolSettings]);
 
     async function loadData() {
         setLoading(true);
@@ -59,7 +62,7 @@ export default function Settings() {
                 const currencyItems = cRes.data?.data || cRes.data || [];
                 setCurrencies(Array.isArray(currencyItems) ? currencyItems : []);
 
-            } else if (school) {
+            } else if (school && canManageSchoolSettings) {
                 const [profileRes, settingsRes] = await Promise.all([
                     api.get(`/schools/${school.id}`),
                     api.get("/school-settings")
@@ -139,13 +142,24 @@ export default function Settings() {
 
     if (loading) return <PageContainer><LoadingSpinner /></PageContainer>;
 
+    if (!isPlatformAdmin && !canManageSchoolSettings) {
+        return (
+            <PageContainer>
+                <PageHeader title="Settings unavailable" subtitle="Only the Proprietor can manage school profile and payment settings." />
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-amber-900">
+                    Your Principal role does not include access to school ownership, bank, or Paystack configuration.
+                </div>
+            </PageContainer>
+        );
+    }
+
     if (!isPlatformAdmin) {
         return (
             <PageContainer>
                 <PageHeader
                     title="School Settings"
                     subtitle="Manage your school profile and operational configurations"
-                    action={<button onClick={handleSave} disabled={saving} className="bg-amber-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-amber-700 disabled:opacity-50">{saving ? "Saving..." : "Save School Settings"}</button>}
+                    action={<div className="flex flex-wrap gap-2 justify-end"><button type="button" onClick={() => setPage?.("school-branding")} className="border border-indigo-200 bg-indigo-50 text-indigo-700 px-4 py-2.5 rounded-xl font-bold hover:bg-indigo-100">Branding & Report Cards</button><button type="button" onClick={handleSave} disabled={saving} className="bg-amber-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-amber-700 disabled:opacity-50">{saving ? "Saving..." : "Save School Settings"}</button></div>}
                 />
 
                 {message && <div className="bg-emerald-50 text-emerald-700 p-4 rounded-xl border border-emerald-100 mb-6 font-medium">{message}</div>}
@@ -225,7 +239,7 @@ export default function Settings() {
             <PageHeader
                 title="System Settings"
                 subtitle="Global SaaS Platform Control"
-                action={<button onClick={handleSave} disabled={saving} className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-indigo-700 disabled:opacity-50">{saving ? "Saving..." : "Save Changes"}</button>}
+                action={<button type="button" onClick={handleSave} disabled={saving} className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-indigo-700 disabled:opacity-50">{saving ? "Saving..." : "Save Changes"}</button>}
             />
 
             {message && <div className="bg-emerald-50 text-emerald-700 p-4 rounded-xl border border-emerald-100 mb-6 font-medium">{message}</div>}
@@ -280,8 +294,8 @@ export default function Settings() {
                     <div className="space-y-4">
                         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
                             <div>
-                                <h4 className="font-bold text-slate-900">Enforce Subscriptions</h4>
-                                <p className="text-xs text-slate-500">Require schools to pay to access features</p>
+                                <h4 className="font-bold text-slate-900">Require Subscription Payments</h4>
+                                <p className="text-xs text-slate-500">When off, all schools have free access. When on, schools must pay unless individually exempted.</p>
                             </div>
                             <input type="checkbox" className="w-6 h-6 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked={!!settings.enforce_subscriptions} onChange={e => setSettings({...settings, enforce_subscriptions: e.target.checked})} />
                         </div>

@@ -117,6 +117,25 @@ class SchoolResource extends JsonResource
             'address' => $this->address,
 
             'logo' => $this->logo,
+            'logo_url' => app(\App\Services\MediaStorageService::class)->url($this->logo),
+            'report_card_logo' => $this->report_card_logo,
+            'report_card_logo_url' => app(\App\Services\MediaStorageService::class)->url($this->report_card_logo ?: $this->logo),
+            'principal_signature' => $this->principal_signature,
+            'principal_signature_url' => app(\App\Services\MediaStorageService::class)->url($this->principal_signature),
+            'school_stamp' => $this->school_stamp,
+            'school_stamp_url' => app(\App\Services\MediaStorageService::class)->url($this->school_stamp),
+            'branding' => [
+                'primary_color' => $this->primary_color,
+                'secondary_color' => $this->secondary_color,
+                'accent_color' => $this->accent_color,
+                'report_card_theme' => $this->report_card_theme,
+                'report_card_layout' => $this->report_card_layout,
+                'custom_header' => $this->custom_header,
+                'custom_footer' => $this->custom_footer,
+                'show_watermark' => (bool) $this->show_watermark,
+                'allow_branding' => (bool) $this->allow_branding,
+                'watermark_text' => $this->watermark_text,
+            ],
 
             'status' => $this->status,
 

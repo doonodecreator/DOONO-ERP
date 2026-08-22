@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import { arrayFromResponse } from '../utils/response';
 import { useAuth } from '../context/AuthContext';
 
 export default function Transport({ setPage }) {
@@ -14,7 +15,7 @@ export default function Transport({ setPage }) {
 
   // Modals
   const [showRouteModal, setShowRouteModal] = useState(false);
-  const [routeForm, setRouteForm] = useState({ route_name: '', description: '', fare_amount: '' });
+  const [routeForm, setRouteForm] = useState({ route_name: '', vehicle_id: '', description: '', fare_amount: '' });
 
   useEffect(() => {
     loadTransportData();
@@ -25,17 +26,15 @@ export default function Transport({ setPage }) {
       setLoading(true);
       setError('');
       if (activeTab === 'routes') {
-        const res = await api.get('/transport-routes');
-        const data = res.data.data || res.data || [];
-        setRoutes(Array.isArray(data) ? data : []);
+        const [res, vehicleRes] = await Promise.all([api.get('/transport-routes'), api.get('/vehicles')]);
+        setRoutes(arrayFromResponse(res));
+        setVehicles(arrayFromResponse(vehicleRes));
       } else if (activeTab === 'vehicles') {
         const res = await api.get('/vehicles');
-        const data = res.data.data || res.data || [];
-        setVehicles(Array.isArray(data) ? data : []);
+        setVehicles(arrayFromResponse(res));
       } else if (activeTab === 'allocations') {
         const res = await api.get('/transport-allocations');
-        const data = res.data.data || res.data || [];
-        setAllocations(Array.isArray(data) ? data : []);
+        setAllocations(arrayFromResponse(res));
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch transport logistics records.');
@@ -47,10 +46,10 @@ export default function Transport({ setPage }) {
   const handleCreateRoute = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/transport-routes', routeForm);
+      await api.post('/transport-routes', { ...routeForm, fare_amount: Number(routeForm.fare_amount) });
       setMessage('Transport route created successfully!');
       setShowRouteModal(false);
-      setRouteForm({ route_name: '', description: '', fare_amount: '' });
+      setRouteForm({ route_name: '', vehicle_id: '', description: '', fare_amount: '' });
       loadTransportData();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create route.');
@@ -67,7 +66,7 @@ export default function Transport({ setPage }) {
         </div>
         <div>
           {activeTab === 'routes' && (
-            <button
+            <button type="button"
               onClick={() => setShowRouteModal(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 text-sm transition shadow-sm"
             >
@@ -80,20 +79,20 @@ export default function Transport({ setPage }) {
       {message && (
         <div className="p-4 mb-6 bg-green-50 text-green-700 rounded-lg border border-green-200 text-sm flex justify-between items-center">
           <span>{message}</span>
-          <button onClick={() => setMessage('')} className="font-bold">✕</button>
+          <button type="button" onClick={() => setMessage('')} className="font-bold">✕</button>
         </div>
       )}
 
       {error && (
         <div className="p-4 mb-6 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm flex justify-between items-center">
           <span>{error}</span>
-          <button onClick={loadTransportData} className="underline font-semibold">Retry</button>
+          <button type="button" onClick={loadTransportData} className="underline font-semibold">Retry</button>
         </div>
       )}
 
       {/* Tabs */}
       <div className="flex border-b border-gray-200 mb-6 bg-white rounded-xl p-1 shadow-sm">
-        <button
+        <button type="button"
           onClick={() => setActiveTab('routes')}
           className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition ${
             activeTab === 'routes' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'
@@ -101,7 +100,7 @@ export default function Transport({ setPage }) {
         >
           Bus Routes & Fares
         </button>
-        <button
+        <button type="button"
           onClick={() => setActiveTab('vehicles')}
           className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition ${
             activeTab === 'vehicles' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'
@@ -109,7 +108,7 @@ export default function Transport({ setPage }) {
         >
           Vehicle Fleet & Drivers
         </button>
-        <button
+        <button type="button"
           onClick={() => setActiveTab('allocations')}
           className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition ${
             activeTab === 'allocations' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'
@@ -201,7 +200,7 @@ export default function Transport({ setPage }) {
                   {allocations.map((a) => (
                     <tr key={a.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 font-semibold text-gray-900">{a.student?.full_name || 'Student #' + a.student_id}</td>
-                      <td className="px-6 py-4">{a.transport_route?.route_name || 'Route #' + a.transport_route_id}</td>
+                      <td className="px-6 py-4">{a.route?.route_name || 'Route #' + a.transport_route_id}</td>
                       <td className="px-6 py-4 text-gray-600">{a.pickup_point || 'Main Gate'}</td>
                       <td className="px-6 py-4">
                         <span className="px-2.5 py-1 text-xs rounded-full font-medium bg-green-100 text-green-700">
@@ -233,6 +232,13 @@ export default function Transport({ setPage }) {
                   placeholder="e.g. Route A - Asaba Expressway"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
                 />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Vehicle *</label>
+                <select required value={routeForm.vehicle_id} onChange={(e) => setRouteForm({ ...routeForm, vehicle_id: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                  <option value="">Select vehicle</option>
+                  {vehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.vehicle_number || vehicle.registration_number || `Vehicle #${vehicle.id}`}</option>)}
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Fare Amount (₦) *</label>

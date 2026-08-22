@@ -6,7 +6,7 @@ import PageHeader from "../components/layout/PageHeader";
 
 const TABS = [
     { id: "dashboard", label: "Overview" },
-    { id: "timetable", label: "Timetable", page: "timetable" },
+    { id: "timetable", label: "Timetable" },
     { id: "assignments", label: "Assignments" },
     { id: "results", label: "Results", page: "results" },
     { id: "library", label: "Library", page: "library" },
@@ -17,6 +17,7 @@ export default function StudentPortal({ setPage }) {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
     const [error, setError] = useState("");
+    const [downloading, setDownloading] = useState(false);
 
     useEffect(() => {
         const loadStudentData = async () => {
@@ -39,14 +40,37 @@ export default function StudentPortal({ setPage }) {
     const assignments = Array.isArray(data?.upcoming_assignments) ? data.upcoming_assignments : [];
     const results = Array.isArray(data?.recent_results) ? data.recent_results : [];
     const attendance = data?.attendance_summary || { present: 0, absent: 0 };
-                <div className="mt-8 flex justify-end"><button onClick={() => window.open(`${api.defaults.baseURL}/report-cards/${student.id}/download`, "_blank")} className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700">Download Latest Report Card</button></div>
+    const timetable = Array.isArray(data?.timetable) ? data.timetable : [];
+    const timetableContext = data?.timetable_context || {};
+    const notices = Array.isArray(data?.recent_notices) ? data.recent_notices : [];
+
+    const downloadReportCard = async () => {
+        setDownloading(true);
+        setError("");
+        try {
+            const response = await api.get("/student/report-card/download", { responseType: "blob" });
+            const url = window.URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "Latest_Report_Card.pdf";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            setError(err?.response?.data?.message || "No published report card is available yet.");
+        } finally {
+            setDownloading(false);
+        }
+    };
 
     const openTab = (tabId) => {
         const tab = TABS.find((item) => item.id === tabId);
-        setActiveTab(tabId);
         if (tab?.page && typeof setPage === "function") {
             setPage(tab.page);
+            return;
         }
+        setActiveTab(tabId);
     };
 
     if (loading) {
@@ -68,11 +92,14 @@ export default function StudentPortal({ setPage }) {
                             <p className="text-[10px] font-semibold text-rose-600 uppercase">Absent</p>
                             <p className="text-sm font-bold text-rose-700">{attendance.absent} Days</p>
                         </div>
+                        <button type="button" onClick={downloadReportCard} disabled={downloading} className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white disabled:opacity-50">{downloading ? "Preparing..." : "Download Report Card"}</button>
                     </div>
                 }
             />
 
             {error && <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
+
+            {notices.length > 0 && <section className="mb-6 rounded-2xl border border-blue-100 bg-white shadow-sm"><div className="border-b border-slate-100 p-5"><h2 className="font-bold text-slate-900">School Notices</h2><p className="mt-1 text-sm text-slate-500">Important updates from your school.</p></div><div className="divide-y divide-slate-100">{notices.map((notice) => <article key={notice.id} className="p-5"><h3 className="font-semibold text-slate-900">{notice.subject}</h3><p className="mt-1 whitespace-pre-wrap text-sm text-slate-600">{notice.body}</p><p className="mt-2 text-xs text-slate-400">{notice.published_at ? new Date(notice.published_at).toLocaleString() : "Recently published"}</p></article>)}</div></section>}
 
             <div className="flex gap-2 overflow-x-auto mb-6 pb-1">
                 {TABS.map((tab) => (
@@ -133,10 +160,20 @@ export default function StudentPortal({ setPage }) {
                         </div>
                     </div>
                 </div>
+            ) : activeTab === "timetable" ? (
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="mb-5"><h2 className="text-xl font-bold text-slate-900">My Term Timetable</h2><p className="mt-1 text-sm text-slate-500">{timetableContext.academic_session || "Current session"} · {timetableContext.term || "Current term"} · {timetableContext.class || "Class"}{timetableContext.stream ? ` · ${timetableContext.stream}` : ""}</p></div>
+                    {timetable.length === 0 ? <EmptyState title="No timetable published yet" message="Your school has not configured timetable entries for your current class and term." /> : <div className="space-y-3">{timetable.map((item) => <div key={item.id} className="rounded-xl border border-slate-100 bg-slate-50 p-4"><div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold text-slate-900">{item.title || item.subject || "Schedule entry"}</p><p className="text-xs text-slate-500">{item.entry_type === "lesson" ? `${item.teacher || "Teacher not assigned"}${item.room ? ` · ${item.room}` : ""}` : item.description || item.entry_type}</p></div><div className="text-left text-xs font-semibold text-indigo-700 sm:text-right"><p>{item.day_of_week || item.event_date || item.effective_from || "Term event"}</p><p>{item.start_time && item.end_time ? `${item.start_time} – ${item.end_time}` : item.effective_until ? `Until ${item.effective_until}` : "All day"}</p></div></div></div>)}</div>}
+                </div>
+            ) : activeTab === "assignments" ? (
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h2 className="text-xl font-bold text-slate-900">Assignments</h2>
+                    {assignments.length === 0 ? <EmptyState title="No upcoming assignments" message="Published assignments will appear here." /> : <div className="mt-4 divide-y divide-slate-100">{assignments.map((assignment) => <div key={assignment.id} className="py-4"><p className="font-semibold text-slate-800">{assignment.title}</p><p className="text-sm text-slate-500">{assignment.subject} · Due {assignment.due_date}</p></div>)}</div>}
+                </div>
             ) : (
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
                     <h3 className="text-xl font-bold text-slate-900 mb-2 capitalize">{activeTab} Portal</h3>
-                    <p className="text-slate-500 max-w-sm mx-auto">{TABS.find(t => t.id === activeTab)?.page ? "Opening the registered student workspace." : "This module is intentionally marked unavailable rather than displaying mock data."}</p>
+                    <p className="text-slate-500 max-w-sm mx-auto">Opening the registered student workspace.</p>
                 </div>
             )}
         </div>

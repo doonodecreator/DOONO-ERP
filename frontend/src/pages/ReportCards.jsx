@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import { arrayFromResponse } from '../utils/response';
 import { useAuth } from '../context/AuthContext';
+
+function apiErrorMessage(error, fallback) {
+  const data = error?.response?.data;
+  if (data?.errors && typeof data.errors === 'object') {
+    const first = Object.values(data.errors).flat()?.[0];
+    if (first) return first;
+  }
+  return data?.message || error?.message || fallback;
+}
 
 export default function ReportCards() {
   const { user } = useAuth();
@@ -36,24 +46,17 @@ export default function ReportCards() {
         api.get('/classes'),
       ]);
 
-      if (repRes.status === 'fulfilled') {
-        const data = repRes.value.data.data || repRes.value.data;
-        setReportCards(Array.isArray(data) ? data : []);
-      }
-      if (sessRes.status === 'fulfilled') {
-        const data = sessRes.value.data.data || sessRes.value.data;
-        setSessions(Array.isArray(data) ? data : []);
-      }
-      if (termRes.status === 'fulfilled') {
-        const data = termRes.value.data.data || termRes.value.data;
-        setTerms(Array.isArray(data) ? data : []);
-      }
-      if (classRes.status === 'fulfilled') {
-        const data = classRes.value.data.data || classRes.value.data;
-        setClasses(Array.isArray(data) ? data : []);
-      }
+      if (repRes.status === 'fulfilled') setReportCards(arrayFromResponse(repRes.value));
+      if (sessRes.status === 'fulfilled') setSessions(arrayFromResponse(sessRes.value));
+      if (termRes.status === 'fulfilled') setTerms(arrayFromResponse(termRes.value));
+      if (classRes.status === 'fulfilled') setClasses(arrayFromResponse(classRes.value));
+
+      const reportFailure = repRes.status === 'rejected' ? apiErrorMessage(repRes.reason, 'Report cards could not be loaded.') : '';
+      const filterFailure = [sessRes, termRes, classRes].find((result) => result.status === 'rejected');
+      if (reportFailure) setError(reportFailure);
+      else if (filterFailure) setError(apiErrorMessage(filterFailure.reason, 'Some report-card filters could not be loaded.'));
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load report cards.');
+      setError(apiErrorMessage(err, 'Failed to load report cards.'));
     } finally {
       setLoading(false);
     }
@@ -63,7 +66,7 @@ export default function ReportCards() {
     e.stopPropagation();
     try {
       setDownloadingId(report.id);
-      const response = await api.get(`/report-cards/${report.id}/download-pdf`, {
+      const response = await api.get(`/report-cards/${report.id}/download`, {
         responseType: 'blob',
       });
 
@@ -84,9 +87,7 @@ export default function ReportCards() {
 
   const handleViewReport = async (report) => {
     try {
-      const response = await api.get(`/report-cards/${report.id}`);
-      const detailedData = response.data.data || response.data;
-      setSelectedReport(detailedData);
+      setSelectedReport(report);
       setShowModal(true);
     } catch (err) {
       setSelectedReport(report);
@@ -95,13 +96,15 @@ export default function ReportCards() {
   };
 
   const filteredReports = reportCards.filter((rc) => {
-    const studentName = (rc.student?.full_name || rc.student_name || '').toLowerCase();
-    const admNo = (rc.student?.admission_number || '').toLowerCase();
+    const enrollment = rc.student_enrollment || {};
+    const student = enrollment.student || {};
+    const studentName = (student.full_name || `${student.first_name || ''} ${student.last_name || ''}`.trim() || rc.student_name || '').toLowerCase();
+    const admNo = (student.admission_number || enrollment.admission_number || '').toLowerCase();
     const matchesSearch = studentName.includes(search.toLowerCase()) || admNo.includes(search.toLowerCase());
 
     const matchesSession = !selectedSession || String(rc.academic_session_id) === String(selectedSession);
     const matchesTerm = !selectedTerm || String(rc.term_id) === String(selectedTerm);
-    const matchesClass = !selectedClass || String(rc.class_id) === String(selectedClass);
+    const matchesClass = !selectedClass || String(enrollment.class_id || rc.class_id) === String(selectedClass);
 
     return matchesSearch && matchesSession && matchesTerm && matchesClass;
   });
@@ -163,7 +166,7 @@ export default function ReportCards() {
       {error && (
         <div className="p-4 mb-6 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm flex justify-between items-center">
           <span>{error}</span>
-          <button onClick={loadFiltersAndReports} className="underline font-semibold">Retry</button>
+          <button type="button" onClick={loadFiltersAndReports} className="underline font-semibold">Retry</button>
         </div>
       )}
 
@@ -171,7 +174,7 @@ export default function ReportCards() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-gray-500">Loading terminal report cards...</div>
-        ) : filteredReports.length === 0 ? (
+        ) : error ? null : filteredReports.length === 0 ? (
           <div className="p-12 text-center text-gray-400">
             <p className="text-base font-medium">No report cards found.</p>
             <p className="text-xs mt-1">Make sure results have been calculated and published for the selected term.</p>
@@ -192,7 +195,9 @@ export default function ReportCards() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredReports.map((rc) => {
-                  const studentName = rc.student?.full_name || rc.student_name || 'N/A';
+                  const enrollment = rc.student_enrollment || {};
+                  const student = enrollment.student || {};
+                  const studentName = student.full_name || `${student.first_name || ''} ${student.last_name || ''}`.trim() || rc.student_name || 'N/A';
                   return (
                     <tr
                       key={rc.id}
@@ -216,7 +221,7 @@ export default function ReportCards() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
-                        <button
+                        <button type="button"
                           onClick={(e) => handleDownloadPdf(e, rc)}
                           disabled={downloadingId === rc.id}
                           className="px-3 py-1 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 disabled:opacity-50"
@@ -239,9 +244,9 @@ export default function ReportCards() {
           <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl">
             <div className="flex justify-between items-center mb-4 border-b pb-3">
               <h2 className="text-lg font-bold text-gray-800">
-                {selectedReport.student?.full_name || selectedReport.student_name || 'Report Card Summary'}
+                {selectedReport.student_enrollment?.student?.full_name || selectedReport.student_name || 'Report Card Summary'}
               </h2>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+              <button type="button" onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
             </div>
 
             <div className="space-y-3 text-sm">
@@ -272,13 +277,13 @@ export default function ReportCards() {
             </div>
 
             <div className="flex justify-end space-x-2 pt-4 mt-4 border-t">
-              <button
+              <button type="button"
                 onClick={() => setShowModal(false)}
                 className="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100"
               >
                 Close
               </button>
-              <button
+              <button type="button"
                 onClick={(e) => handleDownloadPdf(e, selectedReport)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 font-medium"
               >

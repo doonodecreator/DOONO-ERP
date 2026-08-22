@@ -96,7 +96,7 @@ class ParentStudentController extends Controller
     private function schoolScopedQuery(Request $request): Builder
     {
         $query = ParentStudent::with(['parent', 'student']);
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         if ($schoolId) {
             return $query
@@ -119,7 +119,7 @@ class ParentStudentController extends Controller
         Request $request,
         ParentStudent $parentStudent
     ): void {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         if (! $schoolId) {
             abort_unless($request->user()?->isSuperAdmin(), 403, 'Unauthorized.');
@@ -137,9 +137,4 @@ class ParentStudentController extends Controller
         );
     }
 
-    private function currentSchoolId(Request $request): ?int
-    {
-        return $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($request->user())?->id;
-    }
 }

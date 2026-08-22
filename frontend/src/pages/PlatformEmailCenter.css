@@ -1,0 +1,61 @@
+.platform-email-toggle-list {
+  display: grid;
+  gap: 10px;
+}
+
+.platform-email-toggle-row {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.platform-email-toggle-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+
+.platform-email-toggle-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.platform-email-save-button {
+  min-height: 42px;
+  border: 1px solid #3730a3;
+  background: #4f46e5;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.platform-email-save-button:disabled {
+  border-color: #94a3b8;
+  background: #cbd5e1;
+  color: #334155;
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .platform-email-settings-form {
+    padding: 16px;
+  }
+
+  .platform-email-toggle-row {
+    grid-template-columns: 24px minmax(0, 1fr);
+    font-size: 15px;
+  }
+
+  .platform-email-save-button {
+    width: 100%;
+  }
+}

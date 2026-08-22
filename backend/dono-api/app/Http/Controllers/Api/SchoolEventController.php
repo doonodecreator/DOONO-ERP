@@ -21,7 +21,7 @@ class SchoolEventController extends Controller
 
     public function index(Request $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         $query = SchoolEvent::with($this->resourceRelationships())
             ->where('school_id', $schoolId)
@@ -44,7 +44,7 @@ class SchoolEventController extends Controller
 
     public function options(Request $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $search = trim((string) $request->input('search'));
 
         $staff = Staff::where('school_id', $schoolId)
@@ -71,7 +71,7 @@ class SchoolEventController extends Controller
 
     public function store(StoreSchoolEventRequest $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $event = SchoolEvent::create([
             ...$request->validated(),
             'school_id' => $schoolId,
@@ -120,21 +120,12 @@ class SchoolEventController extends Controller
 
     private function ensureSchoolEvent(Request $request, SchoolEvent $schoolEvent): int
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         abort_unless($schoolEvent->school_id === $schoolId, 403);
 
         return $schoolId;
     }
 
-    private function currentSchoolId(Request $request): int
-    {
-        $schoolId = $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($request->user())?->id;
-
-        abort_unless($schoolId, 409, 'No active school.');
-
-        return (int) $schoolId;
-    }
 
     private function resourceRelationships(): array
     {

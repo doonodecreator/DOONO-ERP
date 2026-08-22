@@ -1,0 +1,116 @@
+.dono-home-hero {
+  display: flex;
+  width: min(100%, 920px);
+  min-height: 560px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 86px 24px 96px;
+  flex: 1 0 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.dono-home-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 14px;
+  border: 1px solid rgba(96, 165, 250, .3);
+  border-radius: 999px;
+  background: rgba(30, 58, 138, .4);
+  color: #93c5fd;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.dono-home-hero h1 {
+  max-width: 850px;
+  margin: 24px 0 0;
+  color: #ffffff;
+  font-size: clamp(2.25rem, 6vw, 4.4rem);
+  font-weight: 800;
+  letter-spacing: -.035em;
+  line-height: 1.08;
+}
+
+.dono-home-hero p {
+  max-width: 680px;
+  margin: 22px auto 0;
+  color: #94a3b8;
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  line-height: 1.65;
+}
+
+.dono-home-actions {
+  display: flex;
+  width: 100%;
+  max-width: 680px;
+  margin-top: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.dono-home-actions a {
+  display: inline-flex;
+  min-height: 48px;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+}
+
+.dono-home-primary-action {
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, .28);
+}
+
+.dono-home-primary-action:hover,
+.dono-home-primary-action:focus-visible {
+  background: #1d4ed8;
+}
+
+.dono-home-secondary-action {
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #ffffff;
+}
+
+.dono-home-secondary-action:hover,
+.dono-home-secondary-action:focus-visible {
+  border-color: #64748b;
+  background: #334155;
+}
+
+.dono-home-actions a:focus-visible {
+  outline: 3px solid rgba(147, 197, 253, .45);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .dono-home-hero {
+    min-height: 500px;
+    padding: 58px 16px 78px;
+  }
+
+  .dono-home-actions {
+    flex-direction: column;
+  }
+
+  .dono-home-actions a {
+    width: 100%;
+    flex-basis: auto;
+  }
+}

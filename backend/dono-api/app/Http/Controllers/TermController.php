@@ -11,7 +11,7 @@ class TermController extends Controller
 {
     public function index(Request $request)
     {
-        $schoolId = $request->user()->school_id;
+        $schoolId = $this->requireSchool($request);
 
         // Fetch terms belonging ONLY to the user's school's academic sessions
         $terms = Term::whereHas('academicSession', function ($query) use ($schoolId) {
@@ -26,7 +26,7 @@ class TermController extends Controller
 
     public function store(Request $request)
     {
-        $schoolId = $request->user()->school_id;
+        $schoolId = $this->requireSchool($request);
 
         $request->validate([
             'academic_session_id' => [

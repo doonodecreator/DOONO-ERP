@@ -28,6 +28,7 @@ class StaffResource extends JsonResource
             'basic_salary' => $this->basic_salary,
             'qualification' => $this->qualification,
             'photo' => $this->photo,
+            'photo_url' => app(\App\Services\MediaStorageService::class)->url($this->photo),
             'employment_status' => $this->employment_status ?? 'active',
             'school' => $this->whenLoaded('school'),
             'created_at' => $this->created_at,

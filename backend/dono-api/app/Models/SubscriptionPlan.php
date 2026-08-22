@@ -64,7 +64,10 @@ class SubscriptionPlan extends Model
     public function featureModels(): BelongsToMany
     {
         return $this->belongsToMany(
-            Feature::class
+            Feature::class,
+            'feature_subscription_plan',
+            'subscription_plan_id',
+            'feature_id'
         )
         ->withPivot('is_enabled')
         ->withTimestamps();
@@ -87,7 +90,8 @@ class SubscriptionPlan extends Model
      */
     public static function recommendedPlanForFeature(string $feature): ?self
     {
-        $plans = self::where('is_active', true)
+        $plans = self::with(['featureModels' => fn ($query) => $query->wherePivot('is_enabled', true)])
+            ->where('is_active', true)
             ->orderByRaw("
                 CASE slug
                     WHEN 'basic' THEN 1
@@ -99,8 +103,10 @@ class SubscriptionPlan extends Model
             ->get();
 
         foreach ($plans as $plan) {
+            $pivotSlugs = $plan->featureModels->pluck('slug');
+            $legacyFeatures = collect($plan->features ?? []);
 
-            if ($plan->hasFeature($feature)) {
+            if ($legacyFeatures->contains('*') || $pivotSlugs->contains('*') || $pivotSlugs->contains($feature) || $legacyFeatures->contains($feature)) {
                 return $plan;
             }
         }

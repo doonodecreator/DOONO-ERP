@@ -9,22 +9,33 @@ class Timetable extends Model
 {
     protected $fillable = [
         'school_id',
+        'entry_type',
+        'schedule_mode',
+        'target_type',
         'academic_session_id',
         'term_id',
         'division_id',
         'class_id',
         'stream_id',
         'subject_id',
+        'title',
+        'description',
         'staff_id',
         'day_of_week',
         'start_time',
         'end_time',
+        'event_date',
+        'effective_from',
+        'effective_until',
         'room',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'event_date' => 'date',
+        'effective_from' => 'date',
+        'effective_until' => 'date',
     ];
 
     public function school(): BelongsTo

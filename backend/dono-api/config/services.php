@@ -47,6 +47,9 @@ return [
         ),
 
         'callback_url' => env('PAYSTACK_CALLBACK_URL'),
+
+        // Must match a currency enabled for this Paystack merchant account.
+        'currency' => strtoupper((string) env('PAYSTACK_CURRENCY', 'NGN')),
     ],
 
 ];

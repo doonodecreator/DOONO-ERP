@@ -2,18 +2,22 @@
 
 namespace App\Services\Academic;
 
+use App\Models\AcademicConfiguration;
 use App\Models\Attendance;
 use App\Models\ParentModel;
 use App\Models\Result;
 use App\Models\StudentEnrollment;
 use App\Models\StudentResultSummary;
-use App\Services\ResultComputationService;
+use App\Services\Academic\ResultProcessingService;
+use App\Services\MediaStorageService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 
 class ReportCardService
 {
     public function __construct(
-        protected ResultComputationService $computationService
+        protected ResultProcessingService $processingService,
+        protected MediaStorageService $media,
     ) {}
 
     /**
@@ -22,15 +26,20 @@ class ReportCardService
     public function generatePayload(
         StudentEnrollment $enrollment,
         int $academicSessionId,
-        int $termId
+        int $termId,
+        bool $inlineMedia = false,
     ): array {
         $schoolId = $enrollment->school_id;
+        $school = $enrollment->relationLoaded('school') ? $enrollment->school : $enrollment->load('school')->school;
+        $academicConfiguration = AcademicConfiguration::query()->where('school_id', $schoolId)->first();
+        $schoolSettings = DB::table('school_settings')->where('school_id', $schoolId)->first();
 
         // Fetch subject results for the term
         $subjectResults = Result::with([
             'subject',
             'components.assessmentStructure',
         ])
+        ->where('school_id', $schoolId)
         ->where('student_enrollment_id', $enrollment->id)
         ->where('academic_session_id', $academicSessionId)
         ->where('term_id', $termId)
@@ -38,52 +47,20 @@ class ReportCardService
         ->get();
 
         // Retrieve or calculate result summary
-        $summary = StudentResultSummary::where('student_enrollment_id', $enrollment->id)
+        $summary = StudentResultSummary::where('school_id', $schoolId)
+            ->where('student_enrollment_id', $enrollment->id)
             ->where('academic_session_id', $academicSessionId)
             ->where('term_id', $termId)
             ->first();
 
         if (! $summary && $subjectResults->isNotEmpty()) {
-            $totalScore = $subjectResults->sum('total_score');
-            $subjectsOffered = $subjectResults->count();
-            $studentAvg = $subjectsOffered > 0 ? round($totalScore / $subjectsOffered, 2) : 0;
-            $subjectsPassed = $subjectResults->filter(fn ($r) => ($r->total_score ?? 0) >= 40)->count();
-            $subjectsFailed = $subjectsOffered - $subjectsPassed;
-
-            // Class Average & Ranking Calculation
-            $classEnrollmentIds = StudentEnrollment::where('class_id', $enrollment->class_id)
-                ->where('academic_session_id', $academicSessionId)
-                ->pluck('id');
-
-            $allClassTotals = Result::whereIn('student_enrollment_id', $classEnrollmentIds)
+            $this->processingService->rebuildStudentSummary($enrollment->id, $academicSessionId, $termId);
+            $summary = StudentResultSummary::query()
+                ->where('school_id', $schoolId)
+                ->where('student_enrollment_id', $enrollment->id)
                 ->where('academic_session_id', $academicSessionId)
                 ->where('term_id', $termId)
-                ->selectRaw('student_enrollment_id, AVG(total_score) as avg_score')
-                ->groupBy('student_enrollment_id')
-                ->pluck('avg_score', 'student_enrollment_id')
-                ->toArray();
-
-            $classAvg = count($allClassTotals) > 0 ? round(array_sum($allClassTotals) / count($allClassTotals), 2) : 0;
-
-            // Determine Position using ResultComputationService
-            $ranks = $this->computationService->calculateRanks($allClassTotals);
-            $rawRank = $ranks[$enrollment->id] ?? null;
-            $positionStr = $rawRank ? $this->computationService->formatOrdinal($rawRank) : '-';
-
-            $overallGrade = $this->computationService->calculateGrade($schoolId, $studentAvg);
-            $overallRemark = $this->computationService->calculateRemark($schoolId, $studentAvg);
-
-            $summary = (object) [
-                'subjects_offered' => $subjectsOffered,
-                'subjects_passed' => $subjectsPassed,
-                'subjects_failed' => $subjectsFailed,
-                'total_score' => $totalScore,
-                'student_average' => $studentAvg,
-                'class_average' => $classAvg,
-                'position' => $positionStr,
-                'overall_grade' => $overallGrade,
-                'overall_remark' => $overallRemark,
-            ];
+                ->first();
         }
 
         /* Attendance Metrics */
@@ -107,11 +84,36 @@ class ReportCardService
             $query->where('students.id', $enrollment->student_id);
         })->first();
 
+        $student = $enrollment->load(['student', 'class', 'stream', 'school', 'academicSession', 'term']);
+        $reportCardLogo = $school?->report_card_logo ?: $school?->logo;
+
         return [
-            'student' => $enrollment->load(['student', 'class', 'stream', 'school']),
+            'student' => $student,
             'parent' => $parent,
+            'school' => $school,
+            'school_settings' => $schoolSettings,
+            'academicSession' => $student->academicSession,
+            'term' => $student->term,
             'summary' => $summary,
             'subject_results' => $subjectResults,
+            'academic_configuration' => $academicConfiguration,
+            'branding' => [
+                'logo' => $inlineMedia ? $this->media->inlineDataUri($reportCardLogo) : $this->media->url($reportCardLogo),
+                'principal_signature' => $inlineMedia ? $this->media->inlineDataUri($school?->principal_signature) : $this->media->url($school?->principal_signature),
+                'school_stamp' => $inlineMedia ? $this->media->inlineDataUri($school?->school_stamp) : $this->media->url($school?->school_stamp),
+                'primary_color' => $school?->primary_color ?: '#1E40AF',
+                'secondary_color' => $school?->secondary_color ?: '#FFFFFF',
+                'accent_color' => $school?->accent_color ?: '#F59E0B',
+                'theme' => $school?->report_card_theme ?: 'classic',
+                'layout' => $school?->report_card_layout ?: 'standard',
+                'custom_header' => $school?->custom_header,
+                'custom_footer' => $school?->custom_footer,
+                'show_watermark' => (bool) ($school?->show_watermark ?? true),
+                'watermark_text' => $school?->watermark_text ?: 'Powered by DOONO De Creator ERP',
+                'student_photo' => $academicConfiguration?->show_student_passport === false
+                    ? null
+                    : ($inlineMedia ? $this->media->inlineDataUri($student->student?->photo) : $this->media->url($student->student?->photo)),
+            ],
             'attendance' => [
                 'days_present' => $daysPresent,
                 'days_absent' => $daysAbsent,
@@ -133,10 +135,11 @@ class ReportCardService
         int $termId,
         string $viewName = 'pdf.report-card'
     ) {
-        $payload = $this->generatePayload($enrollment, $academicSessionId, $termId);
+        $payload = $this->generatePayload($enrollment, $academicSessionId, $termId, true);
 
+        $orientation = ($payload['branding']['layout'] ?? 'standard') === 'landscape' ? 'landscape' : 'portrait';
         $pdf = Pdf::loadView($viewName, $payload)
-            ->setPaper('a4', 'portrait');
+            ->setPaper('a4', $orientation);
 
         $fileName = sprintf(
             'ReportCard_%s_%s.pdf',

@@ -57,7 +57,7 @@ export default function Books() {
           <p className="text-sm text-gray-500">Manage book catalogs, textbook inventories, and student borrowing loans.</p>
         </div>
         {activeTab === 'catalog' && (
-          <button
+          <button type="button"
             onClick={() => setShowBookModal(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 text-sm transition shadow-sm"
           >
@@ -69,20 +69,20 @@ export default function Books() {
       {message && (
         <div className="p-4 mb-6 bg-green-50 text-green-700 rounded-lg border border-green-200 text-sm flex justify-between items-center">
           <span>{message}</span>
-          <button onClick={() => setMessage('')} className="font-bold">✕</button>
+          <button type="button" onClick={() => setMessage('')} className="font-bold">✕</button>
         </div>
       )}
 
       {error && (
         <div className="p-4 mb-6 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm flex justify-between items-center">
           <span>{error}</span>
-          <button onClick={loadLibraryData} className="underline font-semibold">Retry</button>
+          <button type="button" onClick={loadLibraryData} className="underline font-semibold">Retry</button>
         </div>
       )}
 
       {/* Tabs */}
       <div className="flex border-b border-gray-200 mb-6 bg-white rounded-xl p-1 shadow-sm">
-        <button
+        <button type="button"
           onClick={() => setActiveTab('catalog')}
           className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition ${
             activeTab === 'catalog' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'
@@ -90,7 +90,7 @@ export default function Books() {
         >
           Book Catalog ({books.length})
         </button>
-        <button
+        <button type="button"
           onClick={() => setActiveTab('loans')}
           className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition ${
             activeTab === 'loans' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'

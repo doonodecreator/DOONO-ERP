@@ -12,6 +12,7 @@ export function AuthProvider({ children }) {
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
   const [isOrganizationOwner, setIsOrganizationOwner] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(null);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const applyContext = useCallback((ctx) => {
@@ -23,6 +24,7 @@ export function AuthProvider({ children }) {
     setIsPlatformAdmin(!!ctx.is_platform_admin);
     setIsOrganizationOwner(!!ctx.is_organization_owner);
     setOnboardingStep(ctx.onboarding_step ?? null);
+    setMustChangePassword(!!ctx.user?.must_change_password);
   }, []);
 
   const clearContext = useCallback(() => {
@@ -34,6 +36,7 @@ export function AuthProvider({ children }) {
     setIsPlatformAdmin(false);
     setIsOrganizationOwner(false);
     setOnboardingStep(null);
+    setMustChangePassword(false);
   }, []);
 
   /**
@@ -98,6 +101,7 @@ export function AuthProvider({ children }) {
         isPlatformAdmin,
         isOrganizationOwner,
         onboardingStep,
+        mustChangePassword,
         loading,
         login,
         logout,

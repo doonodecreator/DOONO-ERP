@@ -4,47 +4,66 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRoleInvitationRequest;
+use App\Models\ClassModel;
+use App\Models\FormTeacherAssignment;
 use App\Models\Role;
 use App\Models\RoleInvitation;
 use App\Models\Staff;
+use App\Models\Stream;
 use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Services\CurrentContextService;
+use App\Services\EmailVerificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class RoleInvitationController extends Controller
 {
     public function __construct(
-        private readonly CurrentContextService $context
+        private readonly CurrentContextService $context,
+        private readonly EmailVerificationService $verification,
+        private readonly \App\Services\SubscriptionQuotaService $quotas
     ) {
     }
 
     public function index(Request $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
 
-        return response()->json([
-            'data' => RoleInvitation::query()
-                ->with(['role:id,slug,name', 'staff:id,first_name,last_name'])
-                ->where('school_id', $schoolId)
-                ->latest()
-                ->limit(50)
-                ->get()
-                ->map(fn (RoleInvitation $invitation) => $this->present($invitation))
-                ->values(),
-        ]);
+        $perPage = min(max($request->integer('per_page', 15), 5), 100);
+        $page = RoleInvitation::query()
+            ->with(['role:id,slug,name', 'staff:id,first_name,last_name', 'formClass:id,name', 'formStream:id,name'])
+            ->where('school_id', $schoolId)
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
+            ->when($request->filled('from'), fn ($query) => $query->whereDate('created_at', '>=', $request->string('from')->toString()))
+            ->when($request->filled('to'), fn ($query) => $query->whereDate('created_at', '<=', $request->string('to')->toString()))
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = trim($request->string('search')->toString());
+                $query->where(function ($nested) use ($search) {
+                    $nested->where('email', 'like', "%{$search}%")
+                        ->orWhere('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('designation', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate($perPage);
+
+        $page->setCollection($page->getCollection()->map(fn (RoleInvitation $invitation) => $this->present($invitation))->values());
+
+        return response()->json(['data' => $page]);
     }
 
     public function store(StoreRoleInvitationRequest $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $data = $request->validated();
+        $data['email'] = strtolower(trim($data['email']));
         $role = Role::where('slug', $data['role_slug'])->firstOrFail();
+        $this->validateFormTeacherAssignment($data, $role, $schoolId);
 
         if (strcasecmp($data['email'], $request->user()->email) === 0) {
             throw ValidationException::withMessages([
@@ -66,6 +85,7 @@ class RoleInvitationController extends Controller
             ]);
         }
 
+        $this->quotas->assertCanAddStaff($schoolId);
         $plainToken = Str::random(64);
         $invitation = RoleInvitation::create([
             ...collect($data)->except('role_slug')->all(),
@@ -88,7 +108,7 @@ class RoleInvitationController extends Controller
 
         return response()->json([
             'message' => 'Invitation created. Send the one-time acceptance link to the invitee.',
-            'data' => $this->present($invitation->load('role')),
+            'data' => $this->present($invitation->load(['role', 'formClass:id,name', 'formStream:id,name'])),
             'invitation_token' => $plainToken,
             'accept_path' => '/role-invitation/accept?token=' . urlencode($plainToken),
         ], 201);
@@ -96,7 +116,7 @@ class RoleInvitationController extends Controller
 
     public function preview(string $token)
     {
-        $invitation = $this->findByToken($token);
+        $invitation = $this->findByToken($token)->load(['formClass:id,name', 'formStream:id,name']);
 
         return response()->json([
             'data' => [
@@ -105,6 +125,8 @@ class RoleInvitationController extends Controller
                 'email' => $invitation->email,
                 'role' => $invitation->role?->name,
                 'school' => $invitation->school?->name,
+                'form_class' => $invitation->formClass?->name,
+                'form_stream' => $invitation->formStream?->name,
                 'expires_at' => $invitation->expires_at?->toIso8601String(),
             ],
         ]);
@@ -117,6 +139,7 @@ class RoleInvitationController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
+        $data['email'] = strtolower(trim($data['email']));
         $invitation = $this->findByToken($data['token']);
 
         if (strcasecmp($invitation->email, $data['email']) !== 0) {
@@ -125,7 +148,7 @@ class RoleInvitationController extends Controller
             ]);
         }
 
-        if (User::where('email', $data['email'])->exists()) {
+        if (User::whereRaw('LOWER(email) = ?', [$data['email']])->exists()) {
             return response()->json([
                 'message' => 'This email already has an account. Sign in first, then accept the invitation from the authenticated acceptance action.',
             ], 409);
@@ -134,9 +157,9 @@ class RoleInvitationController extends Controller
         [$user, $staff] = DB::transaction(function () use ($data, $invitation) {
             $user = User::create([
                 'name' => trim("{$invitation->first_name} {$invitation->last_name}"),
-                'email' => $invitation->email,
-                'password' => Hash::make($data['password']),
-                'email_verified_at' => now(),
+                'email' => $data['email'],
+                'password' => $data['password'],
+                'email_verified_at' => null,
             ]);
 
             $staff = $this->activateInvitation($invitation, $user);
@@ -145,6 +168,7 @@ class RoleInvitationController extends Controller
         });
 
         Auth::setUser($user);
+        $verificationSent = $this->verification->send($user);
 
         ActivityLogService::log(
             module: 'role_invitations',
@@ -155,10 +179,12 @@ class RoleInvitationController extends Controller
         );
 
         return response()->json([
-            'message' => 'Invitation accepted. Your school role is now active.',
-            'token' => $user->createToken('api-token')->plainTextToken,
+            'message' => 'Invitation accepted. Verify your email before signing in.',
+            'verification_required' => true,
+            'verification_email_sent' => $verificationSent,
+            'email' => $user->email,
             'staff_id' => $staff->id,
-        ]);
+        ], 202);
     }
 
     public function acceptAuthenticated(Request $request)
@@ -192,7 +218,7 @@ class RoleInvitationController extends Controller
 
     public function revoke(Request $request, RoleInvitation $roleInvitation)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         abort_unless((int) $roleInvitation->school_id === $schoolId, 403);
         abort_unless($roleInvitation->status === 'pending', 409, 'Only pending invitations can be revoked.');
@@ -273,11 +299,16 @@ class RoleInvitationController extends Controller
         ];
 
         if (! $staff) {
+            $this->quotas->assertCanAddStaff((int) $invitation->school_id);
             $staffData['staff_number'] = $invitation->staff_number
                 ?: 'STF-' . Str::upper(Str::random(8));
             $staff = Staff::create($staffData);
         } else {
             $staff->update($staffData);
+        }
+
+        if ($invitation->role?->slug === 'form_teacher') {
+            $this->activateFormTeacherAssignment($invitation, $staff, $user);
         }
 
         $invitation->update([
@@ -288,6 +319,73 @@ class RoleInvitationController extends Controller
         ]);
 
         return $staff;
+    }
+
+    private function validateFormTeacherAssignment(array $data, Role $role, int $schoolId): void
+    {
+        $classId = $data['form_class_id'] ?? null;
+        $streamId = $data['form_stream_id'] ?? null;
+
+        if ($role->slug !== 'form_teacher') {
+            if ($classId || $streamId) {
+                throw ValidationException::withMessages([
+                    'form_class_id' => ['A class assignment is only valid for a Form Teacher invitation.'],
+                ]);
+            }
+
+            return;
+        }
+
+        $class = ClassModel::query()
+            ->whereKey($classId)
+            ->whereHas('division', fn ($query) => $query->where('school_id', $schoolId))
+            ->first();
+
+        if (! $class) {
+            throw ValidationException::withMessages([
+                'form_class_id' => ['The selected class does not belong to the active school.'],
+            ]);
+        }
+
+        if ($streamId && ! Stream::query()->whereKey($streamId)->where('class_id', $class->id)->exists()) {
+            throw ValidationException::withMessages([
+                'form_stream_id' => ['The selected stream does not belong to the selected class.'],
+            ]);
+        }
+    }
+
+    private function activateFormTeacherAssignment(RoleInvitation $invitation, Staff $staff, User $user): void
+    {
+        $this->validateFormTeacherAssignment(
+            $invitation->toArray(),
+            $invitation->role,
+            (int) $invitation->school_id,
+        );
+
+        FormTeacherAssignment::query()
+            ->where('school_id', $invitation->school_id)
+            ->where(function ($query) use ($staff, $invitation) {
+                $query->where('staff_id', $staff->id)
+                    ->orWhere(function ($nested) use ($invitation) {
+                        $nested->where('class_id', $invitation->form_class_id)
+                            ->when(
+                                $invitation->form_stream_id,
+                                fn ($streamQuery) => $streamQuery->where('stream_id', $invitation->form_stream_id),
+                                fn ($streamQuery) => $streamQuery->whereNull('stream_id'),
+                            );
+                    });
+            })
+            ->where('is_active', true)
+            ->update(['is_active' => false]);
+
+        FormTeacherAssignment::create([
+            'school_id' => $invitation->school_id,
+            'staff_id' => $staff->id,
+            'class_id' => $invitation->form_class_id,
+            'stream_id' => $invitation->form_stream_id,
+            'assigned_by' => $invitation->invited_by ?: $user->id,
+            'is_active' => true,
+        ]);
     }
 
     private function findByToken(string $token): RoleInvitation
@@ -305,15 +403,6 @@ class RoleInvitationController extends Controller
         return $invitation;
     }
 
-    private function currentSchoolId(Request $request): int
-    {
-        $schoolId = $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($request->user())?->id;
-
-        abort_unless($schoolId, 409, 'No active school.');
-
-        return (int) $schoolId;
-    }
 
     private function present(RoleInvitation $invitation): array
     {
@@ -328,6 +417,14 @@ class RoleInvitationController extends Controller
             'expires_at' => $invitation->expires_at?->toIso8601String(),
             'accepted_at' => $invitation->accepted_at?->toIso8601String(),
             'accepted_user_id' => $invitation->accepted_user_id,
+            'form_class' => $invitation->formClass ? [
+                'id' => $invitation->formClass->id,
+                'name' => $invitation->formClass->name,
+            ] : null,
+            'form_stream' => $invitation->formStream ? [
+                'id' => $invitation->formStream->id,
+                'name' => $invitation->formStream->name,
+            ] : null,
         ];
     }
 }

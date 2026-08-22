@@ -1,0 +1,62 @@
+.dono-onboarding-screen {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 40px 16px 80px;
+  background: #090d16;
+  color: #ffffff;
+}
+
+.dono-onboarding-card {
+  width: min(100%, 680px);
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: clamp(22px, 5vw, 34px);
+  border: 1px solid #334155;
+  border-radius: 16px;
+  background: #1e293b;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, .2);
+}
+
+.dono-onboarding-heading {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.dono-onboarding-heading h1 {
+  color: #ffffff;
+  font-size: clamp(1.55rem, 4vw, 2rem);
+}
+
+.dono-onboarding-heading p {
+  margin-top: 8px;
+  color: #cbd5e1;
+}
+
+.dono-onboarding-card .ui-form-label {
+  color: #e2e8f0;
+}
+
+.dono-onboarding-card .ui-form-control {
+  border-color: #475569;
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.dono-onboarding-card .ui-form-hint {
+  color: #94a3b8;
+}
+
+.dono-onboarding-card .ui-form-actions {
+  grid-column: 1 / -1;
+}
+
+.dono-onboarding-inline-error {
+  color: #fecaca;
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .dono-onboarding-screen {
+    padding: 24px 12px 72px;
+  }
+}

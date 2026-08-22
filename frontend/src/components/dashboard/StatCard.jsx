@@ -1,31 +1,14 @@
 import "./StatCard.css";
 
-export default function StatCard({
-    title,
-    value,
-    subtitle = "",
-    color = "#2563eb",
-}) {
-    return (
-        <div
-            className="stat-card"
-            style={{
-                borderTop: `4px solid ${color}`,
-            }}
-        >
-            <div className="stat-title">
-                {title}
-            </div>
+export default function StatCard({ title, value, subtitle = "", color = "primary" }) {
+  const variant = typeof color === "string" && color.startsWith("#") ? "custom" : color;
+  const style = variant === "custom" ? { "--stat-accent": color } : undefined;
 
-            <div className="stat-value">
-                {value}
-            </div>
-
-            {subtitle && (
-                <div className="stat-subtitle">
-                    {subtitle}
-                </div>
-            )}
-        </div>
-    );
+  return (
+    <article className={`stat-card stat-card-${variant}`} style={style}>
+      <div className="stat-title">{title}</div>
+      <div className="stat-value">{value ?? "—"}</div>
+      {subtitle && <div className="stat-subtitle">{subtitle}</div>}
+    </article>
+  );
 }

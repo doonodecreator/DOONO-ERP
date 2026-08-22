@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateSystemSettingRequest;
 use App\Http\Resources\SystemSettingResource;
 use App\Models\SystemSetting;
+use App\Services\ActivityLogService;
 
 class SystemSettingController extends Controller
 {
@@ -29,8 +30,15 @@ class SystemSettingController extends Controller
     {
         $settings = SystemSetting::firstOrFail();
 
-        $settings->update(
-            $request->validated()
+        $validated = $request->validated();
+        $settings->update($validated);
+
+        ActivityLogService::log(
+            module: 'system_settings',
+            action: 'updated',
+            description: 'Platform system settings were updated.',
+            subject: $settings,
+            properties: ['changed_fields' => array_keys($validated)],
         );
 
         return new SystemSettingResource(

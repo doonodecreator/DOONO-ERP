@@ -391,3 +391,60 @@ textarea.form-control{
     background:#2563eb;
     color:#fff;
 }
+
+/* UI consistency pass: shared status and table actions */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    border-radius: var(--radius-round);
+    padding: 5px 10px;
+    font-size: var(--font-xs);
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.status-badge-success { background: #dcfce7; color: #166534; }
+.status-badge-muted { background: #f1f5f9; color: #475569; }
+.status-badge-warning { background: #fef3c7; color: #92400e; }
+.status-badge-danger { background: #fee2e2; color: #991b1b; }
+
+.table-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+}
+
+@media (max-width: 640px) {
+    .table-actions { justify-content: flex-start; }
+}
+
+/* ===========================
+   SHARED FORM ACTIONS
+=========================== */
+.ui-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: var(--space-5);
+}
+
+.ui-form-actions-sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: var(--space-3) 0;
+  background: color-mix(in srgb, var(--bg-body) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 520px) {
+  .ui-form-actions > * {
+    flex: 1 1 140px;
+  }
+}

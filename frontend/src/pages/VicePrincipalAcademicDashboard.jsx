@@ -9,15 +9,15 @@ const TAB_CONFIG = [
     { id: "subjects", label: "Subjects", page: "subjects" },
     { id: "assign_teachers", label: "Assign Teachers", page: "staff" },
     { id: "timetable", label: "Timetable", page: "timetable" },
-    { id: "examinations", label: "Examinations" },
+    { id: "examinations", label: "Examinations", page: "examinations" },
     { id: "ca", label: "Continuous Assessment", page: "result-entry" },
     { id: "results_mgmt", label: "Results Management", page: "results" },
     { id: "promotion", label: "Promotion", page: "promotions" },
     { id: "academic_reports", label: "Academic Reports", page: "report-cards" },
-    { id: "cbt_question_bank", label: "Question Bank (CBT)" },
+    { id: "cbt_question_bank", label: "Question Bank (CBT)", page: "cbt" },
 ];
 
-const formatMetric = (value, fallback = "Unavailable") => (
+const formatMetric = (value, fallback = "Not configured") => (
     value === null || value === undefined || value === "" ? fallback : value
 );
 
@@ -57,11 +57,11 @@ export default function VicePrincipalAcademicDashboard({ setPage }) {
 
     const openTab = (tabId) => {
         const tab = TAB_CONFIG.find((item) => item.id === tabId);
-        setActiveTab(tabId);
-
         if (tab?.page && typeof setPage === "function") {
             setPage(tab.page);
+            return;
         }
+        setActiveTab(tabId);
     };
 
     if (loading) {
@@ -72,7 +72,7 @@ export default function VicePrincipalAcademicDashboard({ setPage }) {
         <div className="page-container">
             <PageHeader
                 title="Vice Principal Academic"
-                subtitle={`${info.vp_name || "Current user"} • ${info.school_name || "Current school"} • ${info.session || "Session unavailable"} / ${info.term || "Term unavailable"}`}
+                subtitle={`${info.vp_name || "Current user"} • ${info.school_name || "Current school"} • ${info.session || "Session not configured"} / ${info.term || "Term not configured"}`}
                 action={(
                     <button
                         type="button"
@@ -93,7 +93,7 @@ export default function VicePrincipalAcademicDashboard({ setPage }) {
             <div className="grid grid-cols-2 gap-4 md:grid-cols-5 mb-6">
                 <div className="stat-card"><span>Total Subjects</span><strong>{formatMetric(metrics.total_subjects, 0)}</strong></div>
                 <div className="stat-card"><span>Active Teachers</span><strong>{formatMetric(metrics.active_teachers, 0)}</strong></div>
-                <div className="stat-card"><span>Result Submissions</span><strong>{metrics.ca_submissions_pct === null || metrics.ca_submissions_pct === undefined ? "Unavailable" : `${metrics.ca_submissions_pct}%`}</strong></div>
+                <div className="stat-card"><span>Result Submissions</span><strong>{metrics.ca_submissions_pct === null || metrics.ca_submissions_pct === undefined ? "0%" : `${metrics.ca_submissions_pct}%`}</strong></div>
                 <div className="stat-card"><span>CBT Questions</span><strong>{formatMetric(metrics.cbt_questions_count)}</strong></div>
                 <div className="stat-card"><span>Results Review</span><strong>{formatMetric(metrics.pending_results_review, 0)}</strong></div>
             </div>
@@ -131,7 +131,7 @@ export default function VicePrincipalAcademicDashboard({ setPage }) {
                                             <h3 className="font-semibold text-slate-800">{item.subject}</h3>
                                             <p className="text-xs text-slate-500 mt-1">Classes: {item.classes || "No classes linked"}</p>
                                         </div>
-                                        <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{item.status || "Unavailable"}</span>
+                                        <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{item.status || "Not assigned"}</span>
                                     </div>
                                 ))}
                             </div>
@@ -171,9 +171,9 @@ export default function VicePrincipalAcademicDashboard({ setPage }) {
                     {activeTabConfig.page ? (
                         <p className="mt-2 text-sm text-slate-500">Opening the registered {activeTabConfig.label.toLowerCase()} workspace.</p>
                     ) : activeTab === "examinations" ? (
-                        <p className="mt-2 text-sm text-slate-500">Live examination data is shown on the dashboard. A dedicated frontend examination workspace is not registered yet.</p>
+                        <p className="mt-2 text-sm text-slate-500">Opening the registered examination workspace.</p>
                     ) : (
-                        <p className="mt-2 text-sm text-slate-500">This module has no verified frontend page or backend data contract in the current repository, so it is intentionally marked unavailable rather than showing mock data.</p>
+                        <p className="mt-2 text-sm text-slate-500">Opening the registered academic workspace.</p>
                     )}
                 </section>
             )}

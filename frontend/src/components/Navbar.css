@@ -1,0 +1,376 @@
+.dono-navbar {
+  width: 100%;
+  min-height: 72px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px;
+  background: var(--bg-navbar);
+  border-bottom: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-xs);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.dono-navbar-left,
+.dono-navbar-actions {
+  display: flex;
+  align-items: center;
+}
+
+.dono-navbar-left {
+  min-width: 0;
+  flex: 1 1 auto;
+  gap: 16px;
+}
+
+.dono-navbar-actions {
+  flex: 0 0 auto;
+  gap: 12px;
+}
+
+.dono-menu-button,
+.dono-navbar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary-dark);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: 20px;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.dono-menu-button:hover,
+.dono-navbar-icon:hover,
+.dono-navbar-icon[aria-expanded="true"] {
+  background: var(--bg-hover);
+  color: var(--color-primary);
+}
+
+.dono-notice-icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.dono-navbar-brand {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.dono-navbar-brand:focus-visible,
+.dono-menu-button:focus-visible,
+.dono-navbar-icon:focus-visible,
+.dono-logout-button:focus-visible,
+.dono-notice-item:focus-visible,
+.dono-notice-view-all:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.dono-navbar-brand strong {
+  color: var(--color-primary-dark);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.dono-navbar-brand span,
+.dono-navbar-brand small {
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.dono-navbar-brand small {
+  max-width: 210px;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dono-role-badge {
+  max-width: 200px;
+  overflow: hidden;
+  padding: 6px 14px;
+  border-radius: var(--radius-round);
+  background: var(--color-primary-surface);
+  color: var(--color-primary);
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.dono-logout-button {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.dono-logout-button:hover {
+  background: var(--color-danger-bg);
+  border-color: rgba(225, 29, 72, 0.3);
+  color: var(--color-danger);
+}
+
+.dono-logout-short {
+  display: none;
+}
+
+.dono-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--text-light);
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform var(--transition-fast);
+}
+
+.dono-avatar:hover {
+  transform: scale(1.04);
+}
+
+.dono-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dono-notice-menu {
+  position: relative;
+}
+
+.dono-notice-count {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: var(--color-danger);
+  color: var(--text-light);
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid #ffffff;
+}
+
+.dono-notice-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-subtle);
+  z-index: 1100;
+  animation: fadeIn var(--transition-fast);
+  overflow: hidden;
+}
+
+.dono-notice-popover-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  font-size: var(--font-sm);
+}
+
+.dono-notice-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.dono-notice-item {
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: background var(--transition-fast);
+}
+
+.dono-notice-item:hover {
+  background: var(--bg-hover);
+}
+
+.dono-notice-item-unread {
+  background: var(--color-primary-surface);
+}
+
+.dono-notice-item strong {
+  color: var(--text-primary);
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+
+.dono-notice-item span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dono-notice-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+}
+
+.dono-notice-view-all {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  text-align: center;
+  background: #f8fafc;
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: var(--font-sm);
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.dono-notice-view-all:hover {
+  background: #eff6ff;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 767px) {
+  .dono-navbar {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    align-items: center;
+    padding: 10px 12px;
+    min-height: 64px;
+    gap: 10px;
+  }
+  .dono-navbar-left {
+    display: contents;
+  }
+  .dono-navbar-actions {
+    min-width: 0;
+    gap: 6px;
+    padding-left: 10px;
+    border-left: 1px solid var(--border-subtle);
+  }
+  .dono-navbar-brand {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .dono-navbar-brand span,
+  .dono-navbar-brand small {
+    display: none;
+  }
+  .dono-navbar-brand strong {
+    overflow: hidden;
+    font-size: 16px;
+    letter-spacing: 0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .dono-role-badge {
+    display: none;
+  }
+  .dono-logout-full {
+    display: none;
+  }
+  .dono-logout-short {
+    display: inline;
+  }
+  .dono-logout-button {
+    padding: 6px 9px;
+    font-size: 11px;
+    min-height: 36px;
+  }
+  .dono-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+  .dono-menu-button,
+  .dono-navbar-icon {
+    min-width: 36px;
+    min-height: 36px;
+    font-size: 18px;
+  }
+}
+
+/* Preserve the three-zone composition on very narrow screens. */
+@media (max-width: 360px) {
+  .dono-navbar {
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    gap: 6px;
+    padding-inline: 8px;
+  }
+  .dono-navbar-actions {
+    padding-left: 6px;
+  }
+  .dono-logout-button {
+    padding-inline: 7px;
+  }
+}

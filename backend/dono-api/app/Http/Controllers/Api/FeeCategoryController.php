@@ -7,57 +7,54 @@ use App\Http\Requests\StoreFeeCategoryRequest;
 use App\Http\Requests\UpdateFeeCategoryRequest;
 use App\Http\Resources\FeeCategoryResource;
 use App\Models\FeeCategory;
+use Illuminate\Http\Request;
 
 class FeeCategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $schoolId = auth()->user()->school_id ?? null;
+        $schoolId = $this->requireSchool($request);
 
         return FeeCategoryResource::collection(
-            FeeCategory::when($schoolId, function ($query) use ($schoolId) {
-                $query->where('school_id', $schoolId);
-            })
-            ->with('school')
-            ->latest()
-            ->paginate(10)
+            FeeCategory::where('school_id', $schoolId)
+                ->with('school')
+                ->latest()
+                ->paginate(10)
         );
     }
 
     public function store(StoreFeeCategoryRequest $request)
     {
         $data = $request->validated();
-        if (auth()->check() && auth()->user()->school_id) {
-            $data['school_id'] = auth()->user()->school_id;
-        }
+        $data['school_id'] = $this->requireSchool($request);
 
         $feeCategory = FeeCategory::create($data);
 
-        return (new FeeCategoryResource(
-            $feeCategory->load('school')
-        ))
-        ->response()
-        ->setStatusCode(201);
+        return (new FeeCategoryResource($feeCategory->load('school')))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    public function show(FeeCategory $feeCategory)
+    public function show(Request $request, FeeCategory $feeCategory)
     {
-        return new FeeCategoryResource(
-            $feeCategory->load('school')
-        );
+        abort_unless((int) $feeCategory->school_id === $this->requireSchool($request), 404);
+
+        return new FeeCategoryResource($feeCategory->load('school'));
     }
 
     public function update(UpdateFeeCategoryRequest $request, FeeCategory $feeCategory)
     {
+        abort_unless((int) $feeCategory->school_id === $this->requireSchool($request), 404);
+
         $feeCategory->update($request->validated());
 
-        return new FeeCategoryResource(
-            $feeCategory->load('school')
-        );
+        return new FeeCategoryResource($feeCategory->load('school'));
     }
 
-    public function destroy(FeeCategory $feeCategory)
+    public function destroy(Request $request, FeeCategory $feeCategory)
     {
+        abort_unless((int) $feeCategory->school_id === $this->requireSchool($request), 404);
+
         $feeCategory->delete();
 
         return response()->json([

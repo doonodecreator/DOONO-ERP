@@ -1,0 +1,151 @@
+.dono-auth-section {
+  display: flex;
+  width: 100%;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 48px 20px 64px;
+}
+
+.dono-auth-card {
+  width: min(100%, 560px);
+  box-sizing: border-box;
+  padding: clamp(24px, 5vw, 40px);
+  border: 1px solid #1e293b;
+  border-radius: 18px;
+  background: #111827;
+  color: #ffffff;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, .24);
+}
+
+.dono-auth-heading {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.dono-auth-kicker {
+  color: #93c5fd;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.dono-auth-heading h1 {
+  margin: 8px 0 0;
+  color: #ffffff;
+  font-size: clamp(1.7rem, 5vw, 2.1rem);
+  line-height: 1.15;
+}
+
+.dono-auth-heading p {
+  margin: 10px 0 0;
+  color: #94a3b8;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.dono-auth-notice,
+.dono-auth-error {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dono-auth-notice {
+  border: 1px solid rgba(96, 165, 250, .35);
+  background: rgba(30, 64, 175, .22);
+  color: #dbeafe;
+}
+
+.dono-auth-error {
+  border: 1px solid rgba(248, 113, 113, .45);
+  background: rgba(127, 29, 29, .32);
+  color: #fecaca;
+}
+
+.dono-auth-fields {
+  display: grid;
+  gap: 8px;
+}
+
+.dono-auth-fields label {
+  margin-top: 8px;
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dono-auth-fields input {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #475569;
+  border-radius: 9px;
+  background: #0f172a;
+  color: #ffffff;
+  font: inherit;
+}
+
+.dono-auth-fields input::placeholder {
+  color: #64748b;
+}
+
+.dono-auth-fields input:focus-visible,
+.dono-auth-submit:focus-visible,
+.dono-auth-link:focus-visible {
+  outline: 3px solid rgba(96, 165, 250, .35);
+  outline-offset: 2px;
+}
+
+.dono-auth-submit {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 24px;
+  border: 1px solid #2563eb;
+  border-radius: 9px;
+  background: #2563eb;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.dono-auth-submit:hover {
+  background: #1d4ed8;
+}
+
+.dono-auth-submit:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.dono-auth-link {
+  display: block;
+  margin: 14px auto 0;
+  border: 0;
+  background: transparent;
+  color: #93c5fd;
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: underline;
+}
+
+.dono-auth-link:hover {
+  color: #dbeafe;
+}
+
+@media (max-width: 560px) {
+  .dono-auth-section {
+    align-items: flex-start;
+    padding: 28px 14px 52px;
+  }
+
+  .dono-auth-card {
+    border-radius: 14px;
+  }
+}

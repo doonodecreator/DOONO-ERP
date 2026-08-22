@@ -66,6 +66,8 @@ class GradingSystem extends Model
             ->active()
             ->where('minimum_score', '<=', $score)
             ->where('maximum_score', '>=', $score)
+            ->orderByDesc('minimum_score')
+            ->orderBy('display_order')
             ->first();
     }
 }

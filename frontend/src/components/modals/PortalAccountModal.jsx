@@ -20,6 +20,7 @@ export default function PortalAccountModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
+  const [createdAccount, setCreatedAccount] = useState(null);
 
   useEffect(() => {
     if (!open) return;
@@ -34,6 +35,7 @@ export default function PortalAccountModal({
     });
     setError('');
     setFieldErrors({});
+    setCreatedAccount(null);
   }, [open, entity, isParent]);
 
   if (!open) return null;
@@ -60,7 +62,7 @@ export default function PortalAccountModal({
         : `/students/${entity.id}/portal-account`;
       const response = await api.post(path, form);
       onSuccess?.(response.data);
-      onClose?.();
+      setCreatedAccount({ email: form.email });
     } catch (err) {
       setError(err.message || 'Unable to create the portal account.');
       setFieldErrors(err.errors || err.responseData?.errors || {});
@@ -81,8 +83,7 @@ export default function PortalAccountModal({
         </div>
 
         {error && <div role="alert" className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</div>}
-
-        <form onSubmit={submit} className="space-y-4">
+        {createdAccount ? <div role="status" className="space-y-4"><div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"><p className="font-bold">Portal account created successfully.</p><p className="mt-2">Login email: <strong>{createdAccount.email}</strong></p><p className="mt-2">Give the temporary password to the user securely. On first login, the portal will force them to create a new private password before showing any dashboard.</p></div><button type="button" onClick={onClose} className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white">Done</button></div> : <form onSubmit={submit} className="space-y-4">
           {isParent && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="text-sm font-medium text-slate-700">
@@ -134,7 +135,7 @@ export default function PortalAccountModal({
               {submitting ? 'Creating...' : 'Create Portal Account'}
             </button>
           </div>
-        </form>
+        </form>}
       </div>
     </div>
   );

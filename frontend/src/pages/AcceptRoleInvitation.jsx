@@ -43,6 +43,12 @@ export default function AcceptRoleInvitation() {
         setForm((current) => ({ ...current, [name]: value }));
     };
 
+    const goToExistingAccountLogin = () => {
+        const returnTo = `/role-invitation/accept?token=${encodeURIComponent(token)}`;
+        const email = preview?.email || form.email;
+        navigate(`/login?email=${encodeURIComponent(email)}&returnTo=${encodeURIComponent(returnTo)}`);
+    };
+
     const acceptInvitation = async (event) => {
         event.preventDefault();
         setSubmitting(true);
@@ -59,7 +65,11 @@ export default function AcceptRoleInvitation() {
                 await refreshContext();
             } else {
                 acceptanceResponse = await api.post("/role-invitations/accept", { ...form, token });
-                await login(acceptanceResponse.data.token);
+                if (acceptanceResponse?.data?.verification_required) {
+                    navigate(`/verify-email?email=${encodeURIComponent(acceptanceResponse.data.email || form.email)}`, { replace: true });
+                    return;
+                }
+                if (acceptanceResponse?.data?.token) await login(acceptanceResponse.data.token);
             }
 
             const staffId = acceptanceResponse?.data?.staff_id;
@@ -85,6 +95,7 @@ export default function AcceptRoleInvitation() {
                 {preview && (
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-5">
                         <p className="text-sm text-amber-900">You have been invited as <strong>{preview.role}</strong> at <strong>{preview.school}</strong>.</p>
+                        {preview.form_class && <p className="text-sm font-semibold text-amber-900 mt-2">Form class: {preview.form_class}{preview.form_stream ? ` · ${preview.form_stream}` : " · All streams"}</p>}
                         <p className="text-xs text-amber-700 mt-1">The role is school-scoped and will become active only after this invitation is accepted.</p>
                     </div>
                 )}
@@ -93,17 +104,29 @@ export default function AcceptRoleInvitation() {
                     <form onSubmit={acceptInvitation} className="space-y-4 mt-6">
                         {!isAuthenticated && (
                             <>
-                                <input required type="email" name="email" value={form.email} onChange={handleChange} placeholder="Invitation email" className="w-full px-3 py-2 border rounded-lg text-sm" />
-                                <input required minLength={8} type="password" name="password" value={form.password} onChange={handleChange} placeholder="Create your password" className="w-full px-3 py-2 border rounded-lg text-sm" />
-                                <input required minLength={8} type="password" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} placeholder="Confirm your password" className="w-full px-3 py-2 border rounded-lg text-sm" />
-                                <p className="text-xs text-slate-500">Use exactly the invited email. Your staff profile will be created from the details entered by the Proprietor.</p>
-                                <button type="button" onClick={() => navigate(`/login?returnTo=${encodeURIComponent(`/role-invitation/accept?token=${token}`)}`)} className="text-left text-xs font-semibold text-indigo-600 underline">Already have an account? Sign in first</button>
+                                <div>
+                                    <label htmlFor="invitation-email" className="block text-sm font-semibold text-slate-700 mb-1">Invited email</label>
+                                    <input id="invitation-email" required type="email" name="email" value={form.email} onChange={handleChange} autoComplete="email" className="w-full px-3 py-2 border rounded-lg text-sm" />
+                                </div>
+                                <div>
+                                    <label htmlFor="invitation-password" className="block text-sm font-semibold text-slate-700 mb-1">Create password</label>
+                                    <input id="invitation-password" required minLength={8} type="password" name="password" value={form.password} onChange={handleChange} autoComplete="new-password" className="w-full px-3 py-2 border rounded-lg text-sm" />
+                                </div>
+                                <div>
+                                    <label htmlFor="invitation-password-confirmation" className="block text-sm font-semibold text-slate-700 mb-1">Confirm password</label>
+                                    <input id="invitation-password-confirmation" required minLength={8} type="password" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} autoComplete="new-password" className="w-full px-3 py-2 border rounded-lg text-sm" />
+                                    {form.password_confirmation && form.password !== form.password_confirmation && (
+                                        <p className="text-xs text-red-600 mt-1">The two passwords must match exactly.</p>
+                                    )}
+                                </div>
+                                <p className="text-xs text-slate-500">This creates your DONO account and activates the invited school role. Use the invited email shown above.</p>
+                                <button type="button" onClick={goToExistingAccountLogin} className="text-left text-sm font-semibold text-indigo-600 underline">Already have a DONO account? Sign in first</button>
                             </>
                         )}
                         {isAuthenticated && user?.email && preview?.email && user.email.toLowerCase() !== preview.email.toLowerCase() && (
                             <button type="button" onClick={logout} className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Sign out and use the invited email</button>
                         )}
-                        <button type="submit" disabled={submitting} className="w-full px-4 py-2.5 bg-amber-600 text-white rounded-lg font-semibold text-sm disabled:opacity-50">
+                        <button type="submit" disabled={submitting || (!isAuthenticated && form.password !== form.password_confirmation)} className="w-full px-4 py-2.5 bg-amber-600 text-white rounded-lg font-semibold text-sm disabled:opacity-50">
                             {submitting ? "Activating Role..." : isAuthenticated ? "Accept and Activate Role" : "Create Account and Accept Role"}
                         </button>
                     </form>

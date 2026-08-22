@@ -24,7 +24,7 @@ class StaffAttendanceController extends Controller
 
     public function index(Request $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         $query = StaffAttendance::with(['staff', 'recorder'])
             ->where('school_id', $schoolId)
@@ -48,7 +48,7 @@ class StaffAttendanceController extends Controller
             'attendance_date' => ['required', 'date'],
         ]);
 
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         $records = StaffAttendance::where('school_id', $schoolId)
             ->whereDate('attendance_date', $data['attendance_date'])
@@ -80,7 +80,7 @@ class StaffAttendanceController extends Controller
 
     public function store(StoreStaffAttendanceRequest $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $data = $request->validated();
 
         $attendance = StaffAttendance::updateOrCreate(
@@ -113,7 +113,7 @@ class StaffAttendanceController extends Controller
 
     public function bulkStore(StoreStaffAttendanceBulkRequest $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $data = $request->validated();
 
         $attendances = $this->attendanceService->recordDailyAttendance(
@@ -147,7 +147,7 @@ class StaffAttendanceController extends Controller
         UpdateStaffAttendanceRequest $request,
         StaffAttendance $staffAttendance
     ) {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $this->ensureAttendanceBelongsToSchool($request, $staffAttendance);
 
         $staffAttendance->update($request->validated());
@@ -165,22 +165,13 @@ class StaffAttendanceController extends Controller
         );
     }
 
-    private function currentSchoolId(Request $request): int
-    {
-        $schoolId = $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($request->user())?->id;
-
-        abort_unless($schoolId, 409, 'No active school.');
-
-        return (int) $schoolId;
-    }
 
     private function ensureAttendanceBelongsToSchool(
         Request $request,
         StaffAttendance $staffAttendance
     ): void {
         abort_unless(
-            $staffAttendance->school_id === $this->currentSchoolId($request),
+            $staffAttendance->school_id === $this->requireSchool($request),
             403
         );
     }

@@ -20,7 +20,7 @@ class PrincipalController extends Controller
 
     public function dashboard(Request $request)
     {
-        $schoolId = $this->currentSchoolId($request);
+        $schoolId = $this->requireSchool($request);
         $school = $this->context->currentSchool($request->user());
 
         $activeStaff = Staff::query()
@@ -109,13 +109,4 @@ class PrincipalController extends Controller
         ]);
     }
 
-    private function currentSchoolId(Request $request): int
-    {
-        $schoolId = $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($request->user())?->id;
-
-        abort_unless($schoolId, 409, 'No active school.');
-
-        return (int) $schoolId;
-    }
 }

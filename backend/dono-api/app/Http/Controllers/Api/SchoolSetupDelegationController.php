@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use App\Models\SchoolSetupDelegation;
 use App\Models\User;
-use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -22,11 +21,9 @@ class SchoolSetupDelegationController extends Controller
         'manage_fee_categories',
     ];
 
-    public function __construct(protected CurrentContextService $context) {}
-
     public function index(Request $request)
     {
-        $schoolId = $this->schoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         $delegations = SchoolSetupDelegation::query()
             ->where('school_id', $schoolId)
@@ -55,7 +52,7 @@ class SchoolSetupDelegationController extends Controller
 
     public function update(Request $request, User $user)
     {
-        $schoolId = $this->schoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         if (! $user->hasRole('principal', $schoolId)
             && ! $user->hasRole('vice_principal_academic', $schoolId)) {
@@ -97,7 +94,7 @@ class SchoolSetupDelegationController extends Controller
 
     public function destroy(Request $request, User $user)
     {
-        $schoolId = $this->schoolId($request);
+        $schoolId = $this->requireSchool($request);
 
         SchoolSetupDelegation::query()
             ->where('school_id', $schoolId)
@@ -110,13 +107,4 @@ class SchoolSetupDelegationController extends Controller
         ]);
     }
 
-    private function schoolId(Request $request): int
-    {
-        $schoolId = $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($request->user())?->id;
-
-        abort_unless($schoolId, 409, 'No active school.');
-
-        return (int) $schoolId;
-    }
 }

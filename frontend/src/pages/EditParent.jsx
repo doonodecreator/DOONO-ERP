@@ -183,7 +183,7 @@ export default function EditParent({
           }}
         />
 
-        <button
+        <button type="submit"
           disabled={loading}
           style={{
             background:

@@ -1,0 +1,25 @@
+.dono-public-shell {
+  --dono-footer-safe-space: 44px;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  overflow-x: hidden;
+  background: #090d16;
+  color: #ffffff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.dono-public-shell-main {
+  display: flex;
+  width: 100%;
+  flex: 1 0 auto;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding-bottom: calc(var(--dono-footer-safe-space) + env(safe-area-inset-bottom));
+}
+
+@media (max-width: 767px) {
+  .dono-public-shell {
+    --dono-footer-safe-space: 38px;
+  }
+}

@@ -5,14 +5,18 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\SchoolSubscriptionResource;
 use App\Models\SchoolSubscription;
+use App\Models\SystemSetting;
+use App\Services\ActivityLogService;
 use App\Services\CurrentContextService;
+use App\Services\SubscriptionAccessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class SchoolSubscriptionController extends Controller
 {
     public function __construct(
-        private CurrentContextService $context
+        private CurrentContextService $context,
+        private SubscriptionAccessService $access
     ) {
     }
 
@@ -141,6 +145,15 @@ class SchoolSubscriptionController extends Controller
 
                 return SchoolSubscription::create($validated);
             }
+        );
+
+        ActivityLogService::log(
+            module: 'school_subscriptions',
+            action: 'created',
+            description: "Subscription was created for school {$subscription->school_id}.",
+            subject: $subscription,
+            properties: ['changed_fields' => array_keys($validated)],
+            schoolId: $subscription->school_id,
         );
 
         return (new SchoolSubscriptionResource(
@@ -304,6 +317,15 @@ class SchoolSubscriptionController extends Controller
             }
         );
 
+        ActivityLogService::log(
+            module: 'school_subscriptions',
+            action: 'updated',
+            description: "Subscription for school {$schoolSubscription->school_id} was updated.",
+            subject: $schoolSubscription,
+            properties: ['changed_fields' => array_keys($validated)],
+            schoolId: $schoolSubscription->school_id,
+        );
+
         return new SchoolSubscriptionResource(
             $schoolSubscription
                 ->fresh()
@@ -322,7 +344,17 @@ class SchoolSubscriptionController extends Controller
     public function destroy(
         SchoolSubscription $schoolSubscription
     ) {
+        $schoolId = $schoolSubscription->school_id;
+        $subscriptionId = $schoolSubscription->id;
         $schoolSubscription->delete();
+
+        ActivityLogService::log(
+            module: 'school_subscriptions',
+            action: 'deleted',
+            description: "Subscription {$subscriptionId} for school {$schoolId} was deleted.",
+            properties: ['subscription_id' => $subscriptionId],
+            schoolId: $schoolId,
+        );
 
         return response()->json([
             'message' => 'Subscription deleted successfully.',
@@ -350,6 +382,8 @@ class SchoolSubscriptionController extends Controller
             ], 404);
         }
 
+        $platformFreeAccess = !(bool) (SystemSetting::first()?->enforce_subscriptions ?? false);
+
         $subscription = SchoolSubscription::with(
             'subscriptionPlan'
         )
@@ -358,16 +392,46 @@ class SchoolSubscriptionController extends Controller
             ->latest('id')
             ->first();
 
+        if ($subscription
+            && $subscription->status === 'pending'
+            && !$subscription->payment_reference
+            && !DB::table('payment_transactions')
+                ->where('school_subscription_id', $subscription->id)
+                ->where('status', 'pending')
+                ->exists()
+        ) {
+            $subscription->update(['status' => 'expired']);
+            $subscription->refresh();
+        }
+
         if (!$subscription) {
             return response()->json([
                 'success' => true,
                 'data' => null,
+                'access' => [
+                    ...$this->access->forSubscription(null, $platformFreeAccess === false),
+                    'platform_free_access' => $platformFreeAccess,
+                    'school_free_access' => false,
+                ],
                 'message' => 'No active subscription has been assigned to this school yet.',
             ]);
         }
 
+        $schoolFreeAccess = $subscription->is_exempt
+            || ($subscription->discount_percentage >= 100 && $subscription->hasActiveDiscount());
+        $effectiveStatus = in_array($subscription->status, ['active', 'trial'], true)
+            && ! $subscription->isActive()
+            ? 'expired'
+            : $subscription->status;
+
         return response()->json([
             'success' => true,
+
+            'access' => [
+                ...$this->access->forSubscription($subscription, $platformFreeAccess === false),
+                'platform_free_access' => $platformFreeAccess,
+                'school_free_access' => $schoolFreeAccess,
+            ],
 
             'data' => [
                 'id' => $subscription->id,
@@ -378,6 +442,7 @@ class SchoolSubscriptionController extends Controller
                     'id' => $subscription->subscriptionPlan?->id,
                     'name' => $subscription->subscriptionPlan?->name,
                     'description' => $subscription->subscriptionPlan?->description,
+                    'features' => $this->access->planFeatureSlugs($subscription)->values()->all(),
                 ],
 
                 'billing_cycle' => $subscription->billing_cycle,
@@ -397,11 +462,13 @@ class SchoolSubscriptionController extends Controller
 
                 'next_billing_date' => $subscription->next_billing_date,
 
-                'status' => $subscription->status,
+                'status' => $effectiveStatus,
 
                 'is_current' => $subscription->is_current,
 
                 'is_exempt' => $subscription->is_exempt,
+                'is_free_access' => $schoolFreeAccess,
+                'free_access_until' => $subscription->is_exempt ? null : $subscription->discount_ends_at,
 
                 'discount_percentage' =>
                     $subscription->discount_percentage,
