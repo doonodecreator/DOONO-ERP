@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     libzip-dev \
     default-mysql-client \
-    && docker-php-ext-install zip pdo pdo_mysql
+    && docker-php-ext-install zip pdo pdo_mysql pdo_pgsql
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
