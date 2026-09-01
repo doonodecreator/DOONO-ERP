@@ -10,12 +10,14 @@ use App\Models\AcademicSession;
 use App\Models\Term;
 use App\Models\User;
 use App\Services\CurrentContextService;
+use App\Services\StudentLifecycleService;
 use Illuminate\Support\Facades\DB;
 
 class TermController extends Controller
 {
     public function __construct(
-        private readonly CurrentContextService $context
+        private readonly CurrentContextService $context,
+        private readonly StudentLifecycleService $lifecycle,
     ) {}
 
     public function index()
@@ -68,6 +70,9 @@ class TermController extends Controller
             }
 
             $term = Term::create($data);
+            if ($term->is_current) {
+                $this->lifecycle->syncCurrentPlacements((int) $academicSession->school_id);
+            }
 
             return (new TermResource(
                 $term->load('academicSession')
@@ -128,6 +133,9 @@ class TermController extends Controller
             }
 
             $term->update($data);
+            if ($term->is_current) {
+                $this->lifecycle->syncCurrentPlacements((int) $term->academicSession->school_id);
+            }
 
             return new TermResource(
                 $term->fresh()->load('academicSession')

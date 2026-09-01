@@ -6,6 +6,7 @@ import PageHeader from "../components/layout/PageHeader";
 import LoadingSpinner from "../components/feedback/LoadingSpinner";
 import EmptyState from "../components/feedback/EmptyState";
 import DataTable from "../components/tables/DataTable";
+import Modal from "../components/modals/Modal";
 
 export default function Subscriptions() {
     const { isPlatformAdmin, roles, isOrganizationOwner, school } = useAuth();
@@ -19,6 +20,12 @@ export default function Subscriptions() {
     const [access, setAccess] = useState({ platform_free_access: false, school_free_access: false, enforced: false, free_features: [], plan_features: [], available_features: [], locked_features: [], feature_catalog: [] });
     const [error, setError] = useState("");
     const [message, setMessage] = useState("");
+    const [transactionHistory, setTransactionHistory] = useState([]);
+    const [transactionPagination, setTransactionPagination] = useState(null);
+    const [reviewingTransaction, setReviewingTransaction] = useState(null);
+    const [reviewForm, setReviewForm] = useState({ reconciliation_status: "needs_review", reconciliation_notes: "" });
+    const [refundingTransaction, setRefundingTransaction] = useState(null);
+    const [refundReason, setRefundReason] = useState("");
 
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -26,7 +33,7 @@ export default function Subscriptions() {
 
     useEffect(() => { loadData(); }, [activeTab]);
 
-    async function loadData() {
+    async function loadData(page = 1) {
         try {
             setLoading(true);
             setError("");
@@ -34,10 +41,12 @@ export default function Subscriptions() {
             if (activeTab === "features") endpoint = "/features";
             if (activeTab === "coupons") endpoint = "/coupons";
             if (activeTab === "promos") endpoint = "/promo-campaigns";
+            if (activeTab === "billing") endpoint = "/payment-transactions";
 
-            const res = await api.get(endpoint);
+            const res = await api.get(endpoint, activeTab === "billing" ? { params: { page, per_page: 25 } } : undefined);
             const items = res.data?.data?.data ?? res.data?.data ?? res.data ?? [];
             setData(Array.isArray(items) ? items : []);
+            if (activeTab === "billing") setTransactionPagination(res.data?.meta || null);
 
             if (isPlatformAdmin && activeTab === "plans") {
                 const featureRes = await api.get("/features", { params: { active_only: true, per_page: 100 } });
@@ -51,6 +60,15 @@ export default function Subscriptions() {
                     const subscription = subRes.data?.data ?? subRes.data ?? null;
                     setMySub(subscription && typeof subscription === "object" ? subscription : null);
                     setAccess(subRes.data?.access && typeof subRes.data.access === "object" ? subRes.data.access : { platform_free_access: false, school_free_access: false, enforced: true, free_features: [], plan_features: [], available_features: [], locked_features: [], feature_catalog: [] });
+                    try {
+                        const historyRes = await api.get("/payment-transactions", { params: { per_page: 10 } });
+                        const historyItems = historyRes.data?.data;
+                        setTransactionHistory(Array.isArray(historyItems) ? historyItems : []);
+                        setTransactionPagination(historyRes.data?.meta || null);
+                    } catch {
+                        setTransactionHistory([]);
+                        setTransactionPagination(null);
+                    }
                 } catch (subscriptionError) {
                     if (subscriptionError.response?.status === 404) {
                         setMySub(null);
@@ -181,6 +199,46 @@ export default function Subscriptions() {
         }
     }
 
+    async function reviewTransaction(event) {
+        event.preventDefault();
+        if (!reviewingTransaction) return;
+        try {
+            setLoading(true);
+            setError("");
+            await api.post(`/payment-transactions/${reviewingTransaction.id}/review`, reviewForm);
+            setMessage("Reconciliation review saved.");
+            setReviewingTransaction(null);
+            await loadData();
+        } catch (err) {
+            setError(err.response?.data?.message || "Unable to save reconciliation review.");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function openReview(transaction) {
+        setReviewingTransaction(transaction);
+        setReviewForm({ reconciliation_status: transaction.reconciliation_status === "failed" ? "failed" : "needs_review", reconciliation_notes: "" });
+    }
+
+    async function requestRefund(event) {
+        event.preventDefault();
+        if (!refundingTransaction) return;
+        try {
+            setLoading(true);
+            setError("");
+            await api.post(`/payment-transactions/${refundingTransaction.id}/refund`, { reason: refundReason });
+            setMessage("Refund request sent to Paystack. The payment will change to refunded only after gateway confirmation.");
+            setRefundingTransaction(null);
+            setRefundReason("");
+            await loadData();
+        } catch (err) {
+            setError(err.response?.data?.message || "Unable to request the refund.");
+        } finally {
+            setLoading(false);
+        }
+    }
+
     function startEditing(row) {
         setEditingId(row.id);
         if (activeTab === "plans") {
@@ -218,17 +276,17 @@ export default function Subscriptions() {
                 <PageHeader
                     title="Platform Management"
                     subtitle="Software Owner Control Panel"
-                    action={
+                    action={activeTab !== "billing" ? (
                         <button type="button" onClick={() => setShowForm(!showForm)} style={{ backgroundColor: showForm ? '#ef4444' : '#4f46e5', color: '#fff', padding: '10px 20px', borderRadius: '10px', fontWeight: 'bold', border: 'none' }}>
                             {showForm ? 'Cancel' : `+ Create ${activeTab.slice(0, -1)}`}
                         </button>
-                    }
+                    ) : null}
                 />
 
                 {message && <div style={{ backgroundColor: '#ecfdf5', color: '#065f46', padding: '16px', borderRadius: '12px', marginBottom: '20px', border: '1px solid #d1fae5' }}>{message}</div>}
                 {error && <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', padding: '16px', borderRadius: '12px', marginBottom: '20px', border: '1px solid #fee2e2' }}>{error}</div>}
 
-                {showForm && (
+                {showForm && activeTab !== "billing" && (
                     <div style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', marginBottom: '32px' }}>
                         <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '20px' }}>{editingId ? 'Edit' : 'New'} {activeTab.slice(0, -1)}</h3>
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -346,14 +404,23 @@ export default function Subscriptions() {
                 )}
 
                 <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', overflowX: 'auto', paddingBottom: '8px' }}>
-                    {['plans', 'features', 'coupons', 'promos'].map(tab => (
+                    {['plans', 'features', 'coupons', 'promos', 'billing'].map(tab => (
                         <button type="button" key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '10px 20px', borderRadius: '12px', fontWeight: '600', textTransform: 'capitalize', border: '1px solid #e2e8f0', backgroundColor: activeTab === tab ? '#4f46e5' : '#ffffff', color: activeTab === tab ? '#ffffff' : '#475569', cursor: 'pointer', whiteSpace: 'nowrap' }}>{tab}</button>
                     ))}
                 </div>
 
                 <div style={{ backgroundColor: '#fff', borderRadius: '20px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                     <DataTable
-                        columns={[
+                        columns={activeTab === "billing" ? [
+                            { key: "school", label: "School", render: (row) => row.school?.name || "Unknown school" },
+                            { key: "plan", label: "Plan", render: (row) => row.subscription?.plan || "Subscription" },
+                            { key: "amount", label: "Amount", render: (row) => `${row.currency || ""} ${row.amount || "0.00"}` },
+                            { key: "reference", label: "Reference" },
+                            { key: "status", label: "Payment", render: (row) => row.status || "Unknown" },
+                            { key: "reconciliation_status", label: "Reconciliation", render: (row) => row.reconciliation_status || "pending" },
+                            { key: "refund_status", label: "Refund", render: (row) => row.is_refunded ? "Processed" : (row.refund_status || "—") },
+                            { key: "actions", label: "Actions", render: (row) => <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>{row.checkout_url && row.status === "pending" && <button type="button" onClick={() => window.open(row.checkout_url, "_blank", "noopener,noreferrer")} style={{ color: "#4f46e5", fontWeight: "bold" }}>Resume checkout</button>}{row.status !== "successful" && row.status !== "refunded" && <button type="button" onClick={() => openReview(row)} style={{ color: "#b45309", fontWeight: "bold" }}>Review</button>}{row.status === "successful" && !row.is_refunded && !["pending", "processing", "needs_attention"].includes(row.refund_status) && <button type="button" onClick={() => { setRefundingTransaction(row); setRefundReason(""); }} style={{ color: "#dc2626", fontWeight: "bold" }}>Refund</button>}</div> },
+                        ] : [
                             {key: 'name', label: 'Name'},
                             activeTab === 'plans' ? {key: 'monthly_price', label: 'Monthly', render: (row) => `${row.currency} ${row.monthly_price}`} : activeTab === 'features' ? {key: 'category', label: 'Category', render: (row) => row.category || 'General'} : {key: 'discount_value', label: 'Discount', render: (row) => `${row.discount_value}${row.discount_type === 'percentage' ? '%' : ''}`},
                             {key: 'is_active', label: 'Status', render: (row) => row.is_active ? 'Active' : 'Inactive'},
@@ -365,9 +432,34 @@ export default function Subscriptions() {
                             )}
                         ]}
                         data={data}
+                        pagination={activeTab === "billing" ? transactionPagination : null}
+                        onPageChange={activeTab === "billing" ? loadData : undefined}
                         emptyMessage={`No ${activeTab} found.`}
                     />
                 </div>
+                <Modal open={Boolean(reviewingTransaction)} title="Review payment reconciliation" description="Reviewing a payment cannot activate it. Successful activation is only performed after verified Paystack confirmation." onClose={() => setReviewingTransaction(null)}>
+                    <form onSubmit={reviewTransaction} className="space-y-4">
+                        <label className="block text-sm font-semibold text-slate-700">Review outcome
+                            <select value={reviewForm.reconciliation_status} onChange={(event) => setReviewForm({ ...reviewForm, reconciliation_status: event.target.value })} className="ui-form-control mt-1 w-full">
+                                <option value="needs_review">Needs further review</option>
+                                <option value="failed">Mark payment failed</option>
+                            </select>
+                        </label>
+                        <label className="block text-sm font-semibold text-slate-700">Operator notes
+                            <textarea required minLength={10} maxLength={2000} value={reviewForm.reconciliation_notes} onChange={(event) => setReviewForm({ ...reviewForm, reconciliation_notes: event.target.value })} className="ui-form-control mt-1 min-h-28 w-full" placeholder="Explain the gateway evidence or reason for this review." />
+                        </label>
+                        <div className="flex flex-wrap justify-end gap-2"><button type="button" onClick={() => setReviewingTransaction(null)}>Cancel</button><button type="submit" disabled={loading}>{loading ? "Saving..." : "Save review"}</button></div>
+                    </form>
+                </Modal>
+                <Modal open={Boolean(refundingTransaction)} title="Request subscription refund" description="This sends a full refund request to Paystack. The local payment remains successful until Paystack confirms the refund." onClose={() => setRefundingTransaction(null)}>
+                    <form onSubmit={requestRefund} className="space-y-4">
+                        <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">Reference: <strong>{refundingTransaction?.reference || "—"}</strong>. Refunds may be queued and processed asynchronously.</p>
+                        <label className="block text-sm font-semibold text-slate-700">Reason
+                            <textarea required minLength={10} maxLength={2000} value={refundReason} onChange={(event) => setRefundReason(event.target.value)} className="ui-form-control mt-1 min-h-28 w-full" placeholder="Explain why this payment should be refunded." />
+                        </label>
+                        <div className="flex flex-wrap justify-end gap-2"><button type="button" onClick={() => setRefundingTransaction(null)}>Cancel</button><button type="submit" disabled={loading}>{loading ? "Requesting..." : "Request full refund"}</button></div>
+                    </form>
+                </Modal>
             </PageContainer>
         );
     }
@@ -440,8 +532,12 @@ export default function Subscriptions() {
                     </div>
                 </section>
             )}
+            <section className="mb-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="billing-history-heading">
+                <div className="mb-4"><h3 id="billing-history-heading" className="text-lg font-bold text-slate-900">Subscription payment history</h3><p className="mt-1 text-sm text-slate-600">A payment remains pending until the gateway confirms it. If your network stopped after payment, resume checkout or return here and the verification step can safely reconcile it without creating a duplicate charge.</p></div>
+                <DataTable columns={[{ key: "reference", label: "Reference" }, { key: "amount", label: "Amount", render: (row) => `${row.currency || ""} ${row.amount || "0.00"}` }, { key: "status", label: "Payment", render: (row) => row.status || "Unknown" }, { key: "reconciliation_status", label: "Reconciliation", render: (row) => row.reconciliation_status || "pending" }, { key: "created_at", label: "Started", render: (row) => row.created_at ? new Date(row.created_at).toLocaleString() : "—" }, { key: "actions", label: "Actions", render: (row) => row.checkout_url && row.status === "pending" ? <button type="button" onClick={() => window.open(row.checkout_url, "_blank", "noopener,noreferrer")} className="font-semibold text-indigo-600 underline">Resume checkout</button> : "—" }]} data={Array.isArray(transactionHistory) ? transactionHistory : []} pagination={transactionPagination} emptyTitle="No subscription payments yet" emptyMessage="Your verified and pending subscription payment attempts will appear here." />
+            </section>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {data.map(plan => (
+                {(Array.isArray(data) ? data : []).map(plan => (
                     <div key={plan.id} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <h4 className="font-bold text-lg">{plan.name}</h4>
                         <div className="text-2xl font-bold text-indigo-600 my-4">{plan.currency} {priceForCycle(plan)} <span className="text-sm font-medium text-slate-500">/{cycleLabels[billingCycle].toLowerCase()}</span></div>

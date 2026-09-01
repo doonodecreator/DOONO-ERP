@@ -15,8 +15,7 @@ class StoreFeeRequest extends FormRequest
 
     public function rules(): array
     {
-        $schoolId = $this->attributes->get('current_school_id')
-            ?? app(CurrentContextService::class)->currentSchool($this->user())?->id;
+        $schoolId = app(CurrentContextService::class)->currentSchool($this->user())?->id;
 
         return [
             'academic_session_id' => [

@@ -27,8 +27,7 @@ class PermissionMiddleware
             return $next($request);
         }
 
-        $schoolId = $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($user)?->id;
+        $schoolId = $this->context->currentSchool($user)?->id;
 
         $hasPermission = $schoolId && $user->hasPermission($permission, (int) $schoolId);
         if (! $hasPermission && $schoolId) {

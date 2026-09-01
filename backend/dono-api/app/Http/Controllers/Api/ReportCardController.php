@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ReportCardResource;
 use App\Models\ReportCard;
 use App\Services\Academic\ReportCardService;
+use App\Services\ActivityLogService;
 use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
 
@@ -60,6 +61,8 @@ class ReportCardController extends Controller
         $schoolId = $this->context->currentSchool($request->user())?->id;
         abort_unless($schoolId && (int) $reportCard->school_id === (int) $schoolId, 404);
         abort_unless($reportCard->studentEnrollment && (int) $reportCard->studentEnrollment->school_id === (int) $schoolId, 404);
+        abort_unless((bool) $reportCard->is_published, 422, 'This report card is not published yet. Complete and publish all required subject results before downloading it.');
+        ActivityLogService::log('report_cards', 'downloaded', 'A published report card PDF was downloaded.', $reportCard, [], $schoolId);
 
         return $this->reportCardService->downloadPdf(
             $reportCard->studentEnrollment,

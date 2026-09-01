@@ -29,6 +29,18 @@ export default function SchoolSetup({ setPage }) {
     }, []);
 
     const steps = Array.isArray(setup?.steps) ? setup.steps : [];
+
+    const acknowledgeStep = async (step) => {
+        try {
+            setError("");
+            await api.patch(`/school-setup/progress/${step.key}`, { acknowledged: true });
+            setSetup((current) => current ? { ...current, steps: (Array.isArray(current.steps) ? current.steps : []).map((item) => item.key === step.key ? { ...item, acknowledged: true, last_viewed_at: new Date().toISOString(), acknowledged_at: new Date().toISOString() } : item), acknowledged_steps: Number(current.acknowledged_steps || 0) + (step.acknowledged ? 0 : 1) } : current);
+        } catch (err) {
+            setError(err.response?.data?.message || "Unable to save checklist progress.");
+        }
+    };
+
+    const dependencyLabels = Object.fromEntries(steps.map((step) => [step.key, step.label]));
     const percentage = useMemo(() => {
         if (!setup?.total_steps) return 0;
         return Math.round((Number(setup.completed_steps || 0) / Number(setup.total_steps)) * 100);
@@ -83,12 +95,17 @@ export default function SchoolSetup({ setPage }) {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-slate-900">{step.label}</h3>
-                                    <p className="mt-1 text-sm text-slate-500">{step.complete ? "Completed" : "Not completed yet"}</p>
+                                    <p className="mt-1 text-sm text-slate-500">{step.complete ? "Completed from the school records" : step.blocked ? "Waiting for prerequisites" : "Not completed yet"}</p>
+                                    {step.blocked && Array.isArray(step.blocked_by) && <p className="mt-1 text-xs font-medium text-amber-700">Complete first: {step.blocked_by.map((key) => dependencyLabels[key] || key).join(", ")}</p>}
+                                    {step.acknowledged && !step.complete && <p className="mt-1 text-xs text-indigo-600">You have acknowledged this step; the record is still incomplete.</p>}
                                 </div>
                             </div>
-                            <button type="button" onClick={() => setPage?.(step.page)} className={`rounded-xl px-4 py-2.5 text-sm font-semibold ${step.complete ? "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50" : "bg-indigo-600 text-white hover:bg-indigo-700"}`}>
-                                {step.complete ? "Review" : "Open Step"}
-                            </button>
+                            <div className="flex flex-wrap justify-end gap-2">
+                                {!step.acknowledged && <button type="button" onClick={() => acknowledgeStep(step)} className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-100">Mark understood</button>}
+                                <button type="button" disabled={Boolean(step.blocked)} onClick={() => setPage?.(step.page)} className={`rounded-xl px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 ${step.complete ? "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50" : "bg-indigo-600 text-white hover:bg-indigo-700"}`}>
+                                    {step.blocked ? "Complete prerequisites" : step.complete ? "Review" : "Open Step"}
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>

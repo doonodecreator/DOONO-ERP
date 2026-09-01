@@ -1,0 +1,467 @@
+=== backend/dono-api/app/Http/Controllers/Api/AttendanceController.php ===
+25-
+26-    public function index(Request $request)
+27-    {
+28:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+29-
+30-        $query = Attendance::with([
+31-            'school',
+32-            'studentEnrollment.student',
+33-            'academicSession',
+34-            'term',
+35-            'staff',
+36-        ]);
+=== backend/dono-api/app/Http/Controllers/Api/BookController.php ===
+13-
+14-    public function index(Request $request)
+15-    {
+16:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+17-
+18-        return response()->json(
+19-            Book::when($schoolId, function ($query) use ($schoolId) {
+20-                $query->where('school_id', $schoolId);
+21-            })->latest()->paginate(10)
+22-        );
+23-    }
+24-
+--
+32-            'total_copies' => 'required|integer|min:1',
+33-        ]);
+34-
+35:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+36-        if ($schoolId) {
+37-            $validated['school_id'] = $schoolId;
+38-        }
+39-        $validated['available_copies'] = $validated['total_copies'];
+40-
+41-        $book = Book::create($validated);
+42-
+43-        return response()->json([
+=== backend/dono-api/app/Http/Controllers/Api/BookLoanController.php ===
+13-
+14-    public function index(Request $request)
+15-    {
+16:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+17-
+18-        return response()->json(
+19-            BookLoan::whereHas('student', function ($query) use ($schoolId) {
+20-                if ($schoolId) {
+21-                    $query->where('school_id', $schoolId);
+22-                }
+23-            })
+24-            ->with(['book', 'student'])
+=== backend/dono-api/app/Http/Controllers/Api/ClinicVisitController.php ===
+13-
+14-    public function index(Request $request)
+15-    {
+16:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+17-
+18-        return response()->json(
+19-            ClinicVisit::whereHas('student', function ($query) use ($schoolId) {
+20-                if ($schoolId) {
+21-                    $query->where('school_id', $schoolId);
+22-                }
+23-            })
+24-            ->with(['student'])
+=== backend/dono-api/app/Http/Controllers/Api/ExpenseController.php ===
+13-
+14-    public function index(Request $request)
+15-    {
+16:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+17-
+18-        return response()->json(
+19-            Expense::when($schoolId, function ($query) use ($schoolId) {
+20-                $query->where('school_id', $schoolId);
+21-            })
+22-            ->with(['recorder'])
+23-            ->latest()
+24-            ->paginate(10)
+--
+35-            'expense_date' => 'required|date',
+36-        ]);
+37-
+38:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+39-        if ($schoolId) {
+40-            $validated['school_id'] = $schoolId;
+41-        }
+42-        
+43-        $validated['recorded_by'] = $request->user()->id;
+44-
+45-        $expense = Expense::create($validated);
+46-
+=== backend/dono-api/app/Http/Controllers/Api/FeeController.php ===
+16-
+17-    public function index(Request $request)
+18-    {
+19:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+20-
+21-        return FeeResource::collection(
+22-            Fee::when($schoolId, fn($q) => $q->where('school_id', $schoolId))
+23-            ->with(['school', 'academicSession', 'term', 'division', 'class'])
+24-            ->latest()
+25-            ->paginate(10)
+26-        );
+27-    }
+--
+29-    public function store(StoreFeeRequest $request)
+30-    {
+31-        $data = $request->validated();
+32:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+33-        
+34-        if ($schoolId) {
+35-            $data['school_id'] = $schoolId;
+36-        }
+37-
+38-        $fee = Fee::create($data);
+39-
+40-        return (new FeeResource($fee->load(['school', 'academicSession', 'term', 'division', 'class'])))
+=== backend/dono-api/app/Http/Controllers/Api/FeePaymentController.php ===
+22-
+23-    public function index(Request $request)
+24-    {
+25:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+26-
+27-        return FeePaymentResource::collection(
+28-            FeePayment::whereHas('studentFee.studentEnrollment.student', function ($query) use ($schoolId) {
+29-                if ($schoolId) {
+30-                    $query->where('school_id', $schoolId);
+31-                }
+32-            })
+33-            ->with(['studentFee.studentEnrollment.student', 'staff', 'receipt'])
+--
+39-    public function store(StoreFeePaymentRequest $request)
+40-    {
+41-        $data = $request->validated();
+42:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+43-
+44-        $studentFee = StudentFee::whereKey($data['student_fee_id'])
+45-            ->whereHas('studentEnrollment.student', function ($query) use ($schoolId) {
+46-                $query->where('school_id', $schoolId);
+47-            })
+48-            ->first();
+49-
+50-        if (! $studentFee) {
+--
+62-
+63-    public function show(Request $request, FeePayment $feePayment)
+64-    {
+65:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+66-        $feePayment->load('studentFee.studentEnrollment.student');
+67-
+68-        if ((int) $feePayment->studentFee?->studentEnrollment?->student?->school_id !== (int) $schoolId) {
+69-            throw new NotFoundHttpException('Payment not found in the current school.');
+70-        }
+71-
+72-        return new FeePaymentResource(
+73-            $feePayment->load(['studentFee.studentEnrollment.student', 'staff', 'receipt'])
+--
+76-
+77-    public function destroy(Request $request, FeePayment $feePayment)
+78-    {
+79:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+80-        $feePayment->load('studentFee.studentEnrollment.student');
+81-
+82-        if ((int) $feePayment->studentFee?->studentEnrollment?->student?->school_id !== (int) $schoolId) {
+83-            throw new NotFoundHttpException('Payment not found in the current school.');
+84-        }
+85-
+86-        $studentFee = $feePayment->studentFee;
+87-        $feePayment->delete();
+=== backend/dono-api/app/Http/Controllers/Api/HostelController.php ===
+13-
+14-    public function index(Request $request)
+15-    {
+16:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+17-
+18-        return response()->json(
+19-            Hostel::when($schoolId, function ($query) use ($schoolId) {
+20-                $query->where('school_id', $schoolId);
+21-            })
+22-            ->with(['rooms', 'allocations'])
+23-            ->latest()
+24-            ->paginate(10)
+--
+34-            'capacity' => 'required|integer|min:1',
+35-        ]);
+36-
+37:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+38-        if ($schoolId) {
+39-            $validated['school_id'] = $schoolId;
+40-        }
+41-
+42-        $hostel = Hostel::create($validated);
+43-
+44-        return response()->json([
+45-            'message' => 'Hostel created successfully.',
+=== backend/dono-api/app/Http/Controllers/Api/MedicalRecordController.php ===
+13-
+14-    public function index(Request $request)
+15-    {
+16:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+17-
+18-        return response()->json(
+19-            MedicalRecord::whereHas('student', function ($query) use ($schoolId) {
+20-                if ($schoolId) {
+21-                    $query->where('school_id', $schoolId);
+22-                }
+23-            })
+24-            ->with(['student'])
+=== backend/dono-api/app/Http/Controllers/Api/PaymentReceiptController.php ===
+15-
+16-    public function index(Request $request)
+17-    {
+18:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+19-
+20-        return PaymentReceiptResource::collection(
+21-            PaymentReceipt::whereHas('feePayment.studentFee.studentEnrollment.student', function ($query) use ($schoolId) {
+22-                $query->where('school_id', $schoolId);
+23-            })
+24-                ->with(['feePayment.studentFee.studentEnrollment.student', 'feePayment.staff'])
+25-                ->latest()
+26-                ->paginate(20)
+--
+29-
+30-    public function show(Request $request, PaymentReceipt $paymentReceipt)
+31-    {
+32:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+33-        $paymentReceipt->load('feePayment.studentFee.studentEnrollment.student');
+34-
+35-        if ((int) $paymentReceipt->feePayment?->studentFee?->studentEnrollment?->student?->school_id !== (int) $schoolId) {
+36-            throw new NotFoundHttpException('Receipt not found in the current school.');
+37-        }
+38-
+39-        return new PaymentReceiptResource(
+40-            $paymentReceipt->load(['feePayment.studentFee.studentEnrollment.student', 'feePayment.staff'])
+=== backend/dono-api/app/Http/Controllers/Api/PortalAccountController.php ===
+88-
+89-    private function ensureSchool(Request $request, int $recordSchoolId): int
+90-    {
+91:        $schoolId = $request->attributes->get('current_school_id')
+92-            ?? $this->context->currentSchool($request->user())?->id;
+93-
+94-        abort_unless($schoolId, 409, 'No active school.');
+95-        abort_unless((int) $schoolId === $recordSchoolId, 403);
+96-
+97-        return (int) $schoolId;
+98-    }
+99-}
+=== backend/dono-api/app/Http/Controllers/Api/SchoolSetupController.php ===
+21-
+22-    public function progress(Request $request)
+23-    {
+24:        $schoolId = $request->attributes->get('current_school_id')
+25-            ?? $this->context->currentSchool($request->user())?->id;
+26-
+27-        abort_unless($schoolId, 409, 'No active school.');
+28-
+29-        $school = School::findOrFail($schoolId);
+30-        $leadershipComplete = RoleInvitation::query()
+31-            ->where('school_id', $schoolId)
+32-            ->where('status', 'accepted')
+=== backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php ===
+17-
+18-    public function index(Request $request)
+19-    {
+20:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+21-
+22-        return StudentFeeResource::collection(
+23-            StudentFee::when($schoolId, function ($query) use ($schoolId) {
+24-                $query->whereHas('studentEnrollment.student', fn($q) => $q->where('school_id', $schoolId));
+25-            })
+26-            ->with([
+27-                'studentEnrollment.student',
+28-                'feeCategory',
+--
+36-    public function store(StoreStudentFeeRequest $request)
+37-    {
+38-        $data = $request->validated();
+39:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+40-        if ($schoolId) {
+41-            $data['school_id'] = $schoolId;
+42-        }
+43-
+44-        $studentFee = StudentFee::create($data);
+45-
+46-        return (new StudentFeeResource(
+47-            $studentFee->load([
+--
+99-
+100-    private function assertBelongsToCurrentSchool(Request $request, StudentFee $studentFee): void
+101-    {
+102:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+103-        $studentFee->loadMissing('studentEnrollment.student');
+104-
+105-        if ((int) $studentFee->studentEnrollment?->student?->school_id !== (int) $schoolId) {
+106-            throw new NotFoundHttpException('Invoice not found in the current school.');
+107-        }
+108-    }
+109-}
+=== backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php ===
+27-    public function dashboard(Request $request)
+28-    {
+29-        $user = $request->user();
+30:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($user)?->id;
+31-
+32-        $student = Student::where('user_id', $user->id)
+33-            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
+34-            ->with(['class', 'stream', 'enrollments'])
+35-            ->first();
+36-
+37-        if (!$student) {
+38-            // Fallback for demo or unlinked accounts
+--
+199-
+200-    public function downloadLatestReportCard(Request $request)
+201-    {
+202:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+203-        $student = Student::where('user_id', $request->user()->id)
+204-            ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
+205-            ->first();
+206-
+207-        abort_unless($student, 404, 'Student profile is not linked to this account.');
+208-
+209-        $reportCard = ReportCard::where('school_id', $student->school_id)
+210-            ->whereHas('studentEnrollment', fn ($query) => $query->where('student_id', $student->id))
+=== backend/dono-api/app/Http/Controllers/Api/VehicleController.php ===
+13-
+14-    public function index(Request $request)
+15-    {
+16:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+17-
+18-        return response()->json(
+19-            Vehicle::when($schoolId, fn($q) => $q->where('school_id', $schoolId))
+20-            ->latest()
+21-            ->paginate(10)
+22-        );
+23-    }
+24-
+--
+32-            'driver_phone' => 'required|string|max:50',
+33-        ]);
+34-
+35:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+36-        if ($schoolId) {
+37-            $validated['school_id'] = $schoolId;
+38-        }
+39-
+40-        $vehicle = Vehicle::create($validated);
+41-
+42-        return response()->json([
+43-            'message' => 'Vehicle registered successfully.',
+=== backend/dono-api/app/Http/Controllers/Api/VisitorController.php ===
+13-
+14-    public function index(Request $request)
+15-    {
+16:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+17-
+18-        return response()->json(
+19-            Visitor::when($schoolId, fn($q) => $q->where('school_id', $schoolId))
+20-            ->latest()
+21-            ->paginate(10)
+22-        );
+23-    }
+24-
+--
+32-            'check_in_time' => 'nullable|date',
+33-        ]);
+34-
+35:        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+36-        if ($schoolId) {
+37-            $validated['school_id'] = $schoolId;
+38-        }
+39-        $validated['check_in_time'] = $validated['check_in_time'] ?? now();
+40-
+41-        $visitor = Visitor::create($validated);
+42-
+43-        return response()->json([
+=== backend/dono-api/app/Http/Requests/StoreClassRequest.php ===
+16-    public function rules(): array
+17-    {
+18-        $user = $this->user();
+19:        $schoolId = $this->attributes->get('current_school_id')
+20-            ?? ($user ? app(CurrentContextService::class)->currentSchool($user)?->id : null);
+21-
+22-        return [
+23-            'division_id' => [
+24-                'required',
+25-                Rule::exists('divisions', 'id')->where(function ($query) use ($schoolId) {
+26-                    $query->where('school_id', $schoolId);
+27-                }),
+=== backend/dono-api/app/Http/Requests/StoreFeeRequest.php ===
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->attributes->get('current_school_id')
+19-            ?? app(CurrentContextService::class)->currentSchool($this->user())?->id;
+20-
+21-        return [
+22-            'academic_session_id' => [
+23-                'required',
+24-                Rule::exists('academic_sessions', 'id')->where('school_id', $schoolId),
+25-            ],
+26-            'term_id' => [
+=== backend/dono-api/app/Http/Requests/StoreParentRequest.php ===
+16-    public function rules(): array
+17-    {
+18-        $user = $this->user();
+19:        $schoolId = $this->attributes->get('current_school_id')
+20-            ?? ($user ? app(CurrentContextService::class)->currentSchool($user)?->id : null);
+21-
+22-        return [
+23-            'father_name' => 'nullable|string|max:255',
+24-            'father_phone' => 'nullable|string|max:50',
+25-            'father_email' => 'nullable|email|max:255',
+26-            'father_occupation' => 'nullable|string|max:255',
+27-            'mother_name' => 'nullable|string|max:255',
+=== backend/dono-api/app/Http/Requests/StoreStreamRequest.php ===
+16-    public function rules(): array
+17-    {
+18-        $user = $this->user();
+19:        $schoolId = $this->attributes->get('current_school_id')
+20-            ?? ($user ? app(CurrentContextService::class)->currentSchool($user)?->id : null);
+21-
+22-        return [
+23-            'class_id' => [
+24-                'required',
+25-                Rule::exists('classes', 'id')->where(function ($query) use ($schoolId) {
+26-                    $query->whereIn('division_id', function ($divisionQuery) use ($schoolId) {
+27-                        $divisionQuery->select('id')
+=== backend/dono-api/app/Http/Requests/StoreStudentRequest.php ===
+16-    public function rules(): array
+17-    {
+18-        $user = $this->user();
+19:        $schoolId = $this->attributes->get('current_school_id')
+20-            ?? ($user ? app(CurrentContextService::class)->currentSchool($user)?->id : null);
+21-
+22-        return [
+23-            'admission_number' => [
+24-                'required',
+25-                'string',
+26-                'max:255',
+27-                Rule::unique('students')->where(function ($query) use ($schoolId) {
+=== backend/dono-api/app/Http/Requests/UpdateFeeRequest.php ===
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->attributes->get('current_school_id')
+19-            ?? app(CurrentContextService::class)->currentSchool($this->user())?->id;
+20-
+21-        return [
+22-            'academic_session_id' => ['sometimes', 'required', Rule::exists('academic_sessions', 'id')->where('school_id', $schoolId)],
+23-            'term_id' => ['sometimes', 'required', Rule::exists('terms', 'id')->whereIn('academic_session_id', function ($query) use ($schoolId) { $query->select('id')->from('academic_sessions')->where('school_id', $schoolId); })],
+24-            'division_id' => ['sometimes', 'required', Rule::exists('divisions', 'id')->where('school_id', $schoolId)],
+25-            'class_id' => ['sometimes', 'required', Rule::exists('classes', 'id')->whereIn('division_id', function ($query) use ($schoolId) { $query->select('id')->from('divisions')->where('school_id', $schoolId); })],
+26-            'name' => ['sometimes', 'required', 'string', 'max:100'],
+=== backend/dono-api/app/Http/Requests/UpdateStreamRequest.php ===
+16-    public function rules(): array
+17-    {
+18-        $stream = $this->route('stream');
+19:        $schoolId = $this->attributes->get('current_school_id')
+20-            ?? app(CurrentContextService::class)->currentSchool($this->user())?->id;
+21-        $classId = $this->input('class_id', $stream?->class_id);
+22-
+23-        return [
+24-            'class_id' => [
+25-                'sometimes',
+26-                'required',
+27-                Rule::exists('classes', 'id')->where(function ($query) use ($schoolId) {

@@ -15,19 +15,9 @@ class StoreStudentRequest extends FormRequest
 
     public function rules(): array
     {
-        $user = $this->user();
-        $schoolId = $this->attributes->get('current_school_id')
-            ?? ($user ? app(CurrentContextService::class)->currentSchool($user)?->id : null);
+        $schoolId = app(CurrentContextService::class)->currentSchool($this->user())?->id;
 
         return [
-            'admission_number' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('students')->where(function ($query) use ($schoolId) {
-                    return $query->where('school_id', $schoolId);
-                }),
-            ],
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',

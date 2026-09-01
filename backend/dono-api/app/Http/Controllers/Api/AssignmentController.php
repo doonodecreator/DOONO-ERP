@@ -12,12 +12,18 @@ use App\Models\Student;
 use App\Models\Subject;
 use App\Services\ActivityLogService;
 use App\Services\CurrentContextService;
+use App\Services\MediaStorageService;
+use App\Services\UploadSecurityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 class AssignmentController extends Controller
 {
-    public function __construct(protected CurrentContextService $context) {}
+    public function __construct(
+        protected CurrentContextService $context,
+        protected MediaStorageService $media,
+        protected UploadSecurityService $uploadSecurity,
+    ) {}
 
     public function index(Request $request)
     {
@@ -41,10 +47,17 @@ class AssignmentController extends Controller
             'subject_id' => ['required', 'exists:subjects,id'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'attachment' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png,txt', 'max:10240'],
             'due_date' => ['nullable', 'date'],
             'status' => ['required', 'in:Draft,Published,Closed'],
         ]);
 
+        unset($data['attachment_url']);
+        if ($request->hasFile('attachment')) {
+            $this->uploadSecurity->validate($request->file('attachment'));
+            $data['attachment_url'] = $this->media->storePrivate($request->file('attachment'), "schools/{$schoolId}/assignments");
+        }
+        unset($data['attachment']);
         $this->assertAcademicOwnership($schoolId, $data);
         $staff = Staff::where('school_id', $schoolId)->where('user_id', $request->user()->id)->first();
         $assignment = Assignment::create([...$data, 'school_id' => $schoolId, 'teacher_staff_id' => $staff?->id, 'created_by' => $request->user()->id]);
@@ -61,9 +74,16 @@ class AssignmentController extends Controller
             'subject_id' => ['sometimes', 'exists:subjects,id'],
             'title' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'attachment' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png,txt', 'max:10240'],
             'due_date' => ['nullable', 'date'],
             'status' => ['sometimes', 'in:Draft,Published,Closed'],
         ]);
+        unset($data['attachment_url']);
+        if ($request->hasFile('attachment')) {
+            $this->uploadSecurity->validate($request->file('attachment'));
+            $data['attachment_url'] = $this->media->storePrivate($request->file('attachment'), "schools/{$schoolId}/assignments", $assignment->attachment_url);
+        }
+        unset($data['attachment']);
         $this->assertAcademicOwnership($schoolId, [...$assignment->only(['class_id', 'stream_id', 'subject_id']), ...$data]);
         $assignment->update($data);
         ActivityLogService::log(module: 'assignments', action: 'updated', description: "Assignment '{$assignment->title}' was updated.", schoolId: $schoolId, properties: ['assignment_id' => $assignment->id, 'changes' => array_keys($data)]);
@@ -108,10 +128,17 @@ class AssignmentController extends Controller
         $this->assertStudentTarget($assignment, $student);
         $data = $request->validate([
             'answer_text' => ['required', 'string', 'max:50000'],
-            'attachment_url' => ['nullable', 'url', 'max:2048'],
+            'attachment' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png,txt', 'max:10240'],
         ]);
 
         $existing = AssignmentSubmission::where('assignment_id', $assignment->id)->where('student_id', $student->id)->first();
+        unset($data['attachment_url']);
+        if ($request->hasFile('attachment')) {
+            $this->uploadSecurity->validate($request->file('attachment'));
+            $data['attachment_url'] = $this->media->storePrivate($request->file('attachment'), "schools/{$schoolId}/assignment-submissions/{$assignment->id}", $existing?->attachment_url);
+        }
+        unset($data['attachment']);
+
         abort_if($existing && $existing->status === 'Reviewed', 422, 'This submission has already been reviewed and cannot be replaced.');
         $isLate = $assignment->due_date && Carbon::now()->startOfDay()->gt(Carbon::parse($assignment->due_date)->startOfDay());
         $submission = AssignmentSubmission::updateOrCreate(
@@ -120,7 +147,7 @@ class AssignmentController extends Controller
                 'school_id' => $schoolId,
                 'submitted_by' => $request->user()->id,
                 'answer_text' => $data['answer_text'],
-                'attachment_url' => $data['attachment_url'] ?? null,
+                'attachment_url' => array_key_exists('attachment_url', $data) ? $data['attachment_url'] : $existing?->attachment_url,
                 'status' => 'Submitted',
                 'is_late' => $isLate,
                 'submitted_at' => now(),
@@ -173,7 +200,10 @@ class AssignmentController extends Controller
 
     private function studentForUser(Request $request, int $schoolId): Student
     {
-        return Student::where('school_id', $schoolId)->where('user_id', $request->user()->id)->firstOrFail();
+        return Student::where('school_id', $schoolId)
+            ->where('user_id', $request->user()->id)
+            ->where('status', 'Active')
+            ->firstOrFail();
     }
 
     private function assertStudentTarget(Assignment $assignment, Student $student): void

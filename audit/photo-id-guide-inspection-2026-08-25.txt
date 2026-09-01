@@ -1,0 +1,115 @@
+=== STUDENT PHOTO REFERENCES ===
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:207:            'avatar' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:208:            'remove_avatar' => ['sometimes', 'boolean'],
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:215:        if (($validated['remove_avatar'] ?? false) === true) {
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:216:            $this->media->delete($user->avatar);
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:217:            $user->avatar = null;
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:218:        } elseif ($request->hasFile('avatar')) {
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:219:            $user->avatar = $this->media->storeImage(
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:220:                $request->file('avatar'),
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:222:                $user->avatar,
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:233:            properties: ['name_changed' => array_key_exists('name', $validated), 'avatar_changed' => $request->hasFile('avatar') || ($validated['remove_avatar'] ?? false)],
+backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php:104:                'photo_url' => app(\App\Services\MediaStorageService::class)->url($child->photo),
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:121:            $data['photo'] = $this->media->storeImage($request->file('photo'), 'schools/' . $schoolId . '/students');
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:292:            $data['photo'] = $this->media->storeImage($request->file('photo'), 'schools/' . $student->school_id . '/students', $student->photo);
+backend/dono-api/app/Http/Controllers/Api/StudentOfficialDocumentController.php:88:            'studentPhoto' => $media->inlineDataUri($student->photo),
+backend/dono-api/app/Http/Controllers/Api/StudentOfficialDocumentController.php:100:            'has_student_photo' => (bool) $cardData['studentPhoto'],
+backend/dono-api/app/Http/Resources/StaffResource.php:31:            'photo_url' => app(\App\Services\MediaStorageService::class)->url($this->photo),
+backend/dono-api/app/Http/Resources/StudentResource.php:31:            'photo_url' => app(\App\Services\MediaStorageService::class)->url($this->photo),
+backend/dono-api/app/Models/User.php:22:        'avatar',
+backend/dono-api/app/Models/User.php:34:        'avatar_url',
+backend/dono-api/app/Models/User.php:46:        return app(\App\Services\MediaStorageService::class)->url($this->avatar);
+backend/dono-api/app/Services/Academic/ReportCardService.php:113:                'student_photo' => $academicConfiguration?->show_student_passport === false
+backend/dono-api/app/Services/Academic/ReportCardService.php:115:                    : ($inlineMedia ? $this->media->inlineDataUri($student->student?->photo) : $this->media->url($student->student?->photo)),
+backend/dono-api/app/Services/CurrentContextService.php:71:                'avatar' => $user->avatar,
+backend/dono-api/app/Services/CurrentContextService.php:72:                'avatar_url' => $this->media->url($user->avatar),
+backend/dono-api/database/migrations/2026_08_21_220000_add_avatar_to_users_table.php:11:        if (! Schema::hasColumn('users', 'avatar')) {
+backend/dono-api/database/migrations/2026_08_21_220000_add_avatar_to_users_table.php:13:                $table->string('avatar')->nullable()->after('email');
+backend/dono-api/database/migrations/2026_08_21_220000_add_avatar_to_users_table.php:20:        if (Schema::hasColumn('users', 'avatar')) {
+backend/dono-api/database/migrations/2026_08_21_220000_add_avatar_to_users_table.php:22:                $table->dropColumn('avatar');
+backend/dono-api/resources/views/pdf/report-card.blade.php:24:        .student-photo-cell { width: 82px; text-align: center; vertical-align: middle; }
+backend/dono-api/resources/views/pdf/report-card.blade.php:25:        .student-photo { width: 64px; height: 72px; object-fit: cover; border: 1px solid #cbd5e1; }
+backend/dono-api/resources/views/pdf/report-card.blade.php:91:                <td class="student-photo-cell" rowspan="3">
+backend/dono-api/resources/views/pdf/report-card.blade.php:92:                    @if(!empty($branding['student_photo']))
+backend/dono-api/resources/views/pdf/report-card.blade.php:93:                        <img class="student-photo" src="{{ $branding['student_photo'] }}" alt="Student photo">
+backend/dono-api/resources/views/pdf/student-id-card.blade.php:91:                    <img class="photo" src="{{ $studentPhoto }}" alt="Student photograph">
+backend/dono-api/storage/framework/views/e93ab08c11e858e48645f5f01e75e2e9.php:24:        .student-photo-cell { width: 82px; text-align: center; vertical-align: middle; }
+backend/dono-api/storage/framework/views/e93ab08c11e858e48645f5f01e75e2e9.php:25:        .student-photo { width: 64px; height: 72px; object-fit: cover; border: 1px solid #cbd5e1; }
+backend/dono-api/storage/framework/views/e93ab08c11e858e48645f5f01e75e2e9.php:92:                <td class="student-photo-cell" rowspan="3">
+backend/dono-api/storage/framework/views/e93ab08c11e858e48645f5f01e75e2e9.php:93:                    <?php if(!empty($branding['student_photo'])): ?>
+backend/dono-api/storage/framework/views/e93ab08c11e858e48645f5f01e75e2e9.php:94:                        <img class="student-photo" src="<?php echo e($branding['student_photo']); ?>" alt="Student photo">
+backend/dono-api/storage/framework/views/5f50b2d913e7a3d31cc48ff07a95d61d.php:91:                    <img class="photo" src="<?php echo e($studentPhoto); ?>" alt="Student photograph">
+frontend/src/components/Navbar.jsx:22:  const [avatarFailed, setAvatarFailed] = useState(false);
+frontend/src/components/Navbar.jsx:55:  }, [user?.avatar_url]);
+frontend/src/components/Navbar.jsx:108:        <button type="button" className="dono-avatar" aria-label="Open My Profile" title="My Profile" onClick={() => onNavigate?.("profile")}>
+frontend/src/components/Navbar.jsx:109:          {user?.avatar_url && !avatarFailed ? <img src={resolveMediaUrl(user.avatar_url)} alt="" onError={() => setAvatarFailed(true)} /> : initial}
+frontend/src/components/Navbar.css:155:.dono-avatar {
+frontend/src/components/Navbar.css:173:.dono-avatar:hover {
+frontend/src/components/Navbar.css:177:.dono-avatar img {
+frontend/src/components/Navbar.css:350:  .dono-avatar {
+frontend/src/pages/AddStudent.jsx:142:            <FormField label="Student photo" htmlFor="student-photo" hint="Optional JPG, PNG, or WebP image up to 5 MB."><input id="student-photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePhoto} className="ui-form-control" />{photoPreview && <img src={photoPreview} alt="Student preview" style={{ width: 76, height: 76, marginTop: 8, borderRadius: "50%", objectFit: "cover" }} />}</FormField>
+frontend/src/pages/EditStaff.jsx:9:    const [photoPreview, setPhotoPreview] = useState(staff?.photo_url || staff?.photo || '');
+frontend/src/pages/EditStaff.jsx:57:            setPhotoPreview(data.photo_url || data.photo || '');
+frontend/src/pages/EditStudent.jsx:8:  const [photoPreview, setPhotoPreview] = useState(student?.photo_url || student?.photo || "");
+frontend/src/pages/EditStudent.jsx:56:      setPhotoPreview(data.photo_url || data.photo || "");
+frontend/src/pages/StudentProfile.jsx:53:    <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex flex-wrap items-center gap-4">{(record.photo_url || record.photo) && <img src={record.photo_url || record.photo} alt={`${record.full_name || "Student"} profile`} className="h-20 w-20 rounded-full border-2 border-indigo-100 object-cover" />}<div><h2 className="text-xl font-bold text-slate-900">{display(record.full_name || [record.first_name, record.middle_name, record.last_name].filter(Boolean).join(" "))}</h2><p className="mt-1 text-sm text-slate-500">{display(record.admission_number)} · {display(record.class?.name || record.class_name)}{record.stream?.name ? ` · ${record.stream.name}` : ""}</p><p className="mt-1 text-xs font-semibold uppercase tracking-wide text-indigo-600">{display(record.status)}</p></div></div><div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs uppercase text-slate-500">Gender</p><p className="mt-1 font-semibold text-slate-900">{display(record.gender)}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs uppercase text-slate-500">Date of birth</p><p className="mt-1 font-semibold text-slate-900">{display(record.date_of_birth)}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs uppercase text-slate-500">Nationality</p><p className="mt-1 font-semibold text-slate-900">{display(record.nationality)}</p></div><div className="rounded-xl bg-slate-50 p-3"><p className="text-xs uppercase text-slate-500">Address</p><p className="mt-1 font-semibold text-slate-900">{display(record.address)}</p></div></div>{record.blood_group || record.genotype || record.medical_notes ? <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-900"><p className="font-semibold">Restricted medical information</p><p className="mt-1">Blood group: {display(record.blood_group)} · Genotype: {display(record.genotype)}</p>{record.medical_notes && <p className="mt-1">Notes: {record.medical_notes}</p>}</div> : null}</section>
+frontend/src/pages/ProfileSettings.jsx:25:  const [avatarFile, setAvatarFile] = useState(null);
+frontend/src/pages/ProfileSettings.jsx:32:  const [avatarInputKey, setAvatarInputKey] = useState(0);
+frontend/src/pages/ProfileSettings.jsx:49:    if (avatarFile) return URL.createObjectURL(avatarFile);
+frontend/src/pages/ProfileSettings.jsx:51:    return resolveMediaUrl(user?.avatar_url);
+frontend/src/pages/ProfileSettings.jsx:52:  }, [avatarFile, removeAvatar, user?.avatar_url]);
+frontend/src/pages/ProfileSettings.jsx:124:      if (avatarFile) formData.append("avatar", avatarFile);
+frontend/src/pages/ProfileSettings.jsx:125:      if (removeAvatar && !avatarFile) formData.append("remove_avatar", "1");
+frontend/src/pages/ProfileSettings.jsx:129:      if (avatarFile && !refreshedContext?.user?.avatar_url) {
+frontend/src/pages/ProfileSettings.jsx:156:              <div className="profile-settings-avatar" aria-label={`${user.name || "User"} profile picture`}>
+frontend/src/pages/ProfileSettings.jsx:169:            <FormField label="Profile picture" htmlFor="profile-avatar" hint="Optional. This appears in the authenticated header and your account context.">
+frontend/src/pages/ProfileSettings.jsx:170:              <input key={avatarInputKey} id="profile-avatar" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { setAvatarFile(event.target.files?.[0] || null); setRemoveAvatar(false); }} />
+frontend/src/pages/ProfileSettings.jsx:172:            {user.avatar_url && !avatarFile && <label className="profile-settings-remove"><input type="checkbox" checked={removeAvatar} onChange={(event) => setRemoveAvatar(event.target.checked)} /> Remove current profile picture</label>}
+frontend/src/pages/ProfileSettings.css:16:.profile-settings-avatar {
+frontend/src/pages/ProfileSettings.css:30:.profile-settings-avatar img {
+frontend/src/pages/ProfileSettings.css:92:  .profile-settings-avatar {
+frontend/src/styles/components.css:293:.avatar{
+frontend/src/styles/responsive.css:139:.avatar{
+frontend/src/config/guideKnowledge.js:531:  profile: { purpose: "Your authenticated identity across DOONO De Creator ERP.", steps: ["Confirm that the email shown belongs to you.", "Update your display name when it changes.", "Choose a clear JPG, PNG, or WebP profile picture if needed.", "Save and confirm that the header avatar changes.", "Log out and sign in again if testing a new device."], next: "Return to your role dashboard." },
+=== ID CARD REFERENCES ===
+backend/dono-api/app/Http/Controllers/Api/StudentOfficialDocumentController.php:62:            $user?->isSuperAdmin() || $user?->hasPermission('issue_student_id_cards', $schoolId),
+backend/dono-api/app/Http/Controllers/Api/StudentOfficialDocumentController.php:107:        return Pdf::loadView('pdf.student-id-card', $cardData)
+backend/dono-api/database/seeders/PermissionSeeder.php:34:            ['name' => 'Issue Student ID Cards', 'slug' => 'issue_student_id_cards'],
+backend/dono-api/database/seeders/RolePermissionSeeder.php:52:        $idCardPermission = Permission::where('slug', 'issue_student_id_cards')->first();
+backend/dono-api/resources/views/pdf/student-id-card.blade.php:84:                    <p class="card-title">Student identity card</p>
+backend/dono-api/routes/api.php:404:            Route::middleware('permission:issue_student_id_cards')->get('students/{student}/documents/id-card', [StudentOfficialDocumentController::class, 'idCard']);
+backend/dono-api/storage/framework/views/5f50b2d913e7a3d31cc48ff07a95d61d.php:84:                    <p class="card-title">Student identity card</p>
+backend/dono-api/storage/framework/views/5f50b2d913e7a3d31cc48ff07a95d61d.php:169:<?php /**PATH /home/ubuntu/DOONO-ERP/backend/dono-api/resources/views/pdf/student-id-card.blade.php ENDPATH**/ ?>
+backend/dono-api/storage/logs/laravel.log:1243:#24 /home/ubuntu/DOONO-ERP/backend/dono-api/tests/tmp_render_student_id_card.php(51): Barryvdh\\DomPDF\\PDF->save()
+frontend/src/components/feedback/DONOGuide.jsx:9:const GUIDE_LABELS = { "id-card": "Student ID Card" };
+frontend/src/pages/Students.jsx:17:  const canIssueStudentIdCards = isPlatformAdmin || permissions.includes("issue_student_id_cards");
+frontend/src/pages/Students.jsx:64:    const path = documentType === "transcript" ? `/students/${student.id}/documents/transcript` : `/students/${student.id}/documents/id-card`;
+frontend/src/pages/Students.jsx:71:      link.download = documentType === "id-card" ? `student-id-card-${student.admission_number || student.id}.pdf` : `${documentType}-${student.admission_number || student.id}.pdf`;
+frontend/src/pages/Students.jsx:116:      render: (student) => <div className="table-actions">{canManageAdmissions && <><Button size="sm" variant="ghost" onClick={(event) => handleEdit(event, student)}>Edit</Button>{student.portal_account?.linked ? <span className="status-badge status-badge-success">Portal linked</span> : <Button size="sm" variant="ghost" onClick={(event) => { event.stopPropagation(); setPortalStudent(student); }}>Portal account</Button>}<Button size="sm" variant="danger" onClick={(event) => handleDelete(event, student.id, `${student.first_name || ""} ${student.last_name || ""}`)}>Delete</Button></>}{permissions.includes("view_results") && <Button size="sm" variant="secondary" loading={documentLoading === `transcript:${student.id}`} onClick={() => downloadStudentDocument(student, "transcript")}>Transcript</Button>}{canIssueStudentIdCards && <Button size="sm" variant="secondary" loading={documentLoading === `id-card:${student.id}`} onClick={() => downloadStudentDocument(student, "id-card")}>ID card</Button>}</div>,
+frontend/src/config/guideKnowledge.js:645:  "id card": {
+frontend/src/config/guideKnowledge.js:647:    what: "This creates a printable identity card for the selected active student. It is an official school document, not a fee receipt or report card.",
+frontend/src/config/guideKnowledge.js:776:  "id-card": [
+frontend/src/config/guideKnowledge.js:851:export const GUIDE_MODULE_KEYS_WITH_DOCUMENTS = [...new Set([...GUIDE_MODULE_KEYS, "id-card", "work-inbox", "notifications", "global-search"])];
+frontend/src/config/guideKnowledge.js:854:MODULE_DETAILS["id-card"] = {
+frontend/src/config/guideKnowledge.js:878:PAGE_ALIASES["student-id-card"] = "id-card";
+frontend/src/config/guideKnowledge.js:879:PAGE_ALIASES["id_card"] = "id-card";
+frontend/src/config/guideKnowledge.js:907:  { key: "id-card", title: "Student ID card", meaning: "A printable identity document for an active student showing the school, learner name, admission number, class, stream, and validity notice.", example: "It can help identify a student during entry checks, school activities, transport, library use, or emergencies.", why: "It identifies the learner but is not proof of fee payment or a final academic result.", related: ["Student", "Admission number", "Official document"] },
+=== GUIDE CONTROL/PAGE REFERENCES ===
+frontend/src/config/guideKnowledge.js:525:const MODULE_DETAILS = {
+frontend/src/config/guideKnowledge.js:585:export const pageGuideKey = (page) => PAGE_ALIASES[page] || page || "dashboard";
+frontend/src/config/guideKnowledge.js:590:  const key = pageGuideKey(page);
+frontend/src/config/guideKnowledge.js:592:  const details = MODULE_DETAILS[key];
+frontend/src/config/guideKnowledge.js:632:export const GUIDE_MODULE_KEYS = Object.keys(ARCHITECTURE_MODULES);
+frontend/src/config/guideKnowledge.js:833:export function controlGuide(label, page = "dashboard", role = "") {
+frontend/src/config/guideKnowledge.js:851:export const GUIDE_MODULE_KEYS_WITH_DOCUMENTS = [...new Set([...GUIDE_MODULE_KEYS, "id-card", "work-inbox", "notifications", "global-search"])];
+frontend/src/config/guideKnowledge.js:854:MODULE_DETAILS["id-card"] = {
+frontend/src/components/feedback/DONOGuide.jsx:5:import { GUIDE_MODULE_KEYS_WITH_DOCUMENTS, controlGuide, moduleGuide, pageGuideKey, roleGuide } from "../../config/guideKnowledge";
+frontend/src/components/feedback/DONOGuide.jsx:10:const uniqueModules = GUIDE_MODULE_KEYS_WITH_DOCUMENTS.map((key) => {
+frontend/src/components/feedback/DONOGuide.jsx:24:  const currentPageKey = pageGuideKey(normalizeSchoolOsPage(page));
+frontend/src/components/feedback/DONOGuide.jsx:53:    const onControlClick = (event) => {
+frontend/src/components/feedback/DONOGuide.jsx:62:        setSelectedControl(controlGuide(label, currentPageKey, role));
+frontend/src/components/feedback/DONOGuide.jsx:66:    document.addEventListener("click", onControlClick, true);
+frontend/src/components/feedback/DONOGuide.jsx:67:    return () => document.removeEventListener("click", onControlClick, true);
+frontend/src/components/feedback/DONOGuide.jsx:99:    setSelectedModule(pageGuideKey(canonicalPage));
+frontend/src/pages/SupportCentre.jsx:5:import { CONCEPT_GUIDES, GUIDE_MODULE_KEYS_WITH_DOCUMENTS, moduleGuide, roleGuide } from "../config/guideKnowledge";
+frontend/src/pages/SupportCentre.jsx:78:    const moduleArticles = GUIDE_MODULE_KEYS_WITH_DOCUMENTS.map((key) => {

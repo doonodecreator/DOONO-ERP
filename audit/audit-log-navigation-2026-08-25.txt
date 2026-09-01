@@ -1,0 +1,12 @@
+frontend/src/App.jsx:265:    case "audit-logs":
+frontend/src/components/Sidebar.jsx:38:    { name: "Audit Logs", page: "audit-logs" },
+frontend/src/components/Sidebar.jsx:72:    { name: "Audit Logs", page: "audit-logs" },
+frontend/src/pages/ProprietorDashboard.jsx:17:  const openTab = (tabId) => { const pageMap = { staff: "staff", leadership: "role-invitations", academics: "school-setup", school_setup: "school-setup", students: "students", finance: "fees", reports: "report-cards", school_settings: "settings", subscriptions: "subscriptions", audit_logs: "audit-logs" }; if (pageMap[tabId] && setPage) { setPage(pageMap[tabId]); return; } setActiveTab(tabId); };
+frontend/src/config/architectureModules.js:24:  backups_logs: { key: "backups_logs", label: "Backups & Logs", page: "backups-logs", permission: "view_audit_logs", platform: true },
+frontend/src/config/architectureModules.js:25:  system_health: { key: "system_health", label: "System Health", page: "system-health", permission: "view_audit_logs", platform: true },
+frontend/src/config/guideKnowledge.js:14:      step("Verify accountability", "Use audit logs to trace every platform action. School proprietors should see only their own school activity.", "audit-logs"),
+frontend/src/config/guideKnowledge.js:46:      step("Protect school records", "Use audit logs and staff management for accountability, while keeping platform-owner actions outside the school audit view.", "audit-logs"),
+frontend/src/config/guideKnowledge.js:320:  "audit-logs": { purpose: "Accountability history for the current platform or school context.", steps: ["Filter by date, actor, module, or action.", "Distinguish platform actions from school actions.", "Investigate unexpected changes using the actor and timestamp.", "Export or retain evidence according to school policy."], next: "The affected module." },
+frontend/src/config/schoolOsCapabilities.js:64:  "audit-logs": { label: "Audit Logs", guideKey: "audit-logs", audience: "authorized", purpose: "Trace important actions in the current platform or school context." },
+backend/dono-api/database/seeders/PermissionSeeder.php:69:            ['name' => 'View Audit Logs', 'slug' => 'view_audit_logs'],
+backend/dono-api/database/seeders/RolePermissionSeeder.php:14:            'super_admin' => ['manage_organizations', 'manage_schools', 'manage_subscriptions', 'manage_system_settings', 'view_audit_logs'],

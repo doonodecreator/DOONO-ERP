@@ -31,6 +31,7 @@ export default function RoleInvitations({ setPage }) {
     const [roles, setRoles] = useState([]);
     const [classes, setClasses] = useState([]);
     const [invitations, setInvitations] = useState([]);
+    const [staffRecords, setStaffRecords] = useState([]);
     const [invitationMeta, setInvitationMeta] = useState(null);
     const [invitationPage, setInvitationPage] = useState(1);
     const [form, setForm] = useState(initialForm);
@@ -54,10 +55,11 @@ export default function RoleInvitations({ setPage }) {
         setError("");
 
         try {
-            const [rolesResponse, classesResponse, invitationsResponse] = await Promise.allSettled([
+            const [rolesResponse, classesResponse, invitationsResponse, staffResponse] = await Promise.allSettled([
                 api.get("/roles"),
                 api.get("/classes"),
                 api.get("/role-invitations", { params: { page: requestedInvitationPage, per_page: 10 } }),
+                canManageDelegation ? api.get("/staff", { params: { per_page: 100 } }) : Promise.resolve({ data: [] }),
             ]);
             const delegationResponse = canManageDelegation
                 ? await api.get("/school-setup/delegations").then((value) => ({ status: "fulfilled", value })).catch((reason) => ({ status: "rejected", reason }))
@@ -65,6 +67,7 @@ export default function RoleInvitations({ setPage }) {
 
             const availableRoles = rolesResponse.status === "fulfilled" ? arrayFromResponse(rolesResponse.value) : [];
             const availableClasses = classesResponse.status === "fulfilled" ? arrayFromResponse(classesResponse.value) : [];
+            const availableStaff = staffResponse.status === "fulfilled" ? arrayFromResponse(staffResponse.value) : [];
             const invitationPageData = invitationsResponse.status === "fulfilled" ? paginatedFromResponse(invitationsResponse.value) : { data: [], meta: null };
             const currentInvitations = invitationPageData.data;
             const delegationPayload = delegationResponse.status === "fulfilled" ? delegationResponse.value?.data || {} : {};
@@ -73,13 +76,14 @@ export default function RoleInvitations({ setPage }) {
 
             setRoles(availableRoles);
             setClasses(availableClasses);
+            setStaffRecords(availableStaff);
             setInvitations(currentInvitations);
             setInvitationMeta(invitationPageData.meta);
             setInvitationPage(Number(invitationPageData.meta?.current_page || requestedInvitationPage));
             setDelegations(currentDelegations);
             setAvailablePermissions(permissions);
 
-            const failedResponse = [rolesResponse, classesResponse, invitationsResponse, delegationResponse].find((response) => response.status === "rejected");
+            const failedResponse = [rolesResponse, classesResponse, invitationsResponse, staffResponse, delegationResponse].find((response) => response.status === "rejected");
             if (failedResponse) {
                 throw new Error(failedResponse.reason?.response?.data?.message || failedResponse.reason?.message || "Some leadership data could not be loaded.");
             }
@@ -145,16 +149,17 @@ export default function RoleInvitations({ setPage }) {
     const selectedClass = classes.find((item) => String(item.id) === String(form.form_class_id));
     const classStreams = arrayFromResponse({ data: selectedClass?.streams });
 
-    const acceptedLeaders = invitations.filter((invitation) =>
-        invitation.status === "accepted"
-        && invitation.accepted_user_id
-        && ["principal", "vice_principal_academic"].includes(invitation.role_slug)
+    const acceptedLeaders = staffRecords.filter((staff) =>
+        staff.employment_status === "Active"
+        && staff.user_id
+        && Array.isArray(staff.roles)
+        && staff.roles.some((role) => ["principal", "vice_principal_academic"].includes(role.slug) && (!role.school_id || String(role.school_id) === String(staff.school_id)))
     );
 
     const saveDelegation = async (event) => {
         event.preventDefault();
         if (!delegationUserId || selectedPermissionSlugs.length === 0) {
-            setError("Select an accepted Principal or Vice Principal Academic and at least one setup permission.");
+            setError("Select an active Principal or Vice Principal Academic and at least one setup permission.");
             return;
         }
         setDelegationSaving(true);
@@ -228,12 +233,12 @@ export default function RoleInvitations({ setPage }) {
             {canManageDelegation && <section className="bg-white rounded-2xl border border-indigo-200 shadow-sm p-5 mb-6">
                 <div className="mb-4">
                     <h2 className="font-bold text-slate-900">Delegate School Setup</h2>
-                    <p className="mt-1 text-xs text-slate-500">Only an accepted Principal or Vice Principal Academic can receive these permissions. Delegation never creates an account or bypasses invitation acceptance.</p>
+                    <p className="mt-1 text-xs text-slate-500">Only an active Principal or Vice Principal Academic with a linked staff account can receive these permissions. Delegation never creates an account, bypasses role authority, or grants access across schools.</p>
                 </div>
                 <form onSubmit={saveDelegation} className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-start">
                     <select value={delegationUserId} onChange={(event) => setDelegationUserId(event.target.value)} className="px-3 py-2 border rounded-lg text-sm bg-white">
-                        <option value="">Select accepted role holder</option>
-                        {acceptedLeaders.map((leader) => <option key={leader.accepted_user_id} value={leader.accepted_user_id}>{leader.name} — {leader.role || leader.role_slug}</option>)}
+                        <option value="">Select active role holder</option>
+                        {acceptedLeaders.map((leader) => <option key={leader.user_id} value={leader.user_id}>{leader.full_name || leader.email} — {leader.roles.filter((role) => ["principal", "vice_principal_academic"].includes(role.slug)).map((role) => role.name).join(" / ")}</option>)}
                     </select>
                     <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {availablePermissions.map((permission) => <label key={permission.slug} className="dono-permission-option"><input type="checkbox" checked={selectedPermissionSlugs.includes(permission.slug)} onChange={(event) => setSelectedPermissionSlugs((current) => event.target.checked ? [...new Set([...current, permission.slug])] : current.filter((slug) => slug !== permission.slug))} /><span>{permission.name}</span></label>)}

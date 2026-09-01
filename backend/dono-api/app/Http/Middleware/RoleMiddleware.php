@@ -31,8 +31,7 @@ class RoleMiddleware
         // All operational roles must match the trusted current school. Routes
         // inside the has.school group provide this attribute; other role-gated
         // routes resolve it through the same CurrentContextService source.
-        $schoolId = $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($user)?->id;
+        $schoolId = $this->context->currentSchool($user)?->id;
 
         if (! $schoolId) {
             return response()->json(['message' => 'Access denied.'], 403);

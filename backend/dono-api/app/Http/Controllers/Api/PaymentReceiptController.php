@@ -15,7 +15,7 @@ class PaymentReceiptController extends Controller
 
     public function index(Request $request)
     {
-        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+        $schoolId = $this->context->currentSchool($request->user())?->id;
 
         return PaymentReceiptResource::collection(
             PaymentReceipt::whereHas('feePayment.studentFee.studentEnrollment.student', function ($query) use ($schoolId) {
@@ -29,7 +29,7 @@ class PaymentReceiptController extends Controller
 
     public function show(Request $request, PaymentReceipt $paymentReceipt)
     {
-        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+        $schoolId = $this->context->currentSchool($request->user())?->id;
         $paymentReceipt->load('feePayment.studentFee.studentEnrollment.student');
 
         if ((int) $paymentReceipt->feePayment?->studentFee?->studentEnrollment?->student?->school_id !== (int) $schoolId) {

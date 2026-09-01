@@ -51,6 +51,7 @@ export default function PlatformOwnerDashboard() {
     }
 
     const stats = dashboard.system_stats || {};
+    const formatMoney = (value) => `₦${Number(value || 0).toLocaleString()}`;
 
     const organizations = Array.isArray(dashboard.organizations)
         ? dashboard.organizations
@@ -104,8 +105,8 @@ export default function PlatformOwnerDashboard() {
                 />
 
                 <StatCard
-                    title="Revenue"
-                    value={stats.mrr || "₦0"}
+                    title="Recognized revenue"
+                    value={formatMoney(stats.recognized_revenue)}
                     color="#9333ea"
                 />
 
@@ -119,6 +120,24 @@ export default function PlatformOwnerDashboard() {
                     title="Failed payments"
                     value={stats.failed_payments || 0}
                     color="#dc2626"
+                />
+
+                <StatCard
+                    title="Refunded"
+                    value={formatMoney(stats.refund_total)}
+                    color="#be123c"
+                />
+
+                <StatCard
+                    title="Disputed payments"
+                    value={stats.disputed_payments || 0}
+                    color="#b45309"
+                />
+
+                <StatCard
+                    title="Review queue"
+                    value={stats.reconciliation_review_queue || 0}
+                    color="#0f766e"
                 />
 
             </DashboardGrid>

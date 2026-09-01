@@ -11,6 +11,7 @@ use App\Services\CurrentContextService;
 use App\Services\EmailVerificationService;
 use App\Services\MediaStorageService;
 use App\Services\ActivityLogService;
+use App\Services\MfaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -22,7 +23,15 @@ class AuthController extends Controller
         private CurrentContextService $context,
         private EmailVerificationService $verification,
         private MediaStorageService $media,
+        private MfaService $mfa,
     ) {
+    }
+
+    private function requiresEmailVerification(): bool
+    {
+        // A disabled flag is honored only in local/testing environments.
+        return (bool) config('app.email_verification_required', true)
+            || ! app()->environment(['local', 'testing']);
     }
 
     /**
@@ -45,13 +54,15 @@ class AuthController extends Controller
 
         $validated['email'] = strtolower(trim($validated['email']));
 
+        $requiresVerification = $this->requiresEmailVerification();
+
         try {
-            $result = DB::transaction(function () use ($validated) {
+            $result = DB::transaction(function () use ($validated, $requiresVerification) {
                 $user = User::create([
                     'name' => $validated['admin_name'],
                     'email' => $validated['email'],
                     'password' => $validated['password'],
-                    'email_verified_at' => null,
+                    'email_verified_at' => $requiresVerification ? null : now(),
                 ]);
 
                 $organization = Organization::create([
@@ -75,14 +86,23 @@ class AuthController extends Controller
             });
 
             [$user] = $result;
-            $verificationSent = $this->verification->send($user);
-
-            return response()->json([
-                'message' => 'Registration successful. Check your email to verify the account before signing in.',
-                'verification_required' => true,
+            $verificationSent = $requiresVerification ? $this->verification->send($user) : false;
+            $payload = [
+                'message' => $requiresVerification
+                    ? 'Registration successful. Check your email to verify the account before signing in.'
+                    : 'Registration successful. Local testing verification is disabled; you can sign in now.',
+                'verification_required' => $requiresVerification,
                 'verification_email_sent' => $verificationSent,
                 'email' => $user->email,
-            ], 202);
+            ];
+
+            if (! $requiresVerification) {
+                $user->tokens()->delete();
+                $payload['token'] = $user->createToken('api-token')->plainTextToken;
+                $payload += $this->context->resolve($user);
+            }
+
+            return response()->json($payload, 202);
 
         } catch (\Throwable $e) {
             return response()->json([
@@ -108,12 +128,21 @@ class AuthController extends Controller
             ]);
         }
 
-        if (! $user->hasVerifiedEmail()) {
+        if ($this->requiresEmailVerification() && ! $user->hasVerifiedEmail()) {
             return response()->json([
                 'message' => 'Verify your email address before signing in.',
                 'code' => 'EMAIL_VERIFICATION_REQUIRED',
                 'email' => $user->email,
             ], 403);
+        }
+
+        if ($user->mfa_enabled) {
+            return response()->json([
+                'message' => 'Enter the authenticator code to complete sign-in.',
+                'code' => 'MFA_REQUIRED',
+                'challenge_token' => $this->mfa->issueChallenge($user, $request->ip(), $request->userAgent()),
+                'email' => $user->email,
+            ], 202);
         }
 
         $user->tokens()->delete();

@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\AcademicSession;
 use App\Models\Organization;
 use App\Models\School;
+use App\Models\Term;
 use App\Models\User;
 
 class CurrentContextService
@@ -29,6 +31,7 @@ class CurrentContextService
         $school = $this->currentSchool($user);
         $organization = $this->currentOrganization($user, $school);
         $isOrgOwner = $this->isOrganizationOwner($user);
+        $academicContext = $this->academicContext($school);
 
         // Resolve every membership for context switching, then derive the
         // active-school role set used by the frontend and permission checks.
@@ -75,6 +78,7 @@ class CurrentContextService
             'organization' => $organization,
             'school' => $school,
             'tenant_partition' => $this->tenantPartitions->forSchool($school),
+            'academic_context' => $academicContext,
             'roles' => $this->presentRoles($roles, $school?->id, $isPlatformAdmin),
             'all_roles' => $roles->map(fn($r) => collect($r)->except('permissions')->all())->values(),
             'permissions' => $this->activePermissions($roles, $school?->id, $isPlatformAdmin),
@@ -194,6 +198,41 @@ class CurrentContextService
             ->unique()
             ->values()
             ->all();
+    }
+
+    private function academicContext(?School $school): array
+    {
+        if (! $school) {
+            return [
+                'session' => null,
+                'term' => null,
+                'state' => 'organization_context',
+            ];
+        }
+
+        $session = AcademicSession::query()
+            ->where('school_id', $school->id)
+            ->where('is_current', true)
+            ->first(['id', 'name', 'start_date', 'end_date']);
+        $term = $session
+            ? Term::query()->where('academic_session_id', $session->id)->where('is_current', true)->first(['id', 'name', 'start_date', 'end_date'])
+            : null;
+
+        return [
+            'session' => $session ? [
+                'id' => $session->id,
+                'name' => $session->name,
+                'start_date' => optional($session->start_date)->format('Y-m-d'),
+                'end_date' => optional($session->end_date)->format('Y-m-d'),
+            ] : null,
+            'term' => $term ? [
+                'id' => $term->id,
+                'name' => $term->name,
+                'start_date' => optional($term->start_date)->format('Y-m-d'),
+                'end_date' => optional($term->end_date)->format('Y-m-d'),
+            ] : null,
+            'state' => ! $session ? 'needs_session' : (! $term ? 'needs_term' : 'ready'),
+        ];
     }
 
     /**

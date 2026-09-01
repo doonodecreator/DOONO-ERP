@@ -39,6 +39,10 @@ class StudentEnrollmentResource extends JsonResource
             'enrollment_date' => $this->enrollment_date,
 
             'status' => $this->status,
+            'attendance_id' => $this->attendance_id,
+            'attendance_status' => $this->attendance_status,
+            'attendance_remarks' => $this->attendance_remarks,
+            'attendance_updated_at' => $this->attendance_updated_at,
 
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

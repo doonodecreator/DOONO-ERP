@@ -3,12 +3,17 @@
 namespace App\Services;
 
 use App\Models\Attendance;
+use App\Models\AttendanceCorrection;
+use App\Services\ActivityLogService;
+use App\Services\NotificationService;
 use App\Models\StudentEnrollment;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class AttendanceService
 {
+    public function __construct(private NotificationService $notifications) {}
+
     /**
      * Record daily class attendance in a single batch transaction.
      *
@@ -19,20 +24,25 @@ class AttendanceService
         int $sessionId,
         int $termId,
         string $date,
-        int $recordedByStaffId,
-        array $records
+        ?int $recordedByStaffId,
+        array $records,
+        ?string $correctionReason = null
     ): Collection {
-        return DB::transaction(function () use ($schoolId, $sessionId, $termId, $date, $recordedByStaffId, $records) {
+        return DB::transaction(function () use ($schoolId, $sessionId, $termId, $date, $recordedByStaffId, $records, $correctionReason) {
             $saved = collect();
 
             foreach ($records as $item) {
+                $identity = [
+                    'school_id' => $schoolId,
+                    'student_enrollment_id' => $item['student_enrollment_id'],
+                    'academic_session_id' => $sessionId,
+                    'term_id' => $termId,
+                    'attendance_date' => $date,
+                ];
+                $previous = Attendance::query()->where($identity)->first();
                 $attendance = Attendance::updateOrCreate(
                     [
-                        'school_id' => $schoolId,
-                        'student_enrollment_id' => $item['student_enrollment_id'],
-                        'academic_session_id' => $sessionId,
-                        'term_id' => $termId,
-                        'attendance_date' => $date,
+                        ...$identity,
                     ],
                     [
                         'status' => $item['status'], // Present, Absent, Late, Excused
@@ -40,6 +50,30 @@ class AttendanceService
                         'staff_id' => $recordedByStaffId,
                     ]
                 );
+
+                if ($attendance->status === 'Absent') {
+                    $this->notifications->notifyAttendanceAbsence($attendance);
+                }
+
+                if ($previous && ($previous->status !== $attendance->status || $previous->remarks !== $attendance->remarks)) {
+                    AttendanceCorrection::create([
+                        'school_id' => $schoolId,
+                        'attendance_id' => $attendance->id,
+                        'edited_by' => $recordedByStaffId,
+                        'before_status' => $previous->status,
+                        'after_status' => $attendance->status,
+                        'before_remarks' => $previous->remarks,
+                        'after_remarks' => $attendance->remarks,
+                        'reason' => $correctionReason ?: 'Attendance record corrected by an authorized school user.',
+                    ]);
+                    ActivityLogService::log(
+                        module: 'attendance',
+                        action: 'corrected',
+                        description: 'An attendance record was corrected with a preserved before-and-after history.',
+                        schoolId: $schoolId,
+                        properties: ['attendance_id' => $attendance->id, 'before_status' => $previous->status, 'after_status' => $attendance->status],
+                    );
+                }
 
                 $saved->push($attendance);
             }

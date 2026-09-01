@@ -1,0 +1,828 @@
+
+=== PrincipalController ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Attendance;
+use App\Models\ResultSubmission;
+use App\Models\Staff;
+use App\Models\Student;
+use App\Services\CurrentContextService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class PrincipalController extends Controller
+{
+    public function __construct(
+        private CurrentContextService $context
+    ) {
+    }
+
+    public function dashboard(Request $request)
+    {
+        $schoolId = $this->requireSchool($request);
+        $school = $this->context->currentSchool($request->user());
+
+        $activeStaff = Staff::query()
+            ->where('school_id', $schoolId)
+            ->where('employment_status', 'Active');
+
+        $teacherCount = (clone $activeStaff)
+            ->where(function ($query) {
+                $query
+                    ->whereRaw('LOWER(designation) LIKE ?', ['%teacher%'])
+                    ->orWhereRaw('LOWER(designation) LIKE ?', ['%form_teacher%']);
+            })
+            ->count();
+
+        $pendingResultSubmissions = ResultSubmission::query()
+            ->with(['class', 'subject', 'creator'])
+            ->where('school_id', $schoolId)
+            ->whereNotNull('submitted_at')
+            ->whereNull('approved_at');
+
+        $attendanceRecords = Attendance::query()
+            ->where('school_id', $schoolId)
+            ->whereDate('attendance_date', '>=', now()->subDays(30)->toDateString());
+        $attendanceTotal = (clone $attendanceRecords)->count();
+        $attendancePresent = (clone $attendanceRecords)
+            ->whereRaw('LOWER(status) = ?', ['present'])
+            ->count();
+
+        $attendanceRate = $attendanceTotal > 0
+            ? number_format(($attendancePresent / $attendanceTotal) * 100, 1) . '%'
+            : '0%';
+
+        $departments = (clone $activeStaff)
+            ->select([
+                'department',
+                DB::raw('COUNT(*) as count'),
+            ])
+            ->whereNotNull('department')
+            ->where('department', '!=', '')
+            ->groupBy('department')
+            ->orderByDesc('count')
+            ->get()
+            ->map(fn (Staff $staff) => [
+                'department' => $staff->department,
+                'count' => (int) $staff->count,
+                'head' => null,
+            ])
+            ->values();
+
+        return response()->json([
+            'school_summary' => [
+                'school_name' => $school?->name,
+                'principal_name' => $request->user()->name,
+                'academic_session' => null,
+                'term' => null,
+            ],
+            'metrics' => [
+                'total_teachers' => $teacherCount,
+                'total_students' => Student::query()
+                    ->where('school_id', $schoolId)
+                    ->whereRaw('LOWER(status) = ?', ['active'])
+                    ->count(),
+                // The current API exposes admission creation, but no pending-admission state.
+                'pending_admissions' => null,
+                'pending_results_approval' => (clone $pendingResultSubmissions)->count(),
+                'attendance_rate' => $attendanceRate,
+            ],
+
+=== VicePrincipalAcademicController ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\AcademicSession;
+use App\Models\CbtQuestion;
+use App\Models\Examination;
+use App\Models\Result;
+use App\Models\ResultSubmission;
+use App\Models\Staff;
+use App\Models\Subject;
+use App\Services\CurrentContextService;
+use Illuminate\Http\Request;
+
+class VicePrincipalAcademicController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {
+    }
+
+    public function dashboard(Request $request)
+    {
+        $user = $request->user();
+        $school = $this->context->currentSchool($user);
+
+        abort_unless($school, 409, 'No active school.');
+
+        $schoolId = (int) $school->id;
+        $staffMember = Staff::query()
+            ->where('school_id', $schoolId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        $currentSession = AcademicSession::query()
+            ->where('school_id', $schoolId)
+            ->where('is_current', true)
+            ->first()
+            ?? AcademicSession::query()
+                ->where('school_id', $schoolId)
+                ->latest('start_date')
+                ->first();
+
+        $currentTerm = $currentSession
+            ? ($currentSession->terms()->where('is_current', true)->first()
+                ?? $currentSession->terms()->orderBy('start_date')->first())
+            : null;
+
+        $totalSubjects = Subject::query()
+            ->where('school_id', $schoolId)
+            ->where('is_active', true)
+            ->count();
+
+        $activeTeachers = Staff::query()
+            ->where('school_id', $schoolId)
+            ->where('employment_status', 'Active')
+            ->count();
+
+        $submissionQuery = ResultSubmission::query()
+            ->where('school_id', $schoolId);
+        $submissionCount = (clone $submissionQuery)->count();
+        $completedSubmissionCount = (clone $submissionQuery)
+            ->whereIn('status', ['submitted', 'approved', 'published'])
+            ->count();
+        $caSubmissionPercentage = $submissionCount > 0
+            ? round(($completedSubmissionCount / $submissionCount) * 100)
+            : 0;
+
+        $pendingResultsReview = (clone $submissionQuery)
+            ->where('status', 'submitted')
+            ->count();
+
+        $pendingRawResults = Result::query()
+            ->where('school_id', $schoolId)
+            ->where(function ($query) {
+                $query->where('is_published', false)
+                    ->orWhereNull('is_published')
+                    ->orWhere('status', '!=', 'published')
+                    ->orWhereNull('status');
+            })
+            ->count();
+
+        $cbtQuestionsCount = CbtQuestion::query()
+            ->where('school_id', $schoolId)
+            ->where('is_active', true)
+            ->count();
+
+        $subjectAssignments = Subject::query()
+            ->with(['classes:id,name'])
+
+=== VicePrincipalAdminController ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Asset;
+use App\Models\DisciplineCase;
+use App\Models\LeaveRequest;
+use App\Models\SchoolEvent;
+use App\Models\SchoolFacility;
+use App\Models\Staff;
+use App\Models\StaffAttendance;
+use App\Services\CurrentContextService;
+use Illuminate\Http\Request;
+
+class VicePrincipalAdminController extends Controller
+{
+    public function __construct(
+        private CurrentContextService $context
+    ) {
+    }
+
+    public function dashboard(Request $request)
+    {
+        $schoolId = $this->requireSchool($request);
+        $today = now()->toDateString();
+
+        $activeStaff = Staff::where('school_id', $schoolId)
+            ->where('employment_status', 'Active');
+
+        $pendingLeaves = LeaveRequest::with('staff')
+            ->where('school_id', $schoolId)
+            ->where('status', 'Pending')
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        $upcomingEvents = SchoolEvent::where('school_id', $schoolId)
+            ->where('start_at', '>=', now())
+            ->where('status', '!=', 'Cancelled')
+            ->orderBy('start_at')
+            ->limit(5)
+            ->get();
+
+        $school = $this->context->currentSchool($request->user());
+        $facilitiesDueInspection = SchoolFacility::where('school_id', $schoolId)
+            ->whereNotNull('next_inspection_at')
+            ->whereDate('next_inspection_at', '<=', $today)
+            ->whereNotIn('status', ['Decommissioned', 'Unavailable'])
+            ->count();
+
+        return response()->json([
+            'admin_summary' => [
+                'vp_name' => $request->user()->name,
+                'school_name' => $school?->name,
+                'session' => null,
+                'term' => null,
+            ],
+            'metrics' => [
+                'total_staff' => (clone $activeStaff)->count(),
+                'staff_present_today' => StaffAttendance::where('school_id', $schoolId)
+                    ->whereDate('attendance_date', $today)
+                    ->whereRaw('LOWER(status) = ?', ['present'])
+                    ->count(),
+                'pending_leave_requests' => LeaveRequest::where('school_id', $schoolId)
+                    ->where('status', 'Pending')
+                    ->count(),
+                'open_discipline_cases' => DisciplineCase::where('school_id', $schoolId)
+                    ->whereNotIn('status', ['Resolved', 'Dismissed'])
+                    ->count(),
+                'total_assets_count' => Asset::where('school_id', $schoolId)
+                    ->where('status', '!=', 'Disposed')
+                    ->count(),
+                'total_facilities_count' => SchoolFacility::where('school_id', $schoolId)->count(),
+                'facilities_under_maintenance' => SchoolFacility::where('school_id', $schoolId)
+                    ->whereIn('status', ['Under Maintenance', 'Unavailable'])
+                    ->count(),
+                'facilities_due_inspection' => $facilitiesDueInspection,
+            ],
+            'leave_requests' => $pendingLeaves->map(fn (LeaveRequest $leave) => [
+                'id' => $leave->id,
+                'staff' => $leave->staff?->full_name ?? 'Unknown staff',
+                'type' => $leave->leave_type,
+                'duration' => $leave->start_date && $leave->end_date
+                    ? ($leave->start_date->diffInDays($leave->end_date) + 1) . ' Days'
+                    : '—',
+                'status' => $leave->status,
+            ])->values(),
+            'upcoming_events' => $upcomingEvents->map(fn (SchoolEvent $event) => [
+                'id' => $event->id,
+
+=== TeacherPortalController ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\AcademicSession;
+use App\Models\Assignment;
+use App\Models\Staff;
+use App\Models\Student;
+use App\Models\Timetable;
+use App\Services\CurrentContextService;
+use Illuminate\Http\Request;
+
+class TeacherPortalController extends Controller
+{
+    public function __construct(protected CurrentContextService $context) {}
+
+    public function dashboard(Request $request)
+    {
+        $user = $request->user();
+        $school = $this->context->currentSchool($user);
+        $schoolId = $school?->id;
+
+        if (! $schoolId) {
+            return response()->json(['message' => 'No active school context found.'], 403);
+        }
+
+        $staff = Staff::where('school_id', $schoolId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (! $staff) {
+            return response()->json(['message' => 'No active staff record found for this school.'], 403);
+        }
+
+        $session = AcademicSession::where('school_id', $schoolId)
+            ->where('is_current', true)
+            ->first()
+            ?? AcademicSession::where('school_id', $schoolId)
+                ->latest('start_date')
+                ->first();
+
+        $currentTerm = $session
+            ? ($session->terms()->where('is_current', true)->first()
+                ?? $session->terms()->latest('start_date')->first())
+            : null;
+
+        $timetableQuery = Timetable::where('school_id', $schoolId)
+            ->where('staff_id', $staff->id)
+            ->where('is_active', true)
+            ->where(function ($statusQuery) {
+                $statusQuery->where('workflow_status', 'published')->orWhereNull('workflow_status');
+            })
+            ->where(function ($query) {
+                $query->where('entry_type', 'lesson')->orWhereNull('entry_type');
+            })
+            ->when($session, fn ($query) => $query->where('academic_session_id', $session->id))
+            ->when($currentTerm, fn ($query) => $query->where('term_id', $currentTerm->id));
+
+        $timetable = $timetableQuery->clone()
+            ->with(['class', 'stream', 'subject'])
+            ->orderByRaw("FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')")
+            ->orderBy('start_time')
+            ->get();
+
+        $myTimetable = $timetable->map(fn (Timetable $slot) => [
+            'id' => $slot->id,
+            'day_of_week' => $slot->day_of_week,
+            'start_time' => $slot->start_time,
+            'end_time' => $slot->end_time,
+            'subject' => $slot->subject?->name,
+            'class' => $slot->class?->name,
+            'stream' => $slot->stream?->name,
+            'room' => $slot->room,
+        ])->values();
+
+        $myClasses = $timetable
+            ->unique(fn (Timetable $slot) => ($slot->class_id ?? 0) . '-' . ($slot->stream_id ?? 0))
+            ->map(fn (Timetable $slot) => [
+                'id' => $slot->class_id,
+                'class_id' => $slot->class_id,
+                'stream_id' => $slot->stream_id,
+                'name' => trim(($slot->class?->name ?? 'Class') . ' ' . ($slot->stream?->name ?? '')),
+                'student_count' => $slot->class
+                    ? $slot->class->students()->where('school_id', $schoolId)->count()
+                    : 0,
+            ])->values();
+
+        $mySubjects = $timetable
+            ->unique(fn (Timetable $slot) => ($slot->subject_id ?? 0) . '-' . ($slot->class_id ?? 0) . '-' . ($slot->stream_id ?? 0))
+
+=== FormTeacherPortalController ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Assignment;
+use App\Models\Attendance;
+use App\Models\DisciplineCase;
+use App\Models\FormTeacherAssignment;
+use App\Models\Staff;
+use App\Models\StudentEnrollment;
+use App\Services\CurrentContextService;
+use Illuminate\Http\Request;
+
+class FormTeacherPortalController extends Controller
+{
+    public function __construct(protected CurrentContextService $context) {}
+
+    public function dashboard(Request $request)
+    {
+        $schoolId = $this->requireSchool($request);
+        $user = $request->user();
+
+        $staff = Staff::query()
+            ->where('school_id', $schoolId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (! $staff) {
+            return response()->json(['message' => 'No active staff record found for this school.'], 403);
+        }
+
+        $assignment = FormTeacherAssignment::query()
+            ->where('school_id', $schoolId)
+            ->where('staff_id', $staff->id)
+            ->where('is_active', true)
+            ->with(['class.division', 'stream'])
+            ->latest()
+            ->first();
+
+        $recentAssignments = Assignment::query()
+            ->where('school_id', $schoolId)
+            ->where('teacher_staff_id', $staff->id)
+            ->with(['class', 'subject'])
+            ->latest('due_date')
+            ->take(5)
+            ->get()
+            ->map(fn ($item) => [
+                'id' => $item->id,
+                'title' => $item->title,
+                'subject' => $item->subject?->name,
+                'class' => $item->class?->name,
+                'due_date' => $item->due_date?->toDateString(),
+            ])
+            ->values();
+
+        if (! $assignment) {
+            return response()->json([
+                'profile' => [
+                    'first_name' => $staff->first_name,
+                    'last_name' => $staff->last_name,
+                    'form_class' => null,
+                    'total_students' => 0,
+                ],
+                'class_students' => [],
+                'pending_tasks' => [
+                    'behaviour_reports' => 0,
+                    'parent_messages' => 0,
+                ],
+                'recent_behaviour_logs' => [],
+                'recent_assignments' => $recentAssignments,
+                'message' => 'Your Proprietor has not assigned a form class yet.',
+            ]);
+        }
+
+        $enrollments = StudentEnrollment::query()
+            ->where('school_id', $schoolId)
+            ->where('class_id', $assignment->class_id)
+            ->where('status', 'Active')
+            ->when(
+                $assignment->stream_id,
+                fn ($query) => $query->where('stream_id', $assignment->stream_id),
+            )
+            ->with('student')
+            ->orderBy('id')
+            ->get();
+
+        $enrollmentIds = $enrollments->pluck('id');
+        $attendanceByEnrollment = Attendance::query()
+            ->whereIn('student_enrollment_id', $enrollmentIds)
+
+=== NurseryHeadController ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\AcademicSession;
+use App\Models\Attendance;
+use App\Models\ClassModel;
+use App\Models\Division;
+use App\Models\ResultSubmission;
+use App\Models\Staff;
+use App\Models\StudentEnrollment;
+use App\Services\CurrentContextService;
+use Illuminate\Http\Request;
+
+class NurseryHeadController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {
+    }
+
+    public function dashboard(Request $request)
+    {
+        $school = $this->context->currentSchool($request->user());
+        abort_unless($school, 409, 'No active school.');
+
+        $schoolId = (int) $school->id;
+        $divisionIds = $this->divisionIds($schoolId, [
+            'nursery',
+            'creche',
+            'kg',
+            'kindergarten',
+            'early',
+        ]);
+        $session = AcademicSession::query()
+            ->where('school_id', $schoolId)
+            ->where('is_current', true)
+            ->first();
+        $term = $session?->terms()->where('is_current', true)->first();
+        $staffMember = Staff::query()
+            ->where('school_id', $schoolId)
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        $enrollments = $this->activeEnrollments($schoolId, $divisionIds, $session?->id);
+        $classes = ClassModel::query()
+            ->whereIn('division_id', $divisionIds ?: [-1])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'division_id']);
+        $classPupilCounts = StudentEnrollment::query()
+            ->where('school_id', $schoolId)
+            ->where('status', 'Active')
+            ->when($session, fn ($query) => $query->where('academic_session_id', $session->id))
+            ->whereIn('class_id', $classes->pluck('id')->all() ?: [-1])
+            ->selectRaw('class_id, COUNT(*) as pupil_count')
+            ->groupBy('class_id')
+            ->pluck('pupil_count', 'class_id');
+
+        $submissions = ResultSubmission::query()
+            ->with('subject:id,name')
+            ->where('school_id', $schoolId)
+            ->whereIn('class_id', $classes->pluck('id')->all() ?: [-1])
+            ->latest()
+            ->limit(8)
+            ->get(['id', 'class_id', 'subject_id', 'status', 'created_at']);
+        $classNames = $classes->pluck('name', 'id');
+
+        return response()->json([
+            'nursery_summary' => [
+                'head_name' => $staffMember?->full_name,
+                'school_name' => $school->name,
+                'session' => $session?->name,
+                'term' => $term?->name,
+            ],
+            'metrics' => [
+                'total_pupils' => $enrollments->count(),
+                'total_teachers' => $this->activeTeacherCount($schoolId),
+                'nursery_classes' => $classes->count(),
+                'today_attendance_pct' => $this->attendanceRate($schoolId, $divisionIds, $session?->id),
+                'pending_assessments' => ResultSubmission::query()
+                    ->where('school_id', $schoolId)
+                    ->whereIn('class_id', $classes->pluck('id')->all() ?: [-1])
+                    ->where('status', 'submitted')
+                    ->count(),
+            ],
+            'classes' => $classes->map(fn (ClassModel $class) => [
+                'id' => $class->id,
+                'name' => $class->name,
+
+=== PrimaryHeadmasterController ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\AcademicSession;
+use App\Models\Attendance;
+use App\Models\ClassModel;
+use App\Models\Division;
+use App\Models\ResultSubmission;
+use App\Models\Staff;
+use App\Models\StudentEnrollment;
+use App\Models\StudentPromotion;
+use App\Services\CurrentContextService;
+use Illuminate\Http\Request;
+
+class PrimaryHeadmasterController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {
+    }
+
+    public function dashboard(Request $request)
+    {
+        $school = $this->context->currentSchool($request->user());
+        abort_unless($school, 409, 'No active school.');
+
+        $schoolId = (int) $school->id;
+        $divisionIds = $this->divisionIds($schoolId, ['primary', 'basic']);
+        $session = AcademicSession::query()
+            ->where('school_id', $schoolId)
+            ->where('is_current', true)
+            ->first();
+        $term = $session?->terms()->where('is_current', true)->first();
+        $staffMember = Staff::query()
+            ->where('school_id', $schoolId)
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        $classes = ClassModel::query()
+            ->whereIn('division_id', $divisionIds ?: [-1])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'division_id']);
+        $classIds = $classes->pluck('id')->all() ?: [-1];
+        $classPupilCounts = StudentEnrollment::query()
+            ->where('school_id', $schoolId)
+            ->where('status', 'Active')
+            ->when($session, fn ($query) => $query->where('academic_session_id', $session->id))
+            ->whereIn('class_id', $classIds)
+            ->selectRaw('class_id, COUNT(*) as pupil_count')
+            ->groupBy('class_id')
+            ->pluck('pupil_count', 'class_id');
+        $submissions = ResultSubmission::query()
+            ->with('subject:id,name')
+            ->where('school_id', $schoolId)
+            ->whereIn('class_id', $classIds)
+            ->latest()
+            ->limit(8)
+            ->get(['id', 'class_id', 'subject_id', 'status', 'created_at']);
+        $classNames = $classes->pluck('name', 'id');
+
+        return response()->json([
+            'headmaster_summary' => [
+                'headmaster_name' => $staffMember?->full_name,
+                'school_name' => $school->name,
+                'session' => $session?->name,
+                'term' => $term?->name,
+            ],
+            'metrics' => [
+                'total_pupils' => StudentEnrollment::query()
+                    ->where('school_id', $schoolId)
+                    ->where('status', 'Active')
+                    ->when($session, fn ($query) => $query->where('academic_session_id', $session->id))
+                    ->whereIn('division_id', $divisionIds ?: [-1])
+                    ->count(),
+                'total_teachers' => $this->activeTeacherCount($schoolId),
+                'primary_classes' => $classes->count(),
+                'today_attendance_pct' => $this->attendanceRate($schoolId, $divisionIds, $session?->id),
+                'pending_promotions' => null,
+                'result_submissions_pending_review' => ResultSubmission::query()
+                    ->where('school_id', $schoolId)
+                    ->whereIn('class_id', $classIds)
+                    ->where('status', 'submitted')
+                    ->count(),
+            ],
+            'classes' => $classes->map(fn (ClassModel $class) => [
+                'id' => $class->id,
+                'name' => $class->name,
+
+=== SecondaryPrincipalController ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\AcademicSession;
+use App\Models\Attendance;
+use App\Models\ClassModel;
+use App\Models\Division;
+use App\Models\ResultSubmission;
+use App\Models\Staff;
+use App\Models\StudentEnrollment;
+use App\Services\CurrentContextService;
+use Illuminate\Http\Request;
+
+class SecondaryPrincipalController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {
+    }
+
+    public function dashboard(Request $request)
+    {
+        $school = $this->context->currentSchool($request->user());
+        abort_unless($school, 409, 'No active school.');
+
+        $schoolId = (int) $school->id;
+        $divisionIds = $this->divisionIds($schoolId, ['secondary', 'jss', 'sss', 'senior', 'junior']);
+        $session = AcademicSession::query()
+            ->where('school_id', $schoolId)
+            ->where('is_current', true)
+            ->first();
+        $term = $session?->terms()->where('is_current', true)->first();
+        $staffMember = Staff::query()
+            ->where('school_id', $schoolId)
+            ->where('user_id', $request->user()->id)
+            ->first();
+
+        $classes = ClassModel::query()
+            ->whereIn('division_id', $divisionIds ?: [-1])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'division_id']);
+        $classIds = $classes->pluck('id')->all() ?: [-1];
+        $enrollmentQuery = StudentEnrollment::query()
+            ->where('school_id', $schoolId)
+            ->where('status', 'Active')
+            ->when($session, fn ($query) => $query->where('academic_session_id', $session->id))
+            ->whereIn('division_id', $divisionIds ?: [-1]);
+        $submissions = ResultSubmission::query()
+            ->with('subject:id,name')
+            ->where('school_id', $schoolId)
+            ->whereIn('class_id', $classIds)
+            ->latest()
+            ->limit(8)
+            ->get(['id', 'class_id', 'subject_id', 'status', 'created_at']);
+        $classNames = $classes->pluck('name', 'id');
+
+        return response()->json([
+            'principal_summary' => [
+                'principal_name' => $staffMember?->full_name,
+                'school_name' => $school->name,
+                'session' => $session?->name,
+                'term' => $term?->name,
+            ],
+            'metrics' => [
+                'total_students' => $enrollmentQuery->count(),
+                'total_teachers' => Staff::query()
+                    ->where('school_id', $schoolId)
+                    ->where('employment_status', 'Active')
+                    ->where('designation', 'like', '%teacher%')
+                    ->count(),
+                'active_classes' => $classes->count(),
+                'waec_candidates' => null,
+                'pending_results_approvals' => ResultSubmission::query()
+                    ->where('school_id', $schoolId)
+                    ->whereIn('class_id', $classIds)
+                    ->where('status', 'submitted')
+                    ->count(),
+            ],
+            'streams' => $this->streamSummary($schoolId, $divisionIds, $session?->id),
+            'external_exams_status' => [],
+            'external_exams_available' => false,
+            'external_exams_message' => 'WAEC, NECO, and UTME integrations are not registered in the current backend, so no external-exam status is fabricated.',
+            'recent_results' => $submissions->map(fn (ResultSubmission $submission) => [
+                'id' => $submission->id,
+                'class' => $classNames[$submission->class_id] ?? 'Class unavailable',
+                'type' => $submission->subject?->name ?? 'Result submission',
+                'status' => $submission->status,
+
+=== ProprietorController ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
+use App\Models\RoleInvitation;
+use App\Models\Staff;
+use App\Models\Student;
+use App\Services\CurrentContextService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class ProprietorController extends Controller
+{
+    public function __construct(private CurrentContextService $context)
+    {
+    }
+
+    public function dashboard(Request $request)
+    {
+        $user = $request->user();
+        $resolved = $this->context->resolve($user);
+        $school = $resolved['school'];
+
+        if (!$school) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active school.',
+            ], 409);
+        }
+
+        $schoolId = $school['id'];
+        $schoolModel = \App\Models\School::with(['organization', 'owner'])->find($schoolId);
+
+        $currentSession = DB::table('academic_sessions')
+            ->where('school_id', $schoolId)
+            ->where('is_current', true)
+            ->first();
+
+        $currentTerm = $currentSession
+            ? DB::table('terms')
+                ->where('academic_session_id', $currentSession->id)
+                ->where('is_current', true)
+                ->first()
+            : null;
+
+        $totalStaff = Staff::where('school_id', $schoolId)
+            ->where('employment_status', 'Active')
+            ->count();
+
+        $totalStudents = Student::where('school_id', $schoolId)
+            ->where('status', 'Active')
+            ->count();
+
+        $enrollmentIdsForSchool = function ($query) use ($schoolId) {
+            $query->select('id')
+                ->from('student_enrollments')
+                ->where('school_id', $schoolId);
+        };
+
+        $studentFeeIdsForSchool = function ($query) use ($enrollmentIdsForSchool) {
+            $query->select('id')
+                ->from('student_fees')
+                ->whereIn('student_enrollment_id', $enrollmentIdsForSchool);
+        };
+
+        $totalRevenue = DB::table('fee_payments')
+            ->whereIn('student_fee_id', $studentFeeIdsForSchool)
+            ->sum('amount_paid');
+
+        $leadershipDesignations = [
+            'Principal',
+            'Vice Principal Academic',
+            'Vice Principal Administration',
+            'Bursar',
+            'Cashier',
+        ];
+
+        $leadership = Staff::where('school_id', $schoolId)
+            ->whereIn('designation', $leadershipDesignations)
+            ->where('employment_status', 'Active')
+            ->get(['designation', 'first_name', 'middle_name', 'last_name'])
+            ->map(fn ($staff) => [
+                'role' => $staff->designation,
+                'name' => $staff->full_name,
+                'status' => 'Assigned',
+            ])
+            ->values();
+

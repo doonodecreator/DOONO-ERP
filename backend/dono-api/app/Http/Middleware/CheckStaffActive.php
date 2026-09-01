@@ -32,8 +32,7 @@ class CheckStaffActive
             ], 401);
         }
 
-        $schoolId = $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($user)?->id;
+        $schoolId = $this->context->currentSchool($user)?->id;
 
         if (! $schoolId) {
             return $next($request);

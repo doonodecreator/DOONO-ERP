@@ -1,0 +1,10 @@
+backend/dono-api/app/Http/Controllers/Api/ClassController.php
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php
+backend/dono-api/app/Http/Controllers/Api/ParentController.php
+backend/dono-api/app/Http/Controllers/Api/ResultController.php
+backend/dono-api/app/Http/Controllers/Api/StreamController.php
+backend/dono-api/app/Http/Controllers/Api/StudentController.php
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php
+backend/dono-api/app/Http/Controllers/Api/StudentPromotionController.php
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php

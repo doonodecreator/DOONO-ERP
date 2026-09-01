@@ -1,0 +1,25 @@
+=== FRONTEND BUILD ===
+
+> frontend@0.0.0 build
+> vite build
+
+vite v8.1.4 building client environment for production...
+[2Ktransforming...[32m✓[0m 288 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[0m[32mindex.html                 [0m[1;2m    0.45 kB[0m[2m │ gzip:   0.29 kB[0m
+[2mdist/[0m[2massets/[0m[35mindex-CH1w5HTK.css  [0m[1;2m   76.44 kB[0m[2m │ gzip:  14.63 kB[0m
+[2mdist/[0m[2massets/[0m[36mindex-YZX3PjC6.js   [0m[33;1m1,919.90 kB[0m[2m │ gzip: 457.03 kB[0m
+
+[plugin builtin:vite-reporter] [33;1m
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[0m
+✓ built in 746ms
+=== PHOTO COMPONENT CHECK ===
+2:import { FormField } from "./FormField";
+14:    <FormField label={label} htmlFor={id} hint={hint} error={error} required={required}>
+22:    </FormField>
+=== PHP CHECK ===
+No syntax errors detected in backend/dono-api/app/Http/Requests/UpdateStudentRequest.php

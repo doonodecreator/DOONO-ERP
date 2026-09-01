@@ -17,7 +17,7 @@ class StudentLeaveApplicationController extends Controller
         $query = StudentLeaveApplication::with(['student:id,first_name,middle_name,last_name', 'requester:id,name', 'reviewer:id,name'])
             ->where('school_id', $schoolId);
 
-        if (!$this->canReview($request)) {
+        if (!$this->canReview($request, $schoolId)) {
             $query->whereIn('student_id', $this->ownedStudentIds($request, $schoolId));
         }
 
@@ -52,8 +52,10 @@ class StudentLeaveApplicationController extends Controller
     public function review(Request $request, StudentLeaveApplication $studentLeaveApplication)
     {
         $schoolId = $this->requireSchool($request);
-        abort_unless($this->canReview($request), 403);
+        abort_unless($this->canReview($request, $schoolId), 403);
         abort_unless((int) $studentLeaveApplication->school_id === $schoolId, 404);
+
+        abort_unless($studentLeaveApplication->status === 'Pending', 409, 'Only pending leave applications can be reviewed.');
 
         $data = $request->validate([
             'status' => ['required', Rule::in(['Approved', 'Rejected'])],
@@ -70,16 +72,20 @@ class StudentLeaveApplicationController extends Controller
     {
         $userId = $request->user()->id;
         return Student::where('school_id', $schoolId)
+            ->where('status', 'Active')
             ->where(function ($query) use ($userId) {
                 $query->where('user_id', $userId)
-                    ->orWhereHas('guardians', fn ($guardianQuery) => $guardianQuery->where('user_id', $userId));
+                    ->orWhereHas('guardians', fn ($guardianQuery) => $guardianQuery->where('user_id', $userId))
+                    ->orWhereHas('parents', fn ($parentQuery) => $parentQuery
+                        ->where('parents.school_id', $schoolId)
+                        ->whereHas('guardian', fn ($guardianQuery) => $guardianQuery->where('user_id', $userId)));
             })
             ->pluck('id')->map(fn ($id) => (int) $id)->all();
     }
 
-    private function canReview(Request $request): bool
+    private function canReview(Request $request, int $schoolId): bool
     {
         return collect(['proprietor', 'principal', 'vice_principal_admin'])
-            ->contains(fn (string $role) => $request->user()->hasRole($role));
+            ->contains(fn (string $role) => $request->user()->hasRole($role, $schoolId));
     }
 }

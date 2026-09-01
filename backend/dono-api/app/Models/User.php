@@ -25,6 +25,9 @@ class User extends Authenticatable implements MustVerifyEmailContract
         'password_changed_at',
         'email_verified_at',
         'current_school_id',
+        'mfa_enabled',
+        'mfa_secret',
+        'mfa_recovery_codes',
     ];
 
     protected $appends = [
@@ -34,6 +37,8 @@ class User extends Authenticatable implements MustVerifyEmailContract
     protected $hidden = [
         'password',
         'remember_token',
+        'mfa_secret',
+        'mfa_recovery_codes',
     ];
 
     public function getAvatarUrlAttribute(): ?string
@@ -48,6 +53,11 @@ class User extends Authenticatable implements MustVerifyEmailContract
             'password' => 'hashed',
             'must_change_password' => 'boolean',
             'password_changed_at' => 'datetime',
+            'mfa_enabled' => 'boolean',
+            'mfa_secret' => 'encrypted',
+            'mfa_recovery_codes' => 'encrypted:array',
+            'mfa_confirmed_at' => 'datetime',
+            'mfa_last_used_at' => 'datetime',
         ];
     }
 

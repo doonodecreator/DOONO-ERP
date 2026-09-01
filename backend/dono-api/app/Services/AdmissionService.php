@@ -14,6 +14,8 @@ class AdmissionService
     public function __construct(
         private readonly CurrentContextService $context,
         private readonly SubscriptionQuotaService $quotas,
+        private readonly StudentAdmissionNumberService $admissionNumbers,
+        private readonly MediaStorageService $media,
     ) {}
 
     public function admit(Request $request, array $data): StudentEnrollment
@@ -32,10 +34,17 @@ class AdmissionService
             $studentData = Arr::except($data, [
                 'term_id',
                 'enrollment_date',
+                'admission_number',
+                'school_id',
             ]);
 
             $studentData['school_id'] = $schoolId;
+            $studentData['admission_number'] = $this->admissionNumbers->allocate($schoolId);
             $studentData['status'] = 'Active';
+
+            if ($request->hasFile('photo')) {
+                $studentData['photo'] = $this->media->storeImage($request->file('photo'), 'schools/' . $schoolId . '/students');
+            }
 
             $student = Student::create($studentData);
 

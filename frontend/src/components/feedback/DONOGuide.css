@@ -9,7 +9,8 @@
 }
 
 .dono-guide-trigger,
-.dono-guide-tour-trigger {
+.dono-guide-tour-trigger,
+.dono-guide-support-trigger {
   min-height: 40px;
   padding: 10px 14px;
   border: 0;
@@ -22,6 +23,12 @@
   font-weight: 700;
 }
 
+.dono-guide-support-trigger {
+  border: 1px solid #c7d2fe;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
 .dono-guide-tour-trigger {
   border: 1px solid #bfdbfe;
   background: #eff6ff;
@@ -31,6 +38,11 @@
 .dono-guide-trigger:hover,
 .dono-guide-trigger:focus-visible {
   background: #1e3a8a;
+}
+
+.dono-guide-support-trigger:hover,
+.dono-guide-support-trigger:focus-visible {
+  background: #e0e7ff;
 }
 
 .dono-guide-tour-trigger:hover,
@@ -296,7 +308,8 @@
   }
 
   .dono-guide-trigger,
-  .dono-guide-tour-trigger {
+  .dono-guide-tour-trigger,
+  .dono-guide-support-trigger {
     min-height: 38px;
     padding: 9px 11px;
     font-size: 11px;
@@ -313,5 +326,273 @@
   .dono-guide-skip,
   .dono-guide-next {
     width: 100%;
+  }
+}
+
+.dono-guide-context-cards {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.dono-guide-context-cards div {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.dono-guide-context-cards strong {
+  color: #334155;
+  font-size: 12px;
+}
+
+.dono-guide-context-cards span {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+@media (min-width: 520px) {
+  .dono-guide-context-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.dono-guide-explanation-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.dono-guide-explanation-grid section,
+.dono-guide-detail-section,
+.dono-guide-control-card {
+  padding: 13px;
+  border: 1px solid #dbeafe;
+  border-radius: 11px;
+  background: #f8fbff;
+}
+
+.dono-guide-explanation-grid strong,
+.dono-guide-detail-section h3,
+.dono-guide-control-card strong {
+  color: #1e3a8a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.dono-guide-explanation-grid p,
+.dono-guide-detail-section p,
+.dono-guide-control-card p {
+  margin: 5px 0 0;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.dono-guide-detail-section {
+  margin-top: 14px;
+  border-color: #e2e8f0;
+  background: #ffffff;
+}
+
+.dono-guide-detail-section h3 {
+  margin: 0;
+  color: #334155;
+  font-size: 13px;
+}
+
+.dono-guide-field-list,
+.dono-guide-control-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.dono-guide-field-list div {
+  display: grid;
+  gap: 3px;
+  padding: 9px 10px;
+  border-left: 3px solid #60a5fa;
+  border-radius: 7px;
+  background: #f8fafc;
+}
+
+.dono-guide-field-list span,
+.dono-guide-control-list p,
+.dono-guide-success-list {
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.dono-guide-field-list strong {
+  color: #1e293b;
+}
+
+.dono-guide-control-card {
+  margin-top: 14px;
+  border-color: #a5b4fc;
+  background: linear-gradient(135deg, #eef2ff, #ffffff);
+}
+
+.dono-guide-control-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dono-guide-control-heading h3 {
+  margin: 5px 0 0;
+  color: #1e293b;
+  font-size: 16px;
+}
+
+.dono-guide-control-close {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #c7d2fe;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.dono-guide-control-grid {
+  display: grid;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.dono-guide-control-grid div {
+  padding-top: 8px;
+  border-top: 1px solid #e0e7ff;
+}
+
+.dono-guide-control-list div {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.dono-guide-control-list span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.dono-guide-control-list p {
+  margin: 0;
+}
+
+.dono-guide-success-heading {
+  margin-top: 15px !important;
+}
+
+.dono-guide-success-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.dono-guide-success-list li + li {
+  margin-top: 5px;
+}
+
+@media (min-width: 520px) {
+  .dono-guide-explanation-grid,
+  .dono-guide-control-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.dono-guide-role-profile {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.dono-guide-role-definition,
+.dono-guide-role-grid > div,
+.dono-guide-role-workflow {
+  padding: 13px;
+  border: 1px solid #dbeafe;
+  border-radius: 11px;
+  background: #f8fbff;
+}
+
+.dono-guide-role-definition strong,
+.dono-guide-role-grid strong,
+.dono-guide-role-workflow strong {
+  color: #1e3a8a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.dono-guide-role-definition p,
+.dono-guide-role-grid p {
+  margin: 5px 0 0;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.dono-guide-role-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.dono-guide-role-grid ul,
+.dono-guide-role-workflow ol {
+  margin: 7px 0 0;
+  padding-left: 18px;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.dono-guide-role-grid li + li,
+.dono-guide-role-workflow li + li {
+  margin-top: 5px;
+}
+
+.dono-guide-role-grid > div:nth-child(2) {
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+
+.dono-guide-role-grid > div:nth-child(2) strong {
+  color: #991b1b;
+}
+
+.dono-guide-role-workflow {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
+
+.dono-guide-role-workflow ol {
+  color: #312e81;
+}
+
+@media (min-width: 520px) {
+  .dono-guide-role-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dono-guide-role-grid:first-of-type > div:last-child {
+    grid-column: 1 / -1;
   }
 }

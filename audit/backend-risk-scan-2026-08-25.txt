@@ -1,0 +1,752 @@
+=== UNSCOPED QUERY CANDIDATES ===
+backend/dono-api/app/Http/Controllers/Api/AcademicSettingController.php:25:        $settings = DB::table('academic_settings')->where('school_id', $schoolId)->first();
+backend/dono-api/app/Http/Controllers/Api/AcademicSettingController.php:58:            'data' => DB::table('academic_settings')->where('school_id', $schoolId)->first(),
+backend/dono-api/app/Http/Controllers/Api/AssetController.php:156:            $locked = Asset::query()->whereKey($asset->id)->where('school_id', $schoolId)->lockForUpdate()->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php:123:        abort_unless($classIds->count() === 1 && $classIds->first(), 422, 'Attendance records must belong to one active school class.');
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php:124:        $this->assertTeachingScope($request, (int) $schoolId, (int) $classIds->first(), null, (int) $request->academic_session_id, (int) $request->term_id);
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php:137:                    ->first();
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php:175:                'class_id' => (int) $classIds->first(),
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:116:        $user = User::where('email', $email)->first();
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:242:        $staff = Staff::where('school_id', $schoolId)->where('user_id', $request->user()->id)->first();
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:259:        $staff = Staff::where('school_id', $schoolId)->where('user_id', $request->user()->id)->first();
+backend/dono-api/app/Http/Controllers/Api/BookController.php:80:            $lockedBook = Book::query()->whereKey($book->id)->lockForUpdate()->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/BookLoanController.php:57:            $book = Book::query()->whereKey($validated['book_id'])->where('school_id', $schoolId)->lockForUpdate()->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/BookLoanController.php:58:            $student = Student::query()->whereKey($validated['student_id'])->where('school_id', $schoolId)->whereRaw('LOWER(status) = ?', ['active'])->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/BookLoanController.php:93:            $lockedLoan = BookLoan::query()->whereKey($loan->id)->lockForUpdate()->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/BookLoanController.php:94:            $book = Book::query()->whereKey($lockedLoan->book_id)->where('school_id', $lockedLoan->school_id)->lockForUpdate()->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/ClinicVisitController.php:78:        $student = Student::query()->whereKey($validated['student_id'])->where('school_id', $schoolId)->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/CountryController.php:15:            'data' => Country::all()
+backend/dono-api/app/Http/Controllers/Api/FeePaymentController.php:50:            ->first();
+backend/dono-api/app/Http/Controllers/Api/FormTeacherPortalController.php:27:            ->first();
+backend/dono-api/app/Http/Controllers/Api/FormTeacherPortalController.php:39:            ->first();
+backend/dono-api/app/Http/Controllers/Api/HostelAllocationController.php:36:        $room = HostelRoom::with('hostel')->whereKey($validated['hostel_room_id'])->whereHas('hostel', fn ($query) => $query->where('school_id', $schoolId))->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php:213:            ->first();
+backend/dono-api/app/Http/Controllers/Api/MedicalRecordController.php:75:        $student = Student::query()->whereKey($validated['student_id'])->where('school_id', $schoolId)->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/NurseryHeadController.php:39:            ->first();
+backend/dono-api/app/Http/Controllers/Api/NurseryHeadController.php:40:        $term = $session?->terms()->where('is_current', true)->first();
+backend/dono-api/app/Http/Controllers/Api/NurseryHeadController.php:44:            ->first();
+backend/dono-api/app/Http/Controllers/Api/NurseryHeadController.php:56:            ->whereIn('class_id', $classes->pluck('id')->all() ?: [-1])
+backend/dono-api/app/Http/Controllers/Api/NurseryHeadController.php:64:            ->whereIn('class_id', $classes->pluck('id')->all() ?: [-1])
+backend/dono-api/app/Http/Controllers/Api/NurseryHeadController.php:84:                    ->whereIn('class_id', $classes->pluck('id')->all() ?: [-1])
+backend/dono-api/app/Http/Controllers/Api/NurseryHeadController.php:115:            ->all();
+backend/dono-api/app/Http/Controllers/Api/OrganizationOwnerController.php:110:                    ? $planNames->first()
+backend/dono-api/app/Http/Controllers/Api/OrganizationOwnerController.php:116:                    ->first()?->format('Y-m-d'),
+backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php:35:            ->first();
+backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php:74:            $student = $studentFees->first()->studentEnrollment->student;
+backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php:121:            ->first();
+backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php:131:            ->first();
+backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php:39:            Student::whereKey($data['student_id'])->lockForUpdate()->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php:48:        $this->portalAccounts->syncParentChildren($parentStudent->parent()->firstOrFail(), $schoolId);
+backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php:85:            Student::whereKey($data['student_id'])->lockForUpdate()->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php:95:        $this->portalAccounts->syncParentChildren($parentStudent->parent()->firstOrFail(), $schoolId);
+backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php:97:            $oldParent = \App\Models\ParentModel::query()->find($oldParentId);
+backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php:118:        $parent = $parentStudent->parent()->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:48:        $studentFee = $studentFeeQuery->latest('id')->first();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:60:            ->first();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:68:        $schoolSettings = DB::table('school_settings')->where('school_id', $schoolId)->first();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:110:        $transaction = FeePaymentTransaction::where('school_id', $schoolId)->where('reference', $reference)->first();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:117:        $schoolSettings = DB::table('school_settings')->where('school_id', $schoolId)->first();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:140:        $school = $schoolId ? School::find($schoolId) : null;
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:149:        $platformSettings = SystemSetting::first();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:156:            ->first();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:163:            ->first();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:194:            ->first();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:296:        $transaction = DB::table('payment_transactions')->where('reference', $reference)->where('school_id', $schoolId)->first();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:300:        $subscription = SchoolSubscription::where('school_id', $schoolId)->whereKey($transaction->school_subscription_id)->first();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:359:                $transaction = DB::table('payment_transactions')->where('reference', $reference)->first();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:360:                $subscription = $transaction ? SchoolSubscription::find($transaction->school_subscription_id) : SchoolSubscription::where('payment_reference', $reference)->first();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:365:                $feeTransaction = FeePaymentTransaction::where('reference', $reference)->first();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:371:            $transaction = $eventReference ? PaymentTransaction::where('reference', $eventReference)->first() : null;
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:387:            $transaction = $eventReference ? PaymentTransaction::where('reference', $eventReference)->first() : null;
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:405:            $locked = FeePaymentTransaction::whereKey($transaction->id)->lockForUpdate()->first();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:441:            $transaction = DB::table('payment_transactions')->where('reference', $reference)->lockForUpdate()->first();
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:82:            $locked = PaymentTransaction::query()->whereKey($paymentTransaction->id)->lockForUpdate()->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/PlatformOwnerController.php:121:        $targetUser = User::findOrFail($request->user_id);
+backend/dono-api/app/Http/Controllers/Api/PrimaryHeadmasterController.php:34:            ->first();
+backend/dono-api/app/Http/Controllers/Api/PrimaryHeadmasterController.php:35:        $term = $session?->terms()->where('is_current', true)->first();
+backend/dono-api/app/Http/Controllers/Api/PrimaryHeadmasterController.php:39:            ->first();
+backend/dono-api/app/Http/Controllers/Api/PrimaryHeadmasterController.php:46:        $classIds = $classes->pluck('id')->all() ?: [-1];
+backend/dono-api/app/Http/Controllers/Api/PrimaryHeadmasterController.php:120:            ->all();
+backend/dono-api/app/Http/Controllers/Api/ProprietorController.php:34:        $schoolModel = \App\Models\School::with(['organization', 'owner'])->find($schoolId);
+backend/dono-api/app/Http/Controllers/Api/ProprietorController.php:39:            ->first();
+backend/dono-api/app/Http/Controllers/Api/ProprietorController.php:45:                ->first()
+backend/dono-api/app/Http/Controllers/Api/ReceiptController.php:21:        ->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/ResultController.php:88:            ->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/ResultEntryController.php:61:        $staff = Staff::query()->where('school_id', $schoolId)->where('user_id', $request->user()->id)->first();
+backend/dono-api/app/Http/Controllers/Api/ResultEntryController.php:133:                ->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/ResultEntryController.php:171:        return (int) $classIds->first();
+backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php:67:            ->first();
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:92:        $role = Role::where('slug', $data['role_slug'])->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:108:            ->first();
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:119:            ...collect($data)->except('role_slug')->all(),
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:311:            ->first();
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:357:            ->all();
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:383:            ->first();
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:436:            ->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:95:            $proprietorRole = Role::where('slug', 'proprietor')->first();
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:105:            $settings = SystemSetting::first();
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:108:            $defaultPlan = $defaultPlanId ? SubscriptionPlan::find($defaultPlanId) : null;
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:297:            ->first();
+backend/dono-api/app/Http/Controllers/Api/SchoolSettingController.php:26:        $settings = DB::table('school_settings')->where('school_id', $schoolId)->first();
+backend/dono-api/app/Http/Controllers/Api/SchoolSettingController.php:69:            'data' => DB::table('school_settings')->where('school_id', $schoolId)->first(),
+backend/dono-api/app/Http/Controllers/Api/SchoolSubscriptionController.php:385:        $platformFreeAccess = !(bool) (SystemSetting::first()?->enforce_subscriptions ?? false);
+backend/dono-api/app/Http/Controllers/Api/SchoolSubscriptionController.php:393:            ->first();
+backend/dono-api/app/Http/Controllers/Api/SchoolSubscriptionController.php:445:                    'features' => $this->access->planFeatureSlugs($subscription)->values()->all(),
+backend/dono-api/app/Http/Controllers/Api/SecondaryPrincipalController.php:33:            ->first();
+backend/dono-api/app/Http/Controllers/Api/SecondaryPrincipalController.php:34:        $term = $session?->terms()->where('is_current', true)->first();
+backend/dono-api/app/Http/Controllers/Api/SecondaryPrincipalController.php:38:            ->first();
+backend/dono-api/app/Http/Controllers/Api/SecondaryPrincipalController.php:45:        $classIds = $classes->pluck('id')->all() ?: [-1];
+backend/dono-api/app/Http/Controllers/Api/SecondaryPrincipalController.php:108:            ->all();
+backend/dono-api/app/Http/Controllers/Api/SecondaryPrincipalController.php:130:        ])->values()->all();
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:266:        return $query->pluck('class_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php:62:                ->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php:140:                ->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php:52:            ->first();
+backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php:65:            $settings = DB::table('school_settings')->where('school_id', $schoolId)->lockForUpdate()->first();
+backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php:68:                $settings = DB::table('school_settings')->where('school_id', $schoolId)->lockForUpdate()->first();
+backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php:39:            ->first();
+backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php:115:            ->first();
+backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php:117:            ? $currentSession->terms()->where('is_current', true)->first()
+backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php:118:                ?? $currentSession->terms()->orderBy('start_date')->first()
+backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php:127:            ->first();
+backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php:230:            ->first();
+backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php:239:            ->first();
+backend/dono-api/app/Http/Controllers/Api/SystemSettingController.php:21:        ])->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/SystemSettingController.php:31:        $settings = SystemSetting::firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/TeacherPortalController.php:30:            ->first();
+backend/dono-api/app/Http/Controllers/Api/TeacherPortalController.php:38:            ->first()
+backend/dono-api/app/Http/Controllers/Api/TeacherPortalController.php:41:                ->first();
+backend/dono-api/app/Http/Controllers/Api/TeacherPortalController.php:44:            ? ($session->terms()->where('is_current', true)->first()
+backend/dono-api/app/Http/Controllers/Api/TeacherPortalController.php:45:                ?? $session->terms()->latest('start_date')->first())
+backend/dono-api/app/Http/Controllers/Api/TermController.php:49:            $academicSession = AcademicSession::findOrFail(
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:320:            ->first();
+backend/dono-api/app/Http/Controllers/Api/TransportAllocationController.php:57:        $route = TransportRoute::query()->whereKey($validated['transport_route_id'])->where('school_id', $schoolId)->with('vehicle')->first();
+backend/dono-api/app/Http/Controllers/Api/TransportAllocationController.php:59:        $student = Student::query()->whereKey($validated['student_id'])->where('school_id', $schoolId)->whereRaw('LOWER(status) = ?', ['active'])->first();
+backend/dono-api/app/Http/Controllers/Api/TransportAllocationController.php:66:        $latestInspection = VehicleInspection::query()->where('school_id', $schoolId)->where('vehicle_id', $route->vehicle->id)->latest('inspection_date')->latest('id')->first();
+backend/dono-api/app/Http/Controllers/Api/TransportRouteController.php:70:                ? Vehicle::whereKey($validated['vehicle_id'])->where('school_id', $schoolId)->first()
+backend/dono-api/app/Http/Controllers/Api/TransportRouteController.php:77:                $inspection = VehicleInspection::query()->where('school_id', $schoolId)->where('vehicle_id', $newVehicle->id)->latest('inspection_date')->latest('id')->first();
+backend/dono-api/app/Http/Controllers/Api/VicePrincipalAcademicController.php:34:            ->first();
+backend/dono-api/app/Http/Controllers/Api/VicePrincipalAcademicController.php:39:            ->first()
+backend/dono-api/app/Http/Controllers/Api/VicePrincipalAcademicController.php:43:                ->first();
+backend/dono-api/app/Http/Controllers/Api/VicePrincipalAcademicController.php:46:            ? ($currentSession->terms()->where('is_current', true)->first()
+backend/dono-api/app/Http/Controllers/Api/VicePrincipalAcademicController.php:47:                ?? $currentSession->terms()->orderBy('start_date')->first())
+backend/dono-api/app/Http/Controllers/Api/SchoolSetupDelegationController.php:35:                $user = $items->first()->user;
+backend/dono-api/app/Http/Controllers/Api/SchoolSetupController.php:27:        $school = School::findOrFail($schoolId);
+backend/dono-api/app/Http/Controllers/Api/SchoolSetupController.php:37:                ->all();
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php:62:        $staff = Staff::where('school_id', $schoolId)->where('user_id', $request->user()->id)->first();
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php:134:        $existing = AssignmentSubmission::where('assignment_id', $assignment->id)->where('student_id', $student->id)->first();
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php:170:        return response()->json(['data' => AssignmentSubmission::where('assignment_id', $assignment->id)->where('student_id', $student->id)->first()]);
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php:206:            ->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:94:            $communication->read_at = $communication->reads->first()?->read_at
+backend/dono-api/app/Http/Controllers/Api/StudentLeaveApplicationController.php:83:            ->pluck('id')->map(fn ($id) => (int) $id)->all();
+backend/dono-api/app/Http/Controllers/Api/PayrollEntryController.php:49:        $contract = ! empty($data['contract_id']) ? StaffContract::query()->whereKey($data['contract_id'])->where('school_id', $schoolId)->where('staff_id', $data['staff_id'])->where('status', 'active')->firstOrFail() : null;
+backend/dono-api/app/Http/Controllers/Api/PayrollEntryController.php:77:            $contract = StaffContract::query()->whereKey($data['contract_id'])->where('school_id', $schoolId)->where('staff_id', $payrollEntry->staff_id)->where('status', 'active')->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/FinancialReportController.php:44:        $schoolSettings = DB::table('school_settings')->where('school_id', $schoolId)->first();
+backend/dono-api/app/Http/Controllers/Api/LibraryController.php:74:            ->first();
+backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php:177:                $latest = $assessment->attempts()->where('student_enrollment_id', $enrollment->id)->latest('attempt_number')->first();
+backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php:205:                ->first();
+backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php:234:                'question_order' => $questionOrder->all(),
+backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php:239:            return $this->submitForStudent($request, CbtAttempt::findOrFail($state['expired_attempt_id']), true);
+backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php:251:        $question = $cbtAttempt->assessment->questions()->whereKey($data['assessment_question_id'])->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php:256:            $existing = $cbtAttempt->answers()->where('cbt_assessment_question_id', $question->id)->lockForUpdate()->first();
+backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php:335:            ->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php:342:        $assessment = $attempt->assessment()->with(['assessmentStructure', 'resultSubmission'])->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php:369:        $student = Student::where('school_id', $schoolId)->where('user_id', $request->user()->id)->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php:370:        $enrollment = StudentEnrollment::where('school_id', $schoolId)->where('student_id', $student->id)->where('status', 'Active')->latest()->first();
+backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php:389:                ->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/EmailVerificationController.php:17:        $user = User::findOrFail($id);
+backend/dono-api/app/Http/Controllers/Api/EmailVerificationController.php:84:        $user = User::where('email', $email)->first();
+backend/dono-api/app/Http/Controllers/Api/PlatformAnnouncementController.php:122:        $user = User::where('email', $email)->first();
+backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php:82:            ])->all();
+backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php:113:            ])->all();
+backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php:126:            properties: collect($validated)->except(['logo', 'report_card_logo', 'principal_signature', 'school_stamp'])->all(),
+backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php:156:        $configuration = AcademicConfiguration::query()->where('school_id', $school->id)->first();
+backend/dono-api/app/Http/Controllers/Api/ReportCardVerificationController.php:23:            ->first();
+backend/dono-api/app/Http/Controllers/Api/AssignmentAttachmentController.php:36:        $student = Student::query()->where('school_id', $schoolId)->where('user_id', $request->user()->id)->first();
+backend/dono-api/app/Http/Controllers/Api/AssignmentAttachmentController.php:61:        $student = Student::query()->where('school_id', $schoolId)->where('user_id', $user->id)->first();
+backend/dono-api/app/Http/Controllers/Api/AssignmentAttachmentController.php:76:        $student = Student::query()->where('school_id', $schoolId)->where('user_id', $user->id)->first();
+backend/dono-api/app/Http/Controllers/Api/VehicleInspectionController.php:30:        $vehicle = Vehicle::query()->whereKey($validated['vehicle_id'])->where('school_id', $schoolId)->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/BookReservationController.php:19:        $student = Student::query()->where('school_id', $schoolId)->where('user_id', $request->user()->id)->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/BookReservationController.php:27:        $student = Student::query()->where('school_id', $schoolId)->where('user_id', $request->user()->id)->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/BookReservationController.php:30:        $book = Book::query()->whereKey($data['book_id'])->where('school_id', $schoolId)->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/BookReservationController.php:51:        $book = Book::query()->whereKey($validated['book_id'])->where('school_id', $schoolId)->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/BookReservationController.php:52:        $student = Student::query()->whereKey($validated['student_id'])->where('school_id', $schoolId)->whereRaw('LOWER(status) = ?', ['active'])->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/BookReservationController.php:75:            $reservation = BookReservation::query()->whereKey($bookReservation->id)->lockForUpdate()->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/StaffContractController.php:36:        $staff = Staff::query()->whereKey($data['staff_id'])->where('school_id', $schoolId)->firstOrFail();
+backend/dono-api/app/Http/Controllers/Api/StudentOfficialDocumentController.php:79:        $guardian = $student->guardians->first();
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:80:            $challenge = MfaChallenge::with('user')->where('token_hash', hash('sha256', $data['challenge_token']))->whereNull('used_at')->lockForUpdate()->first();
+backend/dono-api/app/Http/Controllers/Api/PublicIntegrationController.php:152:            ->first();
+backend/dono-api/app/Http/Controllers/Api/PublicIntegrationController.php:200:        return School::query()->select(['id', 'name', 'short_name', 'school_type', 'address', 'phone', 'email'])->findOrFail($schoolId);
+backend/dono-api/app/Http/Controllers/Api/TwilioWebhookController.php:29:            ->first();
+backend/dono-api/app/Http/Controllers/Api/TwilioWebhookController.php:79:        $params = $request->all();
+backend/dono-api/app/Http/Controllers/Api/BenchmarkController.php:71:            ->map(fn ($items) => $items->first())
+backend/dono-api/app/Http/Controllers/Api/AiTutorController.php:62:            ->first();
+backend/dono-api/app/Http/Controllers/Api/AiTutorController.php:68:            ? AiConversation::query()->whereKey($validated['conversation_id'])->where('school_id', $schoolId)->where('user_id', $user->id)->where('status', 'active')->firstOrFail()
+backend/dono-api/app/Http/Controllers/Api/AiTutorController.php:80:        ])->values()->all();
+backend/dono-api/app/Http/Controllers/Api/CommunityController.php:56:            $consent = StudentCommunityConsent::query()->where('school_id', $schoolId)->where('student_id', $student->id)->where('status', 'approved')->where('video_allowed', true)->first();
+backend/dono-api/app/Http/Controllers/Api/CommunityController.php:163:        $guardian = Guardian::query()->where('school_id', $schoolId)->where('user_id', $request->user()->id)->with('students')->first();
+backend/dono-api/app/Http/Controllers/Api/CommunityController.php:186:        $guardian = Guardian::query()->where('school_id', $schoolId)->where('user_id', $request->user()->id)->whereHas('students', fn ($query) => $query->whereKey($studentCommunityConsent->student_id)->where('school_id', $schoolId))->first();
+backend/dono-api/app/Http/Controllers/Api/CommunityController.php:242:        return Student::query()->where('school_id', $schoolId)->where('user_id', $request->user()->id)->first();
+backend/dono-api/app/Http/Controllers/Api/ExchangeController.php:33:        $setting = SchoolExchangeSetting::query()->where('school_id', $schoolId)->where('enabled', true)->first();
+backend/dono-api/app/Http/Controllers/Api/ExchangeController.php:35:        $consent = StudentCommunityConsent::query()->where('school_id', $schoolId)->where('student_id', $student->id)->first();
+backend/dono-api/app/Http/Controllers/Api/ExchangeController.php:119:        $target = School::query()->findOrFail($validated['school_id']);
+backend/dono-api/app/Http/Controllers/Api/ExchangeController.php:162:        $student = Student::query()->where('school_id', $schoolId)->where('user_id', $request->user()->id)->where('status', 'Active')->first();
+backend/dono-api/app/Http/Controllers/Api/LiveRoomController.php:70:            $project = ExchangeProject::query()->whereKey($validated['exchange_project_id'] ?? 0)->where('school_id', $schoolId)->where('status', 'published')->first();
+backend/dono-api/app/Http/Controllers/Api/LiveRoomController.php:128:            $project = $liveRoom->exchangeProject()->where('status', 'published')->first();
+backend/dono-api/app/Http/Controllers/Api/LiveRoomController.php:131:                $consent = StudentCommunityConsent::query()->where('school_id', $schoolId)->where('student_id', $student->id)->first();
+backend/dono-api/app/Http/Controllers/Api/LiveRoomController.php:141:            $consent = StudentCommunityConsent::query()->where('school_id', $schoolId)->where('student_id', $student->id)->first();
+backend/dono-api/app/Http/Controllers/Api/LiveRoomController.php:167:        $participant = $liveRoom->participants()->where('user_id', $request->user()->id)->where('student_id', $student->id)->where('status', 'admitted')->first();
+backend/dono-api/app/Http/Controllers/Api/LiveRoomController.php:253:        $room = $roomName ? LiveRoom::query()->where('provider_room_id', $roomName)->first() : null;
+backend/dono-api/app/Http/Controllers/Api/LiveRoomController.php:262:                $participant = $room->participants()->where('provider_identity', $identity)->first();
+backend/dono-api/app/Http/Controllers/Api/LiveRoomController.php:275:            $recording = $egressId ? LiveRoomRecording::query()->where('provider', 'livekit')->where('provider_egress_id', $egressId)->first() : null;
+backend/dono-api/app/Http/Controllers/Api/LiveRoomController.php:319:        $student = Student::query()->where('school_id', $schoolId)->where('user_id', $request->user()->id)->where('status', 'Active')->first();
+backend/dono-api/app/Services/Academic/PromotionService.php:23:        $config = AcademicConfiguration::where('school_id', $schoolId)->first();
+backend/dono-api/app/Services/Academic/PromotionService.php:75:            ->firstOrFail();
+backend/dono-api/app/Services/Academic/ReportCardService.php:34:        $academicConfiguration = AcademicConfiguration::query()->where('school_id', $schoolId)->first();
+backend/dono-api/app/Services/Academic/ReportCardService.php:35:        $schoolSettings = DB::table('school_settings')->where('school_id', $schoolId)->first();
+backend/dono-api/app/Services/Academic/ReportCardService.php:54:            ->first();
+backend/dono-api/app/Services/Academic/ReportCardService.php:63:                ->first();
+backend/dono-api/app/Services/Academic/ReportCardService.php:85:        })->first();
+backend/dono-api/app/Services/Academic/ResultEntryService.php:55:            $existing = Result::query()->where($identity)->first();
+backend/dono-api/app/Services/Academic/ResultProcessingService.php:69:            ->firstOrFail();
+backend/dono-api/app/Services/Academic/ResultProcessingService.php:93:            ->first();
+backend/dono-api/app/Services/Academic/ResultProcessingService.php:232:        $enrollment = StudentEnrollment::query()->findOrFail($studentEnrollmentId);
+backend/dono-api/app/Services/Academic/ResultProcessingService.php:238:            ->first();
+backend/dono-api/app/Services/Academic/ResultProcessingService.php:248:            ->firstOrFail();
+backend/dono-api/app/Services/Academic/ResultProcessingService.php:294:            ->firstOrFail();
+backend/dono-api/app/Services/Academic/ResultProcessingService.php:299:            ->firstOrFail();
+backend/dono-api/app/Services/Academic/ResultSubmissionService.php:180:                'result_status_counts' => Result::where('result_submission_id', $submission->id)->selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status')->all(),
+backend/dono-api/app/Services/AssetService.php:20:                ->first();
+backend/dono-api/app/Services/AttendanceService.php:42:                $previous = Attendance::query()->where($identity)->first();
+backend/dono-api/app/Services/CurrentContextService.php:44:                'permissions' => $role->permissions->pluck('slug')->all(),
+backend/dono-api/app/Services/CurrentContextService.php:56:                $proprietorRole = \App\Models\Role::where('slug', 'proprietor')->first();
+backend/dono-api/app/Services/CurrentContextService.php:61:                    'permissions' => $proprietorRole ? $proprietorRole->permissions->pluck('slug')->all() : [],
+backend/dono-api/app/Services/CurrentContextService.php:83:            'all_roles' => $roles->map(fn($r) => collect($r)->except('permissions')->all())->values(),
+backend/dono-api/app/Services/CurrentContextService.php:106:            $selectedSchool = School::find($user->current_school_id);
+backend/dono-api/app/Services/CurrentContextService.php:128:            ->first();
+backend/dono-api/app/Services/CurrentContextService.php:131:            return School::find($roleWithSchool->pivot->school_id);
+backend/dono-api/app/Services/CurrentContextService.php:137:            ->first();
+backend/dono-api/app/Services/CurrentContextService.php:153:            ->first();
+backend/dono-api/app/Services/CurrentContextService.php:183:            ->map(fn ($role) => collect($role)->except('permissions')->all())
+backend/dono-api/app/Services/CurrentContextService.php:185:            ->all();
+backend/dono-api/app/Services/CurrentContextService.php:200:            ->all();
+backend/dono-api/app/Services/CurrentContextService.php:216:            ->first(['id', 'name', 'start_date', 'end_date']);
+backend/dono-api/app/Services/CurrentContextService.php:218:            ? Term::query()->where('academic_session_id', $session->id)->where('is_current', true)->first(['id', 'name', 'start_date', 'end_date'])
+backend/dono-api/app/Services/DisciplineCaseService.php:20:                ->first();
+backend/dono-api/app/Services/Finance/FeeService.php:35:                ->first();
+backend/dono-api/app/Services/Finance/PaymentService.php:26:            $studentFee = StudentFee::query()->whereKey($data['student_fee_id'])->lockForUpdate()->firstOrFail();
+backend/dono-api/app/Services/Finance/PaymentService.php:43:                ->first();
+backend/dono-api/app/Services/Finance/PaymentService.php:99:                ->first();
+backend/dono-api/app/Services/Finance/PaymentService.php:111:                ->first();
+backend/dono-api/app/Services/PortalAccountService.php:54:                ->first();
+backend/dono-api/app/Services/PortalAccountService.php:103:            ->first();
+backend/dono-api/app/Services/PortalAccountService.php:116:            ->all();
+backend/dono-api/app/Services/PortalAccountService.php:128:        $role = Role::where('slug', $roleSlug)->first();
+backend/dono-api/app/Services/SafetyIncidentService.php:23:                ->first();
+backend/dono-api/app/Services/SafetyIncidentService.php:41:            'Student' => Student::findOrFail($data['student_id'])->full_name,
+backend/dono-api/app/Services/SafetyIncidentService.php:42:            'Staff' => Staff::findOrFail($data['staff_id'])->full_name,
+backend/dono-api/app/Services/SafetyIncidentService.php:43:            'Visitor' => Visitor::findOrFail($data['visitor_id'])->visitor_name,
+backend/dono-api/app/Services/TimetableService.php:38:                ->first();
+backend/dono-api/app/Services/TimetableService.php:55:            ->first();
+backend/dono-api/app/Services/TimetableService.php:72:                ->first();
+backend/dono-api/app/Services/TenantPartitionService.php:46:                : TenantPartition::query()->find($school->tenant_partition_id);
+backend/dono-api/app/Services/SubscriptionAccessService.php:67:        $knownSlugs = $databaseFeatures->pluck('slug')->all();
+backend/dono-api/app/Services/SubscriptionAccessService.php:80:        return $databaseFeatures->concat($missingRows)->values()->all();
+backend/dono-api/app/Services/SubscriptionAccessService.php:99:            'free_features' => $freeFeatures->values()->all(),
+backend/dono-api/app/Services/SubscriptionAccessService.php:100:            'plan_features' => $planFeatures->values()->all(),
+backend/dono-api/app/Services/SubscriptionAccessService.php:101:            'available_features' => $available->values()->all(),
+backend/dono-api/app/Services/SubscriptionAccessService.php:102:            'locked_features' => $catalog->pluck('slug')->diff($available)->values()->all(),
+backend/dono-api/app/Services/SubscriptionAccessService.php:103:            'feature_catalog' => $catalog->all(),
+backend/dono-api/app/Services/SubscriptionQuotaService.php:53:        if (! (bool) (SystemSetting::first()?->enforce_subscriptions ?? false)) {
+backend/dono-api/app/Services/SubscriptionQuotaService.php:61:            ->first();
+backend/dono-api/app/Services/NotificationService.php:121:        return $base->map(fn ($id) => (int) $id)->values()->all();
+backend/dono-api/app/Services/FeatureFlagService.php:29:                fn () => FeatureFlag::query()->where('key', $key)->where('scope_type', $scope['scope_type'])->where('scope_id', $scope['scope_id'])->first()
+backend/dono-api/app/Services/NotificationPreferenceService.php:22:                    ->first()
+backend/dono-api/app/Services/SchoolInsightSnapshotService.php:43:                'subject' => $rows->first()->subject?->name ?: 'Unknown subject',
+backend/dono-api/app/Services/SchoolInsightSnapshotService.php:50:            ->all();
+backend/dono-api/app/Services/MfaService.php:90:            ->first();
+backend/dono-api/app/Services/StudentAdmissionNumberService.php:14:            $school = School::query()->find($schoolId);
+backend/dono-api/app/Services/StudentAdmissionNumberService.php:23:                ->first();
+backend/dono-api/app/Services/StudentAdmissionNumberService.php:37:                    ->first();
+backend/dono-api/app/Services/StudentLifecycleService.php:34:                ->firstOrFail();
+backend/dono-api/app/Services/StudentLifecycleService.php:75:            $matchingSource = $sourceEnrollments->first(fn (StudentEnrollment $enrollment): bool =>
+backend/dono-api/app/Services/StudentLifecycleService.php:92:                ->first();
+backend/dono-api/app/Services/StudentLifecycleService.php:220:            ->first();
+backend/dono-api/app/Services/StudentLifecycleService.php:231:            ->first();
+backend/dono-api/app/Services/StudentLifecycleService.php:266:                ->firstOrFail();
+backend/dono-api/app/Services/StudentLifecycleService.php:278:                ->first();
+backend/dono-api/app/Services/StudentLifecycleService.php:342:                ->firstOrFail();
+backend/dono-api/app/Services/StudentLifecycleService.php:374:            ->firstOrFail();
+backend/dono-api/app/Services/WorkInboxService.php:58:            'items' => $sorted->all(),
+backend/dono-api/app/Services/WorkInboxService.php:84:        $state = SchoolSetupChecklistState::where('school_id', $schoolId)->where('acknowledged', true)->pluck('step_key')->all();
+backend/dono-api/app/Services/GlobalSearchService.php:98:            'results' => $results->take($limit * max(count($types), 1))->values()->all(),
+backend/dono-api/app/Services/LiveRoomService.php:151:        $recording = $room->recordings()->whereIn('status', ['requested', 'starting', 'recording'])->whereNotNull('provider_egress_id')->latest()->first();
+=== REQUEST ID TRUST CANDIDATES ===
+backend/dono-api/app/Http/Controllers/Api/AcademicSessionController.php:43:            $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/AcademicSessionController.php:93:            $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/AcademicSettingController.php:18:        $resolved = $this->context->resolve($request->user());
+backend/dono-api/app/Http/Controllers/Api/AcademicSettingController.php:35:        $resolved = $this->context->resolve($request->user());
+backend/dono-api/app/Http/Controllers/Api/AdmissionController.php:21:            $request->validated()
+backend/dono-api/app/Http/Controllers/Api/AssessmentStructureController.php:35:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/AssessmentStructureController.php:67:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/AssetController.php:34:                $query->where('status', $request->input('status'));
+backend/dono-api/app/Http/Controllers/Api/AssetController.php:37:                $query->where('category', $request->input('category'));
+backend/dono-api/app/Http/Controllers/Api/AssetController.php:40:                $search = trim((string) $request->input('search'));
+backend/dono-api/app/Http/Controllers/Api/AssetController.php:56:        $search = trim((string) $request->input('search'));
+backend/dono-api/app/Http/Controllers/Api/AssetController.php:84:            ...$request->validated(),
+backend/dono-api/app/Http/Controllers/Api/AssetController.php:86:            'registered_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/AssetController.php:112:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/AssetController.php:188:                'actor_id' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/AssetController.php:218:        return min(max($request->integer('per_page', 25), 1), 100);
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php:31:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php:60:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php:112:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php:157:        $staffId = Staff::where('school_id', $schoolId)->where('user_id', $request->user()->id)->value('id');
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php:165:            $request->input('correction_reason')
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php:191:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php:223:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php:242:                ->paginate(min(max($request->integer('per_page', 25), 1), 100)),
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:115:        $email = strtolower(trim((string) $request->input('email')));
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:158:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:179:        $request->user()->currentAccessToken()?->delete();
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:192:        return response()->json($this->context->resolve($request->user()));
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:197:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:213:                $request->file('avatar'),
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:241:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:242:        $staff = Staff::where('school_id', $schoolId)->where('user_id', $request->user()->id)->first();
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:258:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:259:        $staff = Staff::where('school_id', $schoolId)->where('user_id', $request->user()->id)->first();
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:273:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:274:        $schoolId = $request->school_id;
+backend/dono-api/app/Http/Controllers/Api/BookController.php:19:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/BookController.php:39:                ->paginate(min(max($request->integer('per_page', 10), 1), 100))
+backend/dono-api/app/Http/Controllers/Api/BookLoanController.php:21:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/BookLoanController.php:43:                ->paginate(min(max($request->integer('per_page', 10), 1), 100))
+backend/dono-api/app/Http/Controllers/Api/BookLoanController.php:71:                'issued_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:33:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:36:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:37:            ! $request->user()->isSuperAdmin()
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:45:                ->where('user_id', $request->user()->id)
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:48:            if ($staffId && $request->user()->hasRole('teacher', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:54:            } elseif ($staffId && $request->user()->hasRole('form_teacher', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:74:            $request->validated()
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:97:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:98:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:99:            $class->division->school_id !== $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:120:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:121:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:122:            $class->division->school_id !== $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:128:            $request->validated()
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:147:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:148:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:149:            $class->division->school_id !== $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/ClinicVisitController.php:18:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/ClinicVisitController.php:31:        return $request->user()->hasPermission('view_sensitive_health', $schoolId);
+backend/dono-api/app/Http/Controllers/Api/ClinicVisitController.php:58:        $paginator = ClinicVisit::query()->where('school_id', $schoolId)->with(['student:id,school_id,first_name,last_name,surname,admission_number', 'treatedBy:id,name'])->latest('visit_date')->paginate(min(max($request->integer('per_page', 10), 1), 100));
+backend/dono-api/app/Http/Controllers/Api/ClinicVisitController.php:80:        $visit = ClinicVisit::create([...$validated, 'school_id' => $schoolId, 'treated_by' => $request->user()->id, 'referral_status' => $validated['referral_status'] ?? 'none', 'emergency_flag' => (bool) ($validated['emergency_flag'] ?? false)]);
+backend/dono-api/app/Http/Controllers/Api/ClinicVisitController.php:109:        $visit->update([...$validated, 'updated_by' => $request->user()->id]);
+backend/dono-api/app/Http/Controllers/Api/CouponController.php:40:            $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/CouponController.php:73:            properties: ['changed_fields' => array_keys($request->validated())],
+backend/dono-api/app/Http/Controllers/Api/CouponController.php:115:            $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/CouponController.php:144:            properties: ['changed_fields' => array_keys($request->validated())],
+backend/dono-api/app/Http/Controllers/Api/DashboardController.php:31:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php:52:                $query->where('reported_by', $request->user()->id);
+backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php:55:                $query->where('status', $request->input('status'));
+backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php:58:                $query->where('student_id', $request->integer('student_id'));
+backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php:77:                $search = trim((string) $request->input('search'));
+backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php:107:            ...$request->validated(),
+backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php:109:            'reported_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php:150:        if ($disciplineCase->reported_by === $request->user()->id) {
+backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php:156:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php:161:            'reviewed_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php:198:        abort_unless($disciplineCase->reported_by === $request->user()->id, 403);
+backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php:213:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php:230:        return min(max($request->integer('per_page', 25), 1), 100);
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:29:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:30:            ! $request->user()->isSuperAdmin()
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:34:                $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:48:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:51:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:52:            ! $request->user()->isSuperAdmin()
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:54:            $data['school_id'] = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:72:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:73:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:74:            $division->school_id !== $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:92:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:93:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:94:            $division->school_id !== $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:99:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:102:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:103:            ! $request->user()->isSuperAdmin()
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:123:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:124:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:125:            $division->school_id !== $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/ExamScoreController.php:27:        $examScore = ExamScore::create($request->validated());
+backend/dono-api/app/Http/Controllers/Api/ExamScoreController.php:55:        $examScore->update($request->validated());
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php:28:        if (! $request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php:31:                $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php:42:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php:44:        if (! $request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php:46:                $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php:69:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php:71:            $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php:90:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php:92:            $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php:97:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php:99:        if (! $request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php:119:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php:121:            $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/ExpenseController.php:16:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/ExpenseController.php:38:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/ExpenseController.php:43:        $validated['recorded_by'] = $request->user()->id;
+backend/dono-api/app/Http/Controllers/Api/FeatureController.php:22:        if ($request->boolean('active_only')) {
+backend/dono-api/app/Http/Controllers/Api/FeatureController.php:26:        return FeatureResource::collection($query->paginate(min(max($request->integer('per_page', 50), 1), 100)));
+backend/dono-api/app/Http/Controllers/Api/FeatureController.php:31:        $feature = Feature::create($request->validated());
+backend/dono-api/app/Http/Controllers/Api/FeatureController.php:54:        $feature->update($request->validated());
+backend/dono-api/app/Http/Controllers/Api/FeeCategoryController.php:28:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/FeeCategoryController.php:49:        $feeCategory->update($request->validated());
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:25:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:37:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:42:            (int) $request->validated('fee_id'),
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:43:            (int) $request->validated('class_id'),
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:44:            (int) $request->validated('academic_session_id'),
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:45:            (int) $request->validated('term_id'),
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:46:            $request->validated('due_date'),
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:55:                'fee_id' => (int) $request->validated('fee_id'),
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:56:                'class_id' => (int) $request->validated('class_id'),
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:57:                'academic_session_id' => (int) $request->validated('academic_session_id'),
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:58:                'term_id' => (int) $request->validated('term_id'),
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:69:                'fee_id' => (int) $request->validated('fee_id'),
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:71:                'class_id' => (int) $request->validated('class_id'),
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:72:                'academic_session_id' => (int) $request->validated('academic_session_id'),
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:73:                'term_id' => (int) $request->validated('term_id'),
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:80:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:81:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:96:        $fee->update($request->validated());
+backend/dono-api/app/Http/Controllers/Api/FeePaymentController.php:27:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/FeePaymentController.php:43:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/FeePaymentController.php:44:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/FeePaymentController.php:58:            ->where('user_id', $request->user()->id)
+backend/dono-api/app/Http/Controllers/Api/FeePaymentController.php:78:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/FormTeacherPortalController.php:22:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/GradingSystemController.php:23:                $request->school_id
+backend/dono-api/app/Http/Controllers/Api/HostelController.php:16:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/HostelController.php:37:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php:45:                $query->where('status', $request->input('status'));
+backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php:87:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php:96:            'requested_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php:140:        if ($leaveRequest->staff?->user_id === $request->user()->id) {
+backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php:146:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php:149:            'reviewed_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php:212:            ->where('user_id', $request->user()->id)
+backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php:218:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php:235:        return min(max($request->integer('per_page', 25), 1), 100);
+backend/dono-api/app/Http/Controllers/Api/MedicalRecordController.php:18:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/MedicalRecordController.php:31:        return $request->user()->hasPermission('view_sensitive_health', $schoolId);
+backend/dono-api/app/Http/Controllers/Api/MedicalRecordController.php:57:        $paginator = MedicalRecord::query()->where('school_id', $schoolId)->with(['student:id,school_id,first_name,last_name,surname,admission_number'])->latest()->paginate(min(max($request->integer('per_page', 10), 1), 100));
+backend/dono-api/app/Http/Controllers/Api/NurseryHeadController.php:25:        $school = $this->context->currentSchool($request->user());
+backend/dono-api/app/Http/Controllers/Api/NurseryHeadController.php:43:            ->where('user_id', $request->user()->id)
+backend/dono-api/app/Http/Controllers/Api/OrganizationController.php:25:        if (! $this->context->canManageOrganization($request->user(), $organization)) {
+backend/dono-api/app/Http/Controllers/Api/OrganizationController.php:37:        if (! $request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/OrganizationController.php:38:            $query->where('owner_id', $request->user()->id);
+backend/dono-api/app/Http/Controllers/Api/OrganizationController.php:77:                ...$request->validated(),
+backend/dono-api/app/Http/Controllers/Api/OrganizationController.php:151:            $organization->update($request->validated());
+backend/dono-api/app/Http/Controllers/Api/OrganizationOwnerController.php:23:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/OrganizationOwnerController.php:141:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/ParentController.php:29:        if (! $request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/ParentController.php:32:                $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/ParentController.php:43:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/ParentController.php:45:        if (! $request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/ParentController.php:46:            $data['school_id'] = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/ParentController.php:66:            ! $request->user()->isSuperAdmin()
+backend/dono-api/app/Http/Controllers/Api/ParentController.php:67:            && $parent->school_id != $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/ParentController.php:87:            ! $request->user()->isSuperAdmin()
+backend/dono-api/app/Http/Controllers/Api/ParentController.php:88:            && $parent->school_id != $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/ParentController.php:93:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/ParentController.php:95:        if (! $request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/ParentController.php:114:            ! $request->user()->isSuperAdmin()
+backend/dono-api/app/Http/Controllers/Api/ParentController.php:115:            && $parent->school_id != $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php:27:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php:117:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php:118:        $guardian = Guardian::where('user_id', $request->user()->id)
+backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php:34:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php:78:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php:151:        abort_unless($request->user()?->isSuperAdmin(), 403, 'Unauthorized.');
+backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php:163:            abort_unless($request->user()?->isSuperAdmin(), 403, 'Unauthorized.');
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:39:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:108:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:138:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:295:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:331:        $event = (string) $request->input('event');
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:332:        $data = $request->input('data', []);
+backend/dono-api/app/Http/Controllers/Api/PaymentReceiptController.php:18:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/PaymentReceiptController.php:32:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:25:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:40:            ->when($isPlatformAdmin && $request->filled('school_id'), fn ($builder) => $builder->where('school_id', $request->integer('school_id')))
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:87:                'reviewed_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:155:                'refund_requested_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:179:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:190:        abort_unless($request->user()?->isSuperAdmin(), 403, 'Only the Software Owner can review payment reconciliation records.');
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:195:        return min(max($request->integer('per_page', 25), 1), 100);
+backend/dono-api/app/Http/Controllers/Api/PlatformOwnerController.php:23:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/PlatformOwnerController.php:112:        $currentAdmin = $request->user();
+backend/dono-api/app/Http/Controllers/Api/PlatformOwnerController.php:121:        $targetUser = User::findOrFail($request->user_id);
+backend/dono-api/app/Http/Controllers/Api/PortalAccountController.php:34:            $request->validated(),
+backend/dono-api/app/Http/Controllers/Api/PortalAccountController.php:66:            $request->validated(),
+backend/dono-api/app/Http/Controllers/Api/PortalAccountController.php:91:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/PrimaryHeadmasterController.php:26:        $school = $this->context->currentSchool($request->user());
+backend/dono-api/app/Http/Controllers/Api/PrimaryHeadmasterController.php:38:            ->where('user_id', $request->user()->id)
+backend/dono-api/app/Http/Controllers/Api/PrincipalController.php:24:        $school = $this->context->currentSchool($request->user());
+backend/dono-api/app/Http/Controllers/Api/PrincipalController.php:76:                'principal_name' => $request->user()->name,
+backend/dono-api/app/Http/Controllers/Api/PromoCampaignController.php:34:            $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/PromoCampaignController.php:54:            properties: ['changed_fields' => array_keys($request->validated())],
+backend/dono-api/app/Http/Controllers/Api/PromoCampaignController.php:87:            $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/PromoCampaignController.php:106:            properties: ['changed_fields' => array_keys($request->validated())],
+backend/dono-api/app/Http/Controllers/Api/ProprietorController.php:22:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/ReportCardController.php:22:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/ReportCardController.php:42:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/ReportCardController.php:61:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/ResultController.php:27:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/ResultController.php:41:        abort_unless((int) $result->school_id === (int) $this->context->currentSchool($request->user())?->id, 404, 'Result not found.');
+backend/dono-api/app/Http/Controllers/Api/ResultController.php:82:        abort_unless((int) $result->school_id === (int) $this->context->currentSchool($request->user())?->id, 404, 'Result not found.');
+backend/dono-api/app/Http/Controllers/Api/ResultController.php:91:        $updated = $this->submissionService->publish($submission, $request->user()->id);
+backend/dono-api/app/Http/Controllers/Api/ResultEntryController.php:61:        $staff = Staff::query()->where('school_id', $schoolId)->where('user_id', $request->user()->id)->first();
+backend/dono-api/app/Http/Controllers/Api/ResultEntryController.php:62:        if ($staff && $request->user()->hasRole('teacher', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/ResultEntryController.php:176:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php:43:                ->paginate(min(max($request->integer('per_page', 30), 1), 100)),
+backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php:98:            'created_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php:199:        $submission = $this->submissionService->approve($submission, $request->user()->id, $request->input('approval_note'));
+backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php:200:        CbtAssessment::where('result_submission_id', $submission->id)->update(['results_status' => 'approved', 'results_reviewed_by' => $request->user()->id, 'results_reviewed_at' => now()]);
+backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php:219:        $updated = $this->submissionService->publish($submission, $request->user()->id);
+backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php:243:        $updated = $this->submissionService->reopen($submission, $validated['reason'], $request->user()->id);
+backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php:250:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:63:        $perPage = min(max($request->integer('per_page', 15), 5), 100);
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:90:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:96:        if (strcasecmp($data['email'], $request->user()->email) === 0) {
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:122:            'invited_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:225:        if (strcasecmp($invitation->email, $request->user()->email) !== 0) {
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:231:        $staff = DB::transaction(fn () => $this->activateInvitation($invitation, $request->user()));
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:236:            description: "{$request->user()->email} accepted the {$invitation->role?->name} invitation.",
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:256:            'revoked_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:354:        $roles = collect($this->context->resolve($request->user())['roles'] ?? [])
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php:63:                $query->where('reported_by', $request->user()->id);
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php:66:                $query->where('status', $request->input('status'));
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php:83:        $search = trim((string) $request->input('search'));
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php:84:        $studentId = $request->integer('student_id');
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php:165:            ...$request->validated(),
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php:167:            'reported_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php:168:            'requires_medical_attention' => $request->boolean('requires_medical_attention'),
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php:203:        if ($safetyIncident->reported_by === $request->user()->id) {
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php:215:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php:233:            'reviewed_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php:277:        abort_unless($safetyIncident->reported_by === $request->user()->id, 403);
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php:292:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php:309:        return min(max($request->integer('per_page', 25), 1), 100);
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:29:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:45:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:150:        if (!$this->userCanAccessSchool($request->user(), $school)) {
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:162:        if (!$this->userCanAccessSchool($request->user(), $school)) {
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:202:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:232:        if (!$request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:285:        if (!$request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:345:        if (!$request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:368:            $subscription->exempted_by = $request->user()->id;
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:400:        if (!$request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:453:        if (!$request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/SchoolEventController.php:28:            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
+backend/dono-api/app/Http/Controllers/Api/SchoolEventController.php:29:            ->when($request->filled('event_type'), fn ($query) => $query->where('event_type', $request->input('event_type')))
+backend/dono-api/app/Http/Controllers/Api/SchoolEventController.php:30:            ->when($request->filled('from'), fn ($query) => $query->whereDate('start_at', '>=', $request->input('from')))
+backend/dono-api/app/Http/Controllers/Api/SchoolEventController.php:31:            ->when($request->filled('to'), fn ($query) => $query->whereDate('start_at', '<=', $request->input('to')))
+backend/dono-api/app/Http/Controllers/Api/SchoolEventController.php:33:                $search = trim((string) $request->input('search'));
+backend/dono-api/app/Http/Controllers/Api/SchoolEventController.php:48:        $search = trim((string) $request->input('search'));
+backend/dono-api/app/Http/Controllers/Api/SchoolEventController.php:76:            ...$request->validated(),
+backend/dono-api/app/Http/Controllers/Api/SchoolEventController.php:78:            'created_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/SchoolEventController.php:104:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/SchoolEventController.php:137:        return min(max($request->integer('per_page', 25), 1), 100);
+backend/dono-api/app/Http/Controllers/Api/SchoolFacilityController.php:28:            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
+backend/dono-api/app/Http/Controllers/Api/SchoolFacilityController.php:29:            ->when($request->filled('category'), fn ($query) => $query->where('category', $request->input('category')))
+backend/dono-api/app/Http/Controllers/Api/SchoolFacilityController.php:30:            ->when($request->filled('condition'), fn ($query) => $query->where('condition', $request->input('condition')))
+backend/dono-api/app/Http/Controllers/Api/SchoolFacilityController.php:32:                $search = trim((string) $request->input('search'));
+backend/dono-api/app/Http/Controllers/Api/SchoolFacilityController.php:47:        $search = trim((string) $request->input('search'));
+backend/dono-api/app/Http/Controllers/Api/SchoolFacilityController.php:75:            ...$request->validated(),
+backend/dono-api/app/Http/Controllers/Api/SchoolFacilityController.php:77:            'created_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/SchoolFacilityController.php:103:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/SchoolFacilityController.php:136:        return min(max($request->integer('per_page', 25), 1), 100);
+backend/dono-api/app/Http/Controllers/Api/SchoolSettingController.php:18:        $resolved = $this->context->resolve($request->user());
+backend/dono-api/app/Http/Controllers/Api/SchoolSettingController.php:36:        $resolved = $this->context->resolve($request->user());
+backend/dono-api/app/Http/Controllers/Api/SchoolSettingController.php:75:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/SchoolSubscriptionController.php:374:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/SecondaryPrincipalController.php:25:        $school = $this->context->currentSchool($request->user());
+backend/dono-api/app/Http/Controllers/Api/SecondaryPrincipalController.php:37:            ->where('user_id', $request->user()->id)
+backend/dono-api/app/Http/Controllers/Api/StaffAttendanceController.php:32:                $query->whereDate('attendance_date', $request->input('attendance_date'));
+backend/dono-api/app/Http/Controllers/Api/StaffAttendanceController.php:35:                $query->where('staff_id', $request->integer('staff_id'));
+backend/dono-api/app/Http/Controllers/Api/StaffAttendanceController.php:84:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/StaffAttendanceController.php:97:                'recorded_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/StaffAttendanceController.php:117:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/StaffAttendanceController.php:123:            $request->user()->id
+backend/dono-api/app/Http/Controllers/Api/StaffAttendanceController.php:153:        $staffAttendance->update($request->validated());
+backend/dono-api/app/Http/Controllers/Api/StaffAttendanceController.php:181:        return min(max($request->integer('per_page', 25), 1), 100);
+backend/dono-api/app/Http/Controllers/Api/StaffController.php:42:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/StaffController.php:45:            $data['photo'] = $this->media->storeImage($request->file('photo'), 'schools/' . $schoolId . '/staff', $staff->photo);
+backend/dono-api/app/Http/Controllers/Api/StreamController.php:29:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/StreamController.php:30:            ! $request->user()->isSuperAdmin()
+backend/dono-api/app/Http/Controllers/Api/StreamController.php:35:                    $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/StreamController.php:51:            $request->validated()
+backend/dono-api/app/Http/Controllers/Api/StreamController.php:69:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/StreamController.php:70:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/StreamController.php:71:            $stream->class->division->school_id !== $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/StreamController.php:89:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/StreamController.php:90:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/StreamController.php:91:            $stream->class->division->school_id !== $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/StreamController.php:97:            $request->validated()
+backend/dono-api/app/Http/Controllers/Api/StreamController.php:113:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/StreamController.php:114:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/StreamController.php:115:            $stream->class->division->school_id !== $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:48:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:50:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:51:            ! $request->user()->isSuperAdmin()
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:92:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:93:            ! $request->user()->isSuperAdmin()
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:97:                $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:113:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:114:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:121:            $data['photo'] = $this->media->storeImage($request->file('photo'), 'schools/' . $schoolId . '/students');
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:148:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:149:        if (! $request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:219:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:221:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:222:            ! $request->user()->isSuperAdmin()
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:248:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:274:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:275:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:276:            $student->school_id !== $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:281:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:285:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:286:            ! $request->user()->isSuperAdmin()
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:292:            $data['photo'] = $this->media->storeImage($request->file('photo'), 'schools/' . $student->school_id . '/students', $student->photo);
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:313:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:314:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:315:            $student->school_id !== $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php:39:        if (! $request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php:42:                $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php:53:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php:54:        $data['school_id'] = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php:102:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php:103:            $studentEnrollment->school_id != $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php:126:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php:127:            $studentEnrollment->school_id != $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php:132:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php:211:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php:212:            $studentEnrollment->school_id != $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php:26:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php:45:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php:46:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php:117:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php:126:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php:151:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php:169:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php:32:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php:226:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php:228:        $student = Student::where('user_id', $request->user()->id)
+backend/dono-api/app/Http/Controllers/Api/StudentPromotionController.php:38:        if (! $request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/StudentPromotionController.php:39:            $query->where('school_id', $this->context->currentSchool($request->user())?->id);
+backend/dono-api/app/Http/Controllers/Api/StudentPromotionController.php:47:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/StudentPromotionController.php:51:            $request->validated(),
+backend/dono-api/app/Http/Controllers/Api/StudentPromotionController.php:53:            (int) $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/StudentPromotionController.php:150:        if ($request->user()->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/StudentPromotionController.php:155:            (int) $studentPromotion->school_id === (int) $this->context->currentSchool($request->user())?->id,
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:29:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:30:            ! $request->user()->isSuperAdmin()
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:34:                $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:45:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:48:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:49:            ! $request->user()->isSuperAdmin()
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:51:            $data['school_id'] = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:72:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:73:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:74:            $subject->school_id !== $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:93:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:94:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:95:            $subject->school_id !== $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:101:            $request->validated()
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:118:            method_exists($request->user(), 'isSuperAdmin') &&
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:119:            ! $request->user()->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:120:            $subject->school_id !== $this->context->currentSchool($request->user())?->id
+backend/dono-api/app/Http/Controllers/Api/SubscriptionPlanController.php:26:        $validated = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/SubscriptionPlanController.php:59:        $validated = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/SystemSettingController.php:33:        $validated = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/TeacherPortalController.php:20:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/TermController.php:60:            $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/TermController.php:121:            $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:38:        $perPage = min(max((int) $request->input('per_page', 500), 1), 500);
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:65:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:97:        $data = $request->validated();
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:167:        abort_unless($request->user()->hasPermission('manage_timetable', $schoolId), 403);
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:174:            'submitted_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:195:        abort_unless($request->user()->hasPermission('approve_timetable', $schoolId), 403);
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:202:            'approved_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:219:        abort_unless($request->user()->hasPermission('approve_timetable', $schoolId), 403);
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:226:            'published_by' => $request->user()->id,
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:241:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:255:                $query->where($field, $request->input($field));
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:260:            $query->where('division_id', $request->input('division_id'));
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:265:                $dateQuery->whereNull('effective_until')->orWhereDate('effective_until', '>=', $request->input('from'));
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:271:                $dateQuery->whereNull('effective_from')->orWhereDate('effective_from', '<=', $request->input('until'));
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:278:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/TransportAllocationController.php:33:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/VicePrincipalAcademicController.php:25:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/VicePrincipalAdminController.php:45:        $school = $this->context->currentSchool($request->user());
+backend/dono-api/app/Http/Controllers/Api/VicePrincipalAdminController.php:54:                'vp_name' => $request->user()->name,
+backend/dono-api/app/Http/Controllers/Api/VisitorController.php:16:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/VisitorController.php:35:        $schoolId = $this->context->currentSchool($request->user())?->id;
+backend/dono-api/app/Http/Controllers/Api/ActivityLogController.php:17:        $user = $request->user();
+backend/dono-api/app/Http/Controllers/Api/ActivityLogController.php:18:        $perPage = min(max($request->integer('per_page', 20), 5), 100);
+backend/dono-api/app/Http/Controllers/Api/SchoolSetupController.php:72:                'last_viewed_by' => $request->user()->id,
+=== RAW MODEL CREATE/UPDATE CANDIDATES ===
+backend/dono-api/app/Http/Controllers/Api/ExamScoreController.php:27:        $examScore = ExamScore::create($request->validated());
+backend/dono-api/app/Http/Controllers/Api/ExamScoreController.php:55:        $examScore->update($request->validated());
+backend/dono-api/app/Http/Controllers/Api/FeatureController.php:31:        $feature = Feature::create($request->validated());
+backend/dono-api/app/Http/Controllers/Api/FeatureController.php:54:        $feature->update($request->validated());
+backend/dono-api/app/Http/Controllers/Api/FeeCategoryController.php:49:        $feeCategory->update($request->validated());
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:96:        $fee->update($request->validated());
+backend/dono-api/app/Http/Controllers/Api/OrganizationController.php:151:            $organization->update($request->validated());
+backend/dono-api/app/Http/Controllers/Api/StaffAttendanceController.php:153:        $staffAttendance->update($request->validated());
+backend/dono-api/app/Http/Controllers/Api/TwilioWebhookController.php:79:        $params = $request->all();
+=== FILE DOWNLOAD/UPLOAD CANDIDATES ===
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:195:    public function profile(Request $request)
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:200:            'avatar' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:213:                $request->file('avatar'),
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:239:    public function staffProfile(Request $request)
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:249:    public function updateStaffProfile(Request $request)
+backend/dono-api/app/Http/Controllers/Api/StaffController.php:45:            $data['photo'] = $this->media->storeImage($request->file('photo'), 'schools/' . $schoolId . '/staff', $staff->photo);
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:121:            $data['photo'] = $this->media->storeImage($request->file('photo'), 'schools/' . $schoolId . '/students');
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:292:            $data['photo'] = $this->media->storeImage($request->file('photo'), 'schools/' . $student->school_id . '/students', $student->photo);
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php:50:            'attachment' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png,txt', 'max:10240'],
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php:57:            $this->uploadSecurity->validate($request->file('attachment'));
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php:58:            $data['attachment_url'] = $this->media->storePrivate($request->file('attachment'), "schools/{$schoolId}/assignments");
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php:77:            'attachment' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png,txt', 'max:10240'],
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php:83:            $this->uploadSecurity->validate($request->file('attachment'));
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php:84:            $data['attachment_url'] = $this->media->storePrivate($request->file('attachment'), "schools/{$schoolId}/assignments", $assignment->attachment_url);
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php:131:            'attachment' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png,txt', 'max:10240'],
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php:137:            $this->uploadSecurity->validate($request->file('attachment'));
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php:138:            $data['attachment_url'] = $this->media->storePrivate($request->file('attachment'), "schools/{$schoolId}/assignment-submissions/{$assignment->id}", $existing?->attachment_url);
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:45:            || (trim((string) ($firebase['service_account_path'] ?? '')) !== '' && is_file((string) $firebase['service_account_path']));
+backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php:40:            'logo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp,svg', 'max:5120'],
+backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php:41:            'report_card_logo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp,svg', 'max:5120'],
+backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php:42:            'principal_signature' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp,svg', 'max:5120'],
+backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php:43:            'school_stamp' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp,svg', 'max:5120'],
+backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php:87:                        $request->file($field),
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:66:            'attachment' => ['nullable', 'file', 'mimes:pdf,txt,doc,docx,xls,xlsx,png,jpg,jpeg,webp', 'max:10240'],
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:88:            $attachment = $request->hasFile('attachment') ? $this->attachments->store($request->file('attachment'), $ticket->id) : [];
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:126:            'attachment' => ['nullable', 'file', 'mimes:pdf,txt,doc,docx,xls,xlsx,png,jpg,jpeg,webp', 'max:10240'],
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:139:                ...($request->hasFile('attachment') ? $this->attachments->store($request->file('attachment'), $supportTicket->id) : []),
+backend/dono-api/app/Http/Controllers/Api/AssignmentAttachmentController.php:99:        $disk = config('filesystems.default') === 's3' ? Storage::disk('s3') : Storage::disk('public');
+backend/dono-api/app/Http/Controllers/Api/CommunityController.php:53:        $video = $request->file('video');
+backend/dono-api/app/Services/MediaStorageService.php:52:            $disk = Storage::disk($diskName);
+backend/dono-api/app/Services/MediaStorageService.php:69:        return Storage::disk($this->diskName())->url($path);
+backend/dono-api/app/Services/MediaStorageService.php:74:        return (bool) $path && Storage::disk($this->privateDiskName())->exists($path);
+backend/dono-api/app/Services/MediaStorageService.php:79:        $disk = Storage::disk($this->privateDiskName());
+backend/dono-api/app/Services/MediaStorageService.php:98:        $disk = Storage::disk($this->diskName());
+backend/dono-api/app/Services/SupportAttachmentService.php:13:        $disk = Storage::disk('support_private');
+backend/dono-api/app/Services/SupportAttachmentService.php:15:        $path = $file->storeAs('tickets/'.$ticketId, $safeName, 'support_private');
+backend/dono-api/app/Services/SupportAttachmentService.php:27:        $disk = Storage::disk('support_private');

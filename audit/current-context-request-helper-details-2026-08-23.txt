@@ -1,0 +1,834 @@
+=== backend/dono-api/app/Http/Requests/LinkParentPortalAccountRequest.php ===
+14-    }
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->currentSchoolId();
+19-
+20-        return [
+21-            'first_name' => ['required', 'string', 'max:255'],
+22-            'last_name' => ['required', 'string', 'max:255'],
+23-            'email' => [
+24-                'required',
+25-                'email',
+26-                'max:255',
+27-                Rule::unique('users', 'email'),
+28-            ],
+29-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+30-            'relationship' => ['nullable', 'string', 'max:100'],
+31-        ];
+32-    }
+33-
+34:    private function currentSchoolId(): ?int
+35-    {
+36-        $schoolId = $this->attributes->get('current_school_id');
+37-
+38-        if ($schoolId) {
+39-            return (int) $schoolId;
+40-        }
+41-
+42-        $user = $this->user();
+43-
+44-        return $user
+45-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+46-            : null;
+47-    }
+48-}
+=== backend/dono-api/app/Http/Requests/LinkStudentPortalAccountRequest.php ===
+14-    }
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->currentSchoolId();
+19-
+20-        return [
+21-            'email' => [
+22-                'required',
+23-                'email',
+24-                'max:255',
+25-                Rule::unique('users', 'email'),
+26-            ],
+27-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+28-        ];
+29-    }
+30-
+31:    private function currentSchoolId(): ?int
+32-    {
+33-        $schoolId = $this->attributes->get('current_school_id');
+34-
+35-        if ($schoolId) {
+36-            return (int) $schoolId;
+37-        }
+38-
+39-        $user = $this->user();
+40-
+41-        return $user
+42-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+43-            : null;
+44-    }
+45-}
+=== backend/dono-api/app/Http/Requests/StoreAdmissionRequest.php ===
+14-    }
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->currentSchoolId();
+19-
+20-        return [
+21-            'admission_number' => [
+22-                'required',
+23-                'string',
+24-                'max:255',
+25-                Rule::unique('students', 'admission_number')
+26-                    ->where('school_id', $schoolId),
+27-            ],
+28-            'first_name' => 'required|string|max:255',
+29-            'middle_name' => 'nullable|string|max:255',
+30-            'last_name' => 'required|string|max:255',
+31-            'gender' => ['required', Rule::in(['Male', 'Female'])],
+32-            'date_of_birth' => 'required|date',
+33-            'admission_date' => 'required|date',
+34-            'division_id' => [
+35-                'required',
+36-                Rule::exists('divisions', 'id')->where('school_id', $schoolId),
+--
+75-            'medical_notes' => 'nullable|string',
+76-        ];
+77-    }
+78-
+79:    private function currentSchoolId(): ?int
+80-    {
+81-        $schoolId = $this->attributes->get('current_school_id');
+82-
+83-        if ($schoolId) {
+84-            return (int) $schoolId;
+85-        }
+86-
+87-        $user = $this->user();
+88-
+89-        return $user
+90-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+91-            : null;
+92-    }
+93-}
+=== backend/dono-api/app/Http/Requests/StoreAssetRequest.php ===
+14-    }
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->currentSchoolId();
+19-
+20-        return [
+21-            'name' => ['required', 'string', 'max:255'],
+22-            'category' => [
+23-                'required',
+24-                Rule::in([
+25-                    'IT Equipment',
+26-                    'Furniture',
+27-                    'Classroom Equipment',
+28-                    'Laboratory',
+29-                    'Sports',
+30-                    'Security',
+31-                    'Office',
+32-                    'Other',
+33-                ]),
+34-            ],
+35-            'quantity' => ['required', 'integer', 'min:1', 'max:1000000'],
+36-            'unit_of_measure' => ['nullable', 'string', 'max:50'],
+--
+47-            'notes' => ['nullable', 'string', 'max:4000'],
+48-        ];
+49-    }
+50-
+51:    private function currentSchoolId(): ?int
+52-    {
+53-        $schoolId = $this->attributes->get('current_school_id');
+54-
+55-        if ($schoolId) {
+56-            return (int) $schoolId;
+57-        }
+58-
+59-        $user = $this->user();
+60-
+61-        return $user
+62-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+63-            : null;
+64-    }
+65-}
+=== backend/dono-api/app/Http/Requests/StoreDisciplineCaseRequest.php ===
+14-    }
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->currentSchoolId();
+19-
+20-        return [
+21-            'student_id' => [
+22-                'required',
+23-                'integer',
+24-                Rule::exists('students', 'id')->where('school_id', $schoolId),
+25-            ],
+26-            'incident_date' => ['required', 'date', 'before_or_equal:today'],
+27-            'category' => [
+28-                'required',
+29-                Rule::in([
+30-                    'Bullying',
+31-                    'Disrespect',
+32-                    'Violence',
+33-                    'Theft',
+34-                    'Harassment',
+35-                    'Academic Misconduct',
+36-                    'Property Damage',
+--
+42-            'description' => ['required', 'string', 'max:4000'],
+43-        ];
+44-    }
+45-
+46:    private function currentSchoolId(): ?int
+47-    {
+48-        $schoolId = $this->attributes->get('current_school_id');
+49-
+50-        if ($schoolId) {
+51-            return (int) $schoolId;
+52-        }
+53-
+54-        $user = $this->user();
+55-
+56-        return $user
+57-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+58-            : null;
+59-    }
+60-}
+=== backend/dono-api/app/Http/Requests/StoreLeaveRequest.php ===
+14-    }
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->currentSchoolId();
+19-
+20-        return [
+21-            'staff_id' => [
+22-                'required',
+23-                'integer',
+24-                Rule::exists('staff', 'id')->where('school_id', $schoolId),
+25-            ],
+26-            'leave_type' => [
+27-                'required',
+28-                Rule::in([
+29-                    'Annual',
+30-                    'Sick',
+31-                    'Maternity',
+32-                    'Paternity',
+33-                    'Compassionate',
+34-                    'Study',
+35-                    'Other',
+36-                ]),
+--
+40-            'reason' => ['required', 'string', 'max:2000'],
+41-        ];
+42-    }
+43-
+44:    private function currentSchoolId(): ?int
+45-    {
+46-        $schoolId = $this->attributes->get('current_school_id');
+47-
+48-        if ($schoolId) {
+49-            return (int) $schoolId;
+50-        }
+51-
+52-        $user = $this->user();
+53-
+54-        return $user
+55-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+56-            : null;
+57-    }
+58-}
+=== backend/dono-api/app/Http/Requests/StoreParentStudentRequest.php ===
+9-class StoreParentStudentRequest extends FormRequest
+10-{
+11-    public function authorize(): bool
+12-    {
+13:        return $this->user() !== null && $this->currentSchoolId() !== null;
+14-    }
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->currentSchoolId();
+19-        $studentId = $this->input('student_id');
+20-
+21-        return [
+22-            'parent_id' => [
+23-                'required',
+24-                'integer',
+25-                Rule::exists('parents', 'id')->where('school_id', $schoolId),
+26-                Rule::unique('parent_student', 'parent_id')->where(
+27-                    'student_id',
+28-                    $studentId
+29-                ),
+30-            ],
+31-            'student_id' => [
+32-                'required',
+33-                'integer',
+34-                Rule::exists('students', 'id')->where('school_id', $schoolId),
+35-            ],
+36-            'relationship_type' => [
+--
+58-            'parent_id.unique' => 'This student is already linked to the selected parent.',
+59-        ];
+60-    }
+61-
+62:    private function currentSchoolId(): ?int
+63-    {
+64-        $schoolId = $this->attributes->get('current_school_id');
+65-
+66-        if ($schoolId) {
+67-            return (int) $schoolId;
+68-        }
+69-
+70-        $user = $this->user();
+71-
+72-        return $user
+73-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+74-            : null;
+75-    }
+76-}
+=== backend/dono-api/app/Http/Requests/StoreSafetyIncidentRequest.php ===
+15-    }
+16-
+17-    public function rules(): array
+18-    {
+19:        $schoolId = $this->currentSchoolId();
+20-
+21-        return [
+22-            'subject_type' => ['required', Rule::in(['Student', 'Staff', 'Visitor', 'Other'])],
+23-            'student_id' => [
+24-                'nullable',
+25-                'integer',
+26-                Rule::exists('students', 'id')->where('school_id', $schoolId),
+27-            ],
+28-            'staff_id' => [
+29-                'nullable',
+30-                'integer',
+31-                Rule::exists('staff', 'id')->where('school_id', $schoolId),
+32-            ],
+33-            'visitor_id' => [
+34-                'nullable',
+35-                'integer',
+36-                Rule::exists('visitors', 'id')->where('school_id', $schoolId),
+37-            ],
+--
+105-            }
+106-        }];
+107-    }
+108-
+109:    private function currentSchoolId(): ?int
+110-    {
+111-        $schoolId = $this->attributes->get('current_school_id');
+112-
+113-        if ($schoolId) {
+114-            return (int) $schoolId;
+115-        }
+116-
+117-        $user = $this->user();
+118-
+119-        return $user
+120-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+121-            : null;
+122-    }
+123-}
+=== backend/dono-api/app/Http/Requests/StoreSchoolEventRequest.php ===
+14-    }
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->currentSchoolId();
+19-
+20-        return [
+21-            'title' => ['required', 'string', 'max:255'],
+22-            'event_type' => ['required', Rule::in([
+23-                'Academic', 'Sports', 'Meeting', 'Cultural', 'Examination', 'Holiday', 'Other',
+24-            ])],
+25-            'description' => ['nullable', 'string', 'max:5000'],
+26-            'start_at' => ['required', 'date'],
+27-            'end_at' => ['nullable', 'date', 'after_or_equal:start_at'],
+28-            'venue' => ['nullable', 'string', 'max:255'],
+29-            'organizer_staff_id' => [
+30-                'nullable',
+31-                'integer',
+32-                Rule::exists('staff', 'id')->where('school_id', $schoolId),
+33-            ],
+34-            'audience' => ['nullable', 'string', 'max:100'],
+35-            'notes' => ['nullable', 'string', 'max:5000'],
+36-        ];
+37-    }
+38-
+39:    private function currentSchoolId(): ?int
+40-    {
+41-        $schoolId = $this->attributes->get('current_school_id');
+42-
+43-        if ($schoolId) {
+44-            return (int) $schoolId;
+45-        }
+46-
+47-        $user = $this->user();
+48-
+49-        return $user
+50-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+51-            : null;
+52-    }
+53-}
+=== backend/dono-api/app/Http/Requests/StoreSchoolFacilityRequest.php ===
+14-    }
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->currentSchoolId();
+19-
+20-        return [
+21-            'name' => ['required', 'string', 'max:255'],
+22-            'category' => ['required', Rule::in([
+23-                'Classroom', 'Office', 'Laboratory', 'Sports', 'Sanitation', 'Security', 'Other',
+24-            ])],
+25-            'location' => ['nullable', 'string', 'max:255'],
+26-            'condition' => ['required', Rule::in(['New', 'Good', 'Fair', 'Poor', 'Critical'])],
+27-            'description' => ['nullable', 'string', 'max:5000'],
+28-            'last_inspected_at' => ['nullable', 'date'],
+29-            'next_inspection_at' => ['nullable', 'date', 'after_or_equal:last_inspected_at'],
+30-            'responsible_staff_id' => [
+31-                'nullable',
+32-                'integer',
+33-                Rule::exists('staff', 'id')->where('school_id', $schoolId),
+34-            ],
+35-            'notes' => ['nullable', 'string', 'max:5000'],
+36-        ];
+37-    }
+38-
+39:    private function currentSchoolId(): ?int
+40-    {
+41-        $schoolId = $this->attributes->get('current_school_id');
+42-
+43-        if ($schoolId) {
+44-            return (int) $schoolId;
+45-        }
+46-
+47-        $user = $this->user();
+48-
+49-        return $user
+50-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+51-            : null;
+52-    }
+53-}
+=== backend/dono-api/app/Http/Requests/StoreStaffAttendanceBulkRequest.php ===
+14-    }
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->currentSchoolId();
+19-
+20-        return [
+21-            'attendance_date' => ['required', 'date'],
+22-            'records' => ['required', 'array', 'min:1', 'max:500'],
+23-            'records.*.staff_id' => [
+24-                'required',
+25-                'integer',
+26-                Rule::exists('staff', 'id')->where('school_id', $schoolId),
+27-            ],
+28-            'records.*.status' => [
+29-                'required',
+30-                Rule::in(['Present', 'Absent', 'Late', 'Excused']),
+31-            ],
+32-            'records.*.check_in_at' => ['nullable', 'date_format:H:i'],
+33-            'records.*.check_out_at' => [
+34-                'nullable',
+35-                'date_format:H:i',
+36-            ],
+--
+54-            }
+55-        }];
+56-    }
+57-
+58:    private function currentSchoolId(): ?int
+59-    {
+60-        $schoolId = $this->attributes->get('current_school_id');
+61-
+62-        if ($schoolId) {
+63-            return (int) $schoolId;
+64-        }
+65-
+66-        $user = $this->user();
+67-
+68-        return $user
+69-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+70-            : null;
+71-    }
+72-}
+=== backend/dono-api/app/Http/Requests/StoreStaffAttendanceRequest.php ===
+14-    }
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->currentSchoolId();
+19-
+20-        return [
+21-            'staff_id' => [
+22-                'required',
+23-                'integer',
+24-                Rule::exists('staff', 'id')->where('school_id', $schoolId),
+25-            ],
+26-            'attendance_date' => ['required', 'date'],
+27-            'status' => [
+28-                'required',
+29-                Rule::in(['Present', 'Absent', 'Late', 'Excused']),
+30-            ],
+31-            'check_in_at' => ['nullable', 'date_format:H:i'],
+32-            'check_out_at' => ['nullable', 'date_format:H:i', 'after:check_in_at'],
+33-            'remarks' => ['nullable', 'string', 'max:1000'],
+34-        ];
+35-    }
+36-
+37:    private function currentSchoolId(): ?int
+38-    {
+39-        $schoolId = $this->attributes->get('current_school_id');
+40-
+41-        if ($schoolId) {
+42-            return (int) $schoolId;
+43-        }
+44-
+45-        $user = $this->user();
+46-
+47-        return $user
+48-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+49-            : null;
+50-    }
+51-}
+=== backend/dono-api/app/Http/Requests/StoreStudentEnrollmentRequest.php ===
+14-    }
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->currentSchoolId();
+19-
+20-        return [
+21-            'student_id' => [
+22-                'required',
+23-                Rule::exists('students', 'id')->where('school_id', $schoolId),
+24-            ],
+25-            'academic_session_id' => [
+26-                'required',
+27-                Rule::exists('academic_sessions', 'id')->where('school_id', $schoolId),
+28-            ],
+29-            'term_id' => [
+30-                'required',
+31-                Rule::exists('terms', 'id')->where(
+32-                    'academic_session_id',
+33-                    $this->input('academic_session_id')
+34-                ),
+35-            ],
+36-            'division_id' => [
+--
+62-            ]),
+63-        ];
+64-    }
+65-
+66:    private function currentSchoolId(): ?int
+67-    {
+68-        $schoolId = $this->attributes->get('current_school_id');
+69-
+70-        if ($schoolId) {
+71-            return (int) $schoolId;
+72-        }
+73-
+74-        $user = $this->user();
+75-
+76-        return $user
+77-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+78-            : null;
+79-    }
+80-}
+=== backend/dono-api/app/Http/Requests/UpdateAssetRequest.php ===
+14-    }
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->currentSchoolId();
+19-
+20-        return [
+21-            'name' => ['sometimes', 'required', 'string', 'max:255'],
+22-            'category' => [
+23-                'sometimes',
+24-                'required',
+25-                Rule::in([
+26-                    'IT Equipment',
+27-                    'Furniture',
+28-                    'Classroom Equipment',
+29-                    'Laboratory',
+30-                    'Sports',
+31-                    'Security',
+32-                    'Office',
+33-                    'Other',
+34-                ]),
+35-            ],
+36-            'quantity' => ['sometimes', 'required', 'integer', 'min:1', 'max:1000000'],
+--
+50-            'notes' => ['sometimes', 'nullable', 'string', 'max:4000'],
+51-        ];
+52-    }
+53-
+54:    private function currentSchoolId(): ?int
+55-    {
+56-        $schoolId = $this->attributes->get('current_school_id');
+57-
+58-        if ($schoolId) {
+59-            return (int) $schoolId;
+60-        }
+61-
+62-        $user = $this->user();
+63-
+64-        return $user
+65-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+66-            : null;
+67-    }
+68-}
+=== backend/dono-api/app/Http/Requests/UpdateParentStudentRequest.php ===
+10-class UpdateParentStudentRequest extends FormRequest
+11-{
+12-    public function authorize(): bool
+13-    {
+14:        return $this->user() !== null && $this->currentSchoolId() !== null;
+15-    }
+16-
+17-    protected function prepareForValidation(): void
+18-    {
+19-        $link = $this->route('parent_student');
+20-
+21-        if (! $link instanceof ParentStudent) {
+22-            return;
+23-        }
+24-
+25-        $this->merge([
+26-            'parent_id' => $this->input('parent_id', $link->parent_id),
+27-            'student_id' => $this->input('student_id', $link->student_id),
+28-            'relationship_type' => $this->input(
+29-                'relationship_type',
+30-                $link->relationship_type
+31-            ),
+32-        ]);
+33-    }
+34-
+35-    public function rules(): array
+36-    {
+37:        $schoolId = $this->currentSchoolId();
+38-        $link = $this->route('parent_student');
+39-        $studentId = $this->input('student_id');
+40-
+41-        return [
+42-            'parent_id' => [
+43-                'required',
+44-                'integer',
+45-                Rule::exists('parents', 'id')->where('school_id', $schoolId),
+46-                Rule::unique('parent_student', 'parent_id')
+47-                    ->ignore($link?->id)
+48-                    ->where('student_id', $studentId),
+49-            ],
+50-            'student_id' => [
+51-                'required',
+52-                'integer',
+53-                Rule::exists('students', 'id')->where('school_id', $schoolId),
+54-            ],
+55-            'relationship_type' => [
+--
+68-            'is_primary_contact' => 'sometimes|boolean',
+69-        ];
+70-    }
+71-
+72:    private function currentSchoolId(): ?int
+73-    {
+74-        $schoolId = $this->attributes->get('current_school_id');
+75-
+76-        if ($schoolId) {
+77-            return (int) $schoolId;
+78-        }
+79-
+80-        $user = $this->user();
+81-
+82-        return $user
+83-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+84-            : null;
+85-    }
+86-}
+=== backend/dono-api/app/Http/Requests/UpdateSchoolEventRequest.php ===
+14-    }
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->currentSchoolId();
+19-
+20-        return [
+21-            'title' => ['sometimes', 'required', 'string', 'max:255'],
+22-            'event_type' => ['sometimes', 'required', Rule::in([
+23-                'Academic', 'Sports', 'Meeting', 'Cultural', 'Examination', 'Holiday', 'Other',
+24-            ])],
+25-            'description' => ['sometimes', 'nullable', 'string', 'max:5000'],
+26-            'start_at' => ['sometimes', 'required', 'date'],
+27-            'end_at' => ['sometimes', 'nullable', 'date', 'after_or_equal:start_at'],
+28-            'venue' => ['sometimes', 'nullable', 'string', 'max:255'],
+29-            'organizer_staff_id' => [
+30-                'sometimes',
+31-                'nullable',
+32-                'integer',
+33-                Rule::exists('staff', 'id')->where('school_id', $schoolId),
+34-            ],
+35-            'audience' => ['sometimes', 'nullable', 'string', 'max:100'],
+36-            'status' => ['sometimes', 'required', Rule::in([
+--
+39-            'notes' => ['sometimes', 'nullable', 'string', 'max:5000'],
+40-        ];
+41-    }
+42-
+43:    private function currentSchoolId(): ?int
+44-    {
+45-        $schoolId = $this->attributes->get('current_school_id');
+46-
+47-        if ($schoolId) {
+48-            return (int) $schoolId;
+49-        }
+50-
+51-        $user = $this->user();
+52-
+53-        return $user
+54-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+55-            : null;
+56-    }
+57-}
+=== backend/dono-api/app/Http/Requests/UpdateSchoolFacilityRequest.php ===
+14-    }
+15-
+16-    public function rules(): array
+17-    {
+18:        $schoolId = $this->currentSchoolId();
+19-
+20-        return [
+21-            'name' => ['sometimes', 'required', 'string', 'max:255'],
+22-            'category' => ['sometimes', 'required', Rule::in([
+23-                'Classroom', 'Office', 'Laboratory', 'Sports', 'Sanitation', 'Security', 'Other',
+24-            ])],
+25-            'location' => ['sometimes', 'nullable', 'string', 'max:255'],
+26-            'condition' => ['sometimes', 'required', Rule::in(['New', 'Good', 'Fair', 'Poor', 'Critical'])],
+27-            'description' => ['sometimes', 'nullable', 'string', 'max:5000'],
+28-            'last_inspected_at' => ['sometimes', 'nullable', 'date'],
+29-            'next_inspection_at' => ['sometimes', 'nullable', 'date', 'after_or_equal:last_inspected_at'],
+30-            'responsible_staff_id' => [
+31-                'sometimes',
+32-                'nullable',
+33-                'integer',
+34-                Rule::exists('staff', 'id')->where('school_id', $schoolId),
+35-            ],
+36-            'status' => ['sometimes', 'required', Rule::in([
+--
+39-            'notes' => ['sometimes', 'nullable', 'string', 'max:5000'],
+40-        ];
+41-    }
+42-
+43:    private function currentSchoolId(): ?int
+44-    {
+45-        $schoolId = $this->attributes->get('current_school_id');
+46-
+47-        if ($schoolId) {
+48-            return (int) $schoolId;
+49-        }
+50-
+51-        $user = $this->user();
+52-
+53-        return $user
+54-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+55-            : null;
+56-    }
+57-}
+=== backend/dono-api/app/Http/Requests/UpdateStudentEnrollmentRequest.php ===
+36-    }
+37-
+38-    public function rules(): array
+39-    {
+40:        $schoolId = $this->currentSchoolId();
+41-
+42-        return [
+43-            'student_id' => [
+44-                'required',
+45-                Rule::exists('students', 'id')->where('school_id', $schoolId),
+46-            ],
+47-            'academic_session_id' => [
+48-                'required',
+49-                Rule::exists('academic_sessions', 'id')->where('school_id', $schoolId),
+50-            ],
+51-            'term_id' => [
+52-                'required',
+53-                Rule::exists('terms', 'id')->where(
+54-                    'academic_session_id',
+55-                    $this->input('academic_session_id')
+56-                ),
+57-            ],
+58-            'division_id' => [
+--
+87-            ],
+88-        ];
+89-    }
+90-
+91:    private function currentSchoolId(): ?int
+92-    {
+93-        $schoolId = $this->attributes->get('current_school_id');
+94-
+95-        if ($schoolId) {
+96-            return (int) $schoolId;
+97-        }
+98-
+99-        $user = $this->user();
+100-
+101-        return $user
+102-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+103-            : null;
+104-    }
+105-}
+=== backend/dono-api/app/Http/Requests/UpdateStudentRequest.php ===
+15-
+16-    public function rules(): array
+17-    {
+18-        $student = $this->route('student');
+19:        $schoolId = $this->currentSchoolId();
+20-
+21-        return [
+22-            'admission_number' => [
+23-                'sometimes',
+24-                'required',
+25-                'string',
+26-                'max:255',
+27-                Rule::unique('students', 'admission_number')
+28-                    ->ignore($student?->id)
+29-                    ->where('school_id', $schoolId),
+30-            ],
+31-            'first_name' => 'sometimes|required|string|max:255',
+32-            'middle_name' => 'nullable|string|max:255',
+33-            'last_name' => 'sometimes|required|string|max:255',
+34-            'gender' => ['sometimes', 'required', Rule::in(['Male', 'Female'])],
+35-            'date_of_birth' => 'sometimes|required|date',
+36-            'admission_date' => 'sometimes|required|date',
+37-            'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+--
+56-            ],
+57-        ];
+58-    }
+59-
+60:    private function currentSchoolId(): ?int
+61-    {
+62-        $schoolId = $this->attributes->get('current_school_id');
+63-
+64-        if ($schoolId) {
+65-            return (int) $schoolId;
+66-        }
+67-
+68-        $user = $this->user();
+69-
+70-        return $user
+71-            ? app(CurrentContextService::class)->currentSchool($user)?->id
+72-            : null;
+73-    }
+74-}

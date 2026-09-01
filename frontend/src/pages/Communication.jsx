@@ -20,6 +20,7 @@ const emptyForm = {
   subject: "",
   body: "",
   is_published: true,
+  delivery_channel: "in_app",
 };
 
 const MANAGEMENT_ROLES = new Set([
@@ -60,6 +61,11 @@ export default function Communication({ mode = "all" }) {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [channelStatus, setChannelStatus] = useState({
+    in_app: { available: true },
+    sms: { available: false, message: "SMS provider is not configured." },
+    push: { available: false, message: "Push provider is not configured." },
+  });
 
   const title = mode === "notices" ? "School Notices" : mode === "messages" ? "Messages & Chat" : "Communication";
   const typeFilter = mode === "notices" ? "notice" : mode === "messages" ? "message" : "";
@@ -88,6 +94,21 @@ export default function Communication({ mode = "all" }) {
     load(1);
   }, [typeFilter]);
 
+  useEffect(() => {
+    let active = true;
+    api.get("/communications/channels")
+      .then((response) => {
+        const channels = response?.data?.data?.channels;
+        if (active && channels && typeof channels === "object") {
+          setChannelStatus((current) => ({ ...current, ...channels }));
+        }
+      })
+      .catch(() => {
+        // Keep safe defaults: in-app remains available and external channels remain disabled.
+      });
+    return () => { active = false; };
+  }, []);
+
   const visibleItems = useMemo(() => (Array.isArray(items) ? items : []), [items]);
 
   function updateField(name, value) {
@@ -111,6 +132,7 @@ export default function Communication({ mode = "all" }) {
       subject: item.subject || "",
       body: item.body || "",
       is_published: isPublished(item),
+      delivery_channel: item.delivery_channel || "in_app",
     });
     setError("");
     setMessage("");
@@ -172,6 +194,21 @@ export default function Communication({ mode = "all" }) {
     }
   }
 
+  async function retryDelivery(item) {
+    try {
+      setActionId(item.id);
+      setError("");
+      setMessage("");
+      const response = await api.post(`/communications/${item.id}/retry-delivery`);
+      setMessage(response?.data?.message || "Failed deliveries queued for retry.");
+      await load();
+    } catch (err) {
+      setError(err?.response?.data?.message || "Unable to retry external deliveries.");
+    } finally {
+      setActionId(null);
+    }
+  }
+
   async function remove(item) {
     if (!window.confirm("Delete this communication permanently?")) return;
     try {
@@ -228,11 +265,19 @@ export default function Communication({ mode = "all" }) {
                   <option value="individual">Individual user</option>
                 </select>
               </FormField>
+              <FormField label="Delivery channel" htmlFor="communication-delivery-channel" hint="SMS and push require the corresponding provider and recipient setup. They begin as queued/provider accepted until the provider confirms delivery.">
+                <select id="communication-delivery-channel" value={form.delivery_channel} onChange={(event) => updateField("delivery_channel", event.target.value)}>
+                  <option value="in_app">In-app notification</option>
+                  <option value="sms" disabled={!channelStatus.sms?.available}>SMS via Twilio{channelStatus.sms?.available ? "" : " (unavailable)"}</option>
+                  <option value="push" disabled={!channelStatus.push?.available}>Push via Firebase{channelStatus.push?.available ? "" : " (unavailable)"}</option>
+                </select>
+              </FormField>
               {form.audience === "individual" && (
                 <FormField label="Recipient user ID" htmlFor="communication-recipient" required>
                   <input id="communication-recipient" required value={form.recipient_id} onChange={(event) => updateField("recipient_id", event.target.value)} inputMode="numeric" />
                 </FormField>
               )}
+              {form.delivery_channel !== "in_app" && !channelStatus[form.delivery_channel]?.available && <p className="communication-channel-warning">{channelStatus[form.delivery_channel]?.message || "This delivery channel is currently unavailable."}</p>}
             </div>
             <FormField label="Subject" htmlFor="communication-subject">
               <input id="communication-subject" value={form.subject} onChange={(event) => updateField("subject", event.target.value)} maxLength={180} />
@@ -254,19 +299,24 @@ export default function Communication({ mode = "all" }) {
       {loading ? <LoadingSpinner text="Loading communication..." /> : visibleItems.length === 0 ? <EmptyState title={`No ${title.toLowerCase()} yet`} message="Published school-scoped communication will appear here." /> : <div className="communication-list">{visibleItems.map((item) => {
         const published = isPublished(item);
         const manageable = canManage(item);
+        const deliveryStatus = item.delivery_status || (published ? "not recorded" : "not sent");
+        const recipientCount = Number(item.delivery_recipient_count);
+        const hasRecipientCount = Number.isFinite(recipientCount) && recipientCount >= 0;
         return (
           <article key={item.id} onClick={() => markRead(item)} className={`communication-card ${item.read_at ? "" : "communication-card-unread"}`}>
             <div className="communication-card-header">
-              <div className="communication-card-tags"><span className="communication-type">{item.type || "notice"}</span><span>To: {item.audience || "all"}</span><span className={`communication-state communication-state-${published ? "published" : "draft"}`}>{published ? "Published" : "Draft"}</span></div>
+              <div className="communication-card-tags"><span className="communication-type">{item.type || "notice"}</span><span>To: {item.audience || "all"}</span><span className={`communication-state communication-state-${published ? "published" : "draft"}`}>{published ? "Published" : "Draft"}</span><span className="communication-state">{item.delivery_channel || "in_app"}: {deliveryStatus}</span>{hasRecipientCount && <span className="communication-state">{recipientCount} recipient{recipientCount === 1 ? "" : "s"}</span>}</div>
               <time>{published && item.published_at ? new Date(item.published_at).toLocaleString() : "Not published"}</time>
             </div>
             <h2>{item.subject || "School communication"}</h2>
             <p className="communication-body">{item.body}</p>
+            {item.delivery_error && <p className="communication-delivery-error" role="status">Delivery note: {item.delivery_error}</p>}
             <div className="communication-card-footer">
               <span>From: {item.sender?.name || "School staff"}</span>
               {manageable && <div className="communication-actions" onClick={(event) => event.stopPropagation()}>
                 <Button size="sm" variant="secondary" onClick={() => beginEdit(item)}>Edit</Button>
                 <Button size="sm" variant={published ? "warning" : "primary"} loading={actionId === item.id} onClick={() => togglePublished(item)}>{published ? "Take down" : "Republish"}</Button>
+                {published && ["sms", "push"].includes(item.delivery_channel) && ["failed", "partially_delivered"].includes(deliveryStatus) && <Button size="sm" variant="secondary" loading={actionId === item.id} onClick={() => retryDelivery(item)}>Retry delivery</Button>}
                 <Button size="sm" variant="danger" loading={actionId === item.id} onClick={() => remove(item)}>Delete</Button>
               </div>}
             </div>

@@ -10,7 +10,7 @@ import DataTable from "../components/tables/DataTable";
 import Button from "../components/forms/Button";
 import Alert from "../components/feedback/Alert";
 
-export default function Staff({ setPage, setSelectedStaff }) {
+export default function Staff({ setPage, setSelectedStaff, focusId }) {
   const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
   const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
   const canManageEmployment = role === "proprietor";
@@ -34,6 +34,26 @@ export default function Staff({ setPage, setSelectedStaff }) {
   };
 
   useEffect(() => { fetchStaff(); }, []);
+
+  useEffect(() => {
+    if (!focusId || !Array.isArray(staffList) || staffList.length === 0) return;
+    const focused = staffList.find((staff) => Number(staff.id) === Number(focusId));
+    if (focused && canManageEmployment) {
+      setSelectedStaff?.(focused);
+      setPage("edit-staff");
+    } else if (focused) {
+      setSearchTerm(focused.staff_number || `${focused.first_name || ""} ${focused.last_name || ""}`.trim());
+    }
+  }, [focusId, staffList, canManageEmployment, setPage, setSelectedStaff]);
+
+  const downloadStaffExport = async () => {
+    try {
+      setError(null);
+      const response = await api.get("/exports/staff.csv", { responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: "text/csv" }));
+      const link = document.createElement("a"); link.href = url; link.download = `staff-${new Date().toISOString().slice(0, 10)}.csv`; document.body.appendChild(link); link.click(); link.remove(); window.URL.revokeObjectURL(url);
+    } catch (err) { setError(err.response?.data?.message || "Unable to export staff records."); }
+  };
 
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Are you sure you want to remove ${name} from staff?`)) return;
@@ -63,7 +83,7 @@ export default function Staff({ setPage, setSelectedStaff }) {
   ];
 
   return <PageContainer>
-    <PageHeader title="Staff Directory" subtitle="Manage school teachers, administrators, and non-teaching personnel." action={canManageEmployment ? <Button onClick={() => setPage("add-staff")}>Add staff</Button> : null} />
+    <PageHeader title="Staff Directory" subtitle="Manage school teachers, administrators, and non-teaching personnel." action={<div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={downloadStaffExport}>Export CSV</Button>{canManageEmployment && <Button onClick={() => setPage("add-staff")}>Add staff</Button>}</div>} />
     {error && <Alert variant="error" action={<button type="button" onClick={fetchStaff}>Retry</button>}>{error}</Alert>}
     <SectionCard title="Find staff" subtitle={`${filteredStaff.length} of ${staffList.length} records`}>
       <div className="ui-form-grid"><input type="search" aria-label="Search staff" placeholder="Search by name, staff ID, or department" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} className="ui-form-control" /><select aria-label="Filter staff by employment status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="ui-form-control"><option value="all">All employment statuses</option><option value="active">Active</option><option value="on_leave">On leave</option><option value="suspended">Suspended</option><option value="retired">Retired</option><option value="resigned">Resigned</option><option value="terminated">Terminated</option></select></div>

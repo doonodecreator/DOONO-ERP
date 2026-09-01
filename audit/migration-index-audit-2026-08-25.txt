@@ -1,0 +1,289 @@
+=== COMPOSITE INDEX DECLARATIONS ===
+backend/dono-api/database/migrations/0001_01_01_000002_create_jobs_table.php:46:            $table->index(['connection', 'queue', 'failed_at']);
+backend/dono-api/database/migrations/2026_06_26_153035_create_academic_sessions_table.php:34:            $table->unique(['school_id', 'name']);
+backend/dono-api/database/migrations/2026_06_26_153801_create_terms_table.php:38:            $table->unique(['academic_session_id', 'name']);
+backend/dono-api/database/migrations/2026_06_26_154227_create_divisions_table.php:29:            $table->unique(['school_id','name']);
+backend/dono-api/database/migrations/2026_06_26_154804_create_classes_table.php:29:            $table->unique(['division_id', 'name']);
+backend/dono-api/database/migrations/2026_06_26_155345_create_streams_table.php:29:            $table->unique(['class_id', 'name']);
+backend/dono-api/database/migrations/2026_06_26_190735_create_parent_student_table.php:25:            $table->unique(['parent_id', 'student_id']);
+backend/dono-api/database/migrations/2026_06_26_192032_create_class_subject_table.php:38:            $table->unique([
+backend/dono-api/database/migrations/2026_06_29_063100_create_role_permission_table.php:25:            $table->unique(['role_id', 'permission_id']);
+backend/dono-api/database/migrations/2026_06_29_064650_create_user_roles_table.php:28:            $table->unique(['user_id', 'role_id']);
+backend/dono-api/database/migrations/2026_07_01_201939_create_feature_subscription_plan_table.php:37:            $table->unique([
+backend/dono-api/database/migrations/2026_07_04_051614_create_result_submissions_table.php:89:            $table->unique([
+backend/dono-api/database/migrations/2026_07_20_142621_create_coupons_table.php:95:            $table->unique([
+backend/dono-api/database/migrations/2026_07_20_142621_create_coupons_table.php:121:            $table->unique([
+backend/dono-api/database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:61:                $table->unique(['user_id', 'role_id', 'school_id'], 'user_roles_user_role_school_unique');
+backend/dono-api/database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:81:            $table->unique(['user_id', 'role_id'], 'user_roles_user_id_role_id_unique');
+backend/dono-api/database/migrations/2026_08_14_080000_create_assets_table.php:41:            $table->unique(['school_id', 'asset_number'], 'assets_school_number_unique');
+backend/dono-api/database/migrations/2026_08_14_080000_create_assets_table.php:42:            $table->index(['school_id', 'status', 'category'], 'assets_school_status_category_index');
+backend/dono-api/database/migrations/2026_08_14_080000_create_assets_table.php:43:            $table->index(['custodian_staff_id', 'status'], 'assets_custodian_status_index');
+backend/dono-api/database/migrations/2026_08_15_010000_create_school_events_table.php:27:            $table->index(['school_id', 'start_at']);
+backend/dono-api/database/migrations/2026_08_15_010000_create_school_events_table.php:28:            $table->index(['school_id', 'status']);
+backend/dono-api/database/migrations/2026_08_15_010000_create_school_events_table.php:29:            $table->index(['school_id', 'event_type']);
+backend/dono-api/database/migrations/2026_08_15_010001_create_school_facilities_table.php:27:            $table->index(['school_id', 'status']);
+backend/dono-api/database/migrations/2026_08_15_010001_create_school_facilities_table.php:28:            $table->index(['school_id', 'category']);
+backend/dono-api/database/migrations/2026_08_15_010001_create_school_facilities_table.php:29:            $table->index(['school_id', 'next_inspection_at']);
+backend/dono-api/database/migrations/2026_08_16_000000_create_role_invitations_table.php:38:            $table->index(['school_id', 'email', 'status']);
+backend/dono-api/database/migrations/2026_08_17_000000_create_school_setup_delegations_table.php:20:                $table->unique(['school_id', 'user_id', 'permission_id'], 'school_setup_delegations_unique');
+backend/dono-api/database/migrations/2026_08_18_120000_repair_school_setup_tables.php:37:                $table->index(['school_id', 'email', 'status']);
+backend/dono-api/database/migrations/2026_08_18_120000_repair_school_setup_tables.php:49:                $table->unique(['school_id', 'user_id', 'permission_id'], 'school_setup_delegations_unique');
+backend/dono-api/database/migrations/2026_08_19_170000_create_assignments_table.php:26:            $table->index(['school_id', 'class_id', 'subject_id', 'status']);
+backend/dono-api/database/migrations/2026_08_20_000000_create_communications_table.php:25:            $table->index(['school_id', 'type', 'is_published']);
+backend/dono-api/database/migrations/2026_08_20_000000_create_communications_table.php:26:            $table->index(['recipient_id', 'read_at']);
+backend/dono-api/database/migrations/2026_08_20_010000_create_cbt_questions_table.php:23:            $table->index(['school_id', 'examination_id', 'is_active']);
+backend/dono-api/database/migrations/2026_08_20_030000_create_student_leave_applications_table.php:25:            $table->index(['school_id', 'student_id', 'status']);
+backend/dono-api/database/migrations/2026_08_20_040000_create_assessment_activities_table.php:28:            $table->index(['school_id', 'type', 'status']);
+backend/dono-api/database/migrations/2026_08_20_050000_create_payroll_entries_table.php:23:            $table->unique(['school_id', 'staff_id', 'pay_period']);
+backend/dono-api/database/migrations/2026_08_20_050000_create_payroll_entries_table.php:24:            $table->index(['school_id', 'status', 'pay_period']);
+backend/dono-api/database/migrations/2026_08_20_060000_create_reception_activities_table.php:24:            $table->index(['school_id', 'type', 'logged_at']);
+backend/dono-api/database/migrations/2026_08_20_070000_create_transport_logs_table.php:24:            $table->index(['school_id', 'type', 'service_date']);
+backend/dono-api/database/migrations/2026_08_20_090000_create_graduation_records_table.php:26:                $table->unique(['school_id', 'student_id', 'academic_session_id'], self::UNIQUE_INDEX);
+backend/dono-api/database/migrations/2026_08_20_090000_create_graduation_records_table.php:37:                $table->unique(['school_id', 'student_id', 'academic_session_id'], self::UNIQUE_INDEX);
+backend/dono-api/database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php:50:            $table->index(['school_id', 'class_id', 'status']);
+backend/dono-api/database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php:51:            $table->index(['school_id', 'available_from', 'available_until']);
+backend/dono-api/database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php:64:            $table->unique(['cbt_assessment_id', 'cbt_question_id'], 'cbt_assessment_question_unique');
+backend/dono-api/database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php:65:            $table->index(['cbt_assessment_id', 'display_order']);
+backend/dono-api/database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php:83:            $table->unique(['cbt_assessment_id', 'student_enrollment_id', 'attempt_number'], 'cbt_attempt_student_unique');
+backend/dono-api/database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php:84:            $table->index(['school_id', 'student_enrollment_id', 'status']);
+backend/dono-api/database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php:96:            $table->unique(['cbt_attempt_id', 'cbt_assessment_question_id'], 'cbt_attempt_answer_unique');
+backend/dono-api/database/migrations/2026_08_21_070000_create_form_teacher_assignments_table.php:21:            $table->index(['school_id', 'staff_id', 'is_active'], 'form_teacher_staff_active_index');
+backend/dono-api/database/migrations/2026_08_21_070000_create_form_teacher_assignments_table.php:22:            $table->index(['school_id', 'class_id', 'stream_id'], 'form_teacher_class_stream_index');
+backend/dono-api/database/migrations/2026_08_21_090000_extend_cbt_questions_for_bulk_authoring.php:35:                $table->index(['school_id', 'subject_id', 'section', 'difficulty'], 'cbt_questions_bank_filter_index');
+backend/dono-api/database/migrations/2026_08_21_091000_create_assignment_submissions_table.php:27:            $table->unique(['assignment_id', 'student_id'], 'assignment_student_submission_unique');
+backend/dono-api/database/migrations/2026_08_21_091000_create_assignment_submissions_table.php:28:            $table->index(['school_id', 'status']);
+backend/dono-api/database/migrations/2026_08_21_120000_create_platform_announcements_table.php:23:            $table->index(['status', 'created_at']);
+backend/dono-api/database/migrations/2026_08_21_130000_add_local_email_outbox_and_announcement_targets.php:47:                $table->index(['recipient_email', 'created_at']);
+backend/dono-api/database/migrations/2026_08_21_130000_add_local_email_outbox_and_announcement_targets.php:48:                $table->index(['message_type', 'created_at']);
+backend/dono-api/database/migrations/2026_08_21_140000_create_tenant_partition_directory.php:41:                $table->index(['tenant_partition_id', 'partition_key']);
+backend/dono-api/database/migrations/2026_08_21_140000_create_tenant_partition_directory.php:42:                $table->index(['data_region', 'status']);
+backend/dono-api/database/migrations/2026_08_21_160000_create_fee_payment_transactions_table.php:24:            $table->index(['school_id', 'status']);
+backend/dono-api/database/migrations/2026_08_21_160000_create_fee_payment_transactions_table.php:25:            $table->index(['student_fee_id', 'status']);
+backend/dono-api/database/migrations/2026_08_21_210000_create_communication_reads_table.php:19:            $table->unique(['communication_id', 'user_id']);
+backend/dono-api/database/migrations/2026_08_21_210000_create_communication_reads_table.php:20:            $table->index(['school_id', 'user_id', 'read_at']);
+backend/dono-api/database/migrations/2026_08_23_120000_create_support_tickets_tables.php:28:                $table->index(['school_id', 'status']);
+backend/dono-api/database/migrations/2026_08_23_120000_create_support_tickets_tables.php:29:                $table->index(['organization_id', 'status']);
+backend/dono-api/database/migrations/2026_08_23_120000_create_support_tickets_tables.php:42:                $table->index(['support_ticket_id', 'created_at']);
+backend/dono-api/database/migrations/2026_08_23_130000_create_app_notifications_table.php:30:            $table->index(['user_id', 'read_at']);
+backend/dono-api/database/migrations/2026_08_23_130000_create_app_notifications_table.php:31:            $table->index(['school_id', 'created_at']);
+backend/dono-api/database/migrations/2026_08_23_130000_create_app_notifications_table.php:32:            $table->index(['organization_id', 'created_at']);
+backend/dono-api/database/migrations/2026_08_23_130000_create_app_notifications_table.php:33:            $table->index(['source_type', 'source_id']);
+backend/dono-api/database/migrations/2026_08_23_170000_create_school_insight_alerts_table.php:27:            $table->unique(['school_id', 'alert_key'], 'school_insight_alert_identity');
+backend/dono-api/database/migrations/2026_08_23_170000_create_school_insight_alerts_table.php:28:            $table->index(['school_id', 'status', 'severity']);
+backend/dono-api/database/migrations/2026_08_23_190000_create_feature_flags_table.php:23:            $table->unique(['key', 'scope_type', 'scope_id'], 'feature_flag_scope_identity');
+backend/dono-api/database/migrations/2026_08_23_190000_create_feature_flags_table.php:24:            $table->index(['scope_type', 'scope_id', 'is_enabled']);
+backend/dono-api/database/migrations/2026_08_23_200000_create_notification_preferences_table.php:19:            $table->index(['user_id', 'school_id', 'channel']);
+backend/dono-api/database/migrations/2026_08_23_220000_create_attendance_corrections_table.php:27:            $table->index(['school_id', 'attendance_id']);
+backend/dono-api/database/migrations/2026_08_23_240000_create_school_insight_snapshots_table.php:28:            $table->unique(['school_id', 'snapshot_date', 'period_days'], 'sis_school_date_period_uq');
+backend/dono-api/database/migrations/2026_08_23_240000_create_school_insight_snapshots_table.php:29:            $table->index(['school_id', 'snapshot_date'], 'sis_school_date_idx');
+backend/dono-api/database/migrations/2026_08_23_260000_create_transport_stops_and_inspections_tables.php:23:                $table->unique(['transport_route_id', 'sequence'], 'tstop_route_seq_uq');
+backend/dono-api/database/migrations/2026_08_23_260000_create_transport_stops_and_inspections_tables.php:24:                $table->index(['school_id', 'transport_route_id'], 'tstop_school_route_idx');
+backend/dono-api/database/migrations/2026_08_23_260000_create_transport_stops_and_inspections_tables.php:40:                $table->index(['school_id', 'vehicle_id', 'inspection_date'], 'vinspect_school_vehicle_date_idx');
+backend/dono-api/database/migrations/2026_08_23_270000_create_book_reservations_table.php:26:            $table->index(['school_id', 'status'], 'bres_school_status_idx');
+backend/dono-api/database/migrations/2026_08_23_270000_create_book_reservations_table.php:27:            $table->index(['book_id', 'status'], 'bres_book_status_idx');
+backend/dono-api/database/migrations/2026_08_23_280000_create_staff_contracts_table.php:30:            $table->unique(['school_id', 'contract_number'], 'scontract_school_number_uq');
+backend/dono-api/database/migrations/2026_08_23_280000_create_staff_contracts_table.php:31:            $table->index(['school_id', 'staff_id', 'status'], 'scontract_school_staff_status_idx');
+backend/dono-api/database/migrations/2026_08_23_310000_create_asset_lifecycle_events_table.php:24:            $table->index(['school_id', 'asset_id', 'occurred_at'], 'ale_school_asset_time_idx');
+backend/dono-api/database/migrations/2026_08_23_310000_create_asset_lifecycle_events_table.php:25:            $table->index(['school_id', 'event_type'], 'ale_school_event_idx');
+backend/dono-api/database/migrations/2026_08_23_350000_create_payment_gateway_events_table.php:21:            $table->unique(['gateway', 'event_id'], 'pge_gateway_event_uq');
+backend/dono-api/database/migrations/2026_08_23_350000_create_payment_gateway_events_table.php:22:            $table->index(['event_type', 'created_at'], 'pge_type_created_idx');
+backend/dono-api/database/migrations/2026_08_23_360000_create_school_setup_checklist_states_table.php:21:            $table->unique(['school_id', 'step_key'], 'sscs_school_step_uq');
+backend/dono-api/database/migrations/2026_08_23_360000_create_school_setup_checklist_states_table.php:22:            $table->index(['school_id', 'acknowledged'], 'sscs_school_ack_idx');
+backend/dono-api/database/migrations/2026_08_23_380000_add_invoice_number_to_student_fees.php:17:                $table->unique(['school_id', 'invoice_number'], 'student_school_invoice_uq');
+backend/dono-api/database/migrations/2026_08_23_390000_create_mfa_challenges_and_user_mfa_fields.php:40:                $table->index(['user_id', 'expires_at'], 'mfa_user_expiry_idx');
+backend/dono-api/database/migrations/2026_08_23_400000_create_school_api_keys_table.php:27:            $table->index(['school_id', 'revoked_at'], 'school_api_key_active_idx');
+backend/dono-api/database/migrations/2026_08_23_410000_add_delivery_state_to_communications.php:34:            $table->index(['school_id', 'delivery_status'], 'communications_delivery_status_idx');
+backend/dono-api/database/migrations/2026_08_23_172700_add_school_scope_to_oauth_clients.php:28:            $table->index(['school_id', 'revoked'], 'oauth_clients_school_revoked_idx');
+backend/dono-api/database/migrations/2026_08_23_173100_create_backup_runs_table.php:28:            $table->index(['status', 'started_at'], 'backup_runs_status_started_idx');
+backend/dono-api/database/migrations/2026_08_23_172900_create_user_push_tokens_table.php:26:            $table->unique(['school_id', 'user_id', 'token_hash'], 'user_push_token_unique');
+backend/dono-api/database/migrations/2026_08_23_172900_create_user_push_tokens_table.php:27:            $table->index(['school_id', 'user_id', 'revoked_at'], 'user_push_token_active_idx');
+backend/dono-api/database/migrations/2026_08_23_173000_create_communication_deliveries_table.php:36:            $table->unique(['communication_id', 'user_id', 'channel', 'push_token_id'], 'communication_delivery_unique');
+backend/dono-api/database/migrations/2026_08_23_173000_create_communication_deliveries_table.php:37:            $table->unique(['provider', 'provider_message_id'], 'communication_provider_message_unique');
+backend/dono-api/database/migrations/2026_08_23_173000_create_communication_deliveries_table.php:38:            $table->index(['school_id', 'channel', 'status'], 'communication_delivery_status_idx');
+backend/dono-api/database/migrations/2026_08_23_173300_create_school_marketplace_installations_table.php:26:            $table->unique(['school_id', 'marketplace_app_id'], 'school_marketplace_app_unique');
+backend/dono-api/database/migrations/2026_08_23_173300_create_school_marketplace_installations_table.php:27:            $table->index(['school_id', 'status'], 'school_marketplace_status_idx');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:20:                $table->index(['school_id', 'user_id', 'status'], 'ai_conversations_school_user_status_idx');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:37:                $table->index(['ai_conversation_id', 'created_at'], 'ai_messages_conversation_created_idx');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:53:                $table->unique(['school_id', 'student_id'], 'student_community_consents_school_student_uq');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:54:                $table->index(['school_id', 'parent_id'], 'student_community_consents_school_parent_idx');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:74:                $table->index(['school_id', 'status', 'created_at'], 'community_posts_school_status_created_idx');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:75:                $table->index(['school_id', 'author_student_id', 'status'], 'community_posts_school_author_status_idx');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:90:                $table->index(['community_post_id', 'status', 'created_at'], 'community_comments_post_status_created_idx');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:108:                $table->index(['school_id', 'status', 'created_at'], 'community_reports_school_status_created_idx');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:109:                $table->index(['target_type', 'target_id'], 'community_reports_target_idx');
+backend/dono-api/database/migrations/2026_08_26_120000_create_school_exchange_tables.php:38:            $table->index(['school_id', 'status']);
+backend/dono-api/database/migrations/2026_08_26_120000_create_school_exchange_tables.php:50:            $table->unique(['exchange_project_id', 'school_id']);
+backend/dono-api/database/migrations/2026_08_26_120000_create_school_exchange_tables.php:51:            $table->index(['school_id', 'status']);
+backend/dono-api/database/migrations/2026_08_26_120000_create_school_exchange_tables.php:64:            $table->unique(['exchange_project_id', 'student_id']);
+backend/dono-api/database/migrations/2026_08_26_120000_create_school_exchange_tables.php:65:            $table->index(['school_id', 'status']);
+backend/dono-api/database/migrations/2026_08_27_120000_create_live_room_tables.php:31:            $table->index(['school_id', 'status']);
+backend/dono-api/database/migrations/2026_08_27_120000_create_live_room_tables.php:32:            $table->index(['exchange_project_id', 'status']);
+backend/dono-api/database/migrations/2026_08_27_120000_create_live_room_tables.php:48:            $table->unique(['live_room_id', 'user_id']);
+backend/dono-api/database/migrations/2026_08_27_120000_create_live_room_tables.php:49:            $table->index(['school_id', 'status']);
+backend/dono-api/database/migrations/2026_08_27_120000_create_live_room_tables.php:64:            $table->index(['school_id', 'status']);
+backend/dono-api/database/migrations/2026_08_27_120003_create_live_room_provider_events_table.php:20:            $table->unique(['provider', 'event_id']);
+backend/dono-api/database/migrations/2026_08_27_120003_create_live_room_provider_events_table.php:21:            $table->index(['provider_room_id', 'event_name']);
+backend/dono-api/database/migrations/2026_08_28_120000_create_live_room_provider_operations_table.php:27:            $table->index(['school_id', 'status', 'created_at'], 'pro_ops_school_status_idx');
+backend/dono-api/database/migrations/2026_08_28_120000_create_live_room_provider_operations_table.php:28:            $table->index(['live_room_id', 'operation', 'created_at'], 'pro_ops_room_op_time_idx');
+backend/dono-api/database/migrations/2026_08_29_120000_add_recording_consent_to_live_room_participants.php:18:            $table->index(['live_room_id', 'recording_consent'], 'lrp_recording_consent_idx');
+backend/dono-api/database/migrations/2026_08_29_120001_create_live_room_recordings_table.php:32:            $table->index(['school_id', 'status', 'created_at'], 'lrr_school_status_idx');
+backend/dono-api/database/migrations/2026_08_29_120001_create_live_room_recordings_table.php:33:            $table->index(['provider_egress_id', 'provider'], 'lrr_provider_egress_idx');
+backend/dono-api/database/migrations/2026_08_29_120001_create_live_room_recordings_table.php:34:            $table->index(['expires_at', 'status'], 'lrr_expiry_status_idx');
+=== EXPLICIT INDEX NAMES ===
+backend/dono-api/database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:61:                $table->unique(['user_id', 'role_id', 'school_id'], 'user_roles_user_role_school_unique');
+backend/dono-api/database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:81:            $table->unique(['user_id', 'role_id'], 'user_roles_user_id_role_id_unique');
+backend/dono-api/database/migrations/2026_08_14_080000_create_assets_table.php:41:            $table->unique(['school_id', 'asset_number'], 'assets_school_number_unique');
+backend/dono-api/database/migrations/2026_08_14_080000_create_assets_table.php:42:            $table->index(['school_id', 'status', 'category'], 'assets_school_status_category_index');
+backend/dono-api/database/migrations/2026_08_14_080000_create_assets_table.php:43:            $table->index(['custodian_staff_id', 'status'], 'assets_custodian_status_index');
+backend/dono-api/database/migrations/2026_08_15_000000_add_user_id_to_students_table.php:23:                $table->unique('user_id', 'students_user_id_unique');
+backend/dono-api/database/migrations/2026_08_15_000001_add_parent_id_to_guardians_table.php:18:            $table->unique('parent_id', 'guardians_parent_id_unique');
+backend/dono-api/database/migrations/2026_08_17_000000_create_school_setup_delegations_table.php:20:                $table->unique(['school_id', 'user_id', 'permission_id'], 'school_setup_delegations_unique');
+backend/dono-api/database/migrations/2026_08_18_120000_repair_school_setup_tables.php:49:                $table->unique(['school_id', 'user_id', 'permission_id'], 'school_setup_delegations_unique');
+backend/dono-api/database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php:64:            $table->unique(['cbt_assessment_id', 'cbt_question_id'], 'cbt_assessment_question_unique');
+backend/dono-api/database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php:83:            $table->unique(['cbt_assessment_id', 'student_enrollment_id', 'attempt_number'], 'cbt_attempt_student_unique');
+backend/dono-api/database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php:96:            $table->unique(['cbt_attempt_id', 'cbt_assessment_question_id'], 'cbt_attempt_answer_unique');
+backend/dono-api/database/migrations/2026_08_21_070000_create_form_teacher_assignments_table.php:21:            $table->index(['school_id', 'staff_id', 'is_active'], 'form_teacher_staff_active_index');
+backend/dono-api/database/migrations/2026_08_21_070000_create_form_teacher_assignments_table.php:22:            $table->index(['school_id', 'class_id', 'stream_id'], 'form_teacher_class_stream_index');
+backend/dono-api/database/migrations/2026_08_21_080000_extend_timetables_for_school_configurable_entries.php:55:                $table->index('class_id', 'timetables_class_id_fk_index');
+backend/dono-api/database/migrations/2026_08_21_090000_extend_cbt_questions_for_bulk_authoring.php:35:                $table->index(['school_id', 'subject_id', 'section', 'difficulty'], 'cbt_questions_bank_filter_index');
+backend/dono-api/database/migrations/2026_08_21_091000_create_assignment_submissions_table.php:27:            $table->unique(['assignment_id', 'student_id'], 'assignment_student_submission_unique');
+backend/dono-api/database/migrations/2026_08_23_170000_create_school_insight_alerts_table.php:27:            $table->unique(['school_id', 'alert_key'], 'school_insight_alert_identity');
+backend/dono-api/database/migrations/2026_08_23_190000_create_feature_flags_table.php:23:            $table->unique(['key', 'scope_type', 'scope_id'], 'feature_flag_scope_identity');
+backend/dono-api/database/migrations/2026_08_23_240000_create_school_insight_snapshots_table.php:28:            $table->unique(['school_id', 'snapshot_date', 'period_days'], 'sis_school_date_period_uq');
+backend/dono-api/database/migrations/2026_08_23_240000_create_school_insight_snapshots_table.php:29:            $table->index(['school_id', 'snapshot_date'], 'sis_school_date_idx');
+backend/dono-api/database/migrations/2026_08_23_260000_create_transport_stops_and_inspections_tables.php:23:                $table->unique(['transport_route_id', 'sequence'], 'tstop_route_seq_uq');
+backend/dono-api/database/migrations/2026_08_23_260000_create_transport_stops_and_inspections_tables.php:24:                $table->index(['school_id', 'transport_route_id'], 'tstop_school_route_idx');
+backend/dono-api/database/migrations/2026_08_23_260000_create_transport_stops_and_inspections_tables.php:40:                $table->index(['school_id', 'vehicle_id', 'inspection_date'], 'vinspect_school_vehicle_date_idx');
+backend/dono-api/database/migrations/2026_08_23_270000_create_book_reservations_table.php:26:            $table->index(['school_id', 'status'], 'bres_school_status_idx');
+backend/dono-api/database/migrations/2026_08_23_270000_create_book_reservations_table.php:27:            $table->index(['book_id', 'status'], 'bres_book_status_idx');
+backend/dono-api/database/migrations/2026_08_23_280000_create_staff_contracts_table.php:30:            $table->unique(['school_id', 'contract_number'], 'scontract_school_number_uq');
+backend/dono-api/database/migrations/2026_08_23_280000_create_staff_contracts_table.php:31:            $table->index(['school_id', 'staff_id', 'status'], 'scontract_school_staff_status_idx');
+backend/dono-api/database/migrations/2026_08_23_310000_create_asset_lifecycle_events_table.php:24:            $table->index(['school_id', 'asset_id', 'occurred_at'], 'ale_school_asset_time_idx');
+backend/dono-api/database/migrations/2026_08_23_310000_create_asset_lifecycle_events_table.php:25:            $table->index(['school_id', 'event_type'], 'ale_school_event_idx');
+backend/dono-api/database/migrations/2026_08_23_350000_create_payment_gateway_events_table.php:21:            $table->unique(['gateway', 'event_id'], 'pge_gateway_event_uq');
+backend/dono-api/database/migrations/2026_08_23_350000_create_payment_gateway_events_table.php:22:            $table->index(['event_type', 'created_at'], 'pge_type_created_idx');
+backend/dono-api/database/migrations/2026_08_23_350000_create_payment_gateway_events_table.php:23:            $table->index('transaction_reference', 'pge_reference_idx');
+backend/dono-api/database/migrations/2026_08_23_360000_create_school_setup_checklist_states_table.php:21:            $table->unique(['school_id', 'step_key'], 'sscs_school_step_uq');
+backend/dono-api/database/migrations/2026_08_23_360000_create_school_setup_checklist_states_table.php:22:            $table->index(['school_id', 'acknowledged'], 'sscs_school_ack_idx');
+backend/dono-api/database/migrations/2026_08_23_380000_add_invoice_number_to_student_fees.php:17:                $table->unique(['school_id', 'invoice_number'], 'student_school_invoice_uq');
+backend/dono-api/database/migrations/2026_08_23_390000_create_mfa_challenges_and_user_mfa_fields.php:40:                $table->index(['user_id', 'expires_at'], 'mfa_user_expiry_idx');
+backend/dono-api/database/migrations/2026_08_23_400000_create_school_api_keys_table.php:27:            $table->index(['school_id', 'revoked_at'], 'school_api_key_active_idx');
+backend/dono-api/database/migrations/2026_08_23_410000_add_delivery_state_to_communications.php:34:            $table->index(['school_id', 'delivery_status'], 'communications_delivery_status_idx');
+backend/dono-api/database/migrations/2026_08_23_172700_add_school_scope_to_oauth_clients.php:28:            $table->index(['school_id', 'revoked'], 'oauth_clients_school_revoked_idx');
+backend/dono-api/database/migrations/2026_08_23_173100_create_backup_runs_table.php:28:            $table->index(['status', 'started_at'], 'backup_runs_status_started_idx');
+backend/dono-api/database/migrations/2026_08_23_172900_create_user_push_tokens_table.php:26:            $table->unique(['school_id', 'user_id', 'token_hash'], 'user_push_token_unique');
+backend/dono-api/database/migrations/2026_08_23_172900_create_user_push_tokens_table.php:27:            $table->index(['school_id', 'user_id', 'revoked_at'], 'user_push_token_active_idx');
+backend/dono-api/database/migrations/2026_08_23_173000_create_communication_deliveries_table.php:36:            $table->unique(['communication_id', 'user_id', 'channel', 'push_token_id'], 'communication_delivery_unique');
+backend/dono-api/database/migrations/2026_08_23_173000_create_communication_deliveries_table.php:37:            $table->unique(['provider', 'provider_message_id'], 'communication_provider_message_unique');
+backend/dono-api/database/migrations/2026_08_23_173000_create_communication_deliveries_table.php:38:            $table->index(['school_id', 'channel', 'status'], 'communication_delivery_status_idx');
+backend/dono-api/database/migrations/2026_08_23_173200_create_marketplace_apps_table.php:27:            $table->index('status', 'marketplace_apps_status_idx');
+backend/dono-api/database/migrations/2026_08_23_173300_create_school_marketplace_installations_table.php:26:            $table->unique(['school_id', 'marketplace_app_id'], 'school_marketplace_app_unique');
+backend/dono-api/database/migrations/2026_08_23_173300_create_school_marketplace_installations_table.php:27:            $table->index(['school_id', 'status'], 'school_marketplace_status_idx');
+backend/dono-api/database/migrations/2026_08_23_174000_add_unique_transaction_reference_to_fee_payments.php:32:            $table->unique('transaction_reference', 'fee_payments_transaction_ref_unique');
+backend/dono-api/database/migrations/2026_08_24_010000_fix_transport_allocation_history_index.php:65:                $table->unique('student_id', 'transport_allocations_student_id_unique');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:20:                $table->index(['school_id', 'user_id', 'status'], 'ai_conversations_school_user_status_idx');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:37:                $table->index(['ai_conversation_id', 'created_at'], 'ai_messages_conversation_created_idx');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:53:                $table->unique(['school_id', 'student_id'], 'student_community_consents_school_student_uq');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:54:                $table->index(['school_id', 'parent_id'], 'student_community_consents_school_parent_idx');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:74:                $table->index(['school_id', 'status', 'created_at'], 'community_posts_school_status_created_idx');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:75:                $table->index(['school_id', 'author_student_id', 'status'], 'community_posts_school_author_status_idx');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:90:                $table->index(['community_post_id', 'status', 'created_at'], 'community_comments_post_status_created_idx');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:108:                $table->index(['school_id', 'status', 'created_at'], 'community_reports_school_status_created_idx');
+backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php:109:                $table->index(['target_type', 'target_id'], 'community_reports_target_idx');
+backend/dono-api/database/migrations/2026_08_28_120000_create_live_room_provider_operations_table.php:27:            $table->index(['school_id', 'status', 'created_at'], 'pro_ops_school_status_idx');
+backend/dono-api/database/migrations/2026_08_28_120000_create_live_room_provider_operations_table.php:28:            $table->index(['live_room_id', 'operation', 'created_at'], 'pro_ops_room_op_time_idx');
+backend/dono-api/database/migrations/2026_08_29_120000_add_recording_consent_to_live_room_participants.php:18:            $table->index(['live_room_id', 'recording_consent'], 'lrp_recording_consent_idx');
+backend/dono-api/database/migrations/2026_08_29_120001_create_live_room_recordings_table.php:32:            $table->index(['school_id', 'status', 'created_at'], 'lrr_school_status_idx');
+backend/dono-api/database/migrations/2026_08_29_120001_create_live_room_recordings_table.php:33:            $table->index(['provider_egress_id', 'provider'], 'lrr_provider_egress_idx');
+backend/dono-api/database/migrations/2026_08_29_120001_create_live_room_recordings_table.php:34:            $table->index(['expires_at', 'status'], 'lrr_expiry_status_idx');
+=== RECENT MIGRATIONS ===
+2026_08_19_170000_create_assignments_table.php
+2026_08_19_180000_add_assignment_permissions.php
+2026_08_19_190000_enforce_employment_authority.php
+2026_08_19_200000_allow_pending_school_subscriptions.php
+2026_08_20_000000_create_communications_table.php
+2026_08_20_010000_create_cbt_questions_table.php
+2026_08_20_020000_add_communication_cbt_permissions.php
+2026_08_20_030000_create_student_leave_applications_table.php
+2026_08_20_040000_create_assessment_activities_table.php
+2026_08_20_050000_create_payroll_entries_table.php
+2026_08_20_060000_create_reception_activities_table.php
+2026_08_20_070000_create_transport_logs_table.php
+2026_08_20_080000_add_reversal_fields_to_fee_payments_table.php
+2026_08_20_090000_create_graduation_records_table.php
+2026_08_20_100000_create_cbt_workflow_tables.php
+2026_08_20_110000_harden_role_permission_boundaries.php
+2026_08_21_070000_create_form_teacher_assignments_table.php
+2026_08_21_071000_add_form_assignment_to_role_invitations_table.php
+2026_08_21_072000_seed_default_assessment_structures.php
+2026_08_21_073000_repair_teacher_academic_permissions.php
+2026_08_21_080000_extend_timetables_for_school_configurable_entries.php
+2026_08_21_090000_extend_cbt_questions_for_bulk_authoring.php
+2026_08_21_091000_create_assignment_submissions_table.php
+2026_08_21_100000_add_password_change_state_to_users_table.php
+2026_08_21_110000_enable_email_verification_for_users.php
+2026_08_21_120000_create_platform_announcements_table.php
+2026_08_21_130000_add_local_email_outbox_and_announcement_targets.php
+2026_08_21_140000_create_tenant_partition_directory.php
+2026_08_21_150000_expand_school_communication_visibility.php
+2026_08_21_160000_create_fee_payment_transactions_table.php
+2026_08_21_190000_add_question_order_to_cbt_attempts_table.php
+2026_08_21_210000_create_communication_reads_table.php
+2026_08_21_220000_add_avatar_to_users_table.php
+2026_08_23_120000_create_support_tickets_tables.php
+2026_08_23_130000_create_app_notifications_table.php
+2026_08_23_140000_add_view_insights_permission.php
+2026_08_23_150000_add_timetable_workflow_fields.php
+2026_08_23_160000_add_report_card_verification_tokens.php
+2026_08_23_170000_create_school_insight_alerts_table.php
+2026_08_23_172558_create_oauth_auth_codes_table.php
+2026_08_23_172559_create_oauth_access_tokens_table.php
+2026_08_23_172600_create_oauth_refresh_tokens_table.php
+2026_08_23_172601_create_oauth_clients_table.php
+2026_08_23_172602_create_oauth_device_codes_table.php
+2026_08_23_172700_add_school_scope_to_oauth_clients.php
+2026_08_23_172900_create_user_push_tokens_table.php
+2026_08_23_173000_create_communication_deliveries_table.php
+2026_08_23_173100_create_backup_runs_table.php
+2026_08_23_173200_create_marketplace_apps_table.php
+2026_08_23_173300_create_school_marketplace_installations_table.php
+2026_08_23_173400_create_school_benchmark_consents_table.php
+2026_08_23_174000_add_unique_transaction_reference_to_fee_payments.php
+2026_08_23_174100_add_review_state_to_marketplace_apps.php
+2026_08_23_180000_add_attachment_to_assignments_table.php
+2026_08_23_190000_create_feature_flags_table.php
+2026_08_23_200000_create_notification_preferences_table.php
+2026_08_23_210000_add_reconciliation_fields_to_payment_transactions.php
+2026_08_23_220000_create_attendance_corrections_table.php
+2026_08_23_230000_add_reopen_metadata_to_result_submissions.php
+2026_08_23_240000_create_school_insight_snapshots_table.php
+2026_08_23_250000_add_health_workflow_fields.php
+2026_08_23_260000_create_transport_stops_and_inspections_tables.php
+2026_08_23_270000_create_book_reservations_table.php
+2026_08_23_280000_create_staff_contracts_table.php
+2026_08_23_290000_add_support_sla_and_attachments.php
+2026_08_23_300000_add_contract_fields_to_payroll_entries.php
+2026_08_23_310000_create_asset_lifecycle_events_table.php
+2026_08_23_320000_add_reversal_fields_to_fee_payments.php
+2026_08_23_330000_add_reconciliation_review_fields_to_payment_transactions.php
+2026_08_23_340000_add_refund_fields_to_payment_transactions.php
+2026_08_23_350000_create_payment_gateway_events_table.php
+2026_08_23_360000_create_school_setup_checklist_states_table.php
+2026_08_23_370000_add_tax_and_invoice_settings.php
+2026_08_23_380000_add_invoice_number_to_student_fees.php
+2026_08_23_390000_create_mfa_challenges_and_user_mfa_fields.php
+2026_08_23_400000_create_school_api_keys_table.php
+2026_08_23_410000_add_delivery_state_to_communications.php
+2026_08_24_000000_create_school_admission_sequences_table.php
+2026_08_24_010000_fix_transport_allocation_history_index.php
+2026_08_25_120000_create_ai_student_community_tables.php
+2026_08_25_120001_add_ai_community_permissions.php
+2026_08_26_120000_create_school_exchange_tables.php
+2026_08_26_120001_add_exchange_permissions.php
+2026_08_27_120000_create_live_room_tables.php
+2026_08_27_120001_add_live_room_permissions.php
+2026_08_27_120002_add_provider_identity_to_live_room_participants.php
+2026_08_27_120003_create_live_room_provider_events_table.php
+2026_08_28_120000_create_live_room_provider_operations_table.php
+2026_08_29_120000_add_recording_consent_to_live_room_participants.php
+2026_08_29_120001_create_live_room_recordings_table.php

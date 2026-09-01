@@ -16,10 +16,7 @@ class ExaminationController extends Controller
         private readonly CurrentContextService $context
     ) {}
 
-    private function currentContextSchoolId(Request $request): ?int
-    {
-        return $this->context->currentSchool($request->user())?->id;
-    }
+
     public function index(Request $request)
     {
         $query = Examination::with([
@@ -31,7 +28,7 @@ class ExaminationController extends Controller
         if (! $request->user()->isSuperAdmin()) {
             $query->where(
                 'school_id',
-                $this->currentContextSchoolId($request)
+                $this->context->currentSchool($request->user())?->id
             );
         }
 
@@ -46,7 +43,7 @@ class ExaminationController extends Controller
 
         if (! $request->user()->isSuperAdmin()) {
             $data['school_id'] =
-                $this->currentContextSchoolId($request);
+                $this->context->currentSchool($request->user())?->id;
         }
 
         $examination = Examination::create($data);
@@ -71,7 +68,7 @@ class ExaminationController extends Controller
         if (
             ! $request->user()->isSuperAdmin() &&
             $examination->school_id !=
-            $this->currentContextSchoolId($request)
+            $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -92,7 +89,7 @@ class ExaminationController extends Controller
         if (
             ! $request->user()->isSuperAdmin() &&
             $examination->school_id !=
-            $this->currentContextSchoolId($request)
+            $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -121,7 +118,7 @@ class ExaminationController extends Controller
         if (
             ! $request->user()->isSuperAdmin() &&
             $examination->school_id !=
-            $this->currentContextSchoolId($request)
+            $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized.');
         }

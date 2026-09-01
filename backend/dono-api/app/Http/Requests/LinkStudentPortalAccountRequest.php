@@ -15,7 +15,7 @@ class LinkStudentPortalAccountRequest extends FormRequest
 
     public function rules(): array
     {
-        $schoolId = $this->currentSchoolId();
+        $schoolId = app(CurrentContextService::class)->currentSchool($this->user())?->id;
 
         return [
             'email' => [
@@ -28,18 +28,4 @@ class LinkStudentPortalAccountRequest extends FormRequest
         ];
     }
 
-    private function currentSchoolId(): ?int
-    {
-        $schoolId = $this->attributes->get('current_school_id');
-
-        if ($schoolId) {
-            return (int) $schoolId;
-        }
-
-        $user = $this->user();
-
-        return $user
-            ? app(CurrentContextService::class)->currentSchool($user)?->id
-            : null;
-    }
 }

@@ -13,7 +13,7 @@ class ExpenseController extends Controller
 
     public function index(Request $request)
     {
-        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+        $schoolId = $this->context->currentSchool($request->user())?->id;
 
         return response()->json(
             Expense::when($schoolId, function ($query) use ($schoolId) {
@@ -35,7 +35,7 @@ class ExpenseController extends Controller
             'expense_date' => 'required|date',
         ]);
 
-        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+        $schoolId = $this->context->currentSchool($request->user())?->id;
         if ($schoolId) {
             $validated['school_id'] = $schoolId;
         }

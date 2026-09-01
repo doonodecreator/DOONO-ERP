@@ -1,0 +1,559 @@
+=== TENANT/FOREIGN KEY PATTERNS ===
+database/migrations/0001_01_01_000000_create_users_table.php:17:            $table->string('email')->unique();
+database/migrations/0001_01_01_000000_create_users_table.php:32:            $table->foreignId('user_id')->nullable()->index();
+database/migrations/0001_01_01_000000_create_users_table.php:36:            $table->integer('last_activity')->index();
+database/migrations/0001_01_01_000001_create_cache_table.php:17:            $table->bigInteger('expiration')->index();
+database/migrations/0001_01_01_000001_create_cache_table.php:23:            $table->bigInteger('expiration')->index();
+database/migrations/0001_01_01_000002_create_jobs_table.php:16:            $table->string('queue')->index();
+database/migrations/0001_01_01_000002_create_jobs_table.php:39:            $table->string('uuid')->unique();
+database/migrations/0001_01_01_000002_create_jobs_table.php:46:            $table->index(['connection', 'queue', 'failed_at']);
+database/migrations/2026_06_26_151928_create_schools_table.php:15:            $table->foreignId('organization_id')
+database/migrations/2026_06_26_151928_create_schools_table.php:16:                ->constrained()
+database/migrations/2026_06_26_151928_create_schools_table.php:33:            $table->string('school_code')->unique();
+database/migrations/2026_06_26_153035_create_academic_sessions_table.php:15:            $table->foreignId('school_id')
+database/migrations/2026_06_26_153035_create_academic_sessions_table.php:16:                ->constrained()
+database/migrations/2026_06_26_153035_create_academic_sessions_table.php:34:            $table->unique(['school_id', 'name']);
+database/migrations/2026_06_26_153801_create_terms_table.php:15:            $table->foreignId('academic_session_id')
+database/migrations/2026_06_26_153801_create_terms_table.php:16:                ->constrained()
+database/migrations/2026_06_26_153801_create_terms_table.php:38:            $table->unique(['academic_session_id', 'name']);
+database/migrations/2026_06_26_154227_create_divisions_table.php:15:            $table->foreignId('school_id')
+database/migrations/2026_06_26_154227_create_divisions_table.php:16:                ->constrained()
+database/migrations/2026_06_26_154227_create_divisions_table.php:29:            $table->unique(['school_id','name']);
+database/migrations/2026_06_26_154804_create_classes_table.php:15:            $table->foreignId('division_id')
+database/migrations/2026_06_26_154804_create_classes_table.php:16:                ->constrained()
+database/migrations/2026_06_26_154804_create_classes_table.php:29:            $table->unique(['division_id', 'name']);
+database/migrations/2026_06_26_155345_create_streams_table.php:15:            $table->foreignId('class_id')
+database/migrations/2026_06_26_155345_create_streams_table.php:16:                ->constrained()
+database/migrations/2026_06_26_155345_create_streams_table.php:29:            $table->unique(['class_id', 'name']);
+database/migrations/2026_06_26_183026_create_students_table.php:17:            $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_06_26_183026_create_students_table.php:19:            $table->foreignId('division_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_06_26_183026_create_students_table.php:21:            $table->foreignId('class_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_06_26_183026_create_students_table.php:23:            $table->foreignId('stream_id')->nullable()->constrained()->nullOnDelete();
+database/migrations/2026_06_26_183026_create_students_table.php:25:            $table->foreignId('academic_session_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_06_26_183026_create_students_table.php:27:            $table->string('admission_number')->unique();
+database/migrations/2026_06_26_184908_create_parents_table.php:14:            $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_06_26_190735_create_parent_student_table.php:17:            $table->foreignId('parent_id')->constrained('parents')->cascadeOnDelete();
+database/migrations/2026_06_26_190735_create_parent_student_table.php:19:            $table->foreignId('student_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_06_26_190735_create_parent_student_table.php:25:            $table->unique(['parent_id', 'student_id']);
+database/migrations/2026_06_26_191217_create_staff_table.php:17:            $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_06_26_191217_create_staff_table.php:19:            $table->string('staff_number')->unique();
+database/migrations/2026_06_26_191655_create_subjects_table.php:17:            $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_06_26_191655_create_subjects_table.php:19:            $table->foreignId('division_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_06_26_191655_create_subjects_table.php:23:            $table->string('code')->unique();
+database/migrations/2026_06_26_192032_create_class_subject_table.php:17:            $table->foreignId('class_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_06_26_192032_create_class_subject_table.php:19:            $table->foreignId('subject_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_06_26_192032_create_class_subject_table.php:21:            $table->foreignId('staff_id')
+database/migrations/2026_06_26_192032_create_class_subject_table.php:23:                  ->constrained('staff')
+database/migrations/2026_06_26_192032_create_class_subject_table.php:26:            $table->foreignId('academic_session_id')
+database/migrations/2026_06_26_192032_create_class_subject_table.php:27:                  ->constrained()
+database/migrations/2026_06_26_192032_create_class_subject_table.php:30:            $table->foreignId('term_id')
+database/migrations/2026_06_26_192032_create_class_subject_table.php:31:                  ->constrained()
+database/migrations/2026_06_26_192032_create_class_subject_table.php:38:            $table->unique([
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:17:            $table->foreignId('student_id')
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:18:                  ->constrained()
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:21:            $table->foreignId('school_id')
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:22:                  ->constrained()
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:25:            $table->foreignId('academic_session_id')
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:26:                  ->constrained()
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:29:            $table->foreignId('term_id')
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:30:                  ->constrained()
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:33:            $table->foreignId('division_id')
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:34:                  ->constrained()
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:37:            $table->foreignId('class_id')
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:38:                  ->constrained()
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:41:            $table->foreignId('stream_id')
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:43:                  ->constrained()
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:59:            $table->unique(
+database/migrations/2026_06_26_192718_create_attendances_table.php:18:            $table->foreignId('student_enrollment_id')
+database/migrations/2026_06_26_192718_create_attendances_table.php:19:                  ->constrained()
+database/migrations/2026_06_26_192718_create_attendances_table.php:22:            $table->foreignId('academic_session_id')
+database/migrations/2026_06_26_192718_create_attendances_table.php:23:                  ->constrained()
+database/migrations/2026_06_26_192718_create_attendances_table.php:26:            $table->foreignId('term_id')
+database/migrations/2026_06_26_192718_create_attendances_table.php:27:                  ->constrained()
+database/migrations/2026_06_26_192718_create_attendances_table.php:41:            $table->foreignId('staff_id')
+database/migrations/2026_06_26_192718_create_attendances_table.php:43:                  ->constrained()
+database/migrations/2026_06_26_192718_create_attendances_table.php:48:            $table->unique(
+database/migrations/2026_06_26_193046_create_examinations_table.php:18:            $table->foreignId('school_id')
+database/migrations/2026_06_26_193046_create_examinations_table.php:19:                  ->constrained()
+database/migrations/2026_06_26_193046_create_examinations_table.php:22:            $table->foreignId('academic_session_id')
+database/migrations/2026_06_26_193046_create_examinations_table.php:23:                  ->constrained()
+database/migrations/2026_06_26_193046_create_examinations_table.php:26:            $table->foreignId('term_id')
+database/migrations/2026_06_26_193046_create_examinations_table.php:27:                  ->constrained()
+database/migrations/2026_06_26_193536_create_exam_scores_table.php:18:            $table->foreignId('student_enrollment_id')
+database/migrations/2026_06_26_193536_create_exam_scores_table.php:19:                  ->constrained()
+database/migrations/2026_06_26_193536_create_exam_scores_table.php:22:            $table->foreignId('class_subject_id')
+database/migrations/2026_06_26_193536_create_exam_scores_table.php:23:                  ->constrained('class_subject')
+database/migrations/2026_06_26_193536_create_exam_scores_table.php:26:            $table->foreignId('examination_id')
+database/migrations/2026_06_26_193536_create_exam_scores_table.php:27:                  ->constrained()
+database/migrations/2026_06_26_193536_create_exam_scores_table.php:42:            $table->foreignId('staff_id')
+database/migrations/2026_06_26_193536_create_exam_scores_table.php:44:                  ->constrained()
+database/migrations/2026_06_26_193536_create_exam_scores_table.php:49:            $table->unique(
+database/migrations/2026_06_26_213646_create_fee_categories_table.php:18:            $table->foreignId('school_id')
+database/migrations/2026_06_26_213646_create_fee_categories_table.php:19:                  ->constrained()
+database/migrations/2026_06_26_213646_create_fee_categories_table.php:24:            $table->string('code')->unique();
+database/migrations/2026_06_27_020020_create_student_fees_table.php:18:            $table->foreignId('student_enrollment_id')
+database/migrations/2026_06_27_020020_create_student_fees_table.php:19:                  ->constrained()
+database/migrations/2026_06_27_020020_create_student_fees_table.php:22:            $table->foreignId('fee_category_id')
+database/migrations/2026_06_27_020020_create_student_fees_table.php:23:                  ->constrained()
+database/migrations/2026_06_27_020020_create_student_fees_table.php:26:            $table->foreignId('academic_session_id')
+database/migrations/2026_06_27_020020_create_student_fees_table.php:27:                  ->constrained()
+database/migrations/2026_06_27_020020_create_student_fees_table.php:30:            $table->foreignId('term_id')
+database/migrations/2026_06_27_020020_create_student_fees_table.php:31:                  ->constrained()
+database/migrations/2026_06_27_020020_create_student_fees_table.php:53:            $table->unique(
+database/migrations/2026_06_27_020424_create_fee_payments_table.php:18:            $table->foreignId('student_fee_id')
+database/migrations/2026_06_27_020424_create_fee_payments_table.php:19:                  ->constrained()
+database/migrations/2026_06_27_020424_create_fee_payments_table.php:22:            $table->foreignId('staff_id')
+database/migrations/2026_06_27_020424_create_fee_payments_table.php:24:                  ->constrained()
+database/migrations/2026_06_27_020424_create_fee_payments_table.php:27:            $table->string('receipt_number')->unique();
+database/migrations/2026_06_27_020755_create_payment_receipts_table.php:18:            $table->foreignId('fee_payment_id')
+database/migrations/2026_06_27_020755_create_payment_receipts_table.php:19:                  ->constrained()
+database/migrations/2026_06_27_020755_create_payment_receipts_table.php:22:            $table->string('receipt_number')->unique();
+database/migrations/2026_06_27_071538_create_personal_access_tokens_table.php:18:            $table->string('token', 64)->unique();
+database/migrations/2026_06_27_071538_create_personal_access_tokens_table.php:21:            $table->timestamp('expires_at')->nullable()->index();
+database/migrations/2026_06_29_062532_create_permissions_table.php:16:            $table->string('name')->unique();
+database/migrations/2026_06_29_062900_create_roles_table.php:20:            $table->string('slug')->unique();
+database/migrations/2026_06_29_063100_create_role_permission_table.php:15:            $table->foreignId('role_id')
+database/migrations/2026_06_29_063100_create_role_permission_table.php:16:                ->constrained('roles')
+database/migrations/2026_06_29_063100_create_role_permission_table.php:19:            $table->foreignId('permission_id')
+database/migrations/2026_06_29_063100_create_role_permission_table.php:20:                ->constrained('permissions')
+database/migrations/2026_06_29_063100_create_role_permission_table.php:25:            $table->unique(['role_id', 'permission_id']);
+database/migrations/2026_06_29_064650_create_user_roles_table.php:18:            $table->foreignId('user_id')
+database/migrations/2026_06_29_064650_create_user_roles_table.php:19:                ->constrained()
+database/migrations/2026_06_29_064650_create_user_roles_table.php:22:            $table->foreignId('role_id')
+database/migrations/2026_06_29_064650_create_user_roles_table.php:23:                ->constrained()
+database/migrations/2026_06_29_064650_create_user_roles_table.php:28:            $table->unique(['user_id', 'role_id']);
+database/migrations/2026_06_29_183245_add_owner_to_schools_table.php:13:            $table->foreignId('owner_id')
+database/migrations/2026_06_29_183245_add_owner_to_schools_table.php:15:                ->after('organization_id')
+database/migrations/2026_06_29_183245_add_owner_to_schools_table.php:16:                ->constrained('users')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:17:            $table->foreignId('student_id')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:18:                ->constrained()
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:21:            $table->foreignId('school_id')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:22:                ->constrained()
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:25:            $table->foreignId('from_academic_session_id')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:26:                ->constrained('academic_sessions')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:29:            $table->foreignId('to_academic_session_id')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:30:                ->constrained('academic_sessions')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:33:            $table->foreignId('from_division_id')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:34:                ->constrained('divisions')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:37:            $table->foreignId('to_division_id')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:38:                ->constrained('divisions')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:41:            $table->foreignId('from_class_id')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:42:                ->constrained('classes')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:45:            $table->foreignId('to_class_id')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:46:                ->constrained('classes')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:49:            $table->foreignId('from_stream_id')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:51:                ->constrained('streams')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:54:            $table->foreignId('to_stream_id')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:56:                ->constrained('streams')
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:72:            $table->unique(
+database/migrations/2026_06_30_130932_add_school_id_to_attendances_table.php:16:            $table->foreignId('school_id')
+database/migrations/2026_06_30_130932_add_school_id_to_attendances_table.php:18:                ->constrained()
+database/migrations/2026_06_30_130932_add_school_id_to_attendances_table.php:31:            $table->dropConstrainedForeignId('school_id');
+database/migrations/2026_06_30_171308_create_results_table.php:18:            $table->foreignId('school_id')
+database/migrations/2026_06_30_171308_create_results_table.php:19:                ->constrained()
+database/migrations/2026_06_30_171308_create_results_table.php:22:            $table->foreignId('student_enrollment_id')
+database/migrations/2026_06_30_171308_create_results_table.php:23:                ->constrained()
+database/migrations/2026_06_30_171308_create_results_table.php:26:            $table->foreignId('subject_id')
+database/migrations/2026_06_30_171308_create_results_table.php:27:                ->constrained()
+database/migrations/2026_06_30_171308_create_results_table.php:30:            $table->foreignId('academic_session_id')
+database/migrations/2026_06_30_171308_create_results_table.php:31:                ->constrained()
+database/migrations/2026_06_30_171308_create_results_table.php:34:            $table->foreignId('term_id')
+database/migrations/2026_06_30_171308_create_results_table.php:35:                ->constrained()
+database/migrations/2026_06_30_171308_create_results_table.php:54:            $table->unique(
+database/migrations/2026_06_30_181633_create_timetables_table.php:18:            $table->foreignId('school_id')
+database/migrations/2026_06_30_181633_create_timetables_table.php:19:                ->constrained()
+database/migrations/2026_06_30_181633_create_timetables_table.php:22:            $table->foreignId('academic_session_id')
+database/migrations/2026_06_30_181633_create_timetables_table.php:23:                ->constrained()
+database/migrations/2026_06_30_181633_create_timetables_table.php:26:            $table->foreignId('term_id')
+database/migrations/2026_06_30_181633_create_timetables_table.php:27:                ->constrained()
+database/migrations/2026_06_30_181633_create_timetables_table.php:30:            $table->foreignId('division_id')
+database/migrations/2026_06_30_181633_create_timetables_table.php:31:                ->constrained()
+database/migrations/2026_06_30_181633_create_timetables_table.php:34:            $table->foreignId('class_id')
+database/migrations/2026_06_30_181633_create_timetables_table.php:35:                ->constrained('classes')
+database/migrations/2026_06_30_181633_create_timetables_table.php:38:            $table->foreignId('stream_id')
+database/migrations/2026_06_30_181633_create_timetables_table.php:40:                ->constrained('streams')
+database/migrations/2026_06_30_181633_create_timetables_table.php:43:            $table->foreignId('subject_id')
+database/migrations/2026_06_30_181633_create_timetables_table.php:44:                ->constrained()
+database/migrations/2026_06_30_181633_create_timetables_table.php:47:            $table->foreignId('staff_id')
+database/migrations/2026_06_30_181633_create_timetables_table.php:49:                ->constrained()
+database/migrations/2026_06_30_181633_create_timetables_table.php:72:            $table->unique(
+database/migrations/2026_06_30_185402_create_report_cards_table.php:15:            $table->foreignId('school_id')
+database/migrations/2026_06_30_185402_create_report_cards_table.php:16:                ->constrained()
+database/migrations/2026_06_30_185402_create_report_cards_table.php:19:            $table->foreignId('student_enrollment_id')
+database/migrations/2026_06_30_185402_create_report_cards_table.php:20:                ->constrained()
+database/migrations/2026_06_30_185402_create_report_cards_table.php:23:            $table->foreignId('academic_session_id')
+database/migrations/2026_06_30_185402_create_report_cards_table.php:24:                ->constrained()
+database/migrations/2026_06_30_185402_create_report_cards_table.php:27:            $table->foreignId('term_id')
+database/migrations/2026_06_30_185402_create_report_cards_table.php:28:                ->constrained()
+database/migrations/2026_06_30_185402_create_report_cards_table.php:62:            $table->unique(
+database/migrations/2026_06_30_204722_create_fees_table.php:18:            $table->foreignId('school_id')
+database/migrations/2026_06_30_204722_create_fees_table.php:19:                ->constrained()
+database/migrations/2026_06_30_204722_create_fees_table.php:22:            $table->foreignId('academic_session_id')
+database/migrations/2026_06_30_204722_create_fees_table.php:23:                ->constrained()
+database/migrations/2026_06_30_204722_create_fees_table.php:26:            $table->foreignId('term_id')
+database/migrations/2026_06_30_204722_create_fees_table.php:27:                ->constrained()
+database/migrations/2026_06_30_204722_create_fees_table.php:30:            $table->foreignId('division_id')
+database/migrations/2026_06_30_204722_create_fees_table.php:31:                ->constrained()
+database/migrations/2026_06_30_204722_create_fees_table.php:34:            $table->foreignId('class_id')
+database/migrations/2026_06_30_204722_create_fees_table.php:35:                ->constrained('classes')
+database/migrations/2026_06_30_204722_create_fees_table.php:50:            $table->unique(
+database/migrations/2026_06_30_204722_create_fees_table.php:52:                    'school_id',
+database/migrations/2026_07_01_071855_create_subscription_plans_table.php:20:            $table->string('slug')->unique();
+database/migrations/2026_07_01_075102_create_school_subscriptions_table.php:18:            $table->foreignId('school_id')
+database/migrations/2026_07_01_075102_create_school_subscriptions_table.php:19:                ->constrained()
+database/migrations/2026_07_01_075102_create_school_subscriptions_table.php:22:            $table->foreignId('subscription_plan_id')
+database/migrations/2026_07_01_075102_create_school_subscriptions_table.php:23:                ->constrained()
+database/migrations/2026_07_01_075102_create_school_subscriptions_table.php:71:            $table->index('school_id');
+database/migrations/2026_07_01_075102_create_school_subscriptions_table.php:73:            $table->index('status');
+database/migrations/2026_07_01_075102_create_school_subscriptions_table.php:75:            $table->index('expiry_date');
+database/migrations/2026_07_01_075102_create_school_subscriptions_table.php:77:            $table->index('trial_ends_at');
+database/migrations/2026_07_01_153110_create_currencies_table.php:20:            $table->string('code', 3)->unique();
+database/migrations/2026_07_01_155126_create_countries_table.php:20:            $table->string('iso2', 2)->unique();
+database/migrations/2026_07_01_155126_create_countries_table.php:22:            $table->string('iso3', 3)->unique();
+database/migrations/2026_07_01_155126_create_countries_table.php:35:            $table->foreignId('currency_id')
+database/migrations/2026_07_01_155126_create_countries_table.php:36:                ->constrained()
+database/migrations/2026_07_01_155929_add_country_id_to_schools_table.php:18:            $table->foreignId('country_id')
+database/migrations/2026_07_01_155929_add_country_id_to_schools_table.php:20:                ->after('organization_id')
+database/migrations/2026_07_01_155929_add_country_id_to_schools_table.php:21:                ->constrained()
+database/migrations/2026_07_01_155929_add_country_id_to_schools_table.php:45:            $table->foreignId('country_id')
+database/migrations/2026_07_01_165628_create_system_settings_table.php:45:            $table->foreignId('default_subscription_plan_id')
+database/migrations/2026_07_01_165628_create_system_settings_table.php:47:                ->constrained('subscription_plans')
+database/migrations/2026_07_01_165628_create_system_settings_table.php:56:            $table->foreignId('default_currency_id')
+database/migrations/2026_07_01_165628_create_system_settings_table.php:58:                ->constrained('currencies')
+database/migrations/2026_07_01_201810_create_features_table.php:20:            $table->string('slug')->unique();
+database/migrations/2026_07_01_201939_create_feature_subscription_plan_table.php:18:            $table->foreignId('feature_id')
+database/migrations/2026_07_01_201939_create_feature_subscription_plan_table.php:19:                ->constrained()
+database/migrations/2026_07_01_201939_create_feature_subscription_plan_table.php:22:            $table->foreignId('subscription_plan_id')
+database/migrations/2026_07_01_201939_create_feature_subscription_plan_table.php:23:                ->constrained()
+database/migrations/2026_07_01_201939_create_feature_subscription_plan_table.php:37:            $table->unique([
+database/migrations/2026_07_01_225838_create_payment_transactions_table.php:24:            $table->foreignId('school_id')
+database/migrations/2026_07_01_225838_create_payment_transactions_table.php:25:                ->constrained()
+database/migrations/2026_07_01_225838_create_payment_transactions_table.php:28:            $table->foreignId('school_subscription_id')
+database/migrations/2026_07_01_225838_create_payment_transactions_table.php:29:                ->constrained()
+database/migrations/2026_07_01_225838_create_payment_transactions_table.php:49:            $table->string('reference')->unique();
+database/migrations/2026_07_01_225838_create_payment_transactions_table.php:121:            $table->index('reference');
+database/migrations/2026_07_01_225838_create_payment_transactions_table.php:122:            $table->index('status');
+database/migrations/2026_07_01_225838_create_payment_transactions_table.php:123:            $table->index('gateway');
+database/migrations/2026_07_03_093717_create_student_result_summaries_table.php:24:            $table->foreignId('school_id')
+database/migrations/2026_07_03_093717_create_student_result_summaries_table.php:25:                ->constrained()
+database/migrations/2026_07_03_093717_create_student_result_summaries_table.php:27:            $table->foreignId('class_id')
+database/migrations/2026_07_03_093717_create_student_result_summaries_table.php:28:    ->constrained('classes')
+database/migrations/2026_07_03_093717_create_student_result_summaries_table.php:31:            $table->foreignId('student_enrollment_id')
+database/migrations/2026_07_03_093717_create_student_result_summaries_table.php:32:                ->constrained()
+database/migrations/2026_07_03_093717_create_student_result_summaries_table.php:35:            $table->foreignId('academic_session_id')
+database/migrations/2026_07_03_093717_create_student_result_summaries_table.php:36:                ->constrained()
+database/migrations/2026_07_03_093717_create_student_result_summaries_table.php:39:            $table->foreignId('term_id')
+database/migrations/2026_07_03_093717_create_student_result_summaries_table.php:40:                ->constrained()
+database/migrations/2026_07_03_093717_create_student_result_summaries_table.php:110:            $table->foreignId('approved_by')
+database/migrations/2026_07_03_093717_create_student_result_summaries_table.php:112:                ->constrained('users')
+database/migrations/2026_07_03_093717_create_student_result_summaries_table.php:126:            $table->unique(
+database/migrations/2026_07_03_095524_create_grading_systems_table.php:18:            $table->foreignId('school_id')
+database/migrations/2026_07_03_095524_create_grading_systems_table.php:19:                ->constrained()
+database/migrations/2026_07_03_095524_create_grading_systems_table.php:55:            $table->unique(
+database/migrations/2026_07_03_095524_create_grading_systems_table.php:57:                    'school_id',
+database/migrations/2026_07_03_101038_create_assessment_structures_table.php:18:            $table->foreignId('school_id')
+database/migrations/2026_07_03_101038_create_assessment_structures_table.php:19:                ->constrained()
+database/migrations/2026_07_03_101038_create_assessment_structures_table.php:39:            $table->unique(
+database/migrations/2026_07_03_101038_create_assessment_structures_table.php:41:                    'school_id',
+database/migrations/2026_07_03_101800_create_academic_configurations_table.php:18:            $table->foreignId('school_id')
+database/migrations/2026_07_03_101800_create_academic_configurations_table.php:19:                ->unique()
+database/migrations/2026_07_03_101800_create_academic_configurations_table.php:20:                ->constrained()
+database/migrations/2026_07_03_102512_create_result_components_table.php:18:            $table->foreignId('result_id')
+database/migrations/2026_07_03_102512_create_result_components_table.php:19:                ->constrained()
+database/migrations/2026_07_03_102512_create_result_components_table.php:22:            $table->foreignId('assessment_structure_id')
+database/migrations/2026_07_03_102512_create_result_components_table.php:23:                ->constrained()
+database/migrations/2026_07_03_102512_create_result_components_table.php:49:            $table->foreignId('entered_by')
+database/migrations/2026_07_03_102512_create_result_components_table.php:51:                ->constrained('users')
+database/migrations/2026_07_03_102512_create_result_components_table.php:59:            $table->unique(
+database/migrations/2026_07_03_163719_add_result_workflow_fields_to_results_table.php:34:            $table->foreignId('approved_by')
+database/migrations/2026_07_03_163719_add_result_workflow_fields_to_results_table.php:37:                ->constrained('users')
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:18:            $table->foreignId('school_id')
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:19:                ->constrained()
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:22:            $table->foreignId('class_id')
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:23:                ->constrained('classes')
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:26:            $table->foreignId('subject_id')
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:27:                ->constrained()
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:30:            $table->foreignId('academic_session_id')
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:31:                ->constrained()
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:34:            $table->foreignId('term_id')
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:35:                ->constrained()
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:58:            $table->foreignId('created_by')
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:59:                ->constrained('users')
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:62:            $table->foreignId('approved_by')
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:64:                ->constrained('users')
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:89:            $table->unique([
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:90:                'school_id',
+database/migrations/2026_07_04_052728_add_result_submission_id_to_results_table.php:16:            $table->foreignId('result_submission_id')
+database/migrations/2026_07_04_052728_add_result_submission_id_to_results_table.php:18:                ->after('school_id')
+database/migrations/2026_07_04_052728_add_result_submission_id_to_results_table.php:19:                ->constrained('result_submissions')
+database/migrations/2026_07_11_074839_add_published_by_to_results_table.php:12:            $table->foreignId('published_by')
+database/migrations/2026_07_11_074839_add_published_by_to_results_table.php:15:                  ->constrained('users')
+database/migrations/2026_07_16_131803_create_departments_table.php:14:            $table->foreignId('school_id')
+database/migrations/2026_07_16_131803_create_departments_table.php:15:                ->constrained()
+database/migrations/2026_07_16_131808_create_department_subject_table.php:14:            $table->foreignId('department_id')
+database/migrations/2026_07_16_131808_create_department_subject_table.php:15:                ->constrained()
+database/migrations/2026_07_16_131808_create_department_subject_table.php:18:            $table->foreignId('subject_id')
+database/migrations/2026_07_16_131808_create_department_subject_table.php:19:                ->constrained()
+database/migrations/2026_07_16_131813_create_staff_subject_table.php:14:            $table->foreignId('staff_id')
+database/migrations/2026_07_16_131813_create_staff_subject_table.php:15:                ->constrained()
+database/migrations/2026_07_16_131813_create_staff_subject_table.php:18:            $table->foreignId('subject_id')
+database/migrations/2026_07_16_131813_create_staff_subject_table.php:19:                ->constrained()
+database/migrations/2026_07_20_140500_create_promo_campaigns_table.php:26:            $table->string('slug')->unique();
+database/migrations/2026_07_20_140500_create_promo_campaigns_table.php:86:            $table->foreignId('promo_campaign_id')
+database/migrations/2026_07_20_140500_create_promo_campaigns_table.php:87:                ->constrained()
+database/migrations/2026_07_20_140500_create_promo_campaigns_table.php:90:            $table->foreignId('subscription_plan_id')
+database/migrations/2026_07_20_140500_create_promo_campaigns_table.php:91:                ->constrained()
+database/migrations/2026_07_20_140500_create_promo_campaigns_table.php:96:            $table->unique(
+database/migrations/2026_07_20_142621_create_coupons_table.php:20:            $table->string('code')->unique();
+database/migrations/2026_07_20_142621_create_coupons_table.php:85:            $table->foreignId('coupon_id')
+database/migrations/2026_07_20_142621_create_coupons_table.php:86:                ->constrained()
+database/migrations/2026_07_20_142621_create_coupons_table.php:89:            $table->foreignId('subscription_plan_id')
+database/migrations/2026_07_20_142621_create_coupons_table.php:90:                ->constrained()
+database/migrations/2026_07_20_142621_create_coupons_table.php:95:            $table->unique([
+database/migrations/2026_07_20_142621_create_coupons_table.php:111:            $table->foreignId('coupon_id')
+database/migrations/2026_07_20_142621_create_coupons_table.php:112:                ->constrained()
+database/migrations/2026_07_20_142621_create_coupons_table.php:115:            $table->foreignId('school_id')
+database/migrations/2026_07_20_142621_create_coupons_table.php:116:                ->constrained()
+database/migrations/2026_07_20_142621_create_coupons_table.php:121:            $table->unique([
+database/migrations/2026_07_20_142621_create_coupons_table.php:123:                'school_id'
+database/migrations/2026_07_31_122604_add_slug_to_permissions_table.php:12:            $table->string('slug')->unique()->after('name');
+database/migrations/2026_08_02_145840_add_owner_id_to_organizations_table.php:16:            $table->foreignId('owner_id')
+database/migrations/2026_08_02_145840_add_owner_id_to_organizations_table.php:19:                ->constrained('users')
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:11:     * - school_id = NULL  → platform-wide role (e.g. software owner / super admin)
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:12:     * - school_id = <id>  → role scoped to that one school (Proprietor, Principal, Teacher...)
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:19:        // Step 1: add school_id (idempotent — safe if it already exists from a prior run)
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:20:        if (!Schema::hasColumn('user_roles', 'school_id')) {
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:22:                $table->foreignId('school_id')
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:25:                    ->constrained('schools')
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:52:        // three-column unique index that includes school_id.
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:61:                $table->unique(['user_id', 'role_id', 'school_id'], 'user_roles_user_role_school_unique');
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:81:            $table->unique(['user_id', 'role_id'], 'user_roles_user_id_role_id_unique');
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:86:        if (Schema::hasColumn('user_roles', 'school_id')) {
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:88:                $table->dropForeign(['school_id']);
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:89:                $table->dropColumn('school_id');
+database/migrations/2026_08_03_210723_create_expenses_table.php:16:        $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_03_210723_create_expenses_table.php:22:        $table->foreignId('recorded_by')->constrained('users');
+database/migrations/2026_08_03_213114_create_books_table.php:16:        $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_03_213115_create_book_loans_table.php:16:        $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_03_213115_create_book_loans_table.php:17:        $table->foreignId('book_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_03_213115_create_book_loans_table.php:18:        $table->foreignId('student_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_03_213115_create_book_loans_table.php:24:        $table->foreignId('issued_by')->constrained('users');
+database/migrations/2026_08_03_215527_create_medical_records_table.php:16:        $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_03_215527_create_medical_records_table.php:17:        $table->foreignId('student_id')->constrained()->cascadeOnDelete()->unique();
+database/migrations/2026_08_03_215528_create_clinic_visits_table.php:16:        $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_03_215528_create_clinic_visits_table.php:17:        $table->foreignId('student_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_03_215528_create_clinic_visits_table.php:22:        $table->foreignId('treated_by')->constrained('users');
+database/migrations/2026_08_03_222003_create_hostels_table.php:16:        $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_03_222004_create_hostel_rooms_table.php:16:        $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_03_222004_create_hostel_rooms_table.php:17:        $table->foreignId('hostel_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_03_222005_create_hostel_allocations_table.php:16:        $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_03_222005_create_hostel_allocations_table.php:17:        $table->foreignId('hostel_room_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_03_222005_create_hostel_allocations_table.php:18:        $table->foreignId('student_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_04_000000_create_school_and_academic_settings_tables.php:14:            $table->foreignId('school_id')->constrained()->onDelete('cascade');
+database/migrations/2026_08_04_000000_create_school_and_academic_settings_tables.php:28:            $table->foreignId('school_id')->constrained()->onDelete('cascade');
+database/migrations/2026_08_04_041454_create_vehicles_table.php:16:        $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_04_041455_create_transport_routes_table.php:16:        $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_04_041455_create_transport_routes_table.php:19:        $table->foreignId('vehicle_id')->nullable()->constrained()->nullOnDelete();
+database/migrations/2026_08_04_041456_create_transport_allocations_table.php:16:        $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_04_041456_create_transport_allocations_table.php:17:        $table->foreignId('transport_route_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_04_041456_create_transport_allocations_table.php:18:        $table->foreignId('student_id')->constrained()->cascadeOnDelete()->unique();
+database/migrations/2026_08_04_044027_create_visitors_table.php:16:        $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+database/migrations/2026_08_04_044028_create_student_gate_passes_table.php:16:        $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+=== TABLES ===
+Schema::create('academic_configurations
+Schema::create('academic_sessions
+Schema::create('academic_settings
+Schema::create('activity_logs
+Schema::create('assessment_activities
+Schema::create('assessment_structures
+Schema::create('assets
+Schema::create('assignment_submissions
+Schema::create('assignments
+Schema::create('attendances
+Schema::create('book_loans
+Schema::create('books
+Schema::create('cache
+Schema::create('cache_locks
+Schema::create('cbt_assessment_questions
+Schema::create('cbt_assessments
+Schema::create('cbt_attempt_answers
+Schema::create('cbt_attempts
+Schema::create('cbt_questions
+Schema::create('class_subject
+Schema::create('classes
+Schema::create('clinic_visits
+Schema::create('communication_reads
+Schema::create('communications
+Schema::create('countries
+Schema::create('coupon_school
+Schema::create('coupon_subscription_plan
+Schema::create('coupons
+Schema::create('currencies
+Schema::create('department_subject
+Schema::create('departments
+Schema::create('discipline_cases
+Schema::create('divisions
+Schema::create('exam_scores
+Schema::create('examinations
+Schema::create('expenses
+Schema::create('failed_jobs
+Schema::create('feature_subscription_plan
+Schema::create('features
+Schema::create('fee_categories
+Schema::create('fee_payment_transactions
+Schema::create('fee_payments
+Schema::create('fees
+Schema::create('form_teacher_assignments
+Schema::create('grading_systems
+Schema::create('graduation_records
+Schema::create('guardian_student
+Schema::create('guardians
+Schema::create('hostel_allocations
+Schema::create('hostel_rooms
+Schema::create('hostels
+Schema::create('job_batches
+Schema::create('jobs
+Schema::create('leave_requests
+Schema::create('local_email_messages
+Schema::create('medical_records
+Schema::create('organizations
+Schema::create('parent_student
+Schema::create('parents
+Schema::create('password_reset_tokens
+Schema::create('payment_receipts
+Schema::create('payment_transactions
+Schema::create('payroll_entries
+Schema::create('permissions
+Schema::create('personal_access_tokens
+Schema::create('platform_announcements
+Schema::create('promo_campaign_subscription_plan
+Schema::create('promo_campaigns
+Schema::create('reception_activities
+Schema::create('reception_appointments
+Schema::create('report_cards
+Schema::create('result_components
+Schema::create('result_submissions
+Schema::create('results
+Schema::create('role_invitations
+Schema::create('role_permission
+Schema::create('roles
+Schema::create('safety_incidents
+Schema::create('school_events
+Schema::create('school_facilities
+Schema::create('school_settings
+Schema::create('school_setup_delegations
+Schema::create('school_subscriptions
+Schema::create('schools
+Schema::create('sessions
+Schema::create('staff
+Schema::create('staff_attendances
+Schema::create('staff_subject
+Schema::create('streams
+Schema::create('student_enrollments
+Schema::create('student_fees
+Schema::create('student_gate_passes
+Schema::create('student_leave_applications
+Schema::create('student_promotions
+Schema::create('student_result_summaries
+Schema::create('students
+Schema::create('subjects
+Schema::create('subscription_plans
+Schema::create('system_settings
+Schema::create('tenant_partitions
+Schema::create('terms
+Schema::create('timetables
+Schema::create('transport_allocations
+Schema::create('transport_logs
+Schema::create('transport_routes
+Schema::create('user_roles
+Schema::create('users
+Schema::create('vehicles
+Schema::create('visitors
+=== POTENTIAL MISSING INDEXES ON TENANT TABLES ===
+database/migrations/2026_06_26_183026_create_students_table.php
+database/migrations/2026_06_26_184908_create_parents_table.php
+database/migrations/2026_06_26_191217_create_staff_table.php
+database/migrations/2026_06_26_191655_create_subjects_table.php
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php
+database/migrations/2026_06_26_193046_create_examinations_table.php
+database/migrations/2026_06_26_213646_create_fee_categories_table.php
+database/migrations/2026_06_30_120752_create_student_promotions_table.php
+database/migrations/2026_06_30_130932_add_school_id_to_attendances_table.php
+database/migrations/2026_06_30_171308_create_results_table.php
+database/migrations/2026_06_30_181633_create_timetables_table.php
+database/migrations/2026_06_30_185402_create_report_cards_table.php
+database/migrations/2026_06_30_204722_create_fees_table.php
+database/migrations/2026_07_01_225838_create_payment_transactions_table.php
+database/migrations/2026_07_03_093717_create_student_result_summaries_table.php
+database/migrations/2026_07_03_095524_create_grading_systems_table.php
+database/migrations/2026_07_03_101038_create_assessment_structures_table.php
+database/migrations/2026_07_03_101800_create_academic_configurations_table.php
+database/migrations/2026_07_04_051614_create_result_submissions_table.php
+database/migrations/2026_07_04_052728_add_result_submission_id_to_results_table.php
+database/migrations/2026_07_16_131803_create_departments_table.php
+database/migrations/2026_07_20_142621_create_coupons_table.php
+database/migrations/2026_08_03_210723_create_expenses_table.php
+database/migrations/2026_08_03_213114_create_books_table.php
+database/migrations/2026_08_03_213115_create_book_loans_table.php
+database/migrations/2026_08_03_215527_create_medical_records_table.php
+database/migrations/2026_08_03_215528_create_clinic_visits_table.php
+database/migrations/2026_08_03_222003_create_hostels_table.php
+database/migrations/2026_08_03_222004_create_hostel_rooms_table.php
+database/migrations/2026_08_03_222005_create_hostel_allocations_table.php
+database/migrations/2026_08_04_000000_create_school_and_academic_settings_tables.php
+database/migrations/2026_08_04_041454_create_vehicles_table.php
+database/migrations/2026_08_04_041455_create_transport_routes_table.php
+database/migrations/2026_08_04_041456_create_transport_allocations_table.php
+database/migrations/2026_08_04_044027_create_visitors_table.php
+database/migrations/2026_08_04_044028_create_student_gate_passes_table.php
+database/migrations/2026_08_04_044029_create_reception_appointments_table.php
+database/migrations/2026_08_04_051359_create_guardians_table.php
+database/migrations/2026_08_04_145953_create_activity_logs_table.php
+database/migrations/2026_08_06_000000_add_user_id_to_staff_table.php
+database/migrations/2026_08_06_110000_add_missing_subscription_columns_and_activity_logs_table.php
+database/migrations/2026_08_14_020000_align_distinct_architecture_role_slugs.php
+database/migrations/2026_08_14_040000_create_staff_attendances_table.php
+database/migrations/2026_08_14_050000_create_leave_requests_table.php
+database/migrations/2026_08_14_060000_create_discipline_cases_table.php
+database/migrations/2026_08_14_070000_create_safety_incidents_table.php
+database/migrations/2026_08_15_000000_add_user_id_to_students_table.php
+database/migrations/2026_08_16_010000_add_user_id_to_students_table.php
+database/migrations/2026_08_18_000000_add_current_school_id_to_users_table.php
+database/migrations/2026_08_21_072000_seed_default_assessment_structures.php
+database/migrations/2026_08_21_080000_extend_timetables_for_school_configurable_entries.php
+database/migrations/2026_08_21_130000_add_local_email_outbox_and_announcement_targets.php
+database/migrations/2026_08_21_140000_create_tenant_partition_directory.php
+=== LARGE TABLE TIMESTAMPS/RETENTION ===
+database/migrations/0001_01_01_000002_create_jobs_table.php:18:            $table->unsignedSmallInteger('attempts');
+database/migrations/2026_07_01_165628_create_system_settings_table.php:97:            $table->boolean('email_notifications')
+database/migrations/2026_07_01_165628_create_system_settings_table.php:100:            $table->boolean('sms_notifications')
+database/migrations/2026_07_01_225838_create_payment_transactions_table.php:14:        Schema::create('payment_transactions', function (Blueprint $table) {
+database/migrations/2026_07_01_225838_create_payment_transactions_table.php:132:        Schema::dropIfExists('payment_transactions');
+database/migrations/2026_07_02_012123_add_billing_cycle_to_payment_transactions_table.php:14:        Schema::table('payment_transactions', function (Blueprint $table) {
+database/migrations/2026_07_02_012123_add_billing_cycle_to_payment_transactions_table.php:37:        Schema::table('payment_transactions', function (Blueprint $table) {
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:14:        Schema::create('result_submissions', function (Blueprint $table) {
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:104:        Schema::dropIfExists('result_submissions');
+database/migrations/2026_07_04_052728_add_result_submission_id_to_results_table.php:19:                ->constrained('result_submissions')
+database/migrations/2026_08_04_145953_create_activity_logs_table.php:11:        Schema::create('activity_logs', function (Blueprint $table) {
+database/migrations/2026_08_04_145953_create_activity_logs_table.php:60:        Schema::dropIfExists('activity_logs');
+database/migrations/2026_08_04_164723_add_subscription_toggles_and_overrides.php:14:                $table->boolean('enforce_subscriptions')->default(false)->after('sms_notifications');
+database/migrations/2026_08_06_110000_add_missing_subscription_columns_and_activity_logs_table.php:11:        // 1. Create activity_logs table if it doesn't exist
+database/migrations/2026_08_06_110000_add_missing_subscription_columns_and_activity_logs_table.php:12:        if (!Schema::hasTable('activity_logs')) {
+database/migrations/2026_08_06_110000_add_missing_subscription_columns_and_activity_logs_table.php:13:            Schema::create('activity_logs', function (Blueprint $table) {
+database/migrations/2026_08_20_000000_create_communications_table.php:11:        Schema::create('communications', function (Blueprint $table) {
+database/migrations/2026_08_20_000000_create_communications_table.php:32:        Schema::dropIfExists('communications');
+database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php:32:            $table->foreignId('result_submission_id')->nullable()->constrained('result_submissions')->nullOnDelete();
+database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php:40:            $table->unsignedInteger('max_attempts')->default(1);
+database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php:68:        Schema::create('cbt_attempts', function (Blueprint $table) {
+database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php:89:            $table->foreignId('cbt_attempt_id')->constrained('cbt_attempts')->cascadeOnDelete();
+database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php:103:        Schema::dropIfExists('cbt_attempts');
+database/migrations/2026_08_21_091000_create_assignment_submissions_table.php:11:        Schema::create('assignment_submissions', function (Blueprint $table) {
+database/migrations/2026_08_21_091000_create_assignment_submissions_table.php:34:        Schema::dropIfExists('assignment_submissions');
+database/migrations/2026_08_21_130000_add_local_email_outbox_and_announcement_targets.php:13:                $table->boolean('local_email_mode')->default(true)->after('email_notifications');
+database/migrations/2026_08_21_160000_create_fee_payment_transactions_table.php:11:        Schema::create('fee_payment_transactions', function (Blueprint $table) {
+database/migrations/2026_08_21_160000_create_fee_payment_transactions_table.php:31:        Schema::dropIfExists('fee_payment_transactions');
+database/migrations/2026_08_21_190000_add_question_order_to_cbt_attempts_table.php:11:        if (!Schema::hasColumn('cbt_attempts', 'question_order')) {
+database/migrations/2026_08_21_190000_add_question_order_to_cbt_attempts_table.php:12:            Schema::table('cbt_attempts', function (Blueprint $table) {
+database/migrations/2026_08_21_190000_add_question_order_to_cbt_attempts_table.php:20:        if (Schema::hasColumn('cbt_attempts', 'question_order')) {
+database/migrations/2026_08_21_190000_add_question_order_to_cbt_attempts_table.php:21:            Schema::table('cbt_attempts', function (Blueprint $table) {
+database/migrations/2026_08_21_210000_create_communication_reads_table.php:14:            $table->foreignId('communication_id')->constrained('communications')->cascadeOnDelete();

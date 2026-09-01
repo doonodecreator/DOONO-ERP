@@ -2,20 +2,26 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getPrimaryRoleSlug } from "../../utils/role";
 import { ARCHITECTURE_MODULES } from "../../config/architectureModules";
-import { GUIDE_MODULE_KEYS, moduleGuide, pageGuideKey, roleGuide } from "../../config/guideKnowledge";
+import { GUIDE_MODULE_KEYS_WITH_DOCUMENTS, controlGuide, moduleGuide, pageGuideKey, roleGuide } from "../../config/guideKnowledge";
+import { normalizeSchoolOsPage, schoolOsCapability } from "../../config/schoolOsCapabilities";
 import "./DONOGuide.css";
 
-const uniqueModules = GUIDE_MODULE_KEYS.map((key) => ({
-  key,
-  label: ARCHITECTURE_MODULES[key]?.label || key,
-  page: ARCHITECTURE_MODULES[key]?.page || key,
-})).filter((module, index, list) => list.findIndex((item) => item.key === module.key) === index);
+const GUIDE_LABELS = { "id-card": "Student ID Card" };
+const uniqueModules = GUIDE_MODULE_KEYS_WITH_DOCUMENTS.map((key) => {
+  const page = normalizeSchoolOsPage(ARCHITECTURE_MODULES[key]?.page || key);
+  const capability = schoolOsCapability(page);
+  return {
+    key,
+    label: capability?.label || ARCHITECTURE_MODULES[key]?.label || GUIDE_LABELS[key] || key,
+    page,
+  };
+}).filter((module, index, list) => list.findIndex((item) => item.key === module.key) === index);
 
 export default function DONOGuide({ page = "dashboard", setPage }) {
   const { user, roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
   const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
   const roleHelp = useMemo(() => roleGuide(role), [role]);
-  const currentPageKey = pageGuideKey(page);
+  const currentPageKey = pageGuideKey(normalizeSchoolOsPage(page));
   const [open, setOpen] = useState(false);
   const [view, setView] = useState("page");
   const [selectedModule, setSelectedModule] = useState(currentPageKey);
@@ -23,6 +29,7 @@ export default function DONOGuide({ page = "dashboard", setPage }) {
   const [roleStepIndex, setRoleStepIndex] = useState(0);
   const [query, setQuery] = useState("");
   const [tourComplete, setTourComplete] = useState(false);
+  const [selectedControl, setSelectedControl] = useState(null);
   const closeButtonRef = useRef(null);
   const storageKey = `doono-guide:${user?.id || "guest"}:${role}:${school?.id || "organization"}`;
 
@@ -55,6 +62,7 @@ export default function DONOGuide({ page = "dashboard", setPage }) {
   if (!user?.id) return null;
 
   function openGuide(nextView = "page") {
+    setSelectedControl(null);
     setView(nextView);
     setOpen(true);
     if (nextView === "role") setRoleStepIndex(0);
@@ -69,9 +77,14 @@ export default function DONOGuide({ page = "dashboard", setPage }) {
 
   function openAction(action) {
     if (!action || typeof setPage !== "function") return;
-    setSelectedModule(pageGuideKey(action));
+    const canonicalPage = normalizeSchoolOsPage(action);
+    setSelectedModule(pageGuideKey(canonicalPage));
     setStepIndex(0);
-    setPage(action);
+    setPage(canonicalPage);
+  }
+
+  function explainControl(label) {
+    setSelectedControl(controlGuide(label, selectedModule, role));
   }
 
   function nextStep() {
@@ -100,6 +113,9 @@ export default function DONOGuide({ page = "dashboard", setPage }) {
         <button type="button" className="dono-guide-trigger" onClick={() => openGuide("page")} aria-label="Open DOONO Guide">
           Guide
         </button>
+        {typeof setPage === "function" && <button type="button" className="dono-guide-support-trigger" onClick={() => setPage("support-centre")} aria-label="Open Support Centre">
+          Support
+        </button>}
         <button type="button" className="dono-guide-tour-trigger" onClick={() => openGuide("role")} aria-label="Start my role tour">
           {tourComplete ? "Replay tour" : "Role tour"}
         </button>
@@ -133,6 +149,31 @@ export default function DONOGuide({ page = "dashboard", setPage }) {
             )}
 
             <p className="dono-guide-purpose">{view === "role" ? roleHelp.intro : pageHelp.purpose}</p>
+            {view === "role" && <section className="dono-guide-role-profile">
+              <div className="dono-guide-role-definition"><strong>What this role means</strong><p>{roleHelp.definition}</p></div>
+              <div className="dono-guide-role-grid">
+                <div><strong>Main purpose</strong><p>{roleHelp.primaryPurpose}</p></div>
+                <div><strong>Works with</strong><p>{roleHelp.worksWith}</p></div>
+                <div><strong>Before you start</strong><p>{roleHelp.firstChecks}</p></div>
+              </div>
+              <div className="dono-guide-role-grid">
+                <div><strong>What this role can do</strong><ul>{(Array.isArray(roleHelp.canDo) ? roleHelp.canDo : []).map((item) => <li key={item}>{item}</li>)}</ul></div>
+                <div><strong>What this role must not do</strong><ul>{(Array.isArray(roleHelp.cannotDo) ? roleHelp.cannotDo : []).map((item) => <li key={item}>{item}</li>)}</ul></div>
+              </div>
+              <div className="dono-guide-role-workflow"><strong>Normal working cycle</strong><ol>{(Array.isArray(roleHelp.dailyWorkflow) ? roleHelp.dailyWorkflow : []).map((item) => <li key={item}>{item}</li>)}</ol></div>
+            </section>}
+            {view === "page" && <div className="dono-guide-explanation-grid">
+              <section><strong>Why this feature matters</strong><p>{pageHelp.whyItMatters}</p></section>
+              <section><strong>What to prepare first</strong><p>{pageHelp.beforeYouStart}</p></section>
+            </div>}
+            {view === "page" && <section className="dono-guide-detail-section"><h3>Important fields and what they mean</h3><div className="dono-guide-field-list">{(Array.isArray(pageHelp.fields) ? pageHelp.fields : []).map((field) => <div key={field.name}><strong>{field.name}</strong><span>{field.explanation}</span></div>)}</div></section>}
+            <div className="dono-guide-context-cards">
+              <div><strong>Before you start</strong><span>{view === "page" ? pageHelp.beforeYouStart : "Confirm the selected organization, school, session, term, and role are correct for this task."}</span></div>
+              <div><strong>When you finish</strong><span>{view === "page" ? pageHelp.successSignals?.join(" ") : "Look for a success message, a changed list, or an updated dashboard number before leaving the workspace."}</span></div>
+              <div><strong>If you are blocked</strong><span>Read the page error, check the prerequisites and permissions, then open Support Centre with the exact message if the problem continues.</span></div>
+            </div>
+            {selectedControl && <section className="dono-guide-control-card" aria-live="polite"><div className="dono-guide-control-heading"><div><span className="dono-guide-kicker">You selected a control</span><h3>{selectedControl.title}</h3></div><button type="button" className="dono-guide-control-close" onClick={() => setSelectedControl(null)} aria-label="Close control explanation">×</button></div><div className="dono-guide-control-grid"><div><strong>What it means</strong><p>{selectedControl.what}</p></div><div><strong>How to use it</strong><p>{selectedControl.how}</p></div><div><strong>Why it helps you</strong><p>{selectedControl.benefit}</p></div><div><strong>What happens next</strong><p>{selectedControl.after}</p></div><div><strong>Who can use it</strong><p>{selectedControl.access}</p></div></div></section>}
+            {view === "page" && <section className="dono-guide-detail-section"><h3>Available controls on this workflow</h3><p className="dono-guide-helper-text">The Guide stays closed while you work. Open it deliberately, then choose Explain when you want a lesson about one of these controls.</p><div className="dono-guide-control-list">{(Array.isArray(pageHelp.controls) ? pageHelp.controls : []).map((control, index) => <div key={`${pageHelp.key}-control-${index}`}><span>{index + 1}</span><p>{control}</p><button type="button" className="dono-guide-inline-action" onClick={() => explainControl(control)}>Explain</button></div>)}</div><h3 className="dono-guide-success-heading">How to know you completed it</h3><ul className="dono-guide-success-list">{(Array.isArray(pageHelp.successSignals) ? pageHelp.successSignals : []).map((signal) => <li key={signal}>{signal}</li>)}</ul></section>}
             <div className="dono-guide-step-card" aria-live="polite">
               <span className="dono-guide-step-number">Step {activeIndex + 1}</span>
               <h3>{currentStep?.title}</h3>

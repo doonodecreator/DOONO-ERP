@@ -1,0 +1,89 @@
+=== PHP DB EXTENSIONS ===
+mysqli
+mysqlnd
+PDO
+pdo_mysql
+=== MIGRATION DRIVER ASSUMPTIONS ===
+database/migrations/2026_06_26_151022_create_organizations_table.php:39:            $table->enum('status', [
+database/migrations/2026_06_26_151928_create_schools_table.php:23:            $table->enum('school_type', [
+database/migrations/2026_06_26_151928_create_schools_table.php:45:            $table->enum('status', [
+database/migrations/2026_06_26_153035_create_academic_sessions_table.php:27:            $table->enum('status', [
+database/migrations/2026_06_26_153801_create_terms_table.php:19:            $table->enum('name', [
+database/migrations/2026_06_26_153801_create_terms_table.php:31:            $table->enum('status', [
+database/migrations/2026_06_26_183026_create_students_table.php:35:            $table->enum('gender', ['Male', 'Female']);
+database/migrations/2026_06_26_183026_create_students_table.php:59:            $table->enum('status', [
+database/migrations/2026_06_26_191217_create_staff_table.php:25:            $table->enum('gender', ['Male', 'Female']);
+database/migrations/2026_06_26_191217_create_staff_table.php:45:            $table->enum('employment_status', [
+database/migrations/2026_06_26_191655_create_subjects_table.php:25:            $table->enum('category', [
+database/migrations/2026_06_26_192404_create_student_enrollments_table.php:48:            $table->enum('status', [
+database/migrations/2026_06_26_192718_create_attendances_table.php:32:            $table->enum('status', [
+database/migrations/2026_06_26_193046_create_examinations_table.php:32:            $table->enum('exam_type', [
+database/migrations/2026_06_26_193046_create_examinations_table.php:48:            $table->enum('status', [
+database/migrations/2026_06_26_213646_create_fee_categories_table.php:30:            $table->enum('frequency', [
+database/migrations/2026_06_27_020020_create_student_fees_table.php:42:            $table->enum('status', [
+database/migrations/2026_06_27_020424_create_fee_payments_table.php:33:            $table->enum('payment_method', [
+database/migrations/2026_06_30_120752_create_student_promotions_table.php:61:            $table->enum('promotion_status', [
+database/migrations/2026_06_30_181633_create_timetables_table.php:52:            $table->enum('day_of_week', [
+database/migrations/2026_06_30_185402_create_report_cards_table.php:51:            $table->enum('promotion_status',[
+database/migrations/2026_07_01_075102_create_school_subscriptions_table.php:34:            $table->enum('billing_cycle', [
+database/migrations/2026_07_01_075102_create_school_subscriptions_table.php:41:            $table->enum('status', [
+database/migrations/2026_07_01_225838_create_payment_transactions_table.php:38:            $table->enum('gateway', [
+database/migrations/2026_07_01_225838_create_payment_transactions_table.php:70:            $table->enum('status', [
+database/migrations/2026_07_02_012123_add_billing_cycle_to_payment_transactions_table.php:16:            $table->enum('billing_cycle', [
+database/migrations/2026_07_03_101800_create_academic_configurations_table.php:41:            $table->enum(
+database/migrations/2026_07_03_101800_create_academic_configurations_table.php:49:            $table->enum(
+database/migrations/2026_07_03_163719_add_result_workflow_fields_to_results_table.php:22:            $table->enum(
+database/migrations/2026_07_04_051614_create_result_submissions_table.php:44:            $table->enum('status', [
+database/migrations/2026_07_20_140500_create_promo_campaigns_table.php:36:            $table->enum('discount_type', [
+database/migrations/2026_07_20_142621_create_coupons_table.php:30:            $table->enum('discount_type', [
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:47:                $table->dropUnique('user_roles_user_id_role_id_unique');
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:70:                $table->dropUnique('user_roles_user_role_school_unique');
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:98:            "SHOW INDEX FROM `{$table}` WHERE Key_name = ?",
+database/migrations/2026_08_03_000002_add_school_scope_to_user_roles_table.php:109:            "SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS
+database/migrations/2026_08_03_213115_create_book_loans_table.php:22:        $table->enum('status', ['Borrowed', 'Returned', 'Lost'])->default('Borrowed');
+database/migrations/2026_08_03_222003_create_hostels_table.php:18:        $table->enum('type', ['Boys', 'Girls', 'Mixed'])->default('Mixed');
+database/migrations/2026_08_03_222005_create_hostel_allocations_table.php:21:        $table->enum('status', ['Active', 'Vacated'])->default('Active');
+database/migrations/2026_08_04_041454_create_vehicles_table.php:22:        $table->enum('status', ['Active', 'Maintenance', 'Inactive'])->default('Active');
+database/migrations/2026_08_04_041456_create_transport_allocations_table.php:20:        $table->enum('status', ['Active', 'Suspended'])->default('Active');
+database/migrations/2026_08_04_044027_create_visitors_table.php:23:        $table->enum('status', ['Checked In', 'Checked Out'])->default('Checked In');
+database/migrations/2026_08_04_044028_create_student_gate_passes_table.php:18:        $table->enum('type', ['Early Departure', 'Late Arrival'])->default('Early Departure');
+database/migrations/2026_08_04_044029_create_reception_appointments_table.php:21:        $table->enum('status', ['Scheduled', 'Completed', 'Cancelled'])->default('Scheduled');
+database/migrations/2026_08_14_040000_create_staff_attendances_table.php:16:            $table->enum('status', [
+database/migrations/2026_08_14_050000_create_leave_requests_table.php:17:            $table->enum('leave_type', [
+database/migrations/2026_08_14_050000_create_leave_requests_table.php:29:            $table->enum('status', [
+database/migrations/2026_08_14_060000_create_discipline_cases_table.php:19:            $table->enum('category', [
+database/migrations/2026_08_14_060000_create_discipline_cases_table.php:30:            $table->enum('severity', ['Minor', 'Major', 'Critical']);
+database/migrations/2026_08_14_060000_create_discipline_cases_table.php:32:            $table->enum('status', [
+database/migrations/2026_08_14_070000_create_safety_incidents_table.php:15:            $table->enum('subject_type', ['Student', 'Staff', 'Visitor', 'Other']);
+database/migrations/2026_08_14_070000_create_safety_incidents_table.php:26:            $table->enum('category', [
+database/migrations/2026_08_14_070000_create_safety_incidents_table.php:36:            $table->enum('severity', ['Low', 'Moderate', 'High', 'Critical']);
+database/migrations/2026_08_14_070000_create_safety_incidents_table.php:45:            $table->enum('status', [
+database/migrations/2026_08_14_080000_create_assets_table.php:16:            $table->enum('category', [
+database/migrations/2026_08_14_080000_create_assets_table.php:34:            $table->enum('condition', ['New', 'Good', 'Fair', 'Poor'])->default('Good');
+database/migrations/2026_08_14_080000_create_assets_table.php:35:            $table->enum('status', ['Active', 'In Repair', 'Lost', 'Disposed'])->default('Active');
+database/migrations/2026_08_15_000000_add_user_id_to_students_table.php:32:            $table->dropUnique('students_user_id_unique');
+database/migrations/2026_08_15_000001_add_parent_id_to_guardians_table.php:26:            $table->dropUnique('guardians_parent_id_unique');
+database/migrations/2026_08_19_170000_create_assignments_table.php:24:            $table->enum('status', ['Draft', 'Published', 'Closed'])->default('Draft');
+database/migrations/2026_08_19_200000_allow_pending_school_subscriptions.php:16:        if (DB::getDriverName() === 'mysql') {
+database/migrations/2026_08_20_090000_create_graduation_records_table.php:53:            $table->dropUnique(self::UNIQUE_INDEX);
+database/migrations/2026_08_21_080000_extend_timetables_for_school_configurable_entries.php:42:            $table->enum('day_of_week', [
+database/migrations/2026_08_21_080000_extend_timetables_for_school_configurable_entries.php:58:                $table->dropUnique('class_timetable_unique');
+database/migrations/2026_08_21_080000_extend_timetables_for_school_configurable_entries.php:72:            $table->dropUnique('school_term_timetable_unique');
+database/migrations/2026_08_21_090000_extend_cbt_questions_for_bulk_authoring.php:44:                $table->dropIndex('cbt_questions_bank_filter_index');
+database/migrations/2026_08_21_140000_create_tenant_partition_directory.php:19:                $table->enum('status', ['active', 'draining', 'disabled'])->default('active')->index();
+database/migrations/2026_08_21_140000_create_tenant_partition_directory.php:67:                $table->dropIndex(['tenant_partition_id', 'partition_key']);
+database/migrations/2026_08_21_140000_create_tenant_partition_directory.php:68:                $table->dropIndex(['data_region', 'status']);
+database/migrations/2026_08_21_160000_create_fee_payment_transactions_table.php:19:            $table->enum('status', ['pending', 'successful', 'failed', 'cancelled'])->default('pending');
+database/migrations/2026_08_23_160000_add_report_card_verification_tokens.php:37:                $table->dropUnique(['verification_token']);
+database/migrations/2026_08_23_210000_add_reconciliation_fields_to_payment_transactions.php:27:            if (Schema::hasColumn('payment_transactions', 'gateway_event_id')) $table->dropUnique(['gateway_event_id']);
+database/migrations/2026_08_23_380000_add_invoice_number_to_student_fees.php:26:                $table->dropUnique('student_school_invoice_uq');
+database/migrations/2026_08_23_410000_add_delivery_state_to_communications.php:45:            $table->dropIndex('communications_delivery_status_idx');
+database/migrations/2026_08_23_172700_add_school_scope_to_oauth_clients.php:41:                $table->dropIndex('oauth_clients_school_revoked_idx');
+database/migrations/2026_08_23_174000_add_unique_transaction_reference_to_fee_payments.php:43:            $table->dropUnique('fee_payments_transaction_ref_unique');
+database/migrations/2026_08_23_174000_add_unique_transaction_reference_to_fee_payments.php:51:                "SHOW INDEX FROM `{$table}` WHERE Key_name = ?",
+database/migrations/2026_08_24_010000_fix_transport_allocation_history_index.php:14:             FROM information_schema.STATISTICS
+database/migrations/2026_08_24_010000_fix_transport_allocation_history_index.php:22:                    $table->dropIndex($index->INDEX_NAME);
+database/migrations/2026_08_24_010000_fix_transport_allocation_history_index.php:45:             FROM information_schema.STATISTICS
+database/migrations/2026_08_24_010000_fix_transport_allocation_history_index.php:53:                $table->dropIndex('transport_allocations_school_student_status_idx');
+database/migrations/2026_08_27_120002_add_provider_identity_to_live_room_participants.php:25:                $table->dropIndex(['provider_identity']);
+database/migrations/2026_08_29_120000_add_recording_consent_to_live_room_participants.php:29:            $table->dropIndex('lrp_recording_consent_idx');

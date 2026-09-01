@@ -88,8 +88,7 @@ class PortalAccountController extends Controller
 
     private function ensureSchool(Request $request, int $recordSchoolId): int
     {
-        $schoolId = $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($request->user())?->id;
+        $schoolId = $this->context->currentSchool($request->user())?->id;
 
         abort_unless($schoolId, 409, 'No active school.');
         abort_unless((int) $schoolId === $recordSchoolId, 403);

@@ -25,7 +25,8 @@ export default function Settings({ setPage }) {
 
     const [schoolData, setSchoolData] = useState({
         name: "", short_name: "", email: "", phone: "", address: "", school_type: "Combined",
-        motto: "", bank_name: "", account_number: "", account_name: "",
+        motto: "", bank_name: "", account_number: "", account_name: "", invoice_prefix: "INV",
+        tax_enabled: false, tax_name: "", tax_rate: "", tax_identifier: "",
         paystack_public_key: "", paystack_secret_key: "", paystack_subaccount_code: ""
     });
 
@@ -82,6 +83,11 @@ export default function Settings({ setPage }) {
                     bank_name: opsData.bank_name || "",
                     account_number: opsData.account_number || "",
                     account_name: opsData.account_name || "",
+                    invoice_prefix: opsData.invoice_prefix || "INV",
+                    tax_enabled: !!opsData.tax_enabled,
+                    tax_name: opsData.tax_name || "",
+                    tax_rate: opsData.tax_rate ?? "",
+                    tax_identifier: opsData.tax_identifier || "",
                     paystack_public_key: opsData.paystack_public_key || "",
                     paystack_secret_key: opsData.paystack_secret_key || "",
                     paystack_subaccount_code: opsData.paystack_subaccount_code || ""
@@ -124,6 +130,11 @@ export default function Settings({ setPage }) {
                         bank_name: schoolData.bank_name,
                         account_number: schoolData.account_number,
                         account_name: schoolData.account_name,
+                        invoice_prefix: schoolData.invoice_prefix,
+                        tax_enabled: !!schoolData.tax_enabled,
+                        tax_name: schoolData.tax_name,
+                        tax_rate: schoolData.tax_rate === "" ? null : Number(schoolData.tax_rate),
+                        tax_identifier: schoolData.tax_identifier,
                         paystack_public_key: schoolData.paystack_public_key,
                         paystack_secret_key: schoolData.paystack_secret_key,
                         paystack_subaccount_code: schoolData.paystack_subaccount_code
@@ -220,12 +231,22 @@ export default function Settings({ setPage }) {
                                 <input className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-amber-500 outline-none" value={schoolData.account_name} onChange={e => setSchoolData({...schoolData, account_name: e.target.value})} />
                             </div>
                             <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-600">Invoice Prefix</label>
+                                <input maxLength={12} className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-amber-500 outline-none" value={schoolData.invoice_prefix} onChange={e => setSchoolData({...schoolData, invoice_prefix: e.target.value})} placeholder="INV" />
+                                <p className="text-xs text-slate-500">New invoices use this prefix and a school-scoped sequence, for example INV-000001.</p>
+                            </div>
+                            <div className="space-y-2">
                                 <label className="text-sm font-semibold text-slate-600">Paystack Public Key</label>
                                 <input className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-amber-500 outline-none" value={schoolData.paystack_public_key} onChange={e => setSchoolData({...schoolData, paystack_public_key: e.target.value})} />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm font-semibold text-slate-600">Paystack Subaccount Code</label>
                                 <input className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-amber-500 outline-none" value={schoolData.paystack_subaccount_code} onChange={e => setSchoolData({...schoolData, paystack_subaccount_code: e.target.value})} placeholder="ACCT_xxxxxxxxx" />
+                            </div>
+                            <div className="md:col-span-2 rounded-xl border border-amber-100 bg-amber-50 p-4">
+                                <label className="flex items-center gap-3 text-sm font-bold text-amber-900"><input type="checkbox" checked={!!schoolData.tax_enabled} onChange={e => setSchoolData({...schoolData, tax_enabled: e.target.checked})} className="h-5 w-5 rounded border-amber-300 text-amber-600" /> Enable configured tax basis in financial reports</label>
+                                <p className="mt-2 text-xs text-amber-800">Enter the rate required by your school’s tax adviser or jurisdiction. DOONO does not invent statutory rules.</p>
+                                {schoolData.tax_enabled && <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3"><label className="text-sm font-semibold text-amber-900">Tax name<input className="mt-1 w-full rounded-xl border border-amber-200 bg-white p-3" value={schoolData.tax_name} onChange={e => setSchoolData({...schoolData, tax_name: e.target.value})} placeholder="VAT / local tax" /></label><label className="text-sm font-semibold text-amber-900">Rate (%)<input type="number" min="0" max="100" step="0.01" className="mt-1 w-full rounded-xl border border-amber-200 bg-white p-3" value={schoolData.tax_rate} onChange={e => setSchoolData({...schoolData, tax_rate: e.target.value})} /></label><label className="text-sm font-semibold text-amber-900">Tax identifier<input className="mt-1 w-full rounded-xl border border-amber-200 bg-white p-3" value={schoolData.tax_identifier} onChange={e => setSchoolData({...schoolData, tax_identifier: e.target.value})} placeholder="Optional registration number" /></label></div>}
                             </div>
                         </div>
                     </section>

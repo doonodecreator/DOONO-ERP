@@ -16,10 +16,7 @@ class ParentController extends Controller
         private readonly CurrentContextService $context
     ) {}
 
-    private function currentContextSchoolId(Request $request): ?int
-    {
-        return $this->context->currentSchool($request->user())?->id;
-    }
+
     public function index(Request $request)
     {
         $query = ParentModel::with([
@@ -32,7 +29,7 @@ class ParentController extends Controller
         if (! $request->user()->isSuperAdmin()) {
             $query->where(
                 'school_id',
-                $this->currentContextSchoolId($request)
+                $this->context->currentSchool($request->user())?->id
             );
         }
 
@@ -46,7 +43,7 @@ class ParentController extends Controller
         $data = $request->validated();
 
         if (! $request->user()->isSuperAdmin()) {
-            $data['school_id'] = $this->currentContextSchoolId($request);
+            $data['school_id'] = $this->context->currentSchool($request->user())?->id;
         }
 
         $parent = ParentModel::create($data);
@@ -67,7 +64,7 @@ class ParentController extends Controller
     {
         if (
             ! $request->user()->isSuperAdmin()
-            && $parent->school_id != $this->currentContextSchoolId($request)
+            && $parent->school_id != $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -88,7 +85,7 @@ class ParentController extends Controller
     ) {
         if (
             ! $request->user()->isSuperAdmin()
-            && $parent->school_id != $this->currentContextSchoolId($request)
+            && $parent->school_id != $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -115,7 +112,7 @@ class ParentController extends Controller
     {
         if (
             ! $request->user()->isSuperAdmin()
-            && $parent->school_id != $this->currentContextSchoolId($request)
+            && $parent->school_id != $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized.');
         }

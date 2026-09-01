@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import PhotoUploadField from '../components/forms/PhotoUploadField';
 
 export default function EditStudent({ student, setPage }) {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(student?.photo_url || student?.photo || "");
+  const [admissionNumber, setAdmissionNumber] = useState(student?.admission_number || "");
 
   const [form, setForm] = useState({
-    admission_number: student?.admission_number || '',
     first_name: student?.first_name || '',
     middle_name: student?.middle_name || '',
     last_name: student?.last_name || '',
@@ -23,7 +24,6 @@ export default function EditStudent({ student, setPage }) {
     blood_group: student?.blood_group || '',
     genotype: student?.genotype || '',
     medical_notes: student?.medical_notes || '',
-    status: student?.status || 'Active',
   });
 
   useEffect(() => {
@@ -38,7 +38,6 @@ export default function EditStudent({ student, setPage }) {
       const data = res.data.data || res.data;
       setForm((prev) => ({
         ...prev,
-        admission_number: data.admission_number || prev.admission_number,
         first_name: data.first_name || prev.first_name,
         middle_name: data.middle_name || prev.middle_name,
         last_name: data.last_name || prev.last_name,
@@ -53,8 +52,8 @@ export default function EditStudent({ student, setPage }) {
         blood_group: data.blood_group || prev.blood_group,
         genotype: data.genotype || prev.genotype,
         medical_notes: data.medical_notes || prev.medical_notes,
-        status: data.status || prev.status,
       }));
+      setAdmissionNumber(data.admission_number || "");
       setPhotoPreview(data.photo_url || data.photo || "");
     } catch (err) {
       console.error('Failed to fetch full student record:', err);
@@ -67,9 +66,26 @@ export default function EditStudent({ student, setPage }) {
 
   const handlePhoto = (event) => {
     const nextPhoto = event.target.files?.[0] || null;
+    if (!nextPhoto) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(nextPhoto.type)) {
+      setErrors((prev) => ({ ...prev, photo: ['Choose a JPG, PNG, or WebP image.'] }));
+      event.target.value = '';
+      return;
+    }
+    if (nextPhoto.size > 5 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, photo: ['The student photo must not exceed 5 MB.'] }));
+      event.target.value = '';
+      return;
+    }
+
+    setErrors((prev) => ({ ...prev, photo: null }));
     setPhoto(nextPhoto);
-    setPhotoPreview(nextPhoto ? URL.createObjectURL(nextPhoto) : "");
+    setPhotoPreview(URL.createObjectURL(nextPhoto));
   };
+
+  const errorFor = (name) => Array.isArray(errors[name]) ? errors[name][0] : errors[name];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -90,7 +106,10 @@ export default function EditStudent({ student, setPage }) {
       payload.append("_method", "PUT");
       Object.entries(form).forEach(([key, value]) => payload.append(key, value ?? ""));
       if (photo) payload.append("photo", photo);
-      await api.post(`/students/${student.id}`, payload, { headers: { "Content-Type": "multipart/form-data" } });
+      const response = await api.post(`/students/${student.id}`, payload);
+      const updated = response?.data?.data ?? response?.data ?? {};
+      setPhoto(null);
+      setPhotoPreview(updated.photo_url || updated.photo || photoPreview);
       if (setPage) setPage('students');
     } catch (err) {
       if (err.response && err.response.status === 422) {
@@ -125,9 +144,7 @@ export default function EditStudent({ student, setPage }) {
           <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Personal Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Student Photo</label>
-              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePhoto} className="w-full text-sm" />
-              {photoPreview && <img src={photoPreview} alt="Student preview" className="mt-2 h-16 w-16 rounded-full object-cover" />}
+              <PhotoUploadField id="student-photo" label="Student photo" preview={photoPreview} onChange={handlePhoto} error={errorFor('photo')} />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">First Name *</label>
@@ -139,7 +156,7 @@ export default function EditStudent({ student, setPage }) {
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
-              {errors.first_name && <p className="text-xs text-red-500 mt-1">{errors.first_name[0]}</p>}
+              {errorFor('first_name') && <p className="text-xs text-red-500 mt-1">{errorFor('first_name')}</p>}
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Middle Name</label>
@@ -161,7 +178,7 @@ export default function EditStudent({ student, setPage }) {
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
-              {errors.last_name && <p className="text-xs text-red-500 mt-1">{errors.last_name[0]}</p>}
+              {errorFor('last_name') && <p className="text-xs text-red-500 mt-1">{errorFor('last_name')}</p>}
             </div>
           </div>
 
@@ -189,24 +206,16 @@ export default function EditStudent({ student, setPage }) {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Status</label>
-              <select
-                name="status"
-                value={form.status}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
-              >
-                <option value="Active">Active</option>
-                <option value="Graduated">Graduated</option>
-                <option value="Transferred">Transferred</option>
-                <option value="Suspended">Suspended</option>
-              </select>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Lifecycle status</label>
+              <div className="flex min-h-10 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700">{student?.status || "Active"}</div>
+              <p className="mt-1 text-xs text-slate-500">Managed from Promotion / Graduation so the student’s history stays consistent.</p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-          Academic placement is managed from <strong>Enrollment &amp; Placement</strong> to preserve complete enrollment history.
+        <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-900">
+          <p>Academic placement is managed from <strong>Enrollment &amp; Placement</strong> to preserve complete enrollment history.</p>
+          <p className="mt-2"><strong>Admission number:</strong> <span className="font-mono font-semibold">{admissionNumber || "Assigned by DOONO"}</span>. This permanent identifier is generated by DOONO and cannot be changed during an ordinary profile edit.</p>
         </div>
 
         <div className="flex justify-end space-x-3 pt-4 border-t">

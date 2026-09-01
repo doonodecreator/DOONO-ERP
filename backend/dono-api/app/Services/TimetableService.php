@@ -16,7 +16,8 @@ class TimetableService
         string $endTime,
         ?int $staffId,
         int $classId,
-        ?int $ignoreId = null
+        ?int $ignoreId = null,
+        ?string $room = null,
     ): array {
         $conflicts = [];
         $overlap = fn ($query) => $query
@@ -57,6 +58,24 @@ class TimetableService
             $conflicts[] = "Class already has another subject scheduled between {$classConflict->start_time} and {$classConflict->end_time}.";
         }
 
+        if ($room) {
+            $roomConflict = Timetable::query()
+                ->where('school_id', $schoolId)
+                ->where('academic_session_id', $sessionId)
+                ->where('term_id', $termId)
+                ->where('entry_type', 'lesson')
+                ->where('day_of_week', $dayOfWeek)
+                ->whereRaw('LOWER(room) = LOWER(?)', [$room])
+                ->where('is_active', true)
+                ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
+                ->where($overlap)
+                ->first();
+
+            if ($roomConflict) {
+                $conflicts[] = "Room {$room} is already reserved between {$roomConflict->start_time} and {$roomConflict->end_time}.";
+            }
+        }
+
         return [
             'has_collision' => $conflicts !== [],
             'errors' => $conflicts,
@@ -66,7 +85,7 @@ class TimetableService
     public function createSchedule(array $data): Timetable
     {
         $entryType = $data['entry_type'] ?? 'lesson';
-        if ($entryType === 'lesson') {
+        if ($entryType === 'lesson' && !empty($data['day_of_week']) && !empty($data['start_time']) && !empty($data['end_time'])) {
             $collision = $this->detectCollisions(
                 (int) $data['school_id'],
                 (int) $data['academic_session_id'],
@@ -76,6 +95,8 @@ class TimetableService
                 $data['end_time'],
                 isset($data['staff_id']) ? (int) $data['staff_id'] : null,
                 (int) $data['class_id'],
+                null,
+                $data['room'] ?? null,
             );
 
             if ($collision['has_collision']) {

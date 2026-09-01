@@ -1,0 +1,26 @@
+=== ARCHITECTURE GUARD ===
+DOONO architecture guard PASSED
+Checked: CurrentContextService boundary, shared role helper usage, model fillable arrays, Support Centre privacy, and canonical Axios client.
+=== RENDER CONFIG GUARD ===
+render.yaml valid: 6 services, 1 database
+=== GIT DIFF CHECK ===
+=== BACKEND PHP LINT SUMMARY ===
+=== FRONTEND BUILD ===
+
+> frontend@0.0.0 build
+> vite build
+
+vite v8.1.4 building client environment for production...
+[2Ktransforming...[32m✓[0m 287 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[0m[32mindex.html                 [0m[1;2m    0.45 kB[0m[2m │ gzip:   0.29 kB[0m
+[2mdist/[0m[2massets/[0m[35mindex-DGYetwWQ.css  [0m[1;2m   74.75 kB[0m[2m │ gzip:  14.34 kB[0m
+[2mdist/[0m[2massets/[0m[36mindex-Ml_D0xBE.js   [0m[33;1m1,866.46 kB[0m[2m │ gzip: 442.16 kB[0m
+
+✓ built in 634ms
+[plugin builtin:vite-reporter] [33;1m
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[0m

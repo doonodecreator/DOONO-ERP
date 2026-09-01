@@ -1,0 +1,77 @@
+=== NONEXISTENT CURRENT SCHOOL CALLS ===
+backend/dono-api/app/Http/Requests/LinkParentPortalAccountRequest.php:18:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/LinkParentPortalAccountRequest.php:34:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/LinkStudentPortalAccountRequest.php:18:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/LinkStudentPortalAccountRequest.php:31:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/StoreAdmissionRequest.php:18:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/StoreAdmissionRequest.php:79:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/StoreAssetRequest.php:18:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/StoreAssetRequest.php:51:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/StoreDisciplineCaseRequest.php:18:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/StoreDisciplineCaseRequest.php:46:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/StoreLeaveRequest.php:18:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/StoreLeaveRequest.php:44:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/StoreParentStudentRequest.php:13:        return $this->user() !== null && $this->currentSchoolId() !== null;
+backend/dono-api/app/Http/Requests/StoreParentStudentRequest.php:18:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/StoreParentStudentRequest.php:62:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/StoreSafetyIncidentRequest.php:19:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/StoreSafetyIncidentRequest.php:109:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/StoreSchoolEventRequest.php:18:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/StoreSchoolEventRequest.php:39:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/StoreSchoolFacilityRequest.php:18:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/StoreSchoolFacilityRequest.php:39:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceBulkRequest.php:18:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceBulkRequest.php:58:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceRequest.php:18:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceRequest.php:37:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/StoreStudentEnrollmentRequest.php:18:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/StoreStudentEnrollmentRequest.php:66:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/UpdateAssetRequest.php:18:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/UpdateAssetRequest.php:54:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/UpdateParentStudentRequest.php:14:        return $this->user() !== null && $this->currentSchoolId() !== null;
+backend/dono-api/app/Http/Requests/UpdateParentStudentRequest.php:37:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/UpdateParentStudentRequest.php:72:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/UpdateSchoolEventRequest.php:18:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/UpdateSchoolEventRequest.php:43:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/UpdateSchoolFacilityRequest.php:18:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/UpdateSchoolFacilityRequest.php:43:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/UpdateStudentEnrollmentRequest.php:40:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/UpdateStudentEnrollmentRequest.php:91:    private function currentSchoolId(): ?int
+backend/dono-api/app/Http/Requests/UpdateStudentRequest.php:19:        $schoolId = $this->currentSchoolId();
+backend/dono-api/app/Http/Requests/UpdateStudentRequest.php:60:    private function currentSchoolId(): ?int
+backend/dono-api/app/Models/User.php:103:    public function currentSchoolId(): ?int
+=== ROLE DETECTION ANTIPATTERNS ===
+frontend/src/utils/role.js:21:  return roles?.[0]?.slug || "guest";
+=== MODELS WITHOUT FILLABLE OR SHORT FILLABLE ===
+=== TESTS ===
+backend/dono-api/tests/Feature/ExampleTest.php
+backend/dono-api/tests/TestCase.php
+backend/dono-api/tests/Unit/AcademicComputationTest.php
+backend/dono-api/tests/Unit/ExampleTest.php
+0
+=== SCHEDULE/QUEUE ===
+backend/dono-api/app/Console/Commands/ExpireSubscriptions.php
+backend/dono-api/app/Console/Commands/SendSubscriptionReminders.php
+backend/dono-api/routes/api.php
+backend/dono-api/routes/console.php
+backend/dono-api/routes/web.php
+backend/dono-api/app/Http/Controllers/Api/PlatformOperationsController.php:31:        $queueDriver = (string) config('queue.default', 'unknown');
+backend/dono-api/app/Http/Controllers/Api/PlatformOperationsController.php:32:        $queueStatus = $queueDriver === 'sync' ? 'configured' : ($queueDriver ? 'configured' : 'unknown');
+backend/dono-api/app/Http/Controllers/Api/PlatformOperationsController.php:39:                'queue' => ['status' => $queueStatus, 'driver' => $queueDriver],
+backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php:281:        return response()->json(['data' => $cbtAssessment->fresh(), 'message' => 'CBT scores sent to the official Results Management review queue.']);
+backend/dono-api/app/Mail/VerifyEmailMail.php:7:use Illuminate\Contracts\Queue\ShouldQueue;
+backend/dono-api/app/Mail/VerifyEmailMail.php:13:class VerifyEmailMail extends Mailable implements ShouldQueue
+backend/dono-api/app/Mail/PasswordResetMail.php:7:use Illuminate\Contracts\Queue\ShouldQueue;
+backend/dono-api/app/Mail/PasswordResetMail.php:12:class PasswordResetMail extends Mailable implements ShouldQueue
+backend/dono-api/app/Mail/PlatformAnnouncementMail.php:7:use Illuminate\Contracts\Queue\ShouldQueue;
+backend/dono-api/app/Mail/PlatformAnnouncementMail.php:12:class PlatformAnnouncementMail extends Mailable implements ShouldQueue
+backend/dono-api/app/Mail/PlatformTestMail.php:6:use Illuminate\Contracts\Queue\ShouldQueue;
+backend/dono-api/app/Mail/PlatformTestMail.php:11:class PlatformTestMail extends Mailable implements ShouldQueue
+backend/dono-api/routes/console.php:23:Schedule::command('subscriptions:expire')
+backend/dono-api/routes/console.php:25:    ->withoutOverlapping()
+backend/dono-api/bootstrap/cache/services.php:206:    'queue' => 'Illuminate\\Queue\\QueueServiceProvider',
+backend/dono-api/bootstrap/cache/services.php:207:    'queue.connection' => 'Illuminate\\Queue\\QueueServiceProvider',
+backend/dono-api/bootstrap/cache/services.php:208:    'queue.failer' => 'Illuminate\\Queue\\QueueServiceProvider',
+backend/dono-api/bootstrap/cache/services.php:209:    'queue.listener' => 'Illuminate\\Queue\\QueueServiceProvider',
+backend/dono-api/bootstrap/cache/services.php:210:    'queue.routes' => 'Illuminate\\Queue\\QueueServiceProvider',
+backend/dono-api/bootstrap/cache/services.php:211:    'queue.worker' => 'Illuminate\\Queue\\QueueServiceProvider',

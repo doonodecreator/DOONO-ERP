@@ -11,7 +11,7 @@ class UpdateParentStudentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null && $this->currentSchoolId() !== null;
+        return $this->user() !== null && app(CurrentContextService::class)->currentSchool($this->user())?->id !== null;
     }
 
     protected function prepareForValidation(): void
@@ -34,7 +34,7 @@ class UpdateParentStudentRequest extends FormRequest
 
     public function rules(): array
     {
-        $schoolId = $this->currentSchoolId();
+        $schoolId = app(CurrentContextService::class)->currentSchool($this->user())?->id;
         $link = $this->route('parent_student');
         $studentId = $this->input('student_id');
 
@@ -69,18 +69,4 @@ class UpdateParentStudentRequest extends FormRequest
         ];
     }
 
-    private function currentSchoolId(): ?int
-    {
-        $schoolId = $this->attributes->get('current_school_id');
-
-        if ($schoolId) {
-            return (int) $schoolId;
-        }
-
-        $user = $this->user();
-
-        return $user
-            ? app(CurrentContextService::class)->currentSchool($user)?->id
-            : null;
-    }
 }

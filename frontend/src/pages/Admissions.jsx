@@ -6,6 +6,7 @@ import PageHeader from '../components/layout/PageHeader';
 import LoadingSpinner from '../components/feedback/LoadingSpinner';
 import EmptyState from '../components/feedback/EmptyState';
 import StudentPlacementFields from '../components/forms/StudentPlacementFields';
+import PhotoUploadField from '../components/forms/PhotoUploadField';
 
 const inputClassName =
   'mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100';
@@ -13,7 +14,6 @@ const inputClassName =
 const today = () => new Date().toISOString().slice(0, 10);
 
 const initialForm = () => ({
-  admission_number: '',
   first_name: '',
   middle_name: '',
   last_name: '',
@@ -66,6 +66,9 @@ export default function Admissions({ setPage }) {
   const [submitError, setSubmitError] = useState('');
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [issuedAdmissionNumber, setIssuedAdmissionNumber] = useState('');
+  const [photo, setPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -111,6 +114,18 @@ export default function Admissions({ setPage }) {
     };
   }, []);
 
+  useEffect(() => () => {
+    if (photoPreview?.startsWith('blob:')) URL.revokeObjectURL(photoPreview);
+  }, [photoPreview]);
+
+  const handlePhoto = (event) => {
+    const nextPhoto = event.target.files?.[0] || null;
+    setPhoto(nextPhoto);
+    if (photoPreview?.startsWith('blob:')) URL.revokeObjectURL(photoPreview);
+    setPhotoPreview(nextPhoto ? URL.createObjectURL(nextPhoto) : '');
+    setErrors((current) => ({ ...current, photo: undefined }));
+  };
+
   const handleChange = (event) => {
     const { name, value } = event.target;
 
@@ -143,8 +158,14 @@ export default function Admissions({ setPage }) {
     setErrors({});
 
     try {
-      await api.post('/admissions', form);
-      setPage('students');
+      const formData = new FormData();
+      Object.entries(form).forEach(([key, value]) => formData.append(key, value ?? ''));
+      if (photo) formData.append('photo', photo);
+      const response = await api.post('/admissions', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const payload = response?.data?.data ?? response?.data ?? {};
+      const issuedNumber = payload?.student?.admission_number || payload?.admission_number || '';
+      setIssuedAdmissionNumber(issuedNumber);
+
     } catch (error) {
       setErrors(error.errors || error.responseData?.errors || {});
       setSubmitError(error.message || 'Unable to complete the admission.');
@@ -168,6 +189,48 @@ export default function Admissions({ setPage }) {
           title="Admission configuration is unavailable"
           message={loadError}
         />
+      </PageContainer>
+    );
+  }
+
+  if (issuedAdmissionNumber) {
+    return (
+      <PageContainer>
+        <PageHeader
+          title="Admission completed"
+          subtitle="The student record and first enrollment were created in the current school."
+          action={
+            <button
+              type="button"
+              onClick={() => setPage('students')}
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Open Students
+            </button>
+          }
+        />
+        <section className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 shadow-sm">
+          <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Official admission number</p>
+          <p className="mt-2 break-all font-mono text-3xl font-bold tracking-wide text-emerald-950">{issuedAdmissionNumber}</p>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-emerald-900">
+            DOONO generated this number automatically for the active school. Keep it for the student’s ID card, invoices, report cards, transcript, and future searches. It does not change when the student moves to another class, stream, term, or session.
+          </p>
+          <button
+            type="button"
+              onClick={() => {
+                setIssuedAdmissionNumber('');
+                setForm(initialForm());
+                setErrors({});
+                setSubmitError('');
+                setPhoto(null);
+                if (photoPreview?.startsWith('blob:')) URL.revokeObjectURL(photoPreview);
+                setPhotoPreview('');
+              }}
+            className="mt-5 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+          >
+            Admit another student
+          </button>
+        </section>
       </PageContainer>
     );
   }
@@ -201,8 +264,8 @@ export default function Admissions({ setPage }) {
         <section className="space-y-4">
           <div>
             <h2 className="text-base font-semibold text-slate-900">Student Details</h2>
-            <p className="mt-1 text-sm text-slate-600">
-              The admission number is unique within the selected school.
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              DOONO assigns the official admission number automatically after this admission is completed. You do not need to type or invent one; the number is generated from this school’s sequence and remains with the student permanently.
             </p>
           </div>
 
@@ -223,11 +286,6 @@ export default function Admissions({ setPage }) {
               <FieldError errors={errors} name="last_name" />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Admission Number
-              <input name="admission_number" value={form.admission_number} onChange={handleChange} required className={inputClassName} />
-              <FieldError errors={errors} name="admission_number" />
-            </label>
-            <label className="block text-sm font-medium text-slate-700">
               Gender
               <select name="gender" value={form.gender} onChange={handleChange} required className={inputClassName}>
                 <option value="">Select gender</option>
@@ -246,6 +304,7 @@ export default function Admissions({ setPage }) {
               <input type="date" name="admission_date" value={form.admission_date} onChange={handleChange} required className={inputClassName} />
               <FieldError errors={errors} name="admission_date" />
             </label>
+            <PhotoUploadField id="admission-student-photo" label="Student profile photo" hint="Optional JPG, PNG, or WebP image up to 5 MB." preview={photoPreview} onChange={handlePhoto} error={errors?.photo?.[0]} />
           </div>
         </section>
 

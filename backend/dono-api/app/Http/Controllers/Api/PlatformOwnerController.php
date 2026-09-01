@@ -33,6 +33,14 @@ class PlatformOwnerController extends Controller
             ->count();
         $pendingPayments = PaymentTransaction::where('status', 'pending')->count();
         $failedPayments = PaymentTransaction::where('status', 'failed')->count();
+        $recognizedRevenue = PaymentTransaction::where('status', 'successful')
+            ->where(fn ($query) => $query->where('is_refunded', false)->orWhereNull('is_refunded'))
+            ->sum('amount');
+        $refundTotal = PaymentTransaction::where(fn ($query) => $query->where('status', 'refunded')->orWhere('is_refunded', true))
+            ->selectRaw('SUM(CASE WHEN refund_amount IS NULL OR refund_amount = 0 THEN amount ELSE refund_amount END) as total')
+            ->value('total');
+        $disputedPayments = PaymentTransaction::where('status', 'disputed')->count();
+        $reviewQueue = PaymentTransaction::whereIn('reconciliation_status', ['pending', 'review'])->count();
 
         $organizations = Organization::withCount('schools')
             ->latest()
@@ -83,6 +91,10 @@ class PlatformOwnerController extends Controller
                 'active_subscriptions' => $activeSubscriptions,
                 'pending_payments' => $pendingPayments,
                 'failed_payments' => $failedPayments,
+                'recognized_revenue' => (float) $recognizedRevenue,
+                'refund_total' => (float) $refundTotal,
+                'disputed_payments' => $disputedPayments,
+                'reconciliation_review_queue' => $reviewQueue,
             ],
             'organizations' => $organizations,
             'subscription_plans' => $subscriptionPlans,

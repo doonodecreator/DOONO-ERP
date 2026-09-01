@@ -15,12 +15,17 @@ class StoreStudentEnrollmentRequest extends FormRequest
 
     public function rules(): array
     {
-        $schoolId = $this->currentSchoolId();
+        $schoolId = app(CurrentContextService::class)->currentSchool($this->user())?->id;
 
         return [
             'student_id' => [
                 'required',
                 Rule::exists('students', 'id')->where('school_id', $schoolId),
+                Rule::unique('student_enrollments', 'student_id')->where(function ($query) use ($schoolId): void {
+                    $query->where('school_id', $schoolId)
+                        ->where('academic_session_id', $this->input('academic_session_id'))
+                        ->where('term_id', $this->input('term_id'));
+                }),
             ],
             'academic_session_id' => [
                 'required',
@@ -52,29 +57,8 @@ class StoreStudentEnrollmentRequest extends FormRequest
                 ),
             ],
             'enrollment_date' => 'required|date',
-            'status' => Rule::in([
-                'Active',
-                'Promoted',
-                'Repeated',
-                'Graduated',
-                'Transferred',
-                'Withdrawn',
-            ]),
+            'status' => ['prohibited'],
         ];
     }
 
-    private function currentSchoolId(): ?int
-    {
-        $schoolId = $this->attributes->get('current_school_id');
-
-        if ($schoolId) {
-            return (int) $schoolId;
-        }
-
-        $user = $this->user();
-
-        return $user
-            ? app(CurrentContextService::class)->currentSchool($user)?->id
-            : null;
-    }
 }

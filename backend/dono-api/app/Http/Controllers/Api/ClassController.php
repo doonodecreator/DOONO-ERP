@@ -19,10 +19,7 @@ class ClassController extends Controller
         private readonly CurrentContextService $context
     ) {}
 
-    private function currentContextSchoolId(Request $request): ?int
-    {
-        return $this->context->currentSchool($request->user())?->id;
-    }
+
     /**
      * Display a listing of the resource.
      */
@@ -33,7 +30,7 @@ class ClassController extends Controller
             'streams',
         ])->orderBy('display_order');
 
-        $schoolId = $this->currentContextSchoolId($request);
+        $schoolId = $this->context->currentSchool($request->user())?->id;
 
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
@@ -99,7 +96,7 @@ class ClassController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $class->division->school_id !== $this->currentContextSchoolId($request)
+            $class->division->school_id !== $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -122,7 +119,7 @@ class ClassController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $class->division->school_id !== $this->currentContextSchoolId($request)
+            $class->division->school_id !== $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -149,7 +146,7 @@ class ClassController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $class->division->school_id !== $this->currentContextSchoolId($request)
+            $class->division->school_id !== $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized.');
         }

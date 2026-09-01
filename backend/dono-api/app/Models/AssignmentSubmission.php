@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AssignmentSubmission extends Model
 {
+    protected $appends = ['attachment_path'];
+
+    protected $hidden = ['attachment_url'];
+
     protected $fillable = [
         'school_id',
         'assignment_id',
@@ -29,6 +33,11 @@ class AssignmentSubmission extends Model
         'submitted_at' => 'datetime',
         'graded_at' => 'datetime',
     ];
+
+    public function getAttachmentPathAttribute(): ?string
+    {
+        return $this->attachment_url ? '/assignments/' . $this->assignment_id . '/submissions/' . $this->id . '/attachment' : null;
+    }
 
     public function school(): BelongsTo
     {

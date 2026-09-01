@@ -16,10 +16,7 @@ class SubjectController extends Controller
         private readonly CurrentContextService $context
     ) {}
 
-    private function currentContextSchoolId(Request $request): ?int
-    {
-        return $this->context->currentSchool($request->user())?->id;
-    }
+
     public function index(Request $request)
     {
         $query = Subject::with([
@@ -34,7 +31,7 @@ class SubjectController extends Controller
         ) {
             $query->where(
                 'school_id',
-                $this->currentContextSchoolId($request)
+                $this->context->currentSchool($request->user())?->id
             );
         }
 
@@ -51,7 +48,7 @@ class SubjectController extends Controller
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin()
         ) {
-            $data['school_id'] = $this->currentContextSchoolId($request);
+            $data['school_id'] = $this->context->currentSchool($request->user())?->id;
         }
 
         $subject = Subject::create($data);
@@ -74,7 +71,7 @@ class SubjectController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $subject->school_id !== $this->currentContextSchoolId($request)
+            $subject->school_id !== $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized access to this subject.');
         }
@@ -95,7 +92,7 @@ class SubjectController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $subject->school_id !== $this->currentContextSchoolId($request)
+            $subject->school_id !== $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized access to update this subject.');
         }
@@ -120,7 +117,7 @@ class SubjectController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $subject->school_id !== $this->currentContextSchoolId($request)
+            $subject->school_id !== $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized access to delete this subject.');
         }

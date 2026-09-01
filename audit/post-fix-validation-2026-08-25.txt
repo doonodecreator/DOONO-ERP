@@ -1,0 +1,1024 @@
+=== PHP LINT TOUCHED FILES ===
+No syntax errors detected in backend/dono-api/routes/api.php
+No syntax errors detected in backend/dono-api/app/Http/Controllers/Api/AuthController.php
+No syntax errors detected in backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php
+No syntax errors detected in backend/dono-api/database/seeders/RolePermissionSeeder.php
+No syntax errors detected in backend/dono-api/database/migrations/2026_08_29_120002_add_audit_log_permission_to_proprietor_role.php
+=== PHPUNIT ===
+PHPUnit 12.5.30 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.6
+Configuration: /home/ubuntu/DOONO-ERP/backend/dono-api/phpunit.xml
+
+..............                                                    14 / 14 (100%)
+
+Time: 00:00.385, Memory: 50.50 MB
+
+[30;42mOK (14 tests, 19 assertions)[0m
+=== ROUTES ===
+route:list passed
+=== ARCHITECTURE ===
+DOONO architecture guard PASSED
+Checked: CurrentContextService boundary, shared role helper usage, model fillable arrays, Support Centre privacy, and canonical Axios client.
+=== GUIDE ===
+Guide source coverage verified: 73 registered modules and 60 role guide entries.
+=== FRONTEND LINT ===
+
+> frontend@0.0.0 lint
+> oxlint
+
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'load'
+    ,-[src/pages/ExchangeWorkspace.jsx:68:32]
+ 67 | 
+ 68 |   useEffect(() => { load(); }, [studentMode]);
+    :                     ^^|^       ^^^^^^^^^^^^^
+    :                       `-- useEffect uses `load` here
+ 69 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! eslint(no-unused-vars): Variable 'configuration' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/SchoolBranding.jsx:51:10]
+ 50 |   const [branding, setBranding] = useState(defaults);
+ 51 |   const [configuration, setConfiguration] = useState({});
+    :          ^^^^^^|^^^^^^
+    :                `-- 'configuration' is declared here
+ 52 |   const [files, setFiles] = useState({});
+    `----
+  help: Consider removing this declaration.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'load'
+    ,-[src/pages/SchoolBranding.jsx:72:32]
+ 71 | 
+ 72 |   useEffect(() => { load(); }, [school?.id]);
+    :                     ^^|^       ^^^^^^^^^^^^
+    :                       `-- useEffect uses `load` here
+ 73 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! eslint(no-unused-vars): Catch parameter 'err' is caught but never used.
+    ,-[src/components/Sidebar.jsx:20:14]
+ 19 |       window.location.href = "/"; // Force a full reload to reset all states
+ 20 |     } catch (err) {
+    :              ^|^
+    :               `-- 'err' is declared here
+ 21 |       alert("Failed to switch back to organization context.");
+    `----
+  help: Consider handling this error.
+
+  ! eslint(no-unused-vars): Identifier 'EmptyState' is imported but never used.
+    ,-[src/pages/NurseDashboard.jsx:11:8]
+ 10 | import LoadingSpinner from "../components/feedback/LoadingSpinner";
+ 11 | import EmptyState from "../components/feedback/EmptyState";
+    :        ^^^^^|^^^^
+    :             `-- 'EmptyState' is imported here
+ 12 | import Alert from "../components/feedback/Alert";
+    `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Variable 'openSearchResult' is declared but never used. Unused variables should start with a '_'.
+     ,-[src/App.jsx:192:9]
+ 191 | 
+ 192 |   const openSearchResult = (result) => {
+     :         ^^^^^^^^|^^^^^^^
+     :                 `-- 'openSearchResult' is declared here
+ 193 |     const id = Number(result?.id);
+     `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Catch parameter 'e' is caught but never used.
+    ,-[src/context/AuthContext.jsx:62:14]
+ 61 |       return response.data;
+ 62 |     } catch (e) {
+    :              |
+    :              `-- 'e' is declared here
+ 63 |       localStorage.removeItem("token");
+    `----
+  help: Consider handling this error.
+
+  ! eslint(no-unused-vars): Catch parameter 'e' is caught but never used.
+    ,-[src/context/AuthContext.jsx:89:14]
+ 88 |       await api.post("/logout");
+ 89 |     } catch (e) {
+    :              |
+    :              `-- 'e' is declared here
+ 90 |       // token may already be invalid — clear local state regardless
+    `----
+  help: Consider handling this error.
+
+  ! react(only-export-components): Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+     ,-[src/context/AuthContext.jsx:121:17]
+ 120 | 
+ 121 | export function useAuth() {
+     :                 ^^^^^^^
+ 122 |   return useContext(AuthContext);
+     `----
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'fetchData'
+    ,-[src/hooks/useApi.js:30:8]
+ 28 |     useEffect(() => {
+ 29 |         fetchData();
+    :         ^^^^|^^^^
+    :             `-- useEffect uses `fetchData` here
+ 30 |     }, [url]);
+    :        ^^^^^
+ 31 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadClassesAndDivisions'
+    ,-[src/pages/Classes.jsx:48:51]
+ 47 | 
+ 48 |   useEffect(() => { loadClassesAndDivisions(); }, []);
+    :                     ^^^^^^^^^^^|^^^^^^^^^^^       ^^
+    :                                `-- useEffect uses `loadClassesAndDivisions` here
+ 49 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! eslint(no-unused-vars): Variable 'discountForm' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/CashierDashboard.jsx:19:12]
+ 18 | 
+ 19 |     const [discountForm, setDiscountForm] = useState({
+    :            ^^^^^^|^^^^^
+    :                  `-- 'discountForm' is declared here
+ 20 |         student_fee_id: "",
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'setDiscountForm' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/CashierDashboard.jsx:19:26]
+ 18 | 
+ 19 |     const [discountForm, setDiscountForm] = useState({
+    :                          ^^^^^^^|^^^^^^^
+    :                                 `-- 'setDiscountForm' is declared here
+ 20 |         student_fee_id: "",
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'selectedReceipt' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/CashierDashboard.jsx:25:12]
+ 24 | 
+ 25 |     const [selectedReceipt, setSelectedReceipt] = useState(null);
+    :            ^^^^^^^|^^^^^^^
+    :                   `-- 'selectedReceipt' is declared here
+ 26 | 
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Catch parameter 'err' is caught but never used.
+    ,-[src/pages/CashierDashboard.jsx:64:18]
+ 63 |             }
+ 64 |         } catch (err) {
+    :                  ^|^
+    :                   `-- 'err' is declared here
+ 65 |             alert("Failed to process payment transaction.");
+    `----
+  help: Consider handling this error.
+
+  ! eslint(no-unused-vars): Catch parameter 'err' is caught but never used.
+    ,-[src/pages/LibrarianDashboard.jsx:59:18]
+ 58 |             loadLibraryData();
+ 59 |         } catch (err) {
+    :                  ^|^
+    :                   `-- 'err' is declared here
+ 60 |             alert("Failed to add book to catalog.");
+    `----
+  help: Consider handling this error.
+
+  ! eslint(no-unused-vars): Catch parameter 'err' is caught but never used.
+    ,-[src/pages/LibrarianDashboard.jsx:81:18]
+ 80 |             loadLibraryData();
+ 81 |         } catch (err) {
+    :                  ^|^
+    :                   `-- 'err' is declared here
+ 82 |             alert("Failed to update loan status.");
+    `----
+  help: Consider handling this error.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadAcademicFilters'
+    ,-[src/pages/Attendance.jsx:46:6]
+ 36 |   useEffect(() => {
+ 37 |     loadAcademicFilters();
+    :     ^^^^^^^^^|^^^^^^^^^
+    :              `-- useEffect uses `loadAcademicFilters` here
+ 38 |     const synchronize = async () => {
+ 39 |       const result = await flushAttendanceQueue(api);
+ 40 |       if (result.conflicts > 0) setError(`${result.conflicts} offline attendance register${result.conflicts === 1 ? '' : 's'} conflicted with a newer server version. Reload the register and review it before saving again.`);
+ 41 |       else if (result.sent > 0) setSuccessMsg(`${result.sent} offline attendance register${result.sent === 1 ? '' : 's'} synchronized.`);
+ 42 |     };
+ 43 |     synchronize();
+ 44 |     window.addEventListener('online', synchronize);
+ 45 |     return () => window.removeEventListener('online', synchronize);
+ 46 |   }, []);
+    :      ^^
+ 47 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadClassAttendance'
+    ,-[src/pages/Attendance.jsx:54:6]
+ 49 |     if (selectedClassId && selectedSessionId && selectedTermId) {
+ 50 |       loadClassAttendance();
+    :       ^^^^^^^^^|^^^^^^^^^
+    :                `-- useEffect uses `loadClassAttendance` here
+ 51 |     } else {
+ 52 |       setStudents([]);
+ 53 |     }
+ 54 |   }, [selectedClassId, selectedStreamId, selectedSessionId, selectedTermId, attendanceDate]);
+    :      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 55 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! eslint(no-unused-vars): Identifier 'EmptyState' is imported but never used.
+   ,-[src/pages/Books.jsx:7:8]
+ 6 | import LoadingSpinner from "../components/feedback/LoadingSpinner";
+ 7 | import EmptyState from "../components/feedback/EmptyState";
+   :        ^^^^^|^^^^
+   :             `-- 'EmptyState' is imported here
+ 8 | import Alert from "../components/feedback/Alert";
+   `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Parameter 'setPage' is declared but never used. Unused parameters should start with a '_'.
+   ,-[src/pages/Hostels.jsx:6:35]
+ 5 | 
+ 6 | export default function Hostels({ setPage }) {
+   :                                   ^^^|^^^
+   :                                      `-- 'setPage' is declared here
+ 7 |   const { user } = useAuth();
+   `----
+  help: Consider removing this parameter.
+
+  ! eslint(no-unused-vars): Variable 'user' is declared but never used. Unused variables should start with a '_'.
+   ,-[src/pages/Hostels.jsx:7:11]
+ 6 | export default function Hostels({ setPage }) {
+ 7 |   const { user } = useAuth();
+   :           ^^|^
+   :             `-- 'user' is declared here
+ 8 |   const [activeTab, setActiveTab] = useState('hostels');
+   `----
+  help: Consider removing this declaration.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadHostelData'
+    ,-[src/pages/Hostels.jsx:22:6]
+ 20 |   useEffect(() => {
+ 21 |     loadHostelData();
+    :     ^^^^^^^|^^^^^^
+    :            `-- useEffect uses `loadHostelData` here
+ 22 |   }, [activeTab]);
+    :      ^^^^^^^^^^^
+ 23 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! eslint(no-unused-vars): Variable 'status' is declared but never used. Unused variables should start with a '_'.
+     ,-[src/pages/AssetRegister.jsx:181:17]
+ 180 |       } else {
+ 181 |         const { status, ...createPayload } = payload;
+     :                 ^^^|^^
+     :                    `-- 'status' is declared here
+ 182 |         await api.post("/assets", createPayload);
+     `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Catch parameter 'err' is caught but never used.
+    ,-[src/pages/ReceptionDashboard.jsx:53:18]
+ 52 |             loadReceptionData();
+ 53 |         } catch (err) {
+    :                  ^|^
+    :                   `-- 'err' is declared here
+ 54 |             alert("Failed to check in visitor.");
+    `----
+  help: Consider handling this error.
+
+  ! eslint(no-unused-vars): Catch parameter 'err' is caught but never used.
+    ,-[src/pages/ReceptionDashboard.jsx:62:18]
+ 61 |             loadReceptionData();
+ 62 |         } catch (err) {
+    :                  ^|^
+    :                   `-- 'err' is declared here
+ 63 |             alert("Failed to check out visitor.");
+    `----
+  help: Consider handling this error.
+
+  ! eslint(no-unused-vars): Catch parameter 'err' is caught but never used.
+    ,-[src/pages/ReceptionDashboard.jsx:74:18]
+ 73 |             loadReceptionData();
+ 74 |         } catch (err) {
+    :                  ^|^
+    :                   `-- 'err' is declared here
+ 75 |             alert("Failed to issue gate pass.");
+    `----
+  help: Consider handling this error.
+
+  ! eslint(no-unused-vars): Catch parameter 'err' is caught but never used.
+    ,-[src/pages/ReceptionDashboard.jsx:86:18]
+ 85 |             loadReceptionData();
+ 86 |         } catch (err) {
+    :                  ^|^
+    :                   `-- 'err' is declared here
+ 87 |             alert("Failed to schedule appointment.");
+    `----
+  help: Consider handling this error.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadConversations'
+    ,-[src/pages/AiTutor.jsx:42:45]
+ 41 | 
+ 42 |   useEffect(() => { loadConversations(); }, [base]);
+    :                     ^^^^^^^^|^^^^^^^^       ^^^^^^
+    :                             `-- useEffect uses `loadConversations` here
+ 43 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a complex expression in the dependency array.
+    ,-[src/pages/AuditLogs.jsx:66:29]
+ 65 |     load(1);
+ 66 |   }, [isPlatformAdmin, tab, JSON.stringify(filters)]);
+    :                             ^^^^^^^^^^^^^^^^^^^^^^^
+ 67 | 
+    `----
+  help: Extract the expression to a separate variable so it can be statically checked.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'load'
+    ,-[src/pages/AuditLogs.jsx:66:6]
+ 64 |   useEffect(() => {
+ 65 |     load(1);
+    :     ^^|^
+    :       `-- useEffect uses `load` here
+ 66 |   }, [isPlatformAdmin, tab, JSON.stringify(filters)]);
+    :      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 67 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useMemo has unnecessary dependency: isOrganizationOwner
+    ,-[src/pages/GlobalSearch.jsx:27:133]
+ 26 |     ["", "All school records"], ["students", "Students"], ["parents", "Parents / guardians"], ["staff", "Staff"], ["enrollments", "Enrollments"], ["results", "Results"],
+ 27 |   ] : [["", "All organization records"], ...(isPlatformAdmin ? [["organizations", "Organizations"]] : []), ["schools", "Schools"]], [school, isOrganizationOwner, isPlatformAdmin]);
+    :                                                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 28 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! eslint(no-unused-vars): Catch parameter 'err' is caught but never used.
+    ,-[src/pages/HostelDashboard.jsx:50:18]
+ 49 |             loadHostelData();
+ 50 |         } catch (err) {
+    :                  ^|^
+    :                   `-- 'err' is declared here
+ 51 |             alert("Failed to create hostel block.");
+    `----
+  help: Consider handling this error.
+
+  ! eslint(no-unused-vars): Catch parameter 'err' is caught but never used.
+    ,-[src/pages/HostelDashboard.jsx:62:18]
+ 61 |             loadHostelData();
+ 62 |         } catch (err) {
+    :                  ^|^
+    :                   `-- 'err' is declared here
+ 63 |             alert("Failed to create hostel room.");
+    `----
+  help: Consider handling this error.
+
+  ! eslint(no-unused-vars): Variable 'user' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/ReportCards.jsx:16:11]
+ 15 | export default function ReportCards() {
+ 16 |   const { user } = useAuth();
+    :           ^^|^
+    :             `-- 'user' is declared here
+ 17 |   const [reportCards, setReportCards] = useState([]);
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Catch parameter 'err' is caught but never used.
+     ,-[src/pages/ReportCards.jsx:101:14]
+ 100 |       window.setTimeout(() => setCopiedVerificationId(null), 2200);
+ 101 |     } catch (err) {
+     :              ^|^
+     :               `-- 'err' is declared here
+ 102 |       alert('The verification link could not be copied. Please use the browser share or copy action.');
+     `----
+  help: Consider handling this error.
+
+  ! eslint(no-unused-vars): Catch parameter 'err' is caught but never used.
+     ,-[src/pages/ReportCards.jsx:110:14]
+ 109 |       setShowModal(true);
+ 110 |     } catch (err) {
+     :              ^|^
+     :               `-- 'err' is declared here
+ 111 |       setSelectedReport(report);
+     `----
+  help: Consider handling this error.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'load'
+    ,-[src/pages/LiveRooms.jsx:44:32]
+ 43 |   };
+ 44 |   useEffect(() => { load(); }, [studentMode]);
+    :                     ^^|^       ^^^^^^^^^^^^^
+    :                       `-- useEffect uses `load` here
+ 45 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! eslint(no-unused-vars): Function 'deleteRecord' is declared but never used.
+     ,-[src/pages/Promotions.jsx:215:20]
+ 214 | 
+ 215 |     async function deleteRecord(record) {
+     :                    ^^^^^^|^^^^^
+     :                          `-- 'deleteRecord' is declared here
+ 216 |         if (!record?.id || !window.confirm("Delete this promotion record? This action cannot be undone.")) return;
+     `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Function 'updateNotifications' is declared but never used.
+    ,-[src/pages/PlatformOperations.jsx:69:18]
+ 68 | 
+ 69 |   async function updateNotifications(event) {
+    :                  ^^^^^^^^^|^^^^^^^^^
+    :                           `-- 'updateNotifications' is declared here
+ 70 |     event.preventDefault();
+    `----
+  help: Consider removing this declaration.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'load'
+    ,-[src/pages/PlatformOperations.jsx:67:32]
+ 66 | 
+ 67 |   useEffect(() => { load(); }, [mode]);
+    :                     ^^|^       ^^^^^^
+    :                       `-- useEffect uses `load` here
+ 68 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'submitAttempt'
+    ,-[src/pages/StudentCbt.jsx:50:6]
+ 47 |     if (!attempt?.expires_at) return undefined;
+ 48 |     const update = () => { const remaining = Math.max(0, Math.floor((new Date(attempt.expires_at).getTime() - Date.now()) / 1000)); setSecondsLeft(remaining); if (remaining === 0 && attempt.status === "in_progress") submitAttempt(true); };
+    :                                                                                                                                                                                                                         ^^^^^^|^^^^^^
+    :                                                                                                                                                                                                                               `-- useEffect uses `submitAttempt` here
+ 49 |     update(); const timer = window.setInterval(update, 1000); return () => window.clearInterval(timer);
+ 50 |   }, [attempt?.expires_at, attempt?.status]);
+    :      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 51 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! eslint(no-unused-vars): Variable 'feeStructures' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/Fees.jsx:10:12]
+  9 |     const [studentFees, setStudentFees] = useState([]);
+ 10 |     const [feeStructures, setFeeStructures] = useState([]);
+    :            ^^^^^^|^^^^^^
+    :                  `-- 'feeStructures' is declared here
+ 11 |     const [sessions, setSessions] = useState([]);
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'sessions' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/Fees.jsx:11:12]
+ 10 |     const [feeStructures, setFeeStructures] = useState([]);
+ 11 |     const [sessions, setSessions] = useState([]);
+    :            ^^^^|^^^
+    :                `-- 'sessions' is declared here
+ 12 |     const [terms, setTerms] = useState([]);
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'setSessions' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/Fees.jsx:11:22]
+ 10 |     const [feeStructures, setFeeStructures] = useState([]);
+ 11 |     const [sessions, setSessions] = useState([]);
+    :                      ^^^^^|^^^^^
+    :                           `-- 'setSessions' is declared here
+ 12 |     const [terms, setTerms] = useState([]);
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'terms' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/Fees.jsx:12:12]
+ 11 |     const [sessions, setSessions] = useState([]);
+ 12 |     const [terms, setTerms] = useState([]);
+    :            ^^|^^
+    :              `-- 'terms' is declared here
+ 13 |     const [classes, setClasses] = useState([]);
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'setTerms' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/Fees.jsx:12:19]
+ 11 |     const [sessions, setSessions] = useState([]);
+ 12 |     const [terms, setTerms] = useState([]);
+    :                   ^^^^|^^^
+    :                       `-- 'setTerms' is declared here
+ 13 |     const [classes, setClasses] = useState([]);
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'classes' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/Fees.jsx:13:12]
+ 12 |     const [terms, setTerms] = useState([]);
+ 13 |     const [classes, setClasses] = useState([]);
+    :            ^^^|^^^
+    :               `-- 'classes' is declared here
+ 14 | 
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'setClasses' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/Fees.jsx:13:21]
+ 12 |     const [terms, setTerms] = useState([]);
+ 13 |     const [classes, setClasses] = useState([]);
+    :                     ^^^^^|^^^^
+    :                          `-- 'setClasses' is declared here
+ 14 | 
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'showAssignModal' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/Fees.jsx:20:12]
+ 19 | 
+ 20 |     const [showAssignModal, setShowAssignModal] = useState(false);
+    :            ^^^^^^^|^^^^^^^
+    :                   `-- 'showAssignModal' is declared here
+ 21 |     const [showPayModal, setShowPayModal] = useState(false);
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'setShowAssignModal' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/Fees.jsx:20:29]
+ 19 | 
+ 20 |     const [showAssignModal, setShowAssignModal] = useState(false);
+    :                             ^^^^^^^^^|^^^^^^^^
+    :                                      `-- 'setShowAssignModal' is declared here
+ 21 |     const [showPayModal, setShowPayModal] = useState(false);
+    `----
+  help: Consider removing this declaration.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadFinancialData'
+    ,-[src/pages/Fees.jsx:40:8]
+ 38 |     useEffect(() => {
+ 39 |         loadFinancialData();
+    :         ^^^^^^^^|^^^^^^^^
+    :                 `-- useEffect uses `loadFinancialData` here
+ 40 |     }, []);
+    :        ^^
+ 41 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useMemo has missing dependencies: 'routeVehicle', and 'routeOccupancy'
+    ,-[src/pages/TransportDashboard.jsx:59:7]
+ 55 |   const allocatableRoutes = useMemo(() => routes.filter((route) => {
+ 56 |     const vehicle = routeVehicle(route); const inspection = latestInspectionByVehicle[vehicle?.id];
+    :                     ^^^^^^^^^^^^
+ 57 |     const dueDate = inspection?.next_due_date ? new Date(inspection.next_due_date) : null;
+ 58 |     return vehicle && !["maintenance", "inactive", "retired"].includes(String(vehicle.status || "").toLowerCase()) && inspection?.status === "passed" && (!dueDate || Number.isNaN(dueDate.getTime()) || dueDate >= new Date(new Date().toDateString())) && routeOccupancy(route.id) < Number(vehicle.capacity || 0);
+    :                                                                                                                                                                                                                                                             ^^^^^^^^^^^^^^
+ 59 |   }), [routes, vehicles, inspections, allocations, latestInspectionByVehicle]);
+    :       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 60 |   const routeName = useMemo(() => Object.fromEntries(routes.map((route) => [route.id, route.route_name])), [routes]);
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useMemo has unnecessary dependency: inspections
+    ,-[src/pages/TransportDashboard.jsx:59:7]
+ 58 |     return vehicle && !["maintenance", "inactive", "retired"].includes(String(vehicle.status || "").toLowerCase()) && inspection?.status === "passed" && (!dueDate || Number.isNaN(dueDate.getTime()) || dueDate >= new Date(new Date().toDateString())) && routeOccupancy(route.id) < Number(vehicle.capacity || 0);
+ 59 |   }), [routes, vehicles, inspections, allocations, latestInspectionByVehicle]);
+    :       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 60 |   const routeName = useMemo(() => Object.fromEntries(routes.map((route) => [route.id, route.route_name])), [routes]);
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useMemo has unnecessary dependency: allocations
+    ,-[src/pages/TransportDashboard.jsx:59:7]
+ 58 |     return vehicle && !["maintenance", "inactive", "retired"].includes(String(vehicle.status || "").toLowerCase()) && inspection?.status === "passed" && (!dueDate || Number.isNaN(dueDate.getTime()) || dueDate >= new Date(new Date().toDateString())) && routeOccupancy(route.id) < Number(vehicle.capacity || 0);
+ 59 |   }), [routes, vehicles, inspections, allocations, latestInspectionByVehicle]);
+    :       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 60 |   const routeName = useMemo(() => Object.fromEntries(routes.map((route) => [route.id, route.route_name])), [routes]);
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useMemo has unnecessary dependency: vehicles
+    ,-[src/pages/TransportDashboard.jsx:59:7]
+ 58 |     return vehicle && !["maintenance", "inactive", "retired"].includes(String(vehicle.status || "").toLowerCase()) && inspection?.status === "passed" && (!dueDate || Number.isNaN(dueDate.getTime()) || dueDate >= new Date(new Date().toDateString())) && routeOccupancy(route.id) < Number(vehicle.capacity || 0);
+ 59 |   }), [routes, vehicles, inspections, allocations, latestInspectionByVehicle]);
+    :       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 60 |   const routeName = useMemo(() => Object.fromEntries(routes.map((route) => [route.id, route.route_name])), [routes]);
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! eslint(no-unused-vars): Parameter 'setPage' is declared but never used. Unused parameters should start with a '_'.
+   ,-[src/pages/Transport.jsx:6:37]
+ 5 | 
+ 6 | export default function Transport({ setPage }) {
+   :                                     ^^^|^^^
+   :                                        `-- 'setPage' is declared here
+ 7 |   const { user } = useAuth();
+   `----
+  help: Consider removing this parameter.
+
+  ! eslint(no-unused-vars): Variable 'user' is declared but never used. Unused variables should start with a '_'.
+   ,-[src/pages/Transport.jsx:7:11]
+ 6 | export default function Transport({ setPage }) {
+ 7 |   const { user } = useAuth();
+   :           ^^|^
+   :             `-- 'user' is declared here
+ 8 |   const [activeTab, setActiveTab] = useState('routes');
+   `----
+  help: Consider removing this declaration.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadTransportData'
+    ,-[src/pages/Transport.jsx:22:6]
+ 20 |   useEffect(() => {
+ 21 |     loadTransportData();
+    :     ^^^^^^^^|^^^^^^^^
+    :             `-- useEffect uses `loadTransportData` here
+ 22 |   }, [activeTab]);
+    :      ^^^^^^^^^^^
+ 23 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'load'
+    ,-[src/pages/TransportLogs.jsx:33:78]
+ 32 |   };
+ 33 |   useEffect(() => { setForm((current) => ({ ...current, type })); load(); }, [type]);
+    :                                                                   ^^|^       ^^^^^^
+    :                                                                     `-- useEffect uses `load` here
+ 34 |   const save = async (event) => { event.preventDefault(); setSaving(true); try { await api.post("/transport-logs", { ...form, type, vehicle_id: Number(form.vehicle_id), amount: Number(form.amount), quantity: form.quantity ? Number(form.quantity) : null, odometer: form.odometer ? Number(form.odometer) : null }); setForm({ ...blank, type }); await load(); } catch (requestError) { setError(requestError?.response?.data?.message || "Transport record could not be saved."); } finally { setSaving(false); } };
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'load'
+    ,-[src/pages/ReceptionActivities.jsx:37:78]
+ 36 |   };
+ 37 |   useEffect(() => { setForm((current) => ({ ...current, type })); load(); }, [type]);
+    :                                                                   ^^|^       ^^^^^^
+    :                                                                     `-- useEffect uses `load` here
+ 38 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadInitialData'
+    ,-[src/pages/Timetable.jsx:90:6]
+ 88 |   useEffect(() => {
+ 89 |     loadInitialData();
+    :     ^^^^^^^|^^^^^^^
+    :            `-- useEffect uses `loadInitialData` here
+ 90 |   }, []);
+    :      ^^
+ 91 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'load'
+    ,-[src/pages/OperationalReports.jsx:45:32]
+ 44 | 
+ 45 |   useEffect(() => { load(); }, [mode]);
+    :                     ^^|^       ^^^^^^
+    :                       `-- useEffect uses `load` here
+ 46 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! eslint(no-unused-vars): Variable 'setLoading' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/ProfileSettings.jsx:27:19]
+ 26 |   const [removeAvatar, setRemoveAvatar] = useState(false);
+ 27 |   const [loading, setLoading] = useState(false);
+    :                   ^^^^^|^^^^
+    :                        `-- 'setLoading' is declared here
+ 28 |   const [saving, setSaving] = useState(false);
+    `----
+  help: Consider removing this declaration.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadRoster'
+    ,-[src/pages/StaffAttendance.jsx:62:6]
+ 60 |   useEffect(() => {
+ 61 |     loadRoster();
+    :     ^^^^^|^^^^
+    :          `-- useEffect uses `loadRoster` here
+ 62 |   }, [attendanceDate]);
+    :      ^^^^^^^^^^^^^^^^
+ 63 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadReport'
+    ,-[src/pages/FinancialReports.jsx:55:38]
+ 54 | 
+ 55 |   useEffect(() => { loadReport(); }, []);
+    :                     ^^^^^|^^^^       ^^
+    :                          `-- useEffect uses `loadReport` here
+ 56 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! eslint(no-unused-vars): Identifier 'ARCHITECTURE_MODULES' is imported but never used.
+   ,-[src/pages/SupportCentre.jsx:6:10]
+ 5 | import { CONCEPT_GUIDES, GUIDE_MODULE_KEYS_WITH_DOCUMENTS, moduleGuide, roleGuide } from "../config/guideKnowledge";
+ 6 | import { ARCHITECTURE_MODULES } from "../config/architectureModules";
+   :          ^^^^^^^^^^|^^^^^^^^^
+   :                    `-- 'ARCHITECTURE_MODULES' is imported here
+ 7 | import PageHeader from "../components/layout/PageHeader";
+   `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Identifier 'LoadingSpinner' is imported but never used.
+    ,-[src/pages/SupportCentre.jsx:9:8]
+  8 | import DataTable from "../components/tables/DataTable";
+  9 | import LoadingSpinner from "../components/feedback/LoadingSpinner";
+    :        ^^^^^^^|^^^^^^
+    :               `-- 'LoadingSpinner' is imported here
+ 10 | import EmptyState from "../components/feedback/EmptyState";
+    `----
+  help: Consider removing this import.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadTickets'
+     ,-[src/pages/SupportCentre.jsx:110:39]
+ 109 | 
+ 110 |   useEffect(() => { loadTickets(); }, [status, category]);
+     :                     ^^^^^|^^^^^       ^^^^^^^^^^^^^^^^^^
+     :                          `-- useEffect uses `loadTickets` here
+ 111 |   useEffect(() => { if (!isPlatformAdmin) return; api.get("/support/canned-replies").then((response) => { const data = response?.data?.data; setCannedReplies(Array.isArray(data) ? data : []); }).catch(() => setCannedReplies([])); }, [isPlatformAdmin]);
+     `----
+  help: Either include it or remove the dependency array.
+
+  ! eslint(no-unused-vars): Variable 'status' is declared but never used. Unused variables should start with a '_'.
+     ,-[src/pages/SchoolFacilities.jsx:110:17]
+ 109 |       } else {
+ 110 |         const { status, ...createPayload } = payload;
+     :                 ^^^|^^
+     :                    `-- 'status' is declared here
+ 111 |         await api.post("/school-facilities", createPayload);
+     `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'status' is declared but never used. Unused variables should start with a '_'.
+     ,-[src/pages/SchoolEvents.jsx:110:17]
+ 109 |       } else {
+ 110 |         const { status, ...createPayload } = payload;
+     :                 ^^^|^^
+     :                    `-- 'status' is declared here
+ 111 |         await api.post("/school-events", createPayload);
+     `----
+  help: Consider removing this declaration.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'load'
+    ,-[src/pages/LeaveApplication.jsx:42:32]
+ 41 | 
+ 42 |   useEffect(() => { load(); }, [role]);
+    :                     ^^|^       ^^^^^^
+    :                       `-- useEffect uses `load` here
+ 43 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadData'
+    ,-[src/pages/Settings.jsx:36:42]
+ 35 | 
+ 36 |     useEffect(() => { loadData();     }, [isPlatformAdmin, school, canManageSchoolSettings]);
+    :                       ^^^^|^^^           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    :                           `-- useEffect uses `loadData` here
+ 37 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'load'
+    ,-[src/pages/TransportTracking.jsx:39:32]
+ 38 | 
+ 39 |   useEffect(() => { load(); }, [role]);
+    :                     ^^|^       ^^^^^^
+    :                       `-- useEffect uses `load` here
+ 40 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadData'
+    ,-[src/pages/RoleInvitations.jsx:51:8]
+ 49 |     useEffect(() => {
+ 50 |         loadData();
+    :         ^^^^|^^^
+    :             `-- useEffect uses `loadData` here
+ 51 |     }, [canManageDelegation]);
+    :        ^^^^^^^^^^^^^^^^^^^^^
+ 52 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! eslint(no-unused-vars): Identifier 'EmptyState' is imported but never used.
+   ,-[src/pages/Subscriptions.jsx:7:8]
+ 6 | import LoadingSpinner from "../components/feedback/LoadingSpinner";
+ 7 | import EmptyState from "../components/feedback/EmptyState";
+   :        ^^^^^|^^^^
+   :             `-- 'EmptyState' is imported here
+ 8 | import DataTable from "../components/tables/DataTable";
+   `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Variable 'roles' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/Subscriptions.jsx:12:30]
+ 11 | export default function Subscriptions() {
+ 12 |     const { isPlatformAdmin, roles, isOrganizationOwner, school } = useAuth();
+    :                              ^^|^^
+    :                                `-- 'roles' is declared here
+ 13 |     const [billingCycle, setBillingCycle] = useState("monthly");
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'isOrganizationOwner' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/Subscriptions.jsx:12:37]
+ 11 | export default function Subscriptions() {
+ 12 |     const { isPlatformAdmin, roles, isOrganizationOwner, school } = useAuth();
+    :                                     ^^^^^^^^^|^^^^^^^^^
+    :                                              `-- 'isOrganizationOwner' is declared here
+ 13 |     const [billingCycle, setBillingCycle] = useState("monthly");
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'school' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/pages/Subscriptions.jsx:12:58]
+ 11 | export default function Subscriptions() {
+ 12 |     const { isPlatformAdmin, roles, isOrganizationOwner, school } = useAuth();
+    :                                                          ^^^|^^
+    :                                                             `-- 'school' is declared here
+ 13 |     const [billingCycle, setBillingCycle] = useState("monthly");
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Catch parameter 'err' is caught but never used.
+     ,-[src/pages/Subscriptions.jsx:268:18]
+ 267 |             loadData();
+ 268 |         } catch (err) { alert("Delete failed."); }
+     :                  ^|^
+     :                   `-- 'err' is declared here
+ 269 |     }
+     `----
+  help: Consider handling this error.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadData'
+    ,-[src/pages/Subscriptions.jsx:34:38]
+ 33 | 
+ 34 |     useEffect(() => { loadData(); }, [activeTab]);
+    :                       ^^^^|^^^       ^^^^^^^^^^^
+    :                           `-- useEffect uses `loadData` here
+ 35 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'resetForm'
+     ,-[src/pages/Subscriptions.jsx:103:39]
+ 102 | 
+ 103 |     useEffect(() => { resetForm(); }, [activeTab]);
+     :                       ^^^^|^^^^       ^^^^^^^^^^^
+     :                           `-- useEffect uses `resetForm` here
+ 104 | 
+     `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadData'
+    ,-[src/pages/Subjects.jsx:20:36]
+ 19 |   const loadData = async () => { setLoading(true); setError(""); try { if (teacherOnly) { const response = await api.get("/teacher/dashboard"); const payload = response?.data; setSubjects(Array.isArray(payload?.my_subjects) ? payload.my_subjects : []); setDivisions([]); return; } const [subjectsResponse, divisionsResponse] = await Promise.all([api.get("/subjects"), api.get("/divisions")]); setSubjects(listFromResponse(subjectsResponse)); setDivisions(listFromResponse(divisionsResponse)); } catch (err) { setError(err.response?.data?.message || "Unable to load subjects and divisions."); setSubjects([]); setDivisions([]); } finally { setLoading(false); } };
+ 20 |   useEffect(() => { loadData(); }, []);
+    :                     ^^^^|^^^       ^^
+    :                         `-- useEffect uses `loadData` here
+ 21 |   const openModal = (subject = null) => { if (!canManageSubjects) return; setFormError(""); setEditingId(subject?.id || null); setForm(subject ? { name: subject.name || "", code: subject.code || "", category: subject.category || "Core", division_id: subject.division_id || subject.division?.id || "", pass_mark: subject.pass_mark ?? 40, maximum_mark: subject.maximum_mark ?? 100, is_active: subject.is_active ?? true, description: subject.description || "" } : { ...emptyForm, division_id: divisions[0]?.id || "" }); setShowModal(true); };
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'load'
+    ,-[src/pages/AssessmentActivities.jsx:28:32]
+ 27 |   }
+ 28 |   useEffect(() => { load(); }, [mode]);
+    :                     ^^|^       ^^^^^^
+    :                       `-- useEffect uses `load` here
+ 29 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'role'
+    ,-[src/pages/ResultEntry.jsx:55:6]
+ 40 |         setLoading(true); setError("");
+ 41 |         const response = role === "teacher" ? await api.get("/teacher/dashboard") : await api.get("/classes");
+    :                          ^^|^
+    :                            `-- useEffect uses `role` here
+ 42 |         if (role === "teacher") {
+ 43 |           const payload = response?.data;
+ 44 |           setClasses(Array.isArray(payload?.my_classes) ? payload.my_classes : []);
+ 45 |           setAssignedSubjects(Array.isArray(payload?.my_subjects) ? payload.my_subjects : []);
+ 46 |         } else {
+ 47 |           setClasses(listFrom(response));
+ 48 |           setAssignedSubjects([]);
+ 49 |         }
+ 50 |       } catch (requestError) {
+ 51 |         setError(requestError?.response?.data?.message || "Unable to load classes.");
+ 52 |       } finally { setLoading(false); }
+ 53 |     }
+ 54 |     loadClasses();
+ 55 |   }, []);
+    :      ^^
+ 56 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has missing dependencies: 'assignedSubjects', and 'role'
+    ,-[src/pages/ResultEntry.jsx:92:6]
+ 68 |         const subjectListFromApi = Array.isArray(payload.subjects) ? payload.subjects : [];
+ 69 |         const assignedSubjectIds = role === "teacher"
+    :                                    ^^^^
+ 70 |           ? assignedSubjects.filter((item) => String(item.class_id) === String(selectedClass)).map((item) => String(item.subject_id))
+    :             ^^^^^^^^^^^^^^^^
+ 71 |           : [];
+ 72 |         const subjectList = role === "teacher" && assignedSubjectIds.length > 0
+ 73 |           ? subjectListFromApi.filter((item) => assignedSubjectIds.includes(String(item.id)))
+ 74 |           : subjectListFromApi;
+ 75 |         const sessionList = Array.isArray(payload.sessions) ? payload.sessions : [];
+ 76 |         const termList = Array.isArray(payload.terms) ? payload.terms : [];
+ 77 |         const structureList = Array.isArray(payload.structures) ? payload.structures.filter((item) => item?.is_active !== false) : [];
+ 78 |         const gradingRuleList = Array.isArray(payload.grading_rules) ? payload.grading_rules : [];
+ 79 |         const enrollmentList = Array.isArray(payload.students) ? payload.students : [];
+ 80 |         setSubjects(subjectList); setSessions(sessionList); setTerms(termList); setStructures(structureList); setGradingRules(gradingRuleList); setStudents(enrollmentList); setSubmissionId(null); setSubmissionStatus("");
+ 81 |         setSelectedSubject((current) => subjectList.some((item) => String(item.id) === String(current)) ? current : String(subjectList[0]?.id || ""));
+ 82 |         setSelectedSession((current) => sessionList.some((item) => String(item.id) === String(current)) ? current : String(sessionList[0]?.id || ""));
+ 83 |         setSelectedTerm((current) => termList.some((item) => String(item.id) === String(current)) ? current : String(termList[0]?.id || ""));
+ 84 |         const initialScores = {};
+ 85 |         enrollmentList.forEach((enrollment) => { initialScores[enrollment.id] = {}; structureList.forEach((structure) => { initialScores[enrollment.id][structure.id] = 0; }); });
+ 86 |         setScores(initialScores);
+ 87 |       } catch (requestError) {
+ 88 |         setStudents([]); setError(requestError?.response?.data?.message || "Unable to load the class result sheet.");
+ 89 |       } finally { setLoadingRoster(false); }
+ 90 |     }
+ 91 |     loadRoster();
+ 92 |   }, [selectedClass]);
+    :      ^^^^^^^^^^^^^^^
+ 93 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'load'
+    ,-[src/pages/CbtQuestionBank.jsx:63:32]
+ 62 | 
+ 63 |   useEffect(() => { load(); }, [role, filters.subject_id, filters.section, filters.topic, filters.difficulty]);
+    :                     ^^|^       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    :                       `-- useEffect uses `load` here
+ 64 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! eslint(no-unused-vars): Function 'toItems' is declared but never used.
+    ,-[src/pages/Communication.jsx:33:10]
+ 32 | 
+ 33 | function toItems(response) {
+    :          ^^^|^^^
+    :             `-- 'toItems' is declared here
+ 34 |   const value = response?.data?.data ?? response?.data ?? response ?? [];
+    `----
+  help: Consider removing this declaration.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'load'
+    ,-[src/pages/Communication.jsx:95:6]
+ 93 |   useEffect(() => {
+ 94 |     load(1);
+    :     ^^|^
+    :       `-- useEffect uses `load` here
+ 95 |   }, [typeFilter]);
+    :      ^^^^^^^^^^^^
+ 96 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+  ! react-hooks(exhaustive-deps): React Hook useEffect has a missing dependency: 'loadData'
+    ,-[src/pages/Assignments.jsx:64:36]
+ 63 | 
+ 64 |   useEffect(() => { loadData(); }, [isStudent]);
+    :                     ^^^^|^^^       ^^^^^^^^^^^
+    :                         `-- useEffect uses `loadData` here
+ 65 | 
+    `----
+  help: Either include it or remove the dependency array.
+
+Found 90 warnings and 0 errors.
+Finished in 42ms on 177 files with 91 rules using 6 threads.
+=== FRONTEND BUILD ===
+
+> frontend@0.0.0 build
+> vite build
+
+vite v8.1.4 building client environment for production...
+[2Ktransforming...[32m✓[0m 287 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[0m[32mindex.html                 [0m[1;2m    0.45 kB[0m[2m │ gzip:   0.29 kB[0m
+[2mdist/[0m[2massets/[0m[35mindex-JeSrTyo-.css  [0m[1;2m   74.75 kB[0m[2m │ gzip:  14.33 kB[0m
+[2mdist/[0m[2massets/[0m[36mindex-DOdbLmd4.js   [0m[33;1m1,864.30 kB[0m[2m │ gzip: 442.62 kB[0m
+
+✓ built in 621ms
+[plugin builtin:vite-reporter] [33;1m
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[0m
+=== DIFF CHECK ===

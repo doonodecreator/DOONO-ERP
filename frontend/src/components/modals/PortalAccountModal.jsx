@@ -62,7 +62,7 @@ export default function PortalAccountModal({
         : `/students/${entity.id}/portal-account`;
       const response = await api.post(path, form);
       onSuccess?.(response.data);
-      setCreatedAccount({ email: form.email });
+      setCreatedAccount({ email: form.email, verificationEmailSent: Boolean(response.data?.verification_email_sent) });
     } catch (err) {
       setError(err.message || 'Unable to create the portal account.');
       setFieldErrors(err.errors || err.responseData?.errors || {});
@@ -83,7 +83,8 @@ export default function PortalAccountModal({
         </div>
 
         {error && <div role="alert" className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</div>}
-        {createdAccount ? <div role="status" className="space-y-4"><div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"><p className="font-bold">Portal account created successfully.</p><p className="mt-2">Login email: <strong>{createdAccount.email}</strong></p><p className="mt-2">Give the temporary password to the user securely. On first login, the portal will force them to create a new private password before showing any dashboard.</p></div><button type="button" onClick={onClose} className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white">Done</button></div> : <form onSubmit={submit} className="space-y-4">
+        {!createdAccount && <div className="mb-4 rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm leading-6 text-blue-900"><strong>How portal access works:</strong> this action links the selected school record to a login. Give the recipient the email and temporary password privately. They sign in on the normal DOONO login page, change the temporary password, and complete email verification when it is enabled. A parent can use one account for every child linked to the same parent record; a student account is linked to one student.</div>}
+        {createdAccount ? <div role="status" className="space-y-4"><div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"><p className="font-bold">Portal account created successfully.</p><p className="mt-2">Login email: <strong>{createdAccount.email}</strong></p><p className="mt-2">Give the temporary password to the user securely. On first login, the portal will force them to create a new private password before showing any dashboard.</p>{createdAccount.verificationEmailSent && <p className="mt-2">An email-verification message was requested. The recipient must verify this same email before signing in when verification is enabled.</p>}</div><button type="button" onClick={onClose} className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white">Done</button></div> : <form onSubmit={submit} className="space-y-4">
           {isParent && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="text-sm font-medium text-slate-700">

@@ -7,11 +7,14 @@ use App\Http\Requests\StoreAssetRequest;
 use App\Http\Requests\UpdateAssetRequest;
 use App\Http\Resources\AssetResource;
 use App\Models\Asset;
+use App\Models\AssetLifecycleEvent;
 use App\Models\Staff;
 use App\Services\ActivityLogService;
 use App\Services\AssetService;
 use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class AssetController extends Controller
 {
@@ -123,6 +126,77 @@ class AssetController extends Controller
         );
 
         return new AssetResource($asset->load($this->resourceRelationships()));
+    }
+
+    public function history(Request $request, Asset $asset)
+    {
+        $schoolId = $this->ensureSchoolAsset($request, $asset);
+        $events = AssetLifecycleEvent::query()
+            ->where('school_id', $schoolId)
+            ->where('asset_id', $asset->id)
+            ->with('actor:id,name')
+            ->latest('occurred_at')
+            ->paginate($this->perPage($request));
+
+        return response()->json($events);
+    }
+
+    public function transition(Request $request, Asset $asset)
+    {
+        $schoolId = $this->ensureSchoolAsset($request, $asset);
+        $validated = $request->validate([
+            'event_type' => ['required', Rule::in(['maintenance_start', 'maintenance_complete', 'mark_lost', 'recover', 'dispose', 'handover'])],
+            'notes' => ['required', 'string', 'min:2', 'max:2000'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'custodian_staff_id' => ['nullable', 'integer', Rule::exists('staff', 'id')->where('school_id', $schoolId)],
+            'condition' => ['nullable', Rule::in(['New', 'Good', 'Fair', 'Poor'])],
+        ]);
+
+        $updated = DB::transaction(function () use ($validated, $asset, $schoolId, $request) {
+            $locked = Asset::query()->whereKey($asset->id)->where('school_id', $schoolId)->lockForUpdate()->firstOrFail();
+            $before = $locked->only(['status', 'condition', 'location', 'custodian_staff_id', 'notes']);
+            $eventType = $validated['event_type'];
+            $statusMap = [
+                'maintenance_start' => 'In Repair',
+                'maintenance_complete' => 'Active',
+                'mark_lost' => 'Lost',
+                'recover' => 'Active',
+                'dispose' => 'Disposed',
+            ];
+            if ($eventType === 'maintenance_start') abort_unless($locked->status === 'Active', 422, 'Only an active asset can enter maintenance.');
+            if ($eventType === 'maintenance_complete') abort_unless($locked->status === 'In Repair', 422, 'Only an asset in repair can be marked complete.');
+            if ($eventType === 'mark_lost') abort_unless(in_array($locked->status, ['Active', 'In Repair'], true), 422, 'Only an active or in-repair asset can be marked lost.');
+            if ($eventType === 'recover') abort_unless($locked->status === 'Lost', 422, 'Only a lost asset can be recovered.');
+            if ($eventType === 'dispose') abort_unless($locked->status !== 'Disposed', 422, 'This asset has already been disposed.');
+            if ($eventType === 'handover') {
+                abort_unless(filled($validated['location'] ?? null) || filled($validated['custodian_staff_id'] ?? null), 422, 'Provide a new location or custodian for a handover.');
+                abort_unless($locked->status !== 'Disposed', 422, 'A disposed asset cannot be handed over.');
+            }
+
+            $changes = ['notes' => $validated['notes']];
+            if (isset($statusMap[$eventType])) $changes['status'] = $statusMap[$eventType];
+            if ($eventType === 'handover') {
+                foreach (['location', 'custodian_staff_id', 'condition'] as $field) {
+                    if (array_key_exists($field, $validated)) $changes[$field] = $validated[$field];
+                }
+            }
+            $locked->update($changes);
+            $after = $locked->fresh()->only(array_keys($before));
+            AssetLifecycleEvent::create([
+                'school_id' => $schoolId,
+                'asset_id' => $locked->id,
+                'actor_id' => $request->user()->id,
+                'event_type' => $eventType,
+                'before_state' => $before,
+                'after_state' => $after,
+                'notes' => $validated['notes'],
+                'occurred_at' => now(),
+            ]);
+            ActivityLogService::log('assets', 'lifecycle_transition', "Asset {$locked->asset_number} recorded {$eventType}.", $locked, ['event_type' => $eventType, 'before' => $before, 'after' => $after], $schoolId);
+            return $locked->load($this->resourceRelationships());
+        });
+
+        return new AssetResource($updated);
     }
 
     private function ensureSchoolAsset(Request $request, Asset $asset): int

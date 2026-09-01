@@ -1,6 +1,7 @@
 import { useAuth } from "../context/AuthContext";
 import api from "../services/api";
 import { getPrimaryRoleSlug } from "../utils/role";
+import { annotateSchoolOsMenuItems } from "../config/schoolOsCapabilities";
 
 export default function Sidebar({
   page,
@@ -29,9 +30,11 @@ export default function Sidebar({
     { name: "Plans & Features", page: "subscriptions" },
     { name: "Payments & Invoices", page: "platform-payments" },
     { name: "System Settings", page: "settings" },
+    { name: "Feature Flags", page: "feature-flags" },
     { name: "Countries / Currency", page: "countries-currency" },
     { name: "Email & SMS Settings", page: "email-sms-settings" },
     { name: "Backups & Logs", page: "backups-logs" },
+    { name: "Marketplace Review", page: "marketplace-review" },
     { name: "Audit Logs", page: "audit-logs" },
     { name: "System Health", page: "system-health" },
   ];
@@ -49,6 +52,7 @@ export default function Sidebar({
   // Proprietor (School Owner) - exactly 10 core modules per architecture diagram
   const proprietorMenuItems = [
     { name: "Dashboard", page: "dashboard" },
+    { name: "School Insights", page: "school-insights" },
     { name: "Staff Management", page: "staff" },
     { name: "Leadership Assignment", page: "role-invitations" },
     { name: "Initial School Setup", page: "school-setup" },
@@ -61,14 +65,21 @@ export default function Sidebar({
     { name: "School Settings", page: "settings" },
     { name: "School Branding & Report Cards", page: "school-branding" },
     { name: "Subscriptions", page: "subscriptions" },
+    { name: "API Integrations", page: "school-api-keys" },
+    { name: "OAuth Clients", page: "oauth-clients" },
+    { name: "Integration Marketplace", page: "marketplace" },
+    { name: "Anonymous Benchmarking", page: "benchmarking" },
     { name: "Audit Logs", page: "audit-logs" },
     { name: "Communication", page: "communication" },
     { name: "CBT Oversight", page: "cbt-assessments" },
     { name: "Assessment Structure", page: "assessment-structures" },
+    { name: "Project Exchange", page: "exchange" },
+    { name: "Live Room Operations", page: "live-rooms" },
   ];
 
   const principalMenuItems = [
     { name: "Dashboard", page: "dashboard" },
+    { name: "School Insights", page: "school-insights" },
     { name: "Manage Teachers", page: "teachers" },
     { name: "Manage Students", page: "students" },
     { name: "Review Admissions & Placement", page: "student-enrollments" },
@@ -81,6 +92,10 @@ export default function Sidebar({
     { name: "CBT Question Review", page: "cbt" },
     { name: "CBT Assessments", page: "cbt-assessments" },
     { name: "Communication", page: "communication" },
+    { name: "AI Tutor", page: "ai-tutor" },
+    { name: "Community Moderation", page: "community-moderation" },
+    { name: "Project Exchange", page: "exchange" },
+    { name: "Live Room Operations", page: "live-rooms" },
   ];
 
   const parentMenuItems = [
@@ -110,44 +125,48 @@ export default function Sidebar({
     { name: "Notices", page: "notices" },
     { name: "Transport Tracking", page: "transport-tracking" },
     { name: "Apply for Leave", page: "leave-application" },
+    { name: "AI Tutor", page: "ai-tutor" },
+    { name: "Student Community", page: "student-community" },
+    { name: "Project Exchange", page: "exchange" },
+    { name: "Live Learning Rooms", page: "live-rooms" },
   ];
 
   const roleMenuItems = {
     vice_principal_academic: [
-      { name: "Dashboard", page: "dashboard" }, { name: "Subjects", page: "subjects" }, { name: "Assign Teachers", page: "teachers" },
+      { name: "Dashboard", page: "dashboard" }, { name: "School Insights", page: "school-insights" }, { name: "Subjects", page: "subjects" }, { name: "Assign Teachers", page: "teachers" },
       { name: "Timetable", page: "timetable" }, { name: "Examinations", page: "examinations" }, { name: "CBT Question Bank", page: "cbt" }, { name: "CBT Assessments", page: "cbt-assessments" }, { name: "Results Management", page: "results" },
       { name: "Promotion", page: "promotions" }, { name: "Academic Reports", page: "report-cards" }, { name: "Communication", page: "communication" },
     ],
     vice_principal_admin: [
-      { name: "Dashboard", page: "dashboard" }, { name: "Staff Management", page: "staff" }, { name: "Staff Attendance", page: "staff-attendance" },
+      { name: "Dashboard", page: "dashboard" }, { name: "School Insights", page: "school-insights" }, { name: "Staff Management", page: "staff" }, { name: "Staff Attendance", page: "staff-attendance" },
       { name: "Leave Management", page: "leave-requests" }, { name: "Discipline / Behaviour", page: "discipline-cases" }, { name: "Inventory / Assets", page: "asset-register" },
       { name: "Events Management", page: "school-events" }, { name: "Health & Safety", page: "safety-incidents" }, { name: "Facilities Management", page: "school-facilities" },
       { name: "Reports", page: "report-cards" },
     ],
     nursery_head: [
-      { name: "Dashboard", page: "dashboard" }, { name: "Nursery Pupils", page: "students" }, { name: "Nursery Teachers", page: "teachers" },
+      { name: "Dashboard", page: "dashboard" }, { name: "School Insights", page: "school-insights" }, { name: "Nursery Pupils", page: "students" }, { name: "Nursery Teachers", page: "teachers" },
       { name: "Nursery Classes", page: "classes" }, { name: "Assessment", page: "results" }, { name: "Attendance", page: "attendance" },
       { name: "Timetable", page: "timetable" }, { name: "Reports", page: "report-cards" }, { name: "Communication", page: "communication" },
     ],
     primary_headmaster: [
-      { name: "Dashboard", page: "dashboard" }, { name: "Primary Classes", page: "classes" }, { name: "Primary Teachers", page: "teachers" },
+      { name: "Dashboard", page: "dashboard" }, { name: "School Insights", page: "school-insights" }, { name: "Primary Classes", page: "classes" }, { name: "Primary Teachers", page: "teachers" },
       { name: "Subjects", page: "subjects" }, { name: "Attendance", page: "attendance" }, { name: "CBT Question Bank", page: "cbt" }, { name: "CBT Assessments", page: "cbt-assessments" }, { name: "Assessment", page: "results" },
       { name: "Promotion", page: "promotions" }, { name: "Reports", page: "report-cards" }, { name: "Communication", page: "communication" },
     ],
     secondary_principal: [
-      { name: "Dashboard", page: "dashboard" }, { name: "JSS Management", page: "classes" }, { name: "SSS Management", page: "classes" },
+      { name: "Dashboard", page: "dashboard" }, { name: "School Insights", page: "school-insights" }, { name: "JSS Management", page: "classes" }, { name: "SSS Management", page: "classes" },
       { name: "Subjects", page: "subjects" }, { name: "Teachers", page: "teachers" }, { name: "Examinations", page: "examinations" }, { name: "CBT Question Bank", page: "cbt" }, { name: "CBT Assessments", page: "cbt-assessments" }, { name: "External Exams (WAEC/NECO)", page: "external-exams" }, { name: "Practicals", page: "practicals" },
       { name: "Results", page: "results" }, { name: "Promotion", page: "promotions" }, { name: "Graduation & Alumni", page: "graduation" }, { name: "Reports", page: "report-cards" }, { name: "Communication", page: "communication" },
     ],
     teacher: [
       { name: "Dashboard", page: "dashboard" }, { name: "My Classes", page: "classes" }, { name: "My Subjects", page: "subjects" },
       { name: "Take Attendance", page: "attendance" }, { name: "Assignments", page: "assignments" }, { name: "CBT Question Bank", page: "cbt" }, { name: "Upload CA Scores", page: "result-entry" },
-      { name: "Upload Exam Scores", page: "result-entry" }, { name: "View Students", page: "students" }, { name: "Class Timetable", page: "timetable" }, { name: "Messages", page: "messages" },
+      { name: "Upload Exam Scores", page: "result-entry" }, { name: "View Students", page: "students" },       { name: "Class Timetable", page: "timetable" }, { name: "Messages", page: "messages" }, { name: "AI Tutor", page: "ai-tutor" }, { name: "Community Moderation", page: "community-moderation" },
     ],
     form_teacher: [
       { name: "Dashboard", page: "dashboard" }, { name: "My Class", page: "classes" }, { name: "Class Attendance", page: "attendance" },
       { name: "Behaviour Reports", page: "discipline-cases" }, { name: "Student Profiles", page: "students" }, { name: "Recommend Promotion", page: "promotions" },
-      { name: "Assignments", page: "assignments" }, { name: "Parent Communication", page: "communication" }, { name: "Messages", page: "messages" },
+      { name: "Assignments", page: "assignments" },       { name: "Parent Communication", page: "communication" }, { name: "Messages", page: "messages" }, { name: "AI Tutor", page: "ai-tutor" }, { name: "Community Moderation", page: "community-moderation" },
     ],
     bursar: [
       { name: "Dashboard", page: "dashboard" }, { name: "Receive Payments", page: "fees-payments" }, { name: "Invoices / Receipts", page: "fees-payments" },
@@ -201,6 +220,15 @@ export default function Sidebar({
               : role === "student"
                 ? studentMenuItems
                 : roleMenuItems[role] || [{ name: "Dashboard", page: "dashboard" }];
+
+  const visibleMenuItems = annotateSchoolOsMenuItems([
+    ...menuItems,
+    { name: "Work Inbox", page: "work-inbox" },
+    { name: "Global Search", page: "global-search" },
+    { name: "Notifications", page: "notifications" },
+    { name: "Notification Preferences", page: "notification-preferences" },
+    { name: "Support Centre", page: "support-centre" },
+  ]);
 
   return (
     <>
@@ -279,9 +307,10 @@ export default function Sidebar({
               ← Back to Organization
             </div>
           )}
-          {menuItems.map((item) => (
+          {visibleMenuItems.map((item) => (
             <div
-              key={item.page}
+              key={`${item.page}-${item.name}`}
+              title={item.capability?.purpose || item.name}
               onClick={() => {
                 setPage(item.page);
                 closeSidebar();

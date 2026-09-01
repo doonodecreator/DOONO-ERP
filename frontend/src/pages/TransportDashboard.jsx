@@ -1,338 +1,73 @@
-import React, { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import api from "../services/api";
 import { arrayFromResponse } from "../utils/response";
+import PageContainer from "../components/layout/PageContainer";
+import PageHeader from "../components/layout/PageHeader";
+import SectionCard from "../components/layout/SectionCard";
+import DataTable from "../components/tables/DataTable";
+import DashboardGrid from "../components/dashboard/DashboardGrid";
+import StatCard from "../components/dashboard/StatCard";
+import LoadingSpinner from "../components/feedback/LoadingSpinner";
+import Alert from "../components/feedback/Alert";
+import Button from "../components/forms/Button";
+import Modal from "../components/modals/Modal";
+
+const emptyVehicle = { vehicle_number: "", model: "", capacity: 14, driver_name: "", driver_phone: "", status: "Active" };
+const emptyRoute = { route_name: "", description: "", vehicle_id: "", fare_amount: "" };
+const emptyAllocation = { transport_route_id: "", student_id: "", pickup_point: "" };
+const emptyStop = { transport_route_id: "", stop_name: "", address: "", pickup_time: "", dropoff_time: "", sequence: 1 };
+const emptyInspection = { vehicle_id: "", inspection_date: new Date().toISOString().slice(0, 10), status: "passed", odometer: "", notes: "", next_due_date: "" };
 
 export default function TransportDashboard() {
-    const [activeTab, setActiveTab] = useState("allocations");
-    const [loading, setLoading] = useState(false);
-    const [vehicles, setVehicles] = useState([]);
-    const [routes, setRoutes] = useState([]);
-    const [allocations, setAllocations] = useState([]);
-    const [students, setStudents] = useState([]);
+  const [activeTab, setActiveTab] = useState("allocations");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [vehicles, setVehicles] = useState([]); const [routes, setRoutes] = useState([]); const [allocations, setAllocations] = useState([]); const [students, setStudents] = useState([]); const [stops, setStops] = useState([]); const [inspections, setInspections] = useState([]);
+  const [modal, setModal] = useState(null);
+  const [vehicleForm, setVehicleForm] = useState(emptyVehicle); const [routeForm, setRouteForm] = useState(emptyRoute); const [allocationForm, setAllocationForm] = useState(emptyAllocation); const [stopForm, setStopForm] = useState(emptyStop); const [inspectionForm, setInspectionForm] = useState(emptyInspection);
 
-    const [showVehicleModal, setShowVehicleModal] = useState(false);
-    const [showRouteModal, setShowRouteModal] = useState(false);
-    const [showAllocationModal, setShowAllocationModal] = useState(false);
+  const loadTransportData = useCallback(async () => {
+    try {
+      setLoading(true); setError("");
+      const responses = await Promise.all([api.get("/vehicles"), api.get("/transport-routes"), api.get("/transport-allocations"), api.get("/students"), api.get("/transport-stops"), api.get("/vehicle-inspections")]);
+      setVehicles(arrayFromResponse(responses[0])); setRoutes(arrayFromResponse(responses[1])); setAllocations(arrayFromResponse(responses[2])); setStudents(arrayFromResponse(responses[3])); setStops(arrayFromResponse(responses[4])); setInspections(arrayFromResponse(responses[5]));
+    } catch (reason) {
+      setError(reason?.response?.data?.message || "The transport workspace could not be loaded."); setVehicles([]); setRoutes([]); setAllocations([]); setStudents([]); setStops([]); setInspections([]);
+    } finally { setLoading(false); }
+  }, []);
+  useEffect(() => { loadTransportData(); }, [loadTransportData]);
 
-    const [vehicleForm, setVehicleForm] = useState({ vehicle_number: "", model: "", capacity: 14, driver_name: "", driver_phone: "", status: "Active" });
-    const [routeForm, setRouteForm] = useState({ route_name: "", description: "", vehicle_id: "", fare_amount: "" });
-    const [allocationForm, setAllocationForm] = useState({ transport_route_id: "", student_id: "", pickup_point: "" });
+  async function submit(endpoint, payload, success, reset) {
+    try { setSaving(true); setError(""); await api.post(endpoint, payload); setMessage(success); reset(); setModal(null); await loadTransportData(); }
+    catch (reason) { setError(reason?.response?.data?.message || "The transport record could not be saved."); }
+    finally { setSaving(false); }
+  }
+  const studentName = (student) => student?.full_name || [student?.surname, student?.first_name, student?.last_name].filter(Boolean).join(" ") || `Student #${student?.id || "—"}`;
+  const eligibleStudents = useMemo(() => students.filter((student) => String(student?.status || "").toLowerCase() === "active"), [students]);
+  const latestInspectionByVehicle = useMemo(() => {
+    const sorted = [...inspections].sort((a, b) => `${b?.inspection_date || ""}-${b?.id || ""}`.localeCompare(`${a?.inspection_date || ""}-${a?.id || ""}`));
+    return sorted.reduce((result, inspection) => { if (result[inspection.vehicle_id] === undefined) result[inspection.vehicle_id] = inspection; return result; }, {});
+  }, [inspections]);
+  const routeVehicle = (route) => route?.vehicle || vehicles.find((vehicle) => Number(vehicle.id) === Number(route?.vehicle_id));
+  const routeOccupancy = (routeId) => allocations.filter((allocation) => Number(allocation.transport_route_id) === Number(routeId) && allocation.status === "Active").length;
+  const allocatableRoutes = useMemo(() => routes.filter((route) => {
+    const vehicle = routeVehicle(route); const inspection = latestInspectionByVehicle[vehicle?.id];
+    const dueDate = inspection?.next_due_date ? new Date(inspection.next_due_date) : null;
+    return vehicle && !["maintenance", "inactive", "retired"].includes(String(vehicle.status || "").toLowerCase()) && inspection?.status === "passed" && (!dueDate || Number.isNaN(dueDate.getTime()) || dueDate >= new Date(new Date().toDateString())) && routeOccupancy(route.id) < Number(vehicle.capacity || 0);
+  }), [routes, vehicles, inspections, allocations, latestInspectionByVehicle]);
+  const routeName = useMemo(() => Object.fromEntries(routes.map((route) => [route.id, route.route_name])), [routes]);
+  const vehicleName = useMemo(() => Object.fromEntries(vehicles.map((vehicle) => [vehicle.id, vehicle.vehicle_number])), [vehicles]);
+  const allocationColumns = [{ key: "student", label: "Student", render: (item) => studentName(item.student) }, { key: "route", label: "Route", render: (item) => item.route?.route_name || "—" }, { key: "vehicle", label: "Vehicle", render: (item) => item.route?.vehicle?.vehicle_number || "Unassigned" }, { key: "pickup_point", label: "Pickup", render: (item) => item.pickup_point || "Main gate" }, { key: "status", label: "Status" }];
+  const routeColumns = [{ key: "route_name", label: "Route" }, { key: "vehicle", label: "Vehicle", render: (item) => item.vehicle?.vehicle_number || "Unassigned" }, { key: "fare_amount", label: "Fare", render: (item) => `₦${Number(item.fare_amount || 0).toLocaleString()}` }, { key: "stops", label: "Stops", render: (item) => stops.filter((stop) => Number(stop.transport_route_id) === Number(item.id) && stop.is_active !== false).length }];
+  const vehicleColumns = [{ key: "vehicle_number", label: "Vehicle" }, { key: "model", label: "Model", render: (item) => item.model || "—" }, { key: "capacity", label: "Capacity", render: (item) => `${item.capacity || 0} seats` }, { key: "driver_name", label: "Driver", render: (item) => item.driver_name || "Unassigned" }, { key: "status", label: "Status" }];
+  const stopColumns = [{ key: "stop_name", label: "Stop" }, { key: "route", label: "Route", render: (item) => routeName[item.transport_route_id] || "—" }, { key: "pickup_time", label: "Pickup", render: (item) => item.pickup_time || "—" }, { key: "dropoff_time", label: "Drop-off", render: (item) => item.dropoff_time || "—" }, { key: "sequence", label: "Order" }];
+  const inspectionColumns = [{ key: "vehicle", label: "Vehicle", render: (item) => item.vehicle?.vehicle_number || vehicleName[item.vehicle_id] || "—" }, { key: "inspection_date", label: "Date" }, { key: "status", label: "Result", render: (item) => <span className={`rounded-full px-2 py-1 text-xs font-bold ${item.status === "passed" ? "bg-emerald-100 text-emerald-700" : item.status === "failed" ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"}`}>{item.status}</span> }, { key: "next_due_date", label: "Next due", render: (item) => item.next_due_date || "—" }, { key: "notes", label: "Notes", render: (item) => item.notes || "—" }];
 
-    useEffect(() => {
-        loadTransportData();
-    }, []);
+  const form = modal === "vehicle" ? <form onSubmit={(event) => { event.preventDefault(); submit("/vehicles", { ...vehicleForm, capacity: Number(vehicleForm.capacity) }, "Vehicle registered successfully.", () => setVehicleForm(emptyVehicle)); }} className="space-y-4"><label className="block text-sm font-semibold">Vehicle number<input required value={vehicleForm.vehicle_number} onChange={(event) => setVehicleForm({ ...vehicleForm, vehicle_number: event.target.value })} className="ui-input mt-1 w-full" /></label><div className="grid gap-4 sm:grid-cols-2"><label className="block text-sm font-semibold">Model<input value={vehicleForm.model} onChange={(event) => setVehicleForm({ ...vehicleForm, model: event.target.value })} className="ui-input mt-1 w-full" /></label><label className="block text-sm font-semibold">Capacity<input required min="1" type="number" value={vehicleForm.capacity} onChange={(event) => setVehicleForm({ ...vehicleForm, capacity: event.target.value })} className="ui-input mt-1 w-full" /></label></div><label className="block text-sm font-semibold">Driver name<input value={vehicleForm.driver_name} onChange={(event) => setVehicleForm({ ...vehicleForm, driver_name: event.target.value })} className="ui-input mt-1 w-full" /></label><label className="block text-sm font-semibold">Driver phone<input value={vehicleForm.driver_phone} onChange={(event) => setVehicleForm({ ...vehicleForm, driver_phone: event.target.value })} className="ui-input mt-1 w-full" /></label><div className="flex justify-end"><Button type="submit" loading={saving}>Save vehicle</Button></div></form> : modal === "route" ? <form onSubmit={(event) => { event.preventDefault(); submit("/transport-routes", routeForm, "Transport route created successfully.", () => setRouteForm(emptyRoute)); }} className="space-y-4"><label className="block text-sm font-semibold">Route name<input required value={routeForm.route_name} onChange={(event) => setRouteForm({ ...routeForm, route_name: event.target.value })} className="ui-input mt-1 w-full" /></label><label className="block text-sm font-semibold">Vehicle<select value={routeForm.vehicle_id} onChange={(event) => setRouteForm({ ...routeForm, vehicle_id: event.target.value })} className="ui-input mt-1 w-full"><option value="">Unassigned</option>{vehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.vehicle_number}</option>)}</select></label><label className="block text-sm font-semibold">Fare amount<input required min="0" type="number" value={routeForm.fare_amount} onChange={(event) => setRouteForm({ ...routeForm, fare_amount: event.target.value })} className="ui-input mt-1 w-full" /></label><label className="block text-sm font-semibold">Description<textarea value={routeForm.description} onChange={(event) => setRouteForm({ ...routeForm, description: event.target.value })} className="ui-input mt-1 w-full" /></label><div className="flex justify-end"><Button type="submit" loading={saving}>Save route</Button></div></form> : modal === "allocation" ? <form onSubmit={(event) => { event.preventDefault(); submit("/transport-allocations", allocationForm, "Student allocated to the route.", () => setAllocationForm(emptyAllocation)); }} className="space-y-4"><label className="block text-sm font-semibold">Student<select required value={allocationForm.student_id} onChange={(event) => setAllocationForm({ ...allocationForm, student_id: event.target.value })} className="ui-input mt-1 w-full"><option value="">Select active student</option>{eligibleStudents.map((student) => <option key={student.id} value={student.id}>{studentName(student)} — {student.admission_number || "No admission number"}</option>)}</select></label><label className="block text-sm font-semibold">Route<select required value={allocationForm.transport_route_id} onChange={(event) => setAllocationForm({ ...allocationForm, transport_route_id: event.target.value })} className="ui-input mt-1 w-full"><option value="">Select transport-ready route</option>{allocatableRoutes.map((route) => { const vehicle = routeVehicle(route); return <option key={route.id} value={route.id}>{route.route_name} — {vehicle.vehicle_number} ({routeOccupancy(route.id)}/{vehicle.capacity} seats)</option>; })}</select>{allocatableRoutes.length === 0 && <span className="mt-1 block text-xs font-normal text-amber-700">No route is currently ready. Assign a vehicle, record a current passed inspection, and keep capacity available.</span>}</label><label className="block text-sm font-semibold">Pickup point<input value={allocationForm.pickup_point} onChange={(event) => setAllocationForm({ ...allocationForm, pickup_point: event.target.value })} className="ui-input mt-1 w-full" /></label><div className="flex justify-end"><Button type="submit" loading={saving}>Allocate student</Button></div></form> : modal === "stop" ? <form onSubmit={(event) => { event.preventDefault(); submit("/transport-stops", { ...stopForm, sequence: Number(stopForm.sequence) }, "Transport stop created successfully.", () => setStopForm(emptyStop)); }} className="space-y-4"><label className="block text-sm font-semibold">Route<select required value={stopForm.transport_route_id} onChange={(event) => setStopForm({ ...stopForm, transport_route_id: event.target.value })} className="ui-input mt-1 w-full"><option value="">Select route</option>{routes.map((route) => <option key={route.id} value={route.id}>{route.route_name}</option>)}</select></label><label className="block text-sm font-semibold">Stop name<input required value={stopForm.stop_name} onChange={(event) => setStopForm({ ...stopForm, stop_name: event.target.value })} className="ui-input mt-1 w-full" /></label><label className="block text-sm font-semibold">Address<input value={stopForm.address} onChange={(event) => setStopForm({ ...stopForm, address: event.target.value })} className="ui-input mt-1 w-full" /></label><div className="grid gap-4 sm:grid-cols-3"><label className="block text-sm font-semibold">Pickup<input type="time" value={stopForm.pickup_time} onChange={(event) => setStopForm({ ...stopForm, pickup_time: event.target.value })} className="ui-input mt-1 w-full" /></label><label className="block text-sm font-semibold">Drop-off<input type="time" value={stopForm.dropoff_time} onChange={(event) => setStopForm({ ...stopForm, dropoff_time: event.target.value })} className="ui-input mt-1 w-full" /></label><label className="block text-sm font-semibold">Order<input required min="1" type="number" value={stopForm.sequence} onChange={(event) => setStopForm({ ...stopForm, sequence: event.target.value })} className="ui-input mt-1 w-full" /></label></div><div className="flex justify-end"><Button type="submit" loading={saving}>Save stop</Button></div></form> : <form onSubmit={(event) => { event.preventDefault(); submit("/vehicle-inspections", { ...inspectionForm, odometer: inspectionForm.odometer ? Number(inspectionForm.odometer) : null }, "Vehicle inspection recorded successfully.", () => setInspectionForm(emptyInspection)); }} className="space-y-4"><label className="block text-sm font-semibold">Vehicle<select required value={inspectionForm.vehicle_id} onChange={(event) => setInspectionForm({ ...inspectionForm, vehicle_id: event.target.value })} className="ui-input mt-1 w-full"><option value="">Select vehicle</option>{vehicles.map((vehicle) => <option key={vehicle.id} value={vehicle.id}>{vehicle.vehicle_number}</option>)}</select></label><div className="grid gap-4 sm:grid-cols-2"><label className="block text-sm font-semibold">Inspection date<input required type="date" value={inspectionForm.inspection_date} onChange={(event) => setInspectionForm({ ...inspectionForm, inspection_date: event.target.value })} className="ui-input mt-1 w-full" /></label><label className="block text-sm font-semibold">Result<select value={inspectionForm.status} onChange={(event) => setInspectionForm({ ...inspectionForm, status: event.target.value })} className="ui-input mt-1 w-full"><option value="passed">Passed</option><option value="needs_attention">Needs attention</option><option value="failed">Failed</option></select></label></div><label className="block text-sm font-semibold">Next due date<input type="date" value={inspectionForm.next_due_date} onChange={(event) => setInspectionForm({ ...inspectionForm, next_due_date: event.target.value })} className="ui-input mt-1 w-full" /></label><label className="block text-sm font-semibold">Notes<textarea value={inspectionForm.notes} onChange={(event) => setInspectionForm({ ...inspectionForm, notes: event.target.value })} className="ui-input mt-1 w-full" /></label><div className="flex justify-end"><Button type="submit" loading={saving}>Save inspection</Button></div></form>;
 
-    const loadTransportData = async () => {
-        setLoading(true);
-        try {
-            const [vehiclesRes, routesRes, allocationsRes, studentsRes] = await Promise.all([
-                api.get("/vehicles").catch(() => ({ data: { data: [] } })),
-                api.get("/transport-routes").catch(() => ({ data: { data: [] } })),
-                api.get("/transport-allocations").catch(() => ({ data: { data: [] } })),
-                api.get("/students").catch(() => ({ data: { data: [] } }))
-            ]);
-
-            setVehicles(arrayFromResponse(vehiclesRes));
-            setRoutes(arrayFromResponse(routesRes));
-            setAllocations(arrayFromResponse(allocationsRes));
-            setStudents(arrayFromResponse(studentsRes));
-        } catch (err) {
-            console.error("Error loading transport data", err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSaveVehicle = async (e) => {
-        e.preventDefault();
-        try {
-            await api.post("/vehicles", vehicleForm);
-            setShowVehicleModal(false);
-            setVehicleForm({ vehicle_number: "", model: "", capacity: 14, driver_name: "", driver_phone: "", status: "Active" });
-            loadTransportData();
-        } catch (err) {
-            alert("Failed to register vehicle.");
-        }
-    };
-
-    const handleSaveRoute = async (e) => {
-        e.preventDefault();
-        try {
-            await api.post("/transport-routes", routeForm);
-            setShowRouteModal(false);
-            setRouteForm({ route_name: "", description: "", vehicle_id: "", fare_amount: "" });
-            loadTransportData();
-        } catch (err) {
-            alert("Failed to create transport route.");
-        }
-    };
-
-    const handleAllocateStudent = async (e) => {
-        e.preventDefault();
-        try {
-            await api.post("/transport-allocations", allocationForm);
-            setShowAllocationModal(false);
-            setAllocationForm({ transport_route_id: "", student_id: "", pickup_point: "" });
-            loadTransportData();
-        } catch (err) {
-            alert(err.response?.data?.message || "Failed to allocate student to route.");
-        }
-    };
-
-    return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-6 text-gray-800">
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm mb-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">School Transport Portal</h1>
-                        <p className="text-sm text-gray-500 mt-1">Manage bus fleets, define route schedules, assign drivers, and allocate student bus passes.</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        <button type="button" onClick={() => setShowVehicleModal(true)} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
-                            + Add Vehicle
-                        </button>
-                        <button type="button" onClick={() => setShowRouteModal(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
-                            + Add Route
-                        </button>
-                        <button type="button" onClick={() => setShowAllocationModal(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
-                            + Allocate Student
-                        </button>
-                    </div>
-                </div>
-
-                <div className="flex gap-2 border-b border-gray-100 mt-6 overflow-x-auto pb-px">
-                    {["allocations", "routes", "vehicles"].map((tab) => (
-                        <button type="button" key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-amber-600 text-amber-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
-                            {tab === "allocations" ? "Student Allocations" : tab === "routes" ? "Bus Routes" : "Vehicle Fleet"}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {loading ? (
-                <div className="flex items-center justify-center p-12 bg-white rounded-2xl border border-gray-100">
-                    <div className="w-8 h-8 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                </div>
-            ) : (
-                <div className="space-y-6">
-                    {activeTab === "allocations" && (
-                        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-                            <div className="p-5 border-b border-gray-100">
-                                <h3 className="font-bold text-slate-900">Assigned Transport Passengers</h3>
-                            </div>
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-medium">
-                                    <tr>
-                                        <th className="p-4">Student</th>
-                                        <th className="p-4">Route Name</th>
-                                        <th className="p-4">Assigned Vehicle</th>
-                                        <th className="p-4">Pickup Point</th>
-                                        <th className="p-4">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {allocations.map(a => {
-                                        const student = a.student || {};
-                                        const route = a.route || {};
-                                        const vehicle = route.vehicle || {};
-                                        return (
-                                            <tr key={a.id} className="hover:bg-gray-50/70">
-                                                <td className="p-4 font-semibold text-slate-900">{student.surname} {student.first_name} ({student.admission_number})</td>
-                                                <td className="p-4 font-medium text-blue-600">{route.route_name || "N/A"}</td>
-                                                <td className="p-4">{vehicle.vehicle_number ? `${vehicle.vehicle_number} (${vehicle.driver_name || 'No driver'})` : 'Unassigned'}</td>
-                                                <td className="p-4 text-gray-600">{a.pickup_point || "Main Gate"}</td>
-                                                <td className="p-4"><span className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md text-xs font-semibold">{a.status}</span></td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-{activeTab === "routes" && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {routes.map(r => (
-                                <div key={r.id} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-4">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <h3 className="font-bold text-slate-900 text-lg">{r.route_name}</h3>
-                                            <p className="text-xs text-gray-500 mt-0.5">{r.description || "No specific itinerary notes."}</p>
-                                        </div>
-                                        <span className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full text-xs font-semibold font-mono">
-                                            ₦{Number(r.fare_amount).toLocaleString()}
-                                        </span>
-                                    </div>
-                                    <div className="border-t border-gray-100 pt-3 text-xs space-y-1">
-                                        <p><span className="font-semibold text-gray-400">Assigned Bus:</span> {r.vehicle?.vehicle_number || "None Assigned"}</p>
-                                        <p><span className="font-semibold text-gray-400">Driver:</span> {r.vehicle?.driver_name || "N/A"} ({r.vehicle?.driver_phone || "No phone"})</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {activeTab === "vehicles" && (
-                        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-                            <div className="p-5 border-b border-gray-100">
-                                <h3 className="font-bold text-slate-900">School Vehicle Fleet & Drivers</h3>
-                            </div>
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-medium">
-                                    <tr>
-                                        <th className="p-4">Vehicle Number</th>
-                                        <th className="p-4">Model</th>
-                                        <th className="p-4 text-center">Capacity</th>
-                                        <th className="p-4">Driver Name</th>
-                                        <th className="p-4">Driver Phone</th>
-                                        <th className="p-4">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {vehicles.map(v => (
-                                        <tr key={v.id} className="hover:bg-gray-50/70">
-                                            <td className="p-4 font-bold font-mono text-slate-900">{v.vehicle_number}</td>
-                                            <td className="p-4 text-gray-600">{v.model || "Standard Bus"}</td>
-                                            <td className="p-4 text-center font-semibold">{v.capacity} seats</td>
-                                            <td className="p-4 font-medium text-slate-800">{v.driver_name || "Unassigned"}</td>
-                                            <td className="p-4 text-xs font-mono text-emerald-600">{v.driver_phone || "N/A"}</td>
-                                            <td className="p-4">
-                                                <span className={`px-2 py-1 rounded-md text-xs font-semibold ${v.status === 'Active' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                                                    {v.status}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* ADD VEHICLE MODAL */}
-            {showVehicleModal && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
-                        <div className="p-5 border-b border-gray-100 flex justify-between items-center">
-                            <h3 className="font-bold text-slate-900">Register Vehicle</h3>
-                            <button type="button" onClick={() => setShowVehicleModal(false)} className="text-gray-400">×</button>
-                        </div>
-                        <form onSubmit={handleSaveVehicle} className="p-5 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Vehicle Number</label>
-                                    <input type="text" required value={vehicleForm.vehicle_number} onChange={(e) => setVehicleForm({...vehicleForm, vehicle_number: e.target.value})} className="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none" placeholder="ABC-123-XY" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Capacity</label>
-                                    <input type="number" required min="1" value={vehicleForm.capacity} onChange={(e) => setVehicleForm({...vehicleForm, capacity: e.target.value})} className="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Vehicle Model</label>
-                                <input type="text" value={vehicleForm.model} onChange={(e) => setVehicleForm({...vehicleForm, model: e.target.value})} className="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Toyota Hiace Bus" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Driver Name</label>
-                                    <input type="text" value={vehicleForm.driver_name} onChange={(e) => setVehicleForm({...vehicleForm, driver_name: e.target.value})} className="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none" placeholder="Driver Full Name" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Driver Phone</label>
-                                    <input type="text" value={vehicleForm.driver_phone} onChange={(e) => setVehicleForm({...vehicleForm, driver_phone: e.target.value})} className="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none" placeholder="080..." />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Status</label>
-                                <select value={vehicleForm.status} onChange={(e) => setVehicleForm({...vehicleForm, status: e.target.value})} className="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
-                                    <option value="Active">Active</option>
-                                    <option value="Maintenance">Maintenance</option>
-                                    <option value="Inactive">Inactive</option>
-                                </select>
-                            </div>
-                            <div className="flex justify-end gap-2 pt-2">
-                                <button type="button" onClick={() => setShowVehicleModal(false)} className="px-4 py-2 text-sm text-gray-500">Cancel</button>
-                                <button type="submit" className="bg-amber-600 text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-sm">Save Vehicle</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* ADD ROUTE MODAL */}
-            {showRouteModal && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
-                        <div className="p-5 border-b border-gray-100 flex justify-between items-center">
-                            <h3 className="font-bold text-slate-900">Create Bus Route</h3>
-                            <button type="button" onClick={() => setShowRouteModal(false)} className="text-gray-400">×</button>
-                        </div>
-                        <form onSubmit={handleSaveRoute} className="p-5 space-y-4">
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Route Name</label>
-                                <input type="text" required value={routeForm.route_name} onChange={(e) => setRouteForm({...routeForm, route_name: e.target.value})} className="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Route A - GRA / Asaba" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Assign Vehicle</label>
-                                    <select value={routeForm.vehicle_id} onChange={(e) => setRouteForm({...routeForm, vehicle_id: e.target.value})} className="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                                        <option value="">-- Choose Vehicle --</option>
-                                        {vehicles.map(v => <option key={v.id} value={v.id}>{v.vehicle_number} ({v.driver_name || 'No driver'})</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Fare Amount (₦)</label>
-                                    <input type="number" required min="0" step="0.01" value={routeForm.fare_amount} onChange={(e) => setRouteForm({...routeForm, fare_amount: e.target.value})} className="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="15000" />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Description / Stops</label>
-                                <textarea rows="2" value={routeForm.description} onChange={(e) => setRouteForm({...routeForm, description: e.target.value})} className="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Major stops along route..."></textarea>
-                            </div>
-                            <div className="flex justify-end gap-2 pt-2">
-                                <button type="button" onClick={() => setShowRouteModal(false)} className="px-4 py-2 text-sm text-gray-500">Cancel</button>
-                                <button type="submit" className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-sm">Save Route</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* ALLOCATE STUDENT MODAL */}
-            {showAllocationModal && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
-                        <div className="p-5 border-b border-gray-100 flex justify-between items-center">
-                            <h3 className="font-bold text-slate-900">Allocate Student to Transport Route</h3>
-                            <button type="button" onClick={() => setShowAllocationModal(false)} className="text-gray-400">×</button>
-                        </div>
-                        <form onSubmit={handleAllocateStudent} className="p-5 space-y-4">
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Select Student</label>
-                                <select required value={allocationForm.student_id} onChange={(e) => setAllocationForm({...allocationForm, student_id: e.target.value})} className="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-                                    <option value="">-- Choose Student --</option>
-                                    {students.map(s => <option key={s.id} value={s.id}>{s.surname} {s.first_name} ({s.admission_number})</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Select Route</label>
-                                <select required value={allocationForm.transport_route_id} onChange={(e) => setAllocationForm({...allocationForm, transport_route_id: e.target.value})} className="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-                                    <option value="">-- Choose Route --</option>
-                                    {routes.map(r => <option key={r.id} value={r.id}>{r.route_name} (₦{Number(r.fare_amount).toLocaleString()})</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Pickup Point / Bus Stop</label>
-                                <input type="text" value={allocationForm.pickup_point} onChange={(e) => setAllocationForm({...allocationForm, pickup_point: e.target.value})} className="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="e.g. Winner's Chapel Junction" />
-                            </div>
-                            <div className="flex justify-end gap-2 pt-2">
-                                <button type="button" onClick={() => setShowAllocationModal(false)} className="px-4 py-2 text-sm text-gray-500">Cancel</button>
-                                <button type="submit" className="bg-emerald-600 text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-sm">Allocate Pass</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
+  const table = activeTab === "allocations" ? <DataTable columns={allocationColumns} data={allocations} emptyTitle="No transport allocations" emptyMessage="Allocate an active student to a route when transport is arranged." /> : activeTab === "routes" ? <DataTable columns={routeColumns} data={routes} emptyTitle="No routes" emptyMessage="Create a route, then add its stops." /> : activeTab === "vehicles" ? <DataTable columns={vehicleColumns} data={vehicles} emptyTitle="No vehicles" emptyMessage="Register the school’s first vehicle before creating routes." /> : activeTab === "stops" ? <DataTable columns={stopColumns} data={stops} emptyTitle="No stops" emptyMessage="Add ordered pickup and drop-off points to a route." /> : <DataTable columns={inspectionColumns} data={inspections} emptyTitle="No inspections" emptyMessage="Record a safety inspection before a vehicle is used for school transport." />;
+  const tabButtons = [["allocations", "Allocations"], ["routes", "Routes"], ["stops", "Stops"], ["vehicles", "Vehicles"], ["inspections", "Inspections"]];
+  return <PageContainer><PageHeader title="School Transport" subtitle="Manage vehicles, routes, ordered stops, student allocations, and safety inspections." action={<div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={loadTransportData} loading={loading}>Refresh</Button><Button onClick={() => setModal(activeTab === "routes" ? "route" : activeTab === "stops" ? "stop" : activeTab === "vehicles" ? "vehicle" : activeTab === "inspections" ? "inspection" : "allocation")}>{activeTab === "routes" ? "Add route" : activeTab === "stops" ? "Add stop" : activeTab === "vehicles" ? "Add vehicle" : activeTab === "inspections" ? "Record inspection" : "Allocate student"}</Button></div>} />{error && <Alert variant="error" action={<Button size="sm" variant="secondary" onClick={loadTransportData}>Retry</Button>}>{error}</Alert>}{message && <Alert variant="success" action={<Button size="sm" variant="secondary" onClick={() => setMessage("")}>Dismiss</Button>}>{message}</Alert>}<DashboardGrid><StatCard title="Vehicles" value={vehicles.length} color="primary" /><StatCard title="Routes" value={routes.length} color="info" /><StatCard title="Allocations" value={allocations.length} color="success" /><StatCard title="Inspection records" value={inspections.length} color="warning" /></DashboardGrid><div className="my-5 flex gap-2 overflow-x-auto rounded-xl border border-slate-200 bg-white p-2 shadow-sm">{tabButtons.map(([key, label]) => <Button key={key} variant={activeTab === key ? "primary" : "secondary"} onClick={() => setActiveTab(key)}>{label} ({key === "allocations" ? allocations.length : key === "routes" ? routes.length : key === "stops" ? stops.length : key === "vehicles" ? vehicles.length : inspections.length})</Button>)}</div>{loading ? <LoadingSpinner text="Loading transport workspace..." /> : <SectionCard title={tabButtons.find(([key]) => key === activeTab)?.[1] || "Transport"} subtitle="All records shown here belong to the active school context.">{table}</SectionCard>}<Modal open={Boolean(modal)} title={modal === "vehicle" ? "Register vehicle" : modal === "route" ? "Create route" : modal === "allocation" ? "Allocate student" : modal === "stop" ? "Add route stop" : "Record vehicle inspection"} description="Complete the required fields, then save the record to the school transport workspace." onClose={() => setModal(null)}>{form}</Modal></PageContainer>;
 }

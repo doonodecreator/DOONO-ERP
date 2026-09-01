@@ -11,7 +11,7 @@ import Button from "../components/forms/Button";
 import Alert from "../components/feedback/Alert";
 import PortalAccountModal from "../components/modals/PortalAccountModal";
 
-export default function Parents({ setPage, setSelectedParent }) {
+export default function Parents({ setPage, setSelectedParent, focusId }) {
   const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
   const roleSlug = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
   const canManageLinks = ["super_admin", "proprietor", "principal", "vice_principal_admin"].includes(roleSlug);
@@ -36,6 +36,15 @@ export default function Parents({ setPage, setSelectedParent }) {
   };
 
   useEffect(() => { loadParents(); }, []);
+
+  useEffect(() => {
+    if (!focusId || !Array.isArray(parents) || parents.length === 0) return;
+    const focused = parents.find((parent) => Number(parent.id) === Number(focusId));
+    if (focused) {
+      setSelectedParent?.(focused);
+      setPage("parent-profile");
+    }
+  }, [focusId, parents, setPage, setSelectedParent]);
 
   const filteredParents = parents.filter((parent) => `${parent.father_name || ""} ${parent.father_phone || ""} ${parent.mother_name || ""} ${parent.guardian_name || ""} ${parent.guardian_phone || ""}`.toLowerCase().includes(search.toLowerCase()));
   const nameFor = (parent) => parent.father_name || parent.mother_name || parent.guardian_name || "Parent record";

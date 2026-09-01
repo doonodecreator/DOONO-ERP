@@ -1,0 +1,68 @@
+=== LEGACY ROLE PATTERNS ===
+=== ROLE HELPER USAGE ===
+frontend/src/App.jsx:4:import { getPrimaryRoleSlug } from "./utils/role";
+frontend/src/App.jsx:231:  const roleSlug = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/components/Navbar.jsx:4:import { getPrimaryRoleSlug, formatRoleLabel } from "../utils/role";
+frontend/src/components/Navbar.jsx:15:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/components/Sidebar.jsx:3:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/components/Sidebar.jsx:13:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/components/feedback/DONOGuide.jsx:3:import { getPrimaryRoleSlug } from "../../utils/role";
+frontend/src/components/feedback/DONOGuide.jsx:22:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/components/layout/SchoolOSContextBar.jsx:2:import { getPrimaryRoleSlug, formatRoleLabel } from "../../utils/role";
+frontend/src/components/layout/SchoolOSContextBar.jsx:14:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/AddTeacher.jsx:2:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/AddTeacher.jsx:6:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/Attendance.jsx:4:import { getPrimaryRoleSlug } from '../utils/role';
+frontend/src/pages/Attendance.jsx:10:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/Dashboard.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/Dashboard.jsx:23:  const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school }) || "user";
+frontend/src/pages/Fees.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/Fees.jsx:32:    const userRole = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/FeesAndPayments.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/FeesAndPayments.jsx:21:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/LeaveRequests.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/LeaveRequests.jsx:37:  const roleSlug = getPrimaryRoleSlug({
+frontend/src/pages/ParentProfile.jsx:3:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/ParentProfile.jsx:10:  const roleSlug = getPrimaryRoleSlug({
+frontend/src/pages/Parents.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/Parents.jsx:16:  const roleSlug = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/ResultEntry.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/ResultEntry.jsx:15:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/RoleInvitations.jsx:6:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/RoleInvitations.jsx:29:    const roleSlug = getPrimaryRoleSlug({ roles: authRoles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/Schools.jsx:9:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/Schools.jsx:14:  const roleSlug = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/Settings.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/Settings.jsx:11:    const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/Staff.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/Staff.jsx:15:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/StudentProfile.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/StudentProfile.jsx:17:  const roleSlug = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/Students.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/Students.jsx:15:  const roleSlug = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/Teachers.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/Teachers.jsx:12:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/Assignments.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/Assignments.jsx:19:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/Communication.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/Communication.jsx:46:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/CbtQuestionBank.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/CbtQuestionBank.jsx:28:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/TransportTracking.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/TransportTracking.jsx:19:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/LeaveApplication.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/LeaveApplication.jsx:15:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/PortalFees.jsx:11:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/PortalFees.jsx:15:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/SupportCentre.jsx:3:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/SupportCentre.jsx:38:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/AiTutor.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/AiTutor.jsx:16:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/ExchangeWorkspace.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/ExchangeWorkspace.jsx:24:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/pages/LiveRooms.jsx:4:import { getPrimaryRoleSlug } from "../utils/role";
+frontend/src/pages/LiveRooms.jsx:21:  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+frontend/src/utils/role.js:1:export function getPrimaryRoleSlug({
+=== DOUBLE V1 PATHS ===
+frontend/src/services/api.js:17:    "/api/v1";
+=== FETCH USAGE ===

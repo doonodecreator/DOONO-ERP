@@ -32,6 +32,7 @@ export default function ResultEntry() {
   const [selectedSession, setSelectedSession] = useState("");
   const [selectedTerm, setSelectedTerm] = useState("");
   const [submissionId, setSubmissionId] = useState(null);
+  const [submissionStatus, setSubmissionStatus] = useState("");
 
   useEffect(() => {
     async function loadClasses() {
@@ -55,7 +56,7 @@ export default function ResultEntry() {
 
   useEffect(() => {
     if (!selectedClass) {
-              setStudents([]); setSubjects([]); setSessions([]); setTerms([]); setStructures([]); setGradingRules([]); setSubmissionId(null);
+              setStudents([]); setSubjects([]); setSessions([]); setTerms([]); setStructures([]); setGradingRules([]); setSubmissionId(null); setSubmissionStatus("");
 
       return;
     }
@@ -76,7 +77,7 @@ export default function ResultEntry() {
         const structureList = Array.isArray(payload.structures) ? payload.structures.filter((item) => item?.is_active !== false) : [];
         const gradingRuleList = Array.isArray(payload.grading_rules) ? payload.grading_rules : [];
         const enrollmentList = Array.isArray(payload.students) ? payload.students : [];
-        setSubjects(subjectList); setSessions(sessionList); setTerms(termList); setStructures(structureList); setGradingRules(gradingRuleList); setStudents(enrollmentList); setSubmissionId(null);
+        setSubjects(subjectList); setSessions(sessionList); setTerms(termList); setStructures(structureList); setGradingRules(gradingRuleList); setStudents(enrollmentList); setSubmissionId(null); setSubmissionStatus("");
         setSelectedSubject((current) => subjectList.some((item) => String(item.id) === String(current)) ? current : String(subjectList[0]?.id || ""));
         setSelectedSession((current) => sessionList.some((item) => String(item.id) === String(current)) ? current : String(sessionList[0]?.id || ""));
         setSelectedTerm((current) => termList.some((item) => String(item.id) === String(current)) ? current : String(termList[0]?.id || ""));
@@ -90,9 +91,58 @@ export default function ResultEntry() {
     loadRoster();
   }, [selectedClass]);
 
+  useEffect(() => {
+    if (!selectedClass || !selectedSubject || !selectedSession || !selectedTerm || loadingRoster) return undefined;
+    let cancelled = false;
+    async function loadExistingSubmission() {
+      try {
+        const response = await api.get("/result-submissions/current", {
+          params: {
+            class_id: Number(selectedClass),
+            subject_id: Number(selectedSubject),
+            academic_session_id: Number(selectedSession),
+            term_id: Number(selectedTerm),
+          },
+        });
+        if (cancelled) return;
+        const submission = response?.data?.submission;
+        setSubmissionId(submission?.id || null);
+        setSubmissionStatus(submission?.status || "");
+        if (submission) hydrateScores(response?.data?.results);
+      } catch (requestError) {
+        if (!cancelled) setError(requestError?.response?.data?.message || "Unable to check the current result submission.");
+      }
+    }
+    loadExistingSubmission();
+    return () => { cancelled = true; };
+  }, [selectedClass, selectedSubject, selectedSession, selectedTerm, loadingRoster]);
+
   const selectedClassName = classes.find((item) => String(item.id) === String(selectedClass))?.name || "";
   const selectedSubjectName = subjects.find((item) => String(item.id) === String(selectedSubject))?.name || "";
   const totalMaximum = useMemo(() => structures.reduce((sum, structure) => sum + Number(structure.maximum_marks || 0), 0), [structures]);
+
+  function hydrateScores(resultList) {
+    if (!Array.isArray(resultList)) return;
+    const restored = {};
+    resultList.forEach((result) => {
+      if (!result?.student_enrollment_id) return;
+      restored[result.student_enrollment_id] = {};
+      if (Array.isArray(result.components)) {
+        result.components.forEach((component) => {
+          if (component?.assessment_structure_id) {
+            restored[result.student_enrollment_id][component.assessment_structure_id] = Number(component.score ?? 0);
+          }
+        });
+      }
+    });
+    setScores((current) => {
+      const next = { ...current };
+      Object.entries(restored).forEach(([enrollmentId, components]) => {
+        next[enrollmentId] = { ...(next[enrollmentId] || {}), ...components };
+      });
+      return next;
+    });
+  }
 
   function updateScore(enrollmentId, structureId, value) {
     const structure = structures.find((item) => String(item.id) === String(structureId));
@@ -126,7 +176,18 @@ export default function ResultEntry() {
         });
         activeSubmissionId = submissionResponse?.data?.submission?.id || submissionResponse?.data?.data?.id;
         if (!activeSubmissionId) throw new Error("The result submission could not be created.");
+        const loadedSubmission = submissionResponse?.data?.submission;
+        const loadedStatus = loadedSubmission?.status || "draft";
         setSubmissionId(activeSubmissionId);
+        setSubmissionStatus(loadedStatus);
+        hydrateScores(submissionResponse?.data?.results);
+        if (!["draft", "in_progress"].includes(loadedStatus)) {
+          setMessage(`This submission is ${loadedStatus} and cannot be edited. Reopen it through the authorized results workflow before making corrections.`);
+          return;
+        }
+      } else if (!["draft", "in_progress", ""].includes(submissionStatus)) {
+        setMessage(`This submission is ${submissionStatus} and cannot be edited. Reopen it through the authorized results workflow before making corrections.`);
+        return;
       }
       await api.post("/result-entry/save", {
         result_submission_id: Number(activeSubmissionId),
@@ -139,7 +200,8 @@ export default function ResultEntry() {
         })),
       });
       await api.post(`/result-submissions/${activeSubmissionId}/submit`);
-      setMessage("Scores saved successfully and submitted for principal approval.");
+      setSubmissionStatus("submitted");
+      setMessage("Scores saved successfully and submitted for principal approval. Further edits require an authorized reopen.");
     } catch (requestError) {
       const validation = requestError?.response?.data?.errors;
       setError(validation ? Object.values(validation).flat().join(" ") : requestError?.response?.data?.message || "Unable to save the result sheet.");
@@ -147,15 +209,16 @@ export default function ResultEntry() {
   }
 
   return <PageContainer>
-    <PageHeader title="Class Result Entry" subtitle="Enter continuous assessment and examination components using the school’s configured assessment structure." action={<button type="button" onClick={saveScores} disabled={saving || !students.length || !structures.length} className="btn-primary disabled:opacity-50">{saving ? "Saving..." : "Save & Submit Scores"}</button>} />
+    <PageHeader title="Class Result Entry" subtitle="Enter continuous assessment and examination components using the school’s configured assessment structure." action={<button type="button" onClick={saveScores} disabled={saving || !students.length || !structures.length || !["", "draft", "in_progress"].includes(submissionStatus)} className="btn-primary disabled:opacity-50">{saving ? "Saving..." : "Save & Submit Scores"}</button>} />
+    {submissionStatus && <div role="status" className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">Current submission status: <strong>{submissionStatus}</strong>. Only draft or in-progress submissions can be edited; approved or published results must be reopened by an authorized reviewer.</div>}
     {message && <div role="status" className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{message}</div>}
     {error && <div role="alert" className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</div>}
     {loading ? <LoadingSpinner text="Loading classes..." /> : <>
       <div className="mb-6 grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-4">
         <label className="flex min-w-0 flex-col text-sm font-semibold text-slate-700">Class<select value={selectedClass} onChange={(event) => setSelectedClass(event.target.value)} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm"><option value="">Select class</option>{classes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-        <label className="flex min-w-0 flex-col text-sm font-semibold text-slate-700">Subject<select value={selectedSubject} onChange={(event) => setSelectedSubject(event.target.value)} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm"><option value="">Select subject</option>{subjects.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-        <label className="flex min-w-0 flex-col text-sm font-semibold text-slate-700">Academic session<select value={selectedSession} onChange={(event) => setSelectedSession(event.target.value)} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm"><option value="">Select session</option>{sessions.map((item) => <option key={item.id} value={item.id}>{item.name || item.session_year}</option>)}</select></label>
-        <label className="flex min-w-0 flex-col text-sm font-semibold text-slate-700">Term<select value={selectedTerm} onChange={(event) => setSelectedTerm(event.target.value)} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm"><option value="">Select term</option>{terms.filter((item) => !selectedSession || String(item.academic_session_id) === String(selectedSession)).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+        <label className="flex min-w-0 flex-col text-sm font-semibold text-slate-700">Subject<select value={selectedSubject} onChange={(event) => { setSelectedSubject(event.target.value); setSubmissionId(null); setSubmissionStatus(""); }} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm"><option value="">Select subject</option>{subjects.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+        <label className="flex min-w-0 flex-col text-sm font-semibold text-slate-700">Academic session<select value={selectedSession} onChange={(event) => { setSelectedSession(event.target.value); setSubmissionId(null); setSubmissionStatus(""); }} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm"><option value="">Select session</option>{sessions.map((item) => <option key={item.id} value={item.id}>{item.name || item.session_year}</option>)}</select></label>
+        <label className="flex min-w-0 flex-col text-sm font-semibold text-slate-700">Term<select value={selectedTerm} onChange={(event) => { setSelectedTerm(event.target.value); setSubmissionId(null); setSubmissionStatus(""); }} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm"><option value="">Select term</option>{terms.filter((item) => !selectedSession || String(item.academic_session_id) === String(selectedSession)).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       </div>
       {loadingRoster ? <LoadingSpinner text="Loading enrolled students and assessment structures..." /> : !selectedClass ? <EmptyState title="Select a class" message="Choose a class to open its real enrolled-student score sheet." /> : !structures.length ? <EmptyState title="Assessment structure not configured" message="Create assessment structures before entering scores." /> : !students.length ? <EmptyState title="No enrolled students" message={`${selectedClassName} has no students for result entry.`} /> : <section className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-100 p-4"><h2 className="font-bold text-slate-900">{selectedClassName} {selectedSubjectName ? `· ${selectedSubjectName}` : ""}</h2><p className="text-xs text-slate-500">Maximum total: {totalMaximum}</p></div><table className="min-w-[760px] w-full text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="p-3">Student</th>{structures.map((structure) => <th className="p-3" key={structure.id}>{structure.name}<span className="block normal-case">Max {structure.maximum_marks}</span></th>)}<th className="p-3">Total</th><th className="p-3">Grade</th></tr></thead><tbody className="divide-y">{students.map((enrollment) => { const student = enrollment.student || {}; const name = student.full_name || `${student.first_name || ""} ${student.last_name || ""}`.trim() || `Student #${enrollment.id}`; const total = totalFor(enrollment.id); return <tr key={enrollment.id}><td className="p-3 font-semibold">{name}<span className="block text-xs font-normal text-slate-500">{student.admission_number || ""}</span></td>{structures.map((structure) => <td className="p-3" key={structure.id}><input type="number" min="0" max={structure.maximum_marks} value={scores[enrollment.id]?.[structure.id] ?? 0} onChange={(event) => updateScore(enrollment.id, structure.id, event.target.value)} className="min-h-10 w-24 rounded-lg border border-slate-300 px-2" /></td>)}<td className="p-3 font-bold">{total}</td><td className="p-3"><span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold">{gradeFor(total)}</span></td></tr>; })}</tbody></table></section>}
     </>}

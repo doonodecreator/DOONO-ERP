@@ -93,10 +93,15 @@ export default function Fees({ setPage }) {
         }
     };
 
-    const filteredStudentFees = studentFees.filter((fee) => {
+    const balanceFor = (fee) => Math.max(0, Number(fee.balance ?? (Number(fee.amount_due || fee.amount || 0) - Number(fee.paid_amount || 0))));
+    const normalizedStatus = (fee) => {
+        const status = String(fee.status || "unpaid").toLowerCase();
+        return status === "partially_paid" ? "partial" : status;
+    };
+    const filteredStudentFees = (Array.isArray(studentFees) ? studentFees : []).filter((fee) => {
         const studentName = (fee.student?.full_name || fee.student_name || "").toLowerCase();
         const matchesSearch = studentName.includes(search.toLowerCase());
-        const matchesStatus = statusFilter === "all" || (fee.status || "").toLowerCase() === statusFilter.toLowerCase();
+        const matchesStatus = statusFilter === "all" || normalizedStatus(fee) === statusFilter.toLowerCase();
         return matchesSearch && matchesStatus;
     });
 
@@ -166,7 +171,7 @@ export default function Fees({ setPage }) {
                                 <tr>
                                     <th className="px-6 py-3">Student</th>
                                     <th className="px-6 py-3">Fee Category / Description</th>
-                                    <th className="px-6 py-3">Amount Due</th>
+                                    <th className="px-6 py-3">Balance Due</th>
                                     <th className="px-6 py-3">Status</th>
                                     <th className="px-6 py-3 text-right">Actions</th>
                                 </tr>
@@ -181,27 +186,27 @@ export default function Fees({ setPage }) {
                                             {fee.fee_category?.name || fee.remarks || "General Fee"}
                                         </td>
                                         <td className="px-6 py-4 font-mono font-semibold text-gray-800">
-                                            ₦{Number(fee.amount_due || fee.amount || 0).toLocaleString()}
+                                            ₦{balanceFor(fee).toLocaleString()}
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${
-                                                (fee.status || "").toLowerCase() === "paid"
+                                                normalizedStatus(fee) === "paid"
                                                     ? "bg-green-100 text-green-700"
-                                                    : (fee.status || "").toLowerCase() === "partial"
+                                                    : normalizedStatus(fee) === "partial"
                                                     ? "bg-yellow-100 text-yellow-700"
                                                     : "bg-red-100 text-red-700"
                                             }`}>
-                                                {fee.status || "Unpaid"}
+                                                {normalizedStatus(fee) === "partial" ? "Partially paid" : fee.status || "Unpaid"}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            {canRecordPayments && (fee.status || "").toLowerCase() !== "paid" && (
+                                            {canRecordPayments && balanceFor(fee) > 0 && normalizedStatus(fee) !== "waived" && (
                                                 <button type="button"
                                                     onClick={() => {
                                                         setSelectedFee(fee);
                                                         setPaymentForm((prev) => ({
                                                             ...prev,
-                                                            amount_paid: fee.amount_due || fee.amount || ""
+                                                            amount_paid: balanceFor(fee) || ""
                                                         }));
                                                         setShowPayModal(true);
                                                     }}

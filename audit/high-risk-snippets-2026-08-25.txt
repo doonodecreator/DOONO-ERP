@@ -1,0 +1,704 @@
+=== BOOK CONTROLLER ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Book;
+use App\Models\BookLoan;
+use App\Services\ActivityLogService;
+use App\Services\CurrentContextService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class BookController extends Controller
+{
+    public function __construct(protected CurrentContextService $context) {}
+
+    private function librarySchoolId(Request $request): int
+    {
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+        abort_unless($schoolId, 409, 'Select an active school before managing the library.');
+
+        return (int) $schoolId;
+    }
+
+    private function scoped(Request $request, Book $book): Book
+    {
+        abort_unless((int) $book->school_id === $this->librarySchoolId($request), 404, 'Book not found.');
+
+        return $book;
+    }
+
+    public function index(Request $request)
+    {
+        return response()->json(
+            Book::query()
+                ->where('school_id', $this->librarySchoolId($request))
+                ->withCount(['loans as active_loan_count' => fn ($query) => $query->where('status', 'Borrowed')])
+                ->latest()
+                ->paginate(min(max($request->integer('per_page', 10), 1), 100))
+        );
+    }
+
+    public function store(Request $request)
+    {
+        $schoolId = $this->librarySchoolId($request);
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'author' => ['required', 'string', 'max:255'],
+            'isbn' => ['nullable', 'string', 'max:50'],
+            'category' => ['required', 'string', 'max:100'],
+            'total_copies' => ['required', 'integer', 'min:1', 'max:100000'],
+        ]);
+        $validated['school_id'] = $schoolId;
+        $validated['available_copies'] = $validated['total_copies'];
+
+        $book = Book::create($validated);
+        ActivityLogService::log('library', 'book_created', 'A library book was added to the school catalog.', $book, ['after' => $book->only(['title', 'author', 'isbn', 'category', 'total_copies', 'available_copies'])], $schoolId);
+
+        return response()->json(['message' => 'Book added successfully.', 'data' => $book], 201);
+    }
+
+    public function show(Request $request, Book $book)
+    {
+        return response()->json($this->scoped($request, $book)->loadCount(['loans as active_loan_count' => fn ($query) => $query->where('status', 'Borrowed')]));
+    }
+
+    public function update(Request $request, Book $book)
+    {
+        $book = $this->scoped($request, $book);
+        $validated = $request->validate([
+            'title' => ['sometimes', 'string', 'max:255'],
+            'author' => ['sometimes', 'string', 'max:255'],
+            'isbn' => ['nullable', 'string', 'max:50'],
+            'category' => ['sometimes', 'string', 'max:100'],
+            'total_copies' => ['sometimes', 'integer', 'min:1', 'max:100000'],
+        ]);
+
+        $before = $book->only(['title', 'author', 'isbn', 'category', 'total_copies', 'available_copies']);
+        DB::transaction(function () use ($book, $validated): void {
+            $lockedBook = Book::query()->whereKey($book->id)->lockForUpdate()->firstOrFail();
+            if (array_key_exists('total_copies', $validated)) {
+                $borrowed = BookLoan::query()->where('book_id', $lockedBook->id)->where('status', 'Borrowed')->count();
+                abort_unless($validated['total_copies'] >= $borrowed, 422, "Total copies cannot be lower than the {$borrowed} currently borrowed copy(ies).");
+                $validated['available_copies'] = $validated['total_copies'] - $borrowed;
+            }
+            $lockedBook->update($validated);
+        });
+
+        ActivityLogService::log('library', 'book_updated', 'A library book was updated.', $book, ['before' => $before, 'after' => $book->fresh()->only(['title', 'author', 'isbn', 'category', 'total_copies', 'available_copies'])], (int) $book->school_id);
+
+        return response()->json(['message' => 'Book updated successfully.', 'data' => $book->fresh()]);
+    }
+
+    public function destroy(Request $request, Book $book)
+    {
+        $book = $this->scoped($request, $book);
+        abort_if(BookLoan::query()->where('book_id', $book->id)->exists(), 422, 'Book history cannot be deleted while loan records exist. Update the catalog record instead.');
+        $before = $book->only(['title', 'author', 'isbn', 'category', 'total_copies', 'available_copies']);
+        $book->delete();
+        ActivityLogService::log('library', 'book_deleted', 'A library book was removed from the school catalog.', $book, ['before' => $before], (int) $book->school_id);
+
+        return response()->json(['message' => 'Book deleted successfully.']);
+    }
+}
+=== PARENT-STUDENT CONTROLLER ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreParentStudentRequest;
+use App\Http\Requests\UpdateParentStudentRequest;
+use App\Http\Resources\ParentStudentResource;
+use App\Models\ParentStudent;
+use App\Models\Student;
+use App\Services\ActivityLogService;
+use App\Services\CurrentContextService;
+use App\Services\PortalAccountService;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class ParentStudentController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context,
+        private readonly PortalAccountService $portalAccounts,
+    ) {}
+
+    public function index(Request $request)
+    {
+        return ParentStudentResource::collection(
+            $this->schoolScopedQuery($request)->latest()->get()
+        );
+    }
+
+    public function store(StoreParentStudentRequest $request)
+    {
+        $data = $request->validated();
+        $data['is_primary_contact'] = $data['is_primary_contact'] ?? true;
+
+        $schoolId = $this->requireSchool($request);
+        $parentStudent = DB::transaction(function () use ($data) {
+            Student::whereKey($data['student_id'])->lockForUpdate()->firstOrFail();
+
+            if ($data['is_primary_contact']) {
+                ParentStudent::where('student_id', $data['student_id'])
+                    ->update(['is_primary_contact' => false]);
+            }
+
+            return ParentStudent::create($data);
+        });
+        $this->portalAccounts->syncParentChildren($parentStudent->parent()->firstOrFail(), $schoolId);
+        ActivityLogService::log(
+            module: 'parent_student_links',
+            action: 'created',
+            description: 'A parent-child portal relationship was created or synchronized.',
+            subject: $parentStudent,
+            schoolId: $schoolId,
+            properties: ['parent_id' => $parentStudent->parent_id, 'student_id' => $parentStudent->student_id],
+        );
+
+        return new ParentStudentResource(
+            $parentStudent->load(['parent', 'student'])
+        );
+    }
+
+    public function show(Request $request, ParentStudent $parentStudent)
+    {
+        $this->ensureSchoolScope($request, $parentStudent);
+
+        return new ParentStudentResource(
+            $parentStudent->load(['parent', 'student'])
+        );
+    }
+
+    public function update(
+        UpdateParentStudentRequest $request,
+        ParentStudent $parentStudent
+    ) {
+        $this->ensureSchoolScope($request, $parentStudent);
+
+        $data = $request->validated();
+        $data['is_primary_contact'] = $data['is_primary_contact']
+            ?? $parentStudent->is_primary_contact;
+
+        $schoolId = $this->requireSchool($request);
+        $oldParentId = $parentStudent->parent_id;
+        DB::transaction(function () use ($parentStudent, $data) {
+            Student::whereKey($data['student_id'])->lockForUpdate()->firstOrFail();
+
+            if ($data['is_primary_contact']) {
+                ParentStudent::where('student_id', $data['student_id'])
+                    ->where('id', '!=', $parentStudent->id)
+                    ->update(['is_primary_contact' => false]);
+            }
+
+            $parentStudent->update($data);
+        });
+        $this->portalAccounts->syncParentChildren($parentStudent->parent()->firstOrFail(), $schoolId);
+        if ((int) $oldParentId !== (int) $parentStudent->parent_id) {
+            $oldParent = \App\Models\ParentModel::query()->find($oldParentId);
+            if ($oldParent) $this->portalAccounts->syncParentChildren($oldParent, $schoolId);
+        }
+        ActivityLogService::log(
+            module: 'parent_student_links',
+            action: 'updated',
+            description: 'A parent-child portal relationship was corrected and synchronized.',
+            subject: $parentStudent,
+            schoolId: $schoolId,
+            properties: ['parent_id' => $parentStudent->parent_id, 'student_id' => $parentStudent->student_id],
+        );
+
+        return new ParentStudentResource(
+            $parentStudent->load(['parent', 'student'])
+        );
+    }
+
+    public function destroy(Request $request, ParentStudent $parentStudent)
+    {
+        $this->ensureSchoolScope($request, $parentStudent);
+        $schoolId = $this->requireSchool($request);
+        $parent = $parentStudent->parent()->firstOrFail();
+        $parentStudent->delete();
+        $this->portalAccounts->syncParentChildren($parent, $schoolId);
+        ActivityLogService::log(
+            module: 'parent_student_links',
+            action: 'deleted',
+            description: 'A parent-child portal relationship was removed and synchronized.',
+            schoolId: $schoolId,
+            properties: ['parent_id' => $parent->id, 'student_id' => $parentStudent->student_id],
+        );
+
+        return response()->json([
+            'message' => 'Relationship deleted successfully.',
+        ]);
+    }
+
+    private function schoolScopedQuery(Request $request): Builder
+    {
+        $query = ParentStudent::with(['parent', 'student']);
+        $schoolId = $this->requireSchool($request);
+
+        if ($schoolId) {
+            return $query
+                ->whereHas('parent', fn (Builder $query) => $query->where(
+                    'school_id',
+                    $schoolId
+                ))
+                ->whereHas('student', fn (Builder $query) => $query->where(
+                    'school_id',
+                    $schoolId
+                ));
+        }
+
+        abort_unless($request->user()?->isSuperAdmin(), 403, 'Unauthorized.');
+
+        return $query;
+    }
+
+    private function ensureSchoolScope(
+        Request $request,
+        ParentStudent $parentStudent
+    ): void {
+        $schoolId = $this->requireSchool($request);
+
+        if (! $schoolId) {
+            abort_unless($request->user()?->isSuperAdmin(), 403, 'Unauthorized.');
+
+            return;
+        }
+
+        $parentStudent->loadMissing(['parent', 'student']);
+
+        abort_unless(
+            $parentStudent->parent?->school_id === $schoolId &&
+            $parentStudent->student?->school_id === $schoolId,
+            403,
+            'Unauthorized.'
+        );
+    }
+
+}
+=== PAYMENT SERVICE ===
+<?php
+
+namespace App\Services\Finance;
+
+use App\Models\FeePayment;
+use App\Models\PaymentReceipt;
+use App\Models\StudentFee;
+use App\Services\PaystackService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+
+class PaymentService
+{
+    public function __construct(
+        protected FeeService $feeService,
+        protected PaystackService $paystackService
+    ) {}
+
+    /**
+     * Record a fee payment and generate an official receipt.
+     */
+    public function recordPayment(array $data): FeePayment
+    {
+        return DB::transaction(function () use ($data) {
+            $studentFee = StudentFee::query()->whereKey($data['student_fee_id'])->lockForUpdate()->firstOrFail();
+            $amount = round((float) $data['amount_paid'], 2);
+            $paid = (float) $studentFee->payments()->whereNull('reversed_at')->sum('amount_paid');
+            $outstanding = max(0, round((float) $studentFee->amount_due - $paid, 2));
+            if ($amount <= 0 || $amount > $outstanding + 0.005) {
+                throw ValidationException::withMessages([
+                    'amount_paid' => 'The payment must be positive and must not exceed the outstanding invoice balance.',
+                ]);
+            }
+
+            $transactionReference = trim((string) ($data['transaction_reference'] ?? ''));
+            if ($transactionReference === '') {
+                $transactionReference = Str::upper(Str::random(12));
+            }
+            $existing = FeePayment::query()
+                ->where('transaction_reference', $transactionReference)
+                ->lockForUpdate()
+                ->first();
+            if ($existing) {
+                if (! $existing->reversed_at && (int) $existing->student_fee_id === (int) $studentFee->id && abs((float) $existing->amount_paid - $amount) < 0.005) {
+                    return $existing->load('receipt');
+                }
+                throw ValidationException::withMessages([
+                    'transaction_reference' => 'This transaction reference has already been used for another payment.',
+                ]);
+            }
+
+            $receiptNumber = $this->generateReceiptNumber();
+
+            // 1. Record Fee Payment
+            $payment = FeePayment::create([
+                'student_fee_id' => $studentFee->id,
+                'staff_id' => $data['staff_id'] ?? null,
+                'receipt_number' => $receiptNumber,
+                'amount_paid' => $amount,
+                'payment_date' => $data['payment_date'] ?? now()->toDateString(),
+                'payment_method' => $data['payment_method'], // 'cash', 'bank_transfer', 'pos', 'online'
+                'transaction_reference' => $transactionReference,
+                'bank_name' => $data['bank_name'] ?? null,
+                'remarks' => $data['remarks'] ?? null,
+            ]);
+
+            // 2. Generate Official Payment Receipt
+            PaymentReceipt::create([
+                'fee_payment_id' => $payment->id,
+                'receipt_number' => $receiptNumber,
+                'issued_by' => $data['staff_id'] ?? null,
+                'issued_at' => now(),
+                'printed' => false,
+                'emailed' => false,
+                'cancelled' => false,
+            ]);
+
+            // 3. Recalculate Invoice Status
+            $this->feeService->recalculateStatus($studentFee);
+
+            return $payment->load('receipt');
+        });
+    }
+
+    /**
+     * Record an idempotent payment submitted by an authorized school integration.
+     *
+     * Unlike the cashier workflow, this contract requires a stable external
+     * transaction reference and refuses amounts above the outstanding balance.
+     */
+    public function recordIntegrationPayment(array $data, int $schoolId): FeePayment
+    {
+        return DB::transaction(function () use ($data, $schoolId): FeePayment {
+            $studentFee = StudentFee::query()
+                ->whereKey($data['student_fee_id'])
+                ->where('school_id', $schoolId)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $studentFee) {
+                throw ValidationException::withMessages([
+                    'student_fee_id' => 'The selected fee invoice does not belong to this school.',
+                ]);
+            }
+
+            $existing = FeePayment::query()
+                ->with('studentFee:id,school_id')
+                ->where('transaction_reference', $data['transaction_reference'])
+                ->lockForUpdate()
+                ->first();
+            if ($existing) {
+                if ((int) $existing->studentFee?->school_id !== $schoolId) {
+                    throw ValidationException::withMessages([
+                        'transaction_reference' => 'This transaction reference has already been used by another school.',
+                    ]);
+                }
+
+                return $existing->load('receipt');
+            }
+
+            $paid = (float) $studentFee->payments()->whereNull('reversed_at')->sum('amount_paid');
+            $outstanding = max(0, (float) $studentFee->amount_due - $paid);
+            $amount = (float) $data['amount_paid'];
+            if ($amount <= 0 || $amount > $outstanding + 0.005) {
+                throw ValidationException::withMessages([
+                    'amount_paid' => 'The payment must be positive and must not exceed the outstanding invoice balance.',
+                ]);
+            }
+
+            $receiptNumber = $this->generateReceiptNumber();
+            $payment = FeePayment::create([
+                'student_fee_id' => $studentFee->id,
+                'staff_id' => null,
+                'receipt_number' => $receiptNumber,
+                'amount_paid' => $amount,
+                'payment_date' => $data['payment_date'] ?? now()->toDateString(),
+                'payment_method' => $data['payment_method'],
+                'transaction_reference' => $data['transaction_reference'],
+                'bank_name' => $data['bank_name'] ?? null,
+                'remarks' => $data['remarks'] ?? 'Recorded by an authorized school integration.',
+            ]);
+
+            PaymentReceipt::create([
+                'fee_payment_id' => $payment->id,
+                'receipt_number' => $receiptNumber,
+                'issued_by' => null,
+                'issued_at' => now(),
+                'printed' => false,
+                'emailed' => false,
+=== SAFETY INCIDENT SERVICE ===
+<?php
+
+namespace App\Services;
+
+use App\Models\SafetyIncident;
+use App\Models\Staff;
+use App\Models\Student;
+use App\Models\Visitor;
+use Illuminate\Support\Facades\DB;
+
+class SafetyIncidentService
+{
+    public function create(array $data): SafetyIncident
+    {
+        return DB::transaction(function () use ($data) {
+            $schoolId = $data['school_id'];
+            $prefix = 'SI-' . now()->format('Y') . '-';
+
+            $lastIncident = SafetyIncident::where('school_id', $schoolId)
+                ->where('incident_number', 'like', $prefix . '%')
+                ->lockForUpdate()
+                ->latest('id')
+                ->first();
+
+            $sequence = $lastIncident
+                ? ((int) substr($lastIncident->incident_number, strlen($prefix))) + 1
+                : 1;
+
+            return SafetyIncident::create([
+                ...$data,
+                'incident_number' => $prefix . str_pad((string) $sequence, 4, '0', STR_PAD_LEFT),
+                'subject_label' => $this->subjectLabel($data),
+                'status' => 'Reported',
+            ]);
+        });
+    }
+
+    private function subjectLabel(array $data): string
+    {
+        return match ($data['subject_type']) {
+            'Student' => Student::findOrFail($data['student_id'])->full_name,
+            'Staff' => Staff::findOrFail($data['staff_id'])->full_name,
+            'Visitor' => Visitor::findOrFail($data['visitor_id'])->visitor_name,
+            'Other' => trim($data['other_subject_name']),
+        };
+    }
+}
+=== STUDENT ENROLLMENT CONTROLLER ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
+use App\Http\Requests\StoreStudentEnrollmentRequest;
+use App\Http\Requests\UpdateStudentEnrollmentRequest;
+use App\Http\Resources\StudentEnrollmentResource;
+use App\Models\StudentEnrollment;
+use App\Models\Student;
+use App\Services\ActivityLogService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class StudentEnrollmentController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+
+    public function index(Request $request)
+    {
+        $validated = $request->validate([
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $query = StudentEnrollment::with([
+            'student',
+            'school',
+            'academicSession',
+            'term',
+            'division',
+            'class',
+            'stream',
+        ]);
+
+        if (! $request->user()->isSuperAdmin()) {
+            $query->where(
+                'school_id',
+                $this->context->currentSchool($request->user())?->id
+            );
+        }
+
+        return StudentEnrollmentResource::collection(
+            $query->latest()->paginate($validated['per_page'] ?? 10)
+        );
+    }
+
+    public function store(StoreStudentEnrollmentRequest $request)
+    {
+        $data = $request->validated();
+        $data['school_id'] = $this->context->currentSchool($request->user())?->id;
+        $data['status'] = 'Active';
+
+        $enrollment = DB::transaction(function () use ($data) {
+            $student = Student::query()
+                ->whereKey((int) $data['student_id'])
+                ->where('school_id', (int) $data['school_id'])
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            abort_if(
+                in_array($student->status, ['Graduated', 'Transferred', 'Withdrawn'], true),
+                422,
+                'This student has a terminal lifecycle status. Use the authorized re-admission workflow before creating another enrollment.'
+            );
+
+            $enrollment = StudentEnrollment::create($data);
+            $this->syncCurrentStudentPlacement($enrollment);
+
+            return $enrollment;
+        });
+        ActivityLogService::log(
+            module: 'enrollments',
+            action: 'created',
+            description: 'A student enrollment was created as an active placement.',
+            subject: $enrollment,
+            schoolId: $enrollment->school_id,
+            properties: ['student_id' => $enrollment->student_id, 'academic_session_id' => $enrollment->academic_session_id, 'term_id' => $enrollment->term_id],
+        );
+
+        return (new StudentEnrollmentResource(
+            $enrollment->load([
+                'student',
+                'school',
+                'academicSession',
+                'term',
+                'division',
+                'class',
+                'stream',
+            ])
+        ))
+        ->response()
+        ->setStatusCode(201);
+    }
+
+    public function show(Request $request, StudentEnrollment $studentEnrollment)
+    {
+        if (
+            ! $request->user()->isSuperAdmin() &&
+            $studentEnrollment->school_id != $this->context->currentSchool($request->user())?->id
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
+        return new StudentEnrollmentResource(
+            $studentEnrollment->load([
+                'student',
+                'school',
+                'academicSession',
+                'term',
+                'division',
+                'class',
+                'stream',
+            ])
+        );
+    }
+
+    public function update(
+        UpdateStudentEnrollmentRequest $request,
+        StudentEnrollment $studentEnrollment
+    ) {
+        if (
+            ! $request->user()->isSuperAdmin() &&
+            $studentEnrollment->school_id != $this->context->currentSchool($request->user())?->id
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $data = $request->validated();
+        unset($data['school_id']);
+
+        DB::transaction(function () use ($studentEnrollment, $data) {
+            $student = Student::query()
+                ->whereKey((int) $studentEnrollment->student_id)
+                ->where('school_id', (int) $studentEnrollment->school_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (
+                in_array($student->status, ['Graduated', 'Transferred', 'Withdrawn'], true)
+                && in_array($data['status'] ?? null, ['Active', 'Promoted', 'Repeated'], true)
+            ) {
+                abort(422, 'A terminal student cannot be reactivated through an enrollment edit. Use the authorized re-admission workflow.');
+            }
+
+            $conflict = StudentEnrollment::query()
+                ->where('school_id', $studentEnrollment->school_id)
+                ->where('student_id', $studentEnrollment->student_id)
+                ->where('academic_session_id', $data['academic_session_id'])
+                ->where('term_id', $data['term_id'])
+                ->where('id', '!=', $studentEnrollment->id)
+                ->exists();
+            abort_if($conflict, 422, 'This student already has an enrollment for the selected academic session and term.');
+
+            unset($data['student_id'], $data['status']);
+            $studentEnrollment->update($data);
+            $this->syncCurrentStudentPlacement($studentEnrollment);
+        });
+        ActivityLogService::log(
+            module: 'enrollments',
+            action: 'updated',
+            description: 'A student enrollment placement was corrected.',
+            subject: $studentEnrollment,
+            schoolId: $studentEnrollment->school_id,
+            properties: ['changed_fields' => array_keys($data)],
+        );
+
+        return new StudentEnrollmentResource(
+            $studentEnrollment->load([
+                'student',
+                'school',
+                'academicSession',
+                'term',
+                'division',
+                'class',
+                'stream',
+            ])
+        );
+    }
+
+    private function syncCurrentStudentPlacement(
+        StudentEnrollment $enrollment
+    ): void {
+        $enrollment->loadMissing(['student', 'academicSession', 'term']);
+
+        if (
+            $enrollment->status !== 'Active' ||
+            ! $enrollment->academicSession?->is_current ||
+            ! $enrollment->term?->is_current
+        ) {
+            return;
+        }
+
+        $enrollment->student->update([
+            'division_id' => $enrollment->division_id,
+            'class_id' => $enrollment->class_id,
+            'stream_id' => $enrollment->stream_id,
+            'academic_session_id' => $enrollment->academic_session_id,
+            'status' => 'Active',
+        ]);
+    }
+
+    public function destroy(
+        Request $request,
+        StudentEnrollment $studentEnrollment
+    ) {
+        if (
+            ! $request->user()->isSuperAdmin() &&
+            $studentEnrollment->school_id != $this->context->currentSchool($request->user())?->id
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $studentEnrollment->delete();
+        ActivityLogService::log(
+            module: 'enrollments',
+            action: 'deleted',

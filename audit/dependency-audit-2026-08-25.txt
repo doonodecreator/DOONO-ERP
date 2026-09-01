@@ -1,0 +1,189 @@
+=== COMPOSER AUDIT ===
+Found 18 security vulnerability advisories affecting 3 packages:
++-------------------+----------------------------------------------------------------------------------+
+| Package           | dompdf/dompdf                                                                    |
+| Severity          | medium                                                                           |
+| CVE               | CVE-2026-59943                                                                   |
+| Title             | Dompdf: Embedded SVG images can leak existence of files and directories within   |
+|                   | the filesystem                                                                   |
+| URL               | https://github.com/advisories/GHSA-j8qw-6jw8-r297                                |
+| Affected versions | <3.1.6                                                                           |
+| Reported at       | 2026-07-22T22:52:44+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | dompdf/dompdf                                                                    |
+| Severity          | medium                                                                           |
+| CVE               | CVE-2026-59942                                                                   |
+| Title             | Dompdf: Denial of Service (DoS) via Resource Exhaustion using Oversized Image    |
+|                   | Bitmaps                                                                          |
+| URL               | https://github.com/advisories/GHSA-f5gf-2cj8-52g2                                |
+| Affected versions | <3.1.6                                                                           |
+| Reported at       | 2026-07-22T22:51:40+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | dompdf/dompdf                                                                    |
+| Severity          | medium                                                                           |
+| CVE               | CVE-2026-59941                                                                   |
+| Title             | Dompdf: Uncontrolled resource consumption based on declared BMP dimensions       |
+| URL               | https://github.com/advisories/GHSA-8hg6-c449-896m                                |
+| Affected versions | <3.1.6                                                                           |
+| Reported at       | 2026-07-22T22:50:34+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | dompdf/dompdf                                                                    |
+| Severity          | medium                                                                           |
+| CVE               | CVE-2026-56722                                                                   |
+| Title             | Dompdf: Local file read due to improper file path validation in SVG images       |
+|                   | encoded as data-URI                                                              |
+| URL               | https://github.com/advisories/GHSA-cx96-42px-69fm                                |
+| Affected versions | <3.1.6                                                                           |
+| Reported at       | 2026-07-22T21:30:01+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | dompdf/dompdf                                                                    |
+| Severity          | low                                                                              |
+| CVE               | CVE-2026-55555                                                                   |
+| Title             | Dompdf: File existence oracle via font-face stylesheet declaration               |
+| URL               | https://github.com/advisories/GHSA-7x2p-4jvh-6384                                |
+| Affected versions | <3.1.6                                                                           |
+| Reported at       | 2026-07-22T21:07:07+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | dompdf/dompdf                                                                    |
+| Severity          | low                                                                              |
+| CVE               | CVE-2026-55554                                                                   |
+| Title             | Dompdf: Chroot Validation Bypass                                                 |
+| URL               | https://github.com/advisories/GHSA-wvh6-f5jh-8gw4                                |
+| Affected versions | <3.1.6                                                                           |
+| Reported at       | 2026-07-22T21:06:48+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | guzzlehttp/guzzle                                                                |
+| Severity          | high                                                                             |
+| CVE               | CVE-2026-69246                                                                   |
+| Title             | Guzzle: Noncanonical host can bypass host-based checks                           |
+| URL               | https://github.com/advisories/GHSA-v5mv-p594-2x33                                |
+| Affected versions | >=8.0.0,<8.0.1|<7.15.2                                                           |
+| Reported at       | 2026-08-03T21:07:26+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | guzzlehttp/guzzle                                                                |
+| Severity          | medium                                                                           |
+| CVE               | CVE-2026-69245                                                                   |
+| Title             | Guzzle: Noncanonical cookie domain keeps subdomain scope                         |
+| URL               | https://github.com/advisories/GHSA-f7vp-7xgx-4w4r                                |
+| Affected versions | >=8.0.0,<8.0.1|<7.15.2                                                           |
+| Reported at       | 2026-08-03T21:05:26+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | guzzlehttp/guzzle                                                                |
+| Severity          | medium                                                                           |
+| CVE               | CVE-2026-67354                                                                   |
+| Title             | Guzzle: URI fragments disclosed in redirect Referer headers                      |
+| URL               | https://github.com/advisories/GHSA-h95v-h523-3mw8                                |
+| Affected versions | <7.15.1                                                                          |
+| Reported at       | 2026-07-20T23:28:36+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | guzzlehttp/guzzle                                                                |
+| Severity          | medium                                                                           |
+| CVE               | CVE-2026-67355                                                                   |
+| Title             | Guzzle: Host-only cookie scope is not preserved                                  |
+| URL               | https://github.com/advisories/GHSA-wm3w-8rrp-j577                                |
+| Affected versions | <7.15.1                                                                          |
+| Reported at       | 2026-07-20T23:27:49+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | guzzlehttp/guzzle                                                                |
+| Severity          | medium                                                                           |
+| CVE               | CVE-2026-67353                                                                   |
+| Title             | Guzzle: Unbounded response cookies risk denial of service                        |
+| URL               | https://github.com/advisories/GHSA-f283-ghqc-fg79                                |
+| Affected versions | <7.15.1                                                                          |
+| Reported at       | 2026-07-20T23:27:02+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | guzzlehttp/guzzle                                                                |
+| Severity          | medium                                                                           |
+| CVE               | CVE-2026-67339                                                                   |
+| Title             | Guzzle: Proxy-Authorization headers can be sent to origin servers                |
+| URL               | https://github.com/advisories/GHSA-94pj-82f3-465w                                |
+| Affected versions | <7.14.2                                                                          |
+| Reported at       | 2026-07-20T21:46:02+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | league/commonmark                                                                |
+| Severity          | medium                                                                           |
+| CVE               | NO CVE                                                                           |
+| Title             | league/commonmark: Denial of service via deeply nested XML output                |
+| URL               | https://github.com/advisories/GHSA-mj63-m3rc-8ppr                                |
+| Affected versions | >=2.0.0,<2.9.0                                                                   |
+| Reported at       | 2026-08-06T20:42:54+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | league/commonmark                                                                |
+| Severity          | high                                                                             |
+| CVE               | NO CVE                                                                           |
+| Title             | league/commonmark: Denial of service via colliding heading slugs                 |
+| URL               | https://github.com/advisories/GHSA-mh25-x5hq-wrqp                                |
+| Affected versions | >=2.0.0,<2.9.0                                                                   |
+| Reported at       | 2026-08-06T20:41:45+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | league/commonmark                                                                |
+| Severity          | high                                                                             |
+| CVE               | NO CVE                                                                           |
+| Title             | league/commonmark:  Denial of service via duplicate footnote definitions         |
+| URL               | https://github.com/advisories/GHSA-jfm3-95jq-q3rf                                |
+| Affected versions | >=1.5.0,<2.9.0                                                                   |
+| Reported at       | 2026-08-06T20:40:53+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | league/commonmark                                                                |
+| Severity          | high                                                                             |
+| CVE               | NO CVE                                                                           |
+| Title             | league/commonmark: Denial of service via adjacent inline attribute blocks        |
+| URL               | https://github.com/advisories/GHSA-g2gp-3wwq-f4ph                                |
+| Affected versions | >=1.5.0,<2.9.0                                                                   |
+| Reported at       | 2026-08-06T20:39:52+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | league/commonmark                                                                |
+| Severity          | high                                                                             |
+| CVE               | CVE-2026-71488                                                                   |
+| Title             | league/commonmark: Quadratic-time denial of service when parsing crafted         |
+|                   | Markdown                                                                         |
+| URL               | https://github.com/advisories/GHSA-2q4p-g7hv-5rgv                                |
+| Affected versions | >=0.6.0,<2.9.0                                                                   |
+| Reported at       | 2026-08-06T20:37:20+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | league/commonmark                                                                |
+| Severity          | medium                                                                           |
+| CVE               | CVE-2026-71478                                                                   |
+| Title             | league/commonmark: AttributesExtension href/src unsafe-link filter bypass via    |
+|                   | embedded control bytes                                                           |
+| URL               | https://github.com/advisories/GHSA-29pj-957v-52mc                                |
+| Affected versions | >=1.5.0,<=2.8.3                                                                  |
+| Reported at       | 2026-08-06T20:30:39+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
+=== NPM AUDIT SUMMARY ===
+# npm audit report
+
+react-router  7.12.0 - 7.18.1
+Severity: high
+React Router: RSC Mode CSRF Bypass Allows Action Execution Before 400 Response - https://github.com/advisories/GHSA-qwww-vcr4-c8h2
+fix available via `npm audit fix`
+node_modules/react-router
+  react-router-dom  7.12.0-pre.0 - 7.18.1
+  Depends on vulnerable versions of react-router
+  node_modules/react-router-dom
+
+2 high severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
+=== LOCKFILES ===
+ls: cannot access 'frontend/pnpm-lock.yaml': No such file or directory
+-rw-r--r-- 1 ubuntu ubuntu 368114 Aug 23 17:21 backend/dono-api/composer.lock
+-rw-r--r-- 1 ubuntu ubuntu  61835 Aug 25 08:16 frontend/package-lock.json

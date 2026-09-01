@@ -25,3 +25,9 @@ Previously issued localhost links can be opened from the updated Local Test Inbo
 ## Validation
 
 PHP lint passed for the changed verification files. The signed verification cross-host regression test passed. The Laravel suite passed 12 tests and 16 assertions. The verification route was discovered with `signed:relative`, and the Vite production build passed.
+
+## Final Termux correction
+
+The Local Test Inbox body rewrite regular expression was corrected so previously stored `127.0.0.1` links are actually detected. When the API base is relative, rewritten action links now remain same-origin paths such as `/api/v1/email/verify/...`, which lets the active Vite/Cloudflare tunnel proxy them to Laravel.
+
+When no non-local frontend origin is configured during local testing, successful verification now redirects to the root-relative `/email-verified` route instead of redirecting to `127.0.0.1` or an API-only host. Email verification remains required; the login gate was not disabled.

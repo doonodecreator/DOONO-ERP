@@ -196,19 +196,4 @@ class CbtQuestionController extends Controller
             ->contains(fn (string $role) => $request->user()->hasRole($role, $schoolId));
     }
 
-    public function studentQuestions(Request $request)
-    {
-        $schoolId = $this->requireSchool($request);
-
-        $questions = CbtQuestion::where('school_id', $schoolId)
-            ->where('is_active', true)
-            ->where('approval_status', 'approved')
-            ->when($request->filled('examination_id'), fn ($query) => $query->where('examination_id', $request->integer('examination_id')))
-            ->when($request->filled('subject_id'), fn ($query) => $query->where('subject_id', $request->integer('subject_id')))
-            ->orderBy('section')
-            ->orderBy('question_order')
-            ->get(['id', 'examination_id', 'subject_id', 'section', 'topic', 'difficulty', 'question', 'options', 'marks', 'question_order']);
-
-        return response()->json(['data' => $questions]);
-    }
 }

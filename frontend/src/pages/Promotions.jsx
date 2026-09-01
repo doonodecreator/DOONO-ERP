@@ -14,6 +14,7 @@ export default function Promotions() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [actionError, setActionError] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
 
     const [records, setRecords] = useState([]);
 
@@ -94,7 +95,7 @@ export default function Promotions() {
 
         } catch (error) {
 
-            console.log(error);
+            setActionError(error?.response?.data?.message || "Promotion and graduation records could not be loaded.");
 
         } finally {
 
@@ -245,6 +246,7 @@ export default function Promotions() {
         <div className="min-h-screen bg-gray-100 p-6">
 
             {actionError && <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{actionError}</div>}
+            {successMessage && <div role="status" className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">{successMessage}</div>}
 
             <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
 
@@ -260,7 +262,7 @@ export default function Promotions() {
 
                         <p className="text-gray-500 mt-2">
 
-                            Manage promotions, repetitions, transfers and graduations.
+                            Manage promotions, repetitions, transfers and graduations. A promotion or repeat creates the student’s enrollments for every term in the target session; graduation closes active learning access while preserving history.
 
                         </p>
 
@@ -557,14 +559,9 @@ export default function Promotions() {
 
                                         </button>
 
-                                        <button type="button"
-                                            onClick={() => deleteRecord(record)}
-                                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
-                                        >
-
-                                            Delete
-
-                                        </button>
+                                        <span className="px-3 py-2 text-xs font-semibold text-slate-500">
+                                            History retained
+                                        </span>
 
                                     </div>
 
@@ -606,6 +603,8 @@ export default function Promotions() {
                             </button>
 
                         </div>
+
+                        {editingId && <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">This is an official lifecycle decision. The student, session, placement, and outcome are locked after recording; only the date and remarks can be corrected.</div>}
 
                         <div className="grid grid-cols-2 gap-5">
 
@@ -1063,8 +1062,8 @@ export default function Promotions() {
                                 {saving
                                     ? "Saving..."
                                     : editingId
-                                    ? "Update Record"
-                                    : "Save Record"}
+                                    ? "Update Notes"
+                                    : "Apply Decision"}
 
                             </button>
 
@@ -1086,34 +1085,32 @@ export default function Promotions() {
 
             setSaving(true);
 
+            let response;
             if (editingId) {
 
-                await api.put(
+                response = await api.put(
                     `/promotions/${editingId}`,
                     form
                 );
 
             } else {
 
-                await api.post(
+                response = await api.post(
                     "/promotions",
                     form
                 );
 
             }
 
+            setActionError("");
+            setSuccessMessage(response?.data?.message || (editingId ? "Lifecycle notes updated." : "Student lifecycle decision applied."));
             closeModal();
 
-            loadData();
+            await loadData();
 
         } catch (error) {
 
-            console.log(error);
-
-            alert(
-                error?.response?.data?.message ??
-                "Unable to save promotion."
-            );
+            setActionError(error?.response?.data?.message ?? "Unable to apply the student lifecycle decision.");
 
         } finally {
 

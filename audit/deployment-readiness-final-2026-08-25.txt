@@ -1,0 +1,533 @@
+=== RENDER CONFIG ===
+# DOONO De Creator ERP — Render Blueprint
+#
+# This Blueprint provisions the canonical backend under backend/dono-api,
+# a React static site, Postgres, a queue worker, and two billing cron jobs.
+# Enter every sync:false value in Render before the first production deploy.
+
+services:
+  - type: web
+    name: dono-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /up
+    maxShutdownDelaySeconds: 120
+    preDeployCommand: php artisan migrate --force
+    envVars:
+      - key: APP_NAME
+        value: DOONO De Creator ERP
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: dono-db
+          property: connectionString
+      - key: DB_SSLMODE
+        value: require
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: FILESYSTEM_DISK
+        value: s3
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_SCHEME
+        value: tls
+      - key: MAIL_HOST
+        sync: false
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: DOONO De Creator ERP
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_PAYMENT_URL
+        value: https://api.paystack.co
+      - key: PAYSTACK_CURRENCY
+        value: NGN
+      - key: OAUTH_ENABLED
+        value: "false"
+      - key: PASSPORT_PRIVATE_KEY
+        sync: false
+      - key: PASSPORT_PUBLIC_KEY
+        sync: false
+      - key: OAUTH_CLIENT_TOKEN_MINUTES
+        value: "60"
+      - key: BACKUP_SCHEDULE_ENABLED
+        value: "false"
+      - key: BACKUP_RETENTION_ENABLED
+        value: "false"
+      - key: BACKUP_RETENTION_DAYS
+        value: "30"
+      - key: BACKUP_DISK
+        value: s3
+      - key: BACKUP_ENCRYPTION_PASSPHRASE
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM
+        sync: false
+      - key: TWILIO_MESSAGING_SERVICE_SID
+        sync: false
+      - key: TWILIO_STATUS_CALLBACK_URL
+        sync: false
+      - key: TWILIO_WEBHOOK_URL
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_DEFAULT_REGION
+        sync: false
+      - key: AWS_BUCKET
+        sync: false
+      - key: AWS_ENDPOINT
+        sync: false
+      - key: AWS_URL
+        sync: false
+      - key: AWS_USE_PATH_STYLE_ENDPOINT
+        value: "false"
+
+  - type: worker
+    name: dono-worker
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    maxShutdownDelaySeconds: 120
+    dockerCommand: php artisan queue:work --sleep=3 --tries=3 --timeout=120 --max-time=3600
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        fromService:
+          name: dono-api
+          type: web
+          envVarKey: APP_KEY
+      - key: APP_URL
+        fromService:
+          name: dono-api
+          type: web
+          envVarKey: APP_URL
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: dono-db
+          property: connectionString
+      - key: DB_SSLMODE
+        value: require
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: FILESYSTEM_DISK
+        value: s3
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_SCHEME
+        value: tls
+      - key: MAIL_HOST
+        sync: false
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: DOONO De Creator ERP
+      - key: OAUTH_ENABLED
+        value: "false"
+      - key: PASSPORT_PRIVATE_KEY
+        sync: false
+      - key: PASSPORT_PUBLIC_KEY
+        sync: false
+      - key: OAUTH_CLIENT_TOKEN_MINUTES
+        value: "60"
+      - key: BACKUP_SCHEDULE_ENABLED
+        value: "false"
+      - key: BACKUP_RETENTION_ENABLED
+        value: "false"
+      - key: BACKUP_RETENTION_DAYS
+        value: "30"
+      - key: BACKUP_DISK
+        value: s3
+      - key: BACKUP_ENCRYPTION_PASSPHRASE
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM
+        sync: false
+      - key: TWILIO_MESSAGING_SERVICE_SID
+        sync: false
+      - key: TWILIO_STATUS_CALLBACK_URL
+        sync: false
+      - key: TWILIO_WEBHOOK_URL
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        sync: false
+
+  - type: worker
+    name: dono-scheduler
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    maxShutdownDelaySeconds: 120
+    dockerCommand: php artisan schedule:work
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        fromService:
+          name: dono-api
+          type: web
+          envVarKey: APP_KEY
+      - key: APP_URL
+        fromService:
+          name: dono-api
+          type: web
+          envVarKey: APP_URL
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: dono-db
+          property: connectionString
+      - key: DB_SSLMODE
+        value: require
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: FILESYSTEM_DISK
+        value: s3
+      - key: OAUTH_ENABLED
+        value: "false"
+      - key: BACKUP_SCHEDULE_ENABLED
+        value: "false"
+      - key: BACKUP_RETENTION_ENABLED
+        value: "false"
+      - key: BACKUP_RETENTION_DAYS
+        value: "30"
+      - key: BACKUP_DISK
+        value: s3
+      - key: BACKUP_ENCRYPTION_PASSPHRASE
+        sync: false
+      - key: BACKUP_MYSQLDUMP_BINARY
+        value: mysqldump
+      - key: BACKUP_PG_DUMP_BINARY
+=== BACKEND ENV EXAMPLE ===
+APP_NAME=Laravel
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost
+# Local Termux only: set false to test login without email verification.
+# Keep true in Render and every production environment.
+EMAIL_VERIFICATION_REQUIRED=true
+# Public frontend URL used after verification and password-reset flows.
+FRONTEND_URL=http://localhost:5173
+# Comma-separated browser origins allowed to call the API.
+CORS_ALLOWED_ORIGINS=http://localhost:5173
+
+APP_LOCALE=en
+APP_FALLBACK_LOCALE=en
+APP_FAKER_LOCALE=en_US
+
+APP_MAINTENANCE_DRIVER=file
+# APP_MAINTENANCE_STORE=database
+
+# PHP_CLI_SERVER_WORKERS=4
+
+BCRYPT_ROUNDS=12
+
+LOG_CHANNEL=stack
+LOG_STACK=single
+LOG_DEPRECATIONS_CHANNEL=null
+LOG_LEVEL=debug
+
+DB_CONNECTION=mysql
+# Render Postgres can be supplied as DB_URL with DB_CONNECTION=pgsql.
+DB_URL=
+
+DB_HOST=
+DB_PORT=
+DB_DATABASE=
+DB_USERNAME=
+DB_PASSWORD=
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=laravel
+# DB_USERNAME=root
+# DB_PASSWORD=
+
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+SESSION_PATH=/
+SESSION_DOMAIN=null
+
+BROADCAST_CONNECTION=log
+# Use public for local/Termux testing. Set to s3 with AWS_* values for persistent hosted media.
+FILESYSTEM_DISK=public
+# Assignment/submission files use a private disk and signed authenticated links.
+# Keep local for Termux; set s3 in production with the AWS_* values configured.
+ASSIGNMENT_PRIVATE_DISK_DRIVER=local
+# Optional absolute scanner command (for example clamdscan) for upload validation.
+UPLOAD_SCANNER=
+QUEUE_CONNECTION=database
+
+CACHE_STORE=database
+# CACHE_PREFIX=
+
+MEMCACHED_HOST=127.0.0.1
+
+REDIS_CLIENT=phpredis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+
+MAIL_MAILER=log
+MAIL_SCHEME=null
+MAIL_HOST=127.0.0.1
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="${APP_NAME}"
+
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=
+AWS_USE_PATH_STYLE_ENDPOINT=false
+
+VITE_APP_NAME="${APP_NAME}"
+
+# OAuth / Passport. Set false to disable machine integrations while keeping Sanctum login active.
+# Generate keys during deployment with `php artisan passport:keys` or supply PEM values through secret variables.
+# Never commit private keys. Keep this true only after Composer dependencies and keys are ready.
+OAUTH_ENABLED=true
+PASSPORT_PRIVATE_KEY=
+PASSPORT_PUBLIC_KEY=
+OAUTH_CLIENT_TOKEN_MINUTES=60
+
+# Encrypted database backup. The scheduled job is disabled unless explicitly enabled.
+BACKUP_SCHEDULE_ENABLED=false
+BACKUP_RETENTION_ENABLED=false
+BACKUP_RETENTION_DAYS=30
+BACKUP_DISK=local
+BACKUP_ENCRYPTION_PASSPHRASE=
+BACKUP_MYSQLDUMP_BINARY=mysqldump
+BACKUP_PG_DUMP_BINARY=pg_dump
+BACKUP_GPG_BINARY=gpg
+
+# Twilio SMS provider and verified status callback URL.
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_FROM=
+TWILIO_MESSAGING_SERVICE_SID=
+TWILIO_STATUS_CALLBACK_URL=
+TWILIO_WEBHOOK_URL=
+
+# Firebase Cloud Messaging HTTP v1 service account. Keep JSON/path server-side only.
+FIREBASE_PROJECT_ID=
+FIREBASE_SERVICE_ACCOUNT_JSON=
+GOOGLE_APPLICATION_CREDENTIALS=
+
+# Paystack merchant configuration
+PAYSTACK_PUBLIC_KEY=
+PAYSTACK_SECRET_KEY=
+PAYSTACK_PAYMENT_URL=https://api.paystack.co
+PAYSTACK_CURRENCY=NGN
+
+# Server-side AI tutor. Keep the API key private and enable only after a provider is configured.
+AI_ENABLED=false
+AI_BASE_URL=https://api.openai.com/v1
+AI_API_KEY=
+AI_MODEL=gpt-5-mini
+AI_MAX_COMPLETION_TOKENS=1200
+
+# Live-room provider. Keep disabled until room admission, moderation, recording, and callbacks are configured and tested.
+LIVE_ROOMS_ENABLED=false
+LIVE_ROOMS_PROVIDER=
+LIVE_ROOMS_PROVIDER_BASE_URL=
+LIVE_ROOMS_PROVIDER_PUBLIC_URL=
+LIVE_ROOMS_PROVIDER_API_KEY=
+LIVE_ROOMS_PROVIDER_API_SECRET=
+LIVE_ROOMS_PROVIDER_WEBHOOK_SECRET=
+LIVE_ROOMS_RECORDING_ENABLED=false
+LIVE_ROOMS_ADAPTER_READY=false
+
+# Live-room provider recording output (disabled unless all provider gates are enabled)
+LIVE_ROOMS_RECORDING_S3_BUCKET=
+LIVE_ROOMS_RECORDING_S3_REGION=us-east-1
+LIVE_ROOMS_RECORDING_S3_ENDPOINT=
+LIVE_ROOMS_RECORDING_S3_ACCESS_KEY=
+LIVE_ROOMS_RECORDING_S3_SECRET=
+LIVE_ROOMS_RECORDING_RETENTION_DAYS=30
+=== FRONTEND ENV EXAMPLE ===
+# Leave empty when the frontend and Laravel API share the same origin/tunnel.
+# For a separate backend, set the public API origin including /api/v1.
+# Example: VITE_API_URL=https://your-backend.example.com/api/v1
+VITE_API_URL=
+=== PRODUCTION READINESS COMMAND ===
+backend/dono-api/app/Console/Commands/SendSubscriptionReminders.php:50:                    ->queue(
+backend/dono-api/app/Console/Commands/SendSubscriptionReminders.php:79:                    ->queue(
+backend/dono-api/app/Console/Commands/SendSubscriptionReminders.php:108:                    ->queue(
+backend/dono-api/app/Console/Commands/RunEncryptedBackup.php:12:    protected $signature = 'dono:backup
+backend/dono-api/app/Console/Commands/RunEncryptedBackup.php:14:        {--initiated-by= : Platform user ID that requested this backup}
+backend/dono-api/app/Console/Commands/RunEncryptedBackup.php:15:        {--dry-run : Validate configuration and binaries without writing a backup}';
+backend/dono-api/app/Console/Commands/RunEncryptedBackup.php:17:    protected $description = 'Create and store an encrypted database backup without retaining plaintext dump files.';
+backend/dono-api/app/Console/Commands/RunEncryptedBackup.php:44:            $workDir = storage_path('app/private/backup-work');
+backend/dono-api/app/Console/Commands/RunEncryptedBackup.php:46:                throw new \RuntimeException('Unable to create the private backup work directory.');
+backend/dono-api/app/Console/Commands/RunEncryptedBackup.php:57:                $remotePath = 'backups/'.now('UTC')->format('Y/m/d').'/'.$run->id.'-'.now('UTC')->format('His').'.sql.gz.gpg';
+backend/dono-api/app/Console/Commands/RunEncryptedBackup.php:63:                    throw new \RuntimeException('The encrypted backup could not be written to the configured private disk.');
+backend/dono-api/app/Console/Commands/RunEncryptedBackup.php:74:                $this->info("Encrypted backup stored at {$remotePath}.");
+backend/dono-api/app/Console/Commands/RunEncryptedBackup.php:104:            throw new \RuntimeException("Database connection [{$connection}] is not supported by the encrypted backup command.");
+backend/dono-api/app/Console/Commands/RunEncryptedBackup.php:150:            throw new \RuntimeException('Unable to start backup process.');
+backend/dono-api/app/Console/Commands/VerifyEncryptedBackup.php:13:    protected $signature = 'dono:backup:verify
+backend/dono-api/app/Console/Commands/VerifyEncryptedBackup.php:14:        {backupRun : Backup run ID to verify}
+backend/dono-api/app/Console/Commands/VerifyEncryptedBackup.php:15:        {--disk= : Override the disk recorded on the backup run}';
+backend/dono-api/app/Console/Commands/VerifyEncryptedBackup.php:17:    protected $description = 'Verify an encrypted backup checksum and decryptability without writing plaintext output.';
+backend/dono-api/app/Console/Commands/VerifyEncryptedBackup.php:24:            $run = BackupRun::query()->findOrFail((int) $this->argument('backupRun'));
+backend/dono-api/app/Console/Commands/VerifyEncryptedBackup.php:26:                throw new RuntimeException('Only a succeeded backup run with a stored encrypted path can be verified.');
+backend/dono-api/app/Console/Commands/VerifyEncryptedBackup.php:44:                throw new RuntimeException('The encrypted backup object does not exist on the configured disk.');
+backend/dono-api/app/Console/Commands/VerifyEncryptedBackup.php:49:                throw new RuntimeException('The encrypted backup object could not be opened for verification.');
+backend/dono-api/app/Console/Commands/VerifyEncryptedBackup.php:52:            $workDir = storage_path('app/private/backup-work');
+backend/dono-api/app/Console/Commands/VerifyEncryptedBackup.php:70:                throw new RuntimeException('Encrypted backup checksum does not match the recorded checksum.');
+backend/dono-api/app/Console/Commands/VerifyEncryptedBackup.php:107:            throw new RuntimeException('GPG could not decrypt the encrypted backup: '.substr(trim((string) $stderr), 0, 2000));
+backend/dono-api/app/Console/Commands/PruneEncryptedBackups.php:12:    protected $signature = 'dono:backup:prune
+backend/dono-api/app/Console/Commands/PruneEncryptedBackups.php:13:        {--days= : Retain succeeded backups for this many days; defaults to BACKUP_RETENTION_DAYS}
+backend/dono-api/app/Console/Commands/PruneEncryptedBackups.php:14:        {--dry-run : Report eligible backups without deleting encrypted objects}';
+backend/dono-api/app/Console/Commands/PruneEncryptedBackups.php:16:    protected $description = 'Expire encrypted backup objects beyond the explicitly configured retention period.';
+backend/dono-api/app/Console/Commands/PruneEncryptedBackups.php:34:            $this->info("{$runs->count()} encrypted backup(s) are eligible for expiration after {$days} day(s).");
+backend/dono-api/app/Console/Commands/PruneEncryptedBackups.php:51:                $this->line("Expired backup run {$run->id}.");
+backend/dono-api/app/Console/Commands/CheckDonoReadiness.php:9:    protected $signature = 'dono:readiness';
+backend/dono-api/app/Console/Commands/CheckDonoReadiness.php:18:        $backupEnabled = (bool) env('BACKUP_SCHEDULE_ENABLED', false) || (bool) env('BACKUP_RETENTION_ENABLED', false);
+backend/dono-api/app/Console/Commands/CheckDonoReadiness.php:20:        $this->line('<info>DOONO De Creator ERP readiness</info>');
+backend/dono-api/app/Console/Commands/CheckDonoReadiness.php:23:        $this->check('Queue is asynchronous', ! in_array((string) config('queue.default'), ['sync', ''], true), app()->environment('production'), $failures, $warnings);
+backend/dono-api/app/Console/Commands/CheckDonoReadiness.php:46:        if ($backupEnabled) {
+backend/dono-api/app/Console/Commands/CheckDonoReadiness.php:47:            $backupDisk = (string) env('BACKUP_DISK', env('FILESYSTEM_DISK', 'local'));
+backend/dono-api/app/Console/Commands/CheckDonoReadiness.php:51:            $this->check('Backup disk configured', (bool) config("filesystems.disks.{$backupDisk}"), true, $failures, $warnings);
+backend/dono-api/app/Http/Controllers/Api/AdminRevenueController.php:61:                'reconciliation_review_queue' => $reviewQueue->count(),
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:134:                'code' => 'EMAIL_VERIFICATION_REQUIRED',
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:174:                'message' => "This plan uses {$planCurrency}, but this Paystack merchant is configured for {$merchantCurrency}. Update the plan currency or PAYSTACK_CURRENCY before retrying.",
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:83:            abort_if(in_array($locked->status, ['successful', 'refunded'], true), 422, 'This payment changed while it was being reviewed. Reload the queue.');
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:144:            abort_unless($response->successful() && ($body['status'] ?? false) && $refund, 502, $body['message'] ?? 'Paystack could not queue the refund.');
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:165:                "Refund {$paymentTransaction->reference} was " . ($confirmed ? 'processed.' : 'queued for processing.'),
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:171:            return (new PaymentTransactionResource($paymentTransaction->fresh()->load(['school:id,name', 'schoolSubscription.subscriptionPlan:id,name,slug', 'reviewer:id,name'])))->additional(['message' => $confirmed ? 'Refund processed.' : 'Refund queued for processing.']);
+backend/dono-api/app/Http/Controllers/Api/PlatformOwnerController.php:97:                'reconciliation_review_queue' => $reviewQueue,
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:243:            action: 'delivery_retry_queued',
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:244:            description: 'Failed external communication deliveries were queued for retry.',
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:253:            'message' => $deliveries->count() > 0 ? 'Failed deliveries queued for retry.' : 'There are no failed deliveries to retry.',
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:254:            'data' => ['queued_count' => $deliveries->count()],
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:326:            $count = $this->externalDeliveries->queueForCommunication($communication->loadMissing('school'), $channel);
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:328:                'delivery_status' => $count > 0 ? 'queued' : 'no_recipients',
+backend/dono-api/app/Http/Controllers/Api/PlatformOperationsController.php:31:        $queueDriver = (string) config('queue.default', 'unknown');
+backend/dono-api/app/Http/Controllers/Api/PlatformOperationsController.php:32:        $queueStatus = $queueDriver === 'sync' ? 'configured' : ($queueDriver ? 'configured' : 'unknown');
+backend/dono-api/app/Http/Controllers/Api/PlatformOperationsController.php:41:        $workerHeartbeat = Cache::get('dono:queue:heartbeat');
+backend/dono-api/app/Http/Controllers/Api/PlatformOperationsController.php:67:                'queue' => ['status' => $queueStatus, 'driver' => $queueDriver, 'pending_jobs' => $pendingJobs, 'failed_jobs' => $failedJobs, 'worker_status' => $workerStatus, 'worker_last_heartbeat' => $workerHeartbeat],
+backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php:297:        return response()->json(['data' => $cbtAssessment->fresh(), 'message' => 'CBT scores sent to the official Results Management review queue.']);
+backend/dono-api/app/Http/Controllers/Api/TwilioWebhookController.php:37:            'queued', 'accepted', 'sending', 'sent' => 'provider_accepted',
+backend/dono-api/app/Http/Controllers/Api/BackupController.php:37:        RunEncryptedBackupJob::dispatch($request->user()?->id)->onQueue('backups');
+backend/dono-api/app/Http/Controllers/Api/BackupController.php:40:            'message' => 'Encrypted backup request queued. Refresh the backup list for the result.',
+backend/dono-api/app/Http/Controllers/Api/BackupController.php:44:    public function verify(BackupRun $backupRun)
+backend/dono-api/app/Http/Controllers/Api/BackupController.php:46:        abort_unless($backupRun->status === 'succeeded' && $backupRun->path, 422, 'Only a completed backup with an encrypted artifact can be verified.');
+backend/dono-api/app/Http/Controllers/Api/BackupController.php:47:        VerifyEncryptedBackupJob::dispatch($backupRun->id)->onQueue('backups');
+backend/dono-api/app/Http/Controllers/Api/BackupController.php:50:            'message' => 'Encrypted backup verification queued. Refresh the backup list and inspect worker logs for the result.',
+backend/dono-api/app/Http/Controllers/Api/CommunityController.php:121:        return response()->json(['message' => 'Report submitted to the school moderation queue.', 'data' => $report], 201);
+backend/dono-api/app/Services/CommunicationDeliveryService.php:15:    public function queueForCommunication(Communication $communication, string $channel): int
+backend/dono-api/app/Services/LiveRoomService.php:35:                    ? 'Provider credentials exist, but the verified adapter readiness switch and client contract are not enabled.'
+backend/dono-api/app/Services/LiveRoomService.php:52:            ['key' => 'adapter_ready', 'label' => 'Adapter readiness explicitly enabled', 'ok' => (bool) ($config['adapter_ready'] ?? false)],
+backend/dono-api/app/Jobs/ProcessCommunicationDelivery.php:159:            $pending > 0 => 'queued',
+backend/dono-api/app/Jobs/RunEncryptedBackupJob.php:23:        $exitCode = Artisan::call('dono:backup', $arguments);
+backend/dono-api/app/Jobs/RunEncryptedBackupJob.php:25:            throw new \RuntimeException(Artisan::output() ?: 'Encrypted backup command failed.');
+backend/dono-api/app/Jobs/VerifyEncryptedBackupJob.php:19:    public function __construct(public int $backupRunId) {}
+backend/dono-api/app/Jobs/VerifyEncryptedBackupJob.php:23:        $exitCode = Artisan::call('dono:backup:verify', [
+backend/dono-api/app/Jobs/VerifyEncryptedBackupJob.php:24:            'backupRun' => $this->backupRunId,
+backend/dono-api/app/Jobs/VerifyEncryptedBackupJob.php:27:            throw new RuntimeException(Artisan::output() ?: 'Encrypted backup verification failed.');
+backend/dono-api/routes/api.php:264:            Route::get('platform/backups', [BackupController::class, 'index']);
+backend/dono-api/routes/api.php:265:            Route::post('platform/backups', [BackupController::class, 'store']);
+backend/dono-api/routes/api.php:266:            Route::post('platform/backups/{backupRun}/verify', [BackupController::class, 'verify']);
+backend/dono-api/routes/console.php:44:    Schedule::command('dono:backup')
+backend/dono-api/routes/console.php:52:    Schedule::command('dono:backup:prune --days='.$retentionDays)
+backend/dono-api/config/app.php:58:    'email_verification_required' => (bool) env('EMAIL_VERIFICATION_REQUIRED', true),
+backend/dono-api/config/filesystems.php:92:    | `storage:link` Artisan command is executed. The array keys should be
+backend/dono-api/config/mail.php:17:    'default' => env('MAIL_MAILER', 'log'),
+backend/dono-api/config/mail.php:42:            'scheme' => env('MAIL_SCHEME'),
+backend/dono-api/config/mail.php:43:            'url' => env('MAIL_URL'),
+backend/dono-api/config/mail.php:44:            'host' => env('MAIL_HOST', '127.0.0.1'),
+backend/dono-api/config/mail.php:45:            'port' => env('MAIL_PORT', 2525),
+backend/dono-api/config/mail.php:46:            'username' => env('MAIL_USERNAME'),
+backend/dono-api/config/mail.php:47:            'password' => env('MAIL_PASSWORD'),
+backend/dono-api/config/mail.php:49:            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+backend/dono-api/config/mail.php:70:            'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
+backend/dono-api/config/mail.php:75:            'channel' => env('MAIL_LOG_CHANNEL'),
+backend/dono-api/config/mail.php:114:        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+backend/dono-api/config/mail.php:115:        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+backend/dono-api/config/queue.php:10:    | Laravel's queue supports a variety of backends via a single, unified
+backend/dono-api/config/queue.php:12:    | syntax for each. The default queue connection is defined below.
+backend/dono-api/config/queue.php:23:    | Here you may configure the connection options for every queue backend
+backend/dono-api/config/queue.php:42:            'queue' => env('DB_QUEUE', 'default'),
+backend/dono-api/config/queue.php:50:            'queue' => env('BEANSTALKD_QUEUE', 'default'),
+backend/dono-api/config/queue.php:61:            'queue' => env('SQS_QUEUE', 'default'),
+backend/dono-api/config/queue.php:70:            'queue' => env('REDIS_QUEUE', 'default'),
+backend/dono-api/config/queue.php:115:    | These options configure the behavior of failed queue job logging so you
+backend/dono-api/config/services.php:39:        'account_sid' => env('TWILIO_ACCOUNT_SID'),
+backend/dono-api/config/services.php:40:        'auth_token' => env('TWILIO_AUTH_TOKEN'),
+backend/dono-api/config/services.php:41:        'from' => env('TWILIO_FROM'),
+backend/dono-api/config/services.php:42:        'messaging_service_sid' => env('TWILIO_MESSAGING_SERVICE_SID'),
+backend/dono-api/config/services.php:43:        'status_callback_url' => env('TWILIO_STATUS_CALLBACK_URL'),
+backend/dono-api/config/services.php:44:        'webhook_url' => env('TWILIO_WEBHOOK_URL'),
+backend/dono-api/config/services.php:48:        'project_id' => env('FIREBASE_PROJECT_ID'),
+backend/dono-api/config/services.php:49:        'service_account_json' => env('FIREBASE_SERVICE_ACCOUNT_JSON'),
+backend/dono-api/config/services.php:81:        'public_key' => env('PAYSTACK_PUBLIC_KEY'),
+backend/dono-api/config/services.php:83:        'secret_key' => env('PAYSTACK_SECRET_KEY'),
+backend/dono-api/config/services.php:86:            'PAYSTACK_PAYMENT_URL',
+backend/dono-api/config/services.php:90:        'callback_url' => env('PAYSTACK_CALLBACK_URL'),
+backend/dono-api/config/services.php:93:        'currency' => strtoupper((string) env('PAYSTACK_CURRENCY', 'NGN')),
+backend/dono-api/config/passport.php:31:    'private_key' => env('PASSPORT_PRIVATE_KEY'),

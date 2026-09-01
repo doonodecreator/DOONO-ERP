@@ -48,6 +48,9 @@ class TeacherPortalController extends Controller
         $timetableQuery = Timetable::where('school_id', $schoolId)
             ->where('staff_id', $staff->id)
             ->where('is_active', true)
+            ->where(function ($statusQuery) {
+                $statusQuery->where('workflow_status', 'published')->orWhereNull('workflow_status');
+            })
             ->where(function ($query) {
                 $query->where('entry_type', 'lesson')->orWhereNull('entry_type');
             })

@@ -1,0 +1,1236 @@
+=== CURRENT CONTEXT SERVICE ===
+<?php
+
+namespace App\Services;
+
+use App\Models\AcademicSession;
+use App\Models\Organization;
+use App\Models\School;
+use App\Models\Term;
+use App\Models\User;
+
+class CurrentContextService
+{
+    public function __construct(
+        protected TenantPartitionService $tenantPartitions,
+        protected MediaStorageService $media,
+    ) {}
+
+    /**
+     * Resolve the authenticated user's complete platform context.
+     *
+     * This is the single source of truth for:
+     * - current organization
+     * - current school
+     * - roles
+     * - permissions
+     * - onboarding stage
+     */
+    public function resolve(User $user): array
+    {
+        $isPlatformAdmin = $user->isSuperAdmin();
+        $school = $this->currentSchool($user);
+        $organization = $this->currentOrganization($user, $school);
+        $isOrgOwner = $this->isOrganizationOwner($user);
+        $academicContext = $this->academicContext($school);
+
+        // Resolve every membership for context switching, then derive the
+        // active-school role set used by the frontend and permission checks.
+        $allRoles = $user->roles()
+            ->get()
+            ->map(fn ($role) => [
+                'slug' => $role->slug,
+                'name' => $role->name,
+                'school_id' => $role->pivot->school_id,
+                'permissions' => $role->permissions->pluck('slug')->all(),
+            ]);
+
+        $roles = $allRoles->values();
+
+        // If an Organization Owner has entered a school, grant them the Proprietor role for that school
+        if ($isOrgOwner && $school && $organization && $organization->owner_id === $user->id) {
+            $hasProprietorRole = $roles->contains(function ($r) use ($school) {
+                return $r['slug'] === 'proprietor' && (int)$r['school_id'] === (int)$school->id;
+            });
+
+            if (!$hasProprietorRole) {
+                $proprietorRole = \App\Models\Role::where('slug', 'proprietor')->first();
+                $roles->push([
+                    'slug' => 'proprietor',
+                    'name' => 'Proprietor',
+                    'school_id' => $school->id,
+                    'permissions' => $proprietorRole ? $proprietorRole->permissions->pluck('slug')->all() : [],
+                ]);
+            }
+        }
+
+        return [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'avatar' => $user->avatar,
+                'avatar_url' => $this->media->url($user->avatar),
+                'must_change_password' => (bool) $user->must_change_password,
+                'password_changed_at' => $user->password_changed_at,
+            ],
+            'is_platform_admin' => $isPlatformAdmin,
+            'is_organization_owner' => $isOrgOwner,
+            'organization' => $organization,
+            'school' => $school,
+            'tenant_partition' => $this->tenantPartitions->forSchool($school),
+            'academic_context' => $academicContext,
+            'roles' => $this->presentRoles($roles, $school?->id, $isPlatformAdmin),
+            'all_roles' => $roles->map(fn($r) => collect($r)->except('permissions')->all())->values(),
+            'permissions' => $this->activePermissions($roles, $school?->id, $isPlatformAdmin),
+            'onboarding_step' => $this->resolveOnboardingStep(
+                $isPlatformAdmin,
+                $organization,
+                $school
+            ),
+        ];
+    }
+
+    /**
+     * Resolve the user's current school.
+     *
+     * Priority:
+     * 1. School attached to one of the user's roles.
+     * 2. A school directly owned by the user.
+     */
+    public function currentSchool(User $user): ?School
+    {
+        // 1. Explicitly selected school (stored on user profile)
+        // If current_school_id is set, we use it. If it's NULL, it means the user
+        // intentionally chose the Organization context (for owners).
+        if ($user->current_school_id) {
+            $selectedSchool = School::find($user->current_school_id);
+            if ($selectedSchool) {
+                // Ensure the user actually has access to this school
+                $isOwner = $selectedSchool->owner_id === $user->id;
+                $hasRole = $user->roles()->wherePivot('school_id', $selectedSchool->id)->exists();
+
+                if ($isOwner || $hasRole) {
+                    return $selectedSchool;
+                }
+            }
+        }
+
+        // 2. If the user is an Organization Owner, we don't fall back.
+        // We let them stay in the Organization context unless they explicitly select a school.
+        if ($this->isOrganizationOwner($user)) {
+            return null;
+        }
+
+        // 3. Fallback for staff: School attached to one of the user's roles.
+        $roleWithSchool = $user->roles()
+            ->wherePivotNotNull('school_id')
+            ->orderByDesc('user_roles.created_at')
+            ->first();
+
+        if ($roleWithSchool && $roleWithSchool->pivot->school_id) {
+            return School::find($roleWithSchool->pivot->school_id);
+        }
+
+        // 4. Final fallback: First school directly owned by the user (only if not an Org Owner).
+        return $user->ownedSchools()
+            ->latest()
+            ->first();
+    }
+
+    /**
+     * Resolve the user's current organization.
+     */
+    public function currentOrganization(
+        User $user,
+        ?School $school = null
+    ): ?Organization {
+        if ($school) {
+            return $school->organization;
+        }
+
+        return Organization::where('owner_id', $user->id)
+            ->latest()
+            ->first();
+    }
+
+    /**
+     * Determine whether the user owns at least one organization.
+     */
+    public function isOrganizationOwner(User $user): bool
+    {
+        return Organization::where('owner_id', $user->id)->exists();
+    }
+
+    /**
+     * Determine whether the user may manage the specified organization.
+     * Platform owners can manage all organizations; organization owners can
+     * manage only records they own.
+     */
+    public function canManageOrganization(User $user, Organization $organization): bool
+    {
+        return $user->isSuperAdmin() || $organization->owner_id === $user->id;
+    }
+
+    private function presentRoles($roles, ?int $schoolId, bool $isPlatformAdmin): array
+    {
+        $visible = $isPlatformAdmin
+            ? $roles
+            : ($schoolId === null
+                ? $roles->filter(fn ($role) => $role['school_id'] === null)
+                : $roles->filter(fn ($role) => (int) $role['school_id'] === $schoolId));
+
+        return $visible
+            ->map(fn ($role) => collect($role)->except('permissions')->all())
+            ->values()
+            ->all();
+    }
+
+    private function activePermissions($roles, ?int $schoolId, bool $isPlatformAdmin): array
+    {
+        $visible = $isPlatformAdmin
+            ? $roles
+            : ($schoolId === null
+                ? $roles->filter(fn ($role) => $role['school_id'] === null)
+                : $roles->filter(fn ($role) => (int) $role['school_id'] === $schoolId));
+
+        return $visible
+            ->flatMap(fn ($role) => $role['permissions'])
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function academicContext(?School $school): array
+    {
+        if (! $school) {
+            return [
+                'session' => null,
+                'term' => null,
+                'state' => 'organization_context',
+            ];
+        }
+
+        $session = AcademicSession::query()
+            ->where('school_id', $school->id)
+            ->where('is_current', true)
+            ->first(['id', 'name', 'start_date', 'end_date']);
+        $term = $session
+            ? Term::query()->where('academic_session_id', $session->id)->where('is_current', true)->first(['id', 'name', 'start_date', 'end_date'])
+            : null;
+
+        return [
+            'session' => $session ? [
+                'id' => $session->id,
+                'name' => $session->name,
+                'start_date' => optional($session->start_date)->format('Y-m-d'),
+                'end_date' => optional($session->end_date)->format('Y-m-d'),
+            ] : null,
+            'term' => $term ? [
+                'id' => $term->id,
+                'name' => $term->name,
+                'start_date' => optional($term->start_date)->format('Y-m-d'),
+                'end_date' => optional($term->end_date)->format('Y-m-d'),
+            ] : null,
+            'state' => ! $session ? 'needs_session' : (! $term ? 'needs_term' : 'ready'),
+        ];
+    }
+
+    /**
+     * Resolve onboarding state.
+     */
+    private function resolveOnboardingStep(
+        bool $isPlatformAdmin,
+        ?Organization $organization,
+        ?School $school
+    ): string {
+        if ($isPlatformAdmin) {
+            return 'complete';
+        }
+
+        if (!$organization) {
+            return 'organization_setup';
+        }
+
+        // Only force school setup if the organization has ZERO schools.
+        // If they have schools but haven't selected one (school is null),
+        // they should see the Organization Dashboard, not the setup page.
+        $hasSchools = $organization->schools()->exists();
+        if (!$hasSchools) {
+            return 'school_setup';
+        }
+
+        return 'complete';
+    }
+}
+=== USER MODEL ===
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Schema;
+use App\Mail\PasswordResetMail;
+use App\Services\EmailDeliveryService;
+use Laravel\Sanctum\HasApiTokens;
+
+class User extends Authenticatable implements MustVerifyEmailContract
+{
+    use HasApiTokens, HasFactory, Notifiable, MustVerifyEmailTrait;
+
+    protected $fillable = [
+        'name',
+        'email',
+        'avatar',
+        'password',
+        'must_change_password',
+        'password_changed_at',
+        'email_verified_at',
+        'current_school_id',
+        'mfa_enabled',
+        'mfa_secret',
+        'mfa_recovery_codes',
+    ];
+
+    protected $appends = [
+        'avatar_url',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+        'mfa_secret',
+        'mfa_recovery_codes',
+    ];
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return app(\App\Services\MediaStorageService::class)->url($this->avatar);
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'must_change_password' => 'boolean',
+            'password_changed_at' => 'datetime',
+            'mfa_enabled' => 'boolean',
+            'mfa_secret' => 'encrypted',
+            'mfa_recovery_codes' => 'encrypted:array',
+            'mfa_confirmed_at' => 'datetime',
+            'mfa_last_used_at' => 'datetime',
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $frontendUrl = rtrim((string) env('FRONTEND_URL', config('app.url')), '/');
+        $resetUrl = $frontendUrl.'/forgot-password/reset?token='.urlencode($token).'&email='.urlencode($this->email);
+        app(EmailDeliveryService::class)->deliverOne(
+            user: $this,
+            email: $this->email,
+            messageType: 'password_reset',
+            subject: 'Reset your DONO School ERP password',
+            bodyText: "Hello {$this->name},\n\nReset your password here:\n{$resetUrl}\n\nIf you did not request this, ignore this message.",
+            actionData: ['action_url' => $resetUrl, 'action_label' => 'Reset password'],
+            mailable: new PasswordResetMail($this, $token),
+        );
+    }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_roles')
+            ->withPivot('school_id')
+            ->withTimestamps();
+    }
+
+    public function organizations()
+    {
+        return $this->hasMany(Organization::class, 'owner_id');
+    }
+
+    public function ownedSchools()
+    {
+        return $this->hasMany(School::class, 'owner_id');
+    }
+
+    public function currentSchool()
+    {
+        return $this->belongsTo(School::class, 'current_school_id');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Current School Helper
+    |--------------------------------------------------------------------------
+    */
+
+    public function currentSchoolId(): ?int
+    {
+        // First try a role assigned to a specific school.
+        $schoolId = $this->roles()
+            ->wherePivotNotNull('school_id')
+            ->value('user_roles.school_id');
+
+        if ($schoolId) {
+            return (int) $schoolId;
+        }
+
+        // Otherwise fall back to the first school the user owns.
+        return $this->ownedSchools()->value('id');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Role & Permission Helpers
+    |--------------------------------------------------------------------------
+    */
+
+    public function hasRole(string $slug, null|int|string $schoolId = null): bool
+    {
+        $query = $this->roles()->where('slug', $slug);
+
+        if ($schoolId === 'any') {
+            return $query->exists();
+        }
+
+        if ($schoolId === null) {
+            return $query->wherePivotNull('school_id')->exists();
+        }
+
+        return $query->wherePivot('school_id', $schoolId)->exists();
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super_admin');
+    }
+
+    public function hasPermission(string $permissionSlug, ?int $schoolId = null): bool
+    {
+        $roles = $this->roles();
+
+        if ($schoolId !== null) {
+            $roles->wherePivot('school_id', $schoolId);
+        }
+
+        if ($roles
+            ->whereHas('permissions', function ($query) use ($permissionSlug) {
+                $query->where('slug', $permissionSlug);
+            })
+            ->exists()) {
+            return true;
+        }
+
+        if ($schoolId === null || ! Schema::hasTable('school_setup_delegations')) {
+            return false;
+        }
+
+        return SchoolSetupDelegation::query()
+            ->where('school_id', $schoolId)
+            ->where('user_id', $this->id)
+            ->whereHas('permission', function ($query) use ($permissionSlug) {
+                $query->where('slug', $permissionSlug);
+            })
+            ->exists();
+    }
+}
+=== AUTH/CONTEXT MIDDLEWARES ===
+backend/dono-api/app/Http/Middleware/Authenticate.php
+--- backend/dono-api/app/Http/Middleware/Authenticate.php
+<?php
+
+namespace App\Http\Middleware;
+
+use Illuminate\Auth\Middleware\Authenticate as Middleware;
+use Illuminate\Http\Request;
+
+class Authenticate extends Middleware
+{
+    protected function redirectTo(Request $request): ?string
+    {
+        return null;
+    }
+}
+backend/dono-api/app/Http/Middleware/CheckActiveSubscription.php
+--- backend/dono-api/app/Http/Middleware/CheckActiveSubscription.php
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Models\SchoolSubscription;
+use App\Models\SystemSetting;
+use App\Services\CurrentContextService;
+use App\Services\SubscriptionAccessService;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class CheckActiveSubscription
+{
+    public function __construct(
+        private CurrentContextService $context,
+        private SubscriptionAccessService $access,
+    ) {
+    }
+
+    public function handle(Request $request, Closure $next): Response
+    {
+        $enforced = (bool) (SystemSetting::first()?->enforce_subscriptions ?? false);
+
+        if (!$enforced || $request->user()?->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        $user = $request->user();
+        $schoolId = $this->context->currentSchool($user)?->id;
+
+        if (!$schoolId) {
+            return $next($request);
+        }
+
+        $feature = $this->featureForRequest($request);
+
+        // Setup and basic administration remain available so a new school can
+        // become operational before selecting a paid plan.
+        if (!$feature) {
+            return $next($request);
+        }
+
+        $subscription = SchoolSubscription::with('subscriptionPlan.featureModels')
+            ->where('school_id', $schoolId)
+            ->where('is_current', true)
+            ->latest('id')
+            ->first();
+
+        if ($this->access->allows($subscription, $feature, $enforced)) {
+            return $next($request);
+        }
+
+        return response()->json([
+            'success' => false,
+            'requires_subscription' => true,
+            'requested_feature' => $feature,
+            'requested_feature_label' => $this->access->label($feature),
+            'current_plan' => $subscription?->subscriptionPlan?->name,
+            'status' => $subscription?->status ?? 'unsubscribed',
+            'message' => $subscription && $subscription->isActive()
+                ? "Your current plan does not include {$this->access->label($feature)}. Upgrade your plan to continue."
+                : "An active subscription is required for {$this->access->label($feature)}. Core school setup remains available while you choose a plan.",
+            'upgrade_url' => '/dashboard/subscription/upgrade',
+        ], 402);
+    }
+
+    private function featureForRequest(Request $request): ?string
+    {
+        $path = trim($request->path(), '/');
+
+        $groups = [
+            'fees' => ['fees', 'student-fees', 'fee-payments', 'payment-receipts', 'fee-adjustments', 'payments/paystack'],
+            'accounting' => ['expenses', 'financial-reports'],
+            'payroll' => ['payroll'],
+            'results' => ['results', 'result-entry', 'result-submissions', 'examinations', 'exam-scores', 'assessment-structures', 'promotions', 'graduation-records'],
+            'report_cards' => ['report-cards', 'student/report-card', 'parent/report-cards'],
+            'cbt' => ['cbt-questions', 'cbt-assessments', 'cbt-attempts', 'assessment-activities', 'student/cbt-assessments', 'student/cbt-attempts', 'student/cbt-questions'],
+            'library' => ['library', 'books', 'book-loans', 'student/library'],
+            'transport' => ['vehicles', 'transport-routes', 'transport-allocations', 'transport-logs', 'portal/transport-tracking', 'student/transport-tracking'],
+            'hostel' => ['hostels', 'hostel-rooms', 'hostel-allocations'],
+            'clinic' => ['medical-records', 'clinic-visits'],
+            'school_operations' => ['school-events', 'school-facilities', 'visitors', 'gate-passes', 'appointments', 'reception-activities', 'discipline-cases', 'safety-incidents', 'leave-requests', 'student-leave-applications', 'portal/leave-applications', 'student/leave-applications'],
+            'inventory' => ['assets', 'asset-register'],
+            'sms' => ['sms'],
+        ];
+
+        foreach ($groups as $feature => $prefixes) {
+            foreach ($prefixes as $prefix) {
+                if ($path === "api/v1/{$prefix}" || str_starts_with($path, "api/v1/{$prefix}/")) {
+                    return $feature;
+                }
+            }
+        }
+
+        return null;
+    }
+}
+backend/dono-api/app/Http/Middleware/CheckMaintenanceMode.php
+--- backend/dono-api/app/Http/Middleware/CheckMaintenanceMode.php
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class CheckMaintenanceMode
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  Closure(Request): (Response)  $next
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        return $next($request);
+    }
+}
+backend/dono-api/app/Http/Middleware/CheckStaffActive.php
+--- backend/dono-api/app/Http/Middleware/CheckStaffActive.php
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Services\CurrentContextService;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class CheckStaffActive
+{
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    /**
+     * Handle an incoming request and ensure the staff member is still active in the school.
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        $user = $request->user();
+
+        // Platform Super Admins always bypass
+        if ($user && method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
+        $schoolId = $this->context->currentSchool($user)?->id;
+
+        if (! $schoolId) {
+            return $next($request);
+        }
+
+        // A staff record is authoritative for school access. On-leave staff may
+        // still sign in, but suspended, retired, resigned, and terminated staff
+        // must be blocked immediately. Eloquent attributes are accessed through
+        // getAttribute(), not property_exists(), because employment_status is a
+        // database column rather than a declared PHP property.
+        $staffRecord = \App\Models\Staff::where('user_id', $user->id)
+            ->where('school_id', $schoolId)
+            ->first();
+
+        $employmentStatus = strtolower(trim((string) $staffRecord?->getAttribute('employment_status')));
+        $staffRoleSlugs = [
+            'principal', 'vice_principal', 'vice_principal_academic',
+            'vice_principal_admin', 'nursery_head', 'primary_head',
+            'secondary_head', 'teacher', 'form_teacher', 'bursar',
+            'cashier', 'accountant', 'librarian', 'nurse', 'hostel_master',
+            'hostel_mistress', 'transport_manager', 'receptionist',
+        ];
+        $hasStaffRole = $user->roles()
+            ->wherePivot('school_id', $schoolId)
+            ->whereIn('slug', $staffRoleSlugs)
+            ->exists();
+
+        $isStaffActive = $staffRecord
+            ? in_array($employmentStatus, ['active', 'on leave', 'on_leave'], true)
+            : ! $hasStaffRole && $this->context->currentSchool($user)?->id === (int) $schoolId;
+
+        if (! $isStaffActive) {
+            // Instantly revoke all active API tokens so they cannot make further requests
+            $user->tokens()->delete();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'You are no longer a staff of this school.',
+            ], 403);
+        }
+
+        return $next($request);
+    }
+}
+backend/dono-api/app/Http/Middleware/CheckSubscriptionFeature.php
+--- backend/dono-api/app/Http/Middleware/CheckSubscriptionFeature.php
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Models\SchoolSubscription;
+use App\Models\SystemSetting;
+use App\Services\CurrentContextService;
+use App\Services\SubscriptionAccessService;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class CheckSubscriptionFeature
+{
+    public function __construct(
+        private CurrentContextService $context,
+        private SubscriptionAccessService $access,
+    ) {
+    }
+
+    public function handle(Request $request, Closure $next, string $feature): Response
+    {
+        $enforced = (bool) (SystemSetting::first()?->enforce_subscriptions ?? false);
+
+        if (!$enforced || $request->user()?->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+        if (!$schoolId) {
+            return $next($request);
+        }
+
+        $subscription = SchoolSubscription::with('subscriptionPlan.featureModels')
+            ->where('school_id', $schoolId)
+            ->where('is_current', true)
+            ->latest('id')
+            ->first();
+
+        if ($this->access->allows($subscription, $feature, $enforced)) {
+            return $next($request);
+        }
+
+        return response()->json([
+            'success' => false,
+            'requires_subscription' => true,
+            'requested_feature' => $feature,
+            'requested_feature_label' => $this->access->label($feature),
+            'current_plan' => $subscription?->subscriptionPlan?->name,
+            'recommended_plan' => $subscription?->subscriptionPlan?->recommendedPlanForFeature($feature)?->name,
+            'message' => "Upgrade your subscription to use {$this->access->label($feature)}.",
+            'upgrade_url' => '/dashboard/subscription/upgrade',
+        ], 402);
+    }
+}
+backend/dono-api/app/Http/Middleware/HasSchool.php
+--- backend/dono-api/app/Http/Middleware/HasSchool.php
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Services\CurrentContextService;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class HasSchool
+{
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    /**
+     * Handle an incoming request with strict tenant isolation.
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Access Denied: Unassigned or invalid school context.',
+            ], 403);
+        }
+
+        // CurrentContextService is the sole resolver of a user's default school.
+        $resolvedSchoolId = $this->context->currentSchool($user)?->id;
+
+        // Platform admins may explicitly select a school for a platform action.
+        if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+            $requestedSchoolId = $request->header('X-School-Id')
+                ?? $request->input('school_id')
+                ?? $resolvedSchoolId;
+
+            if ($requestedSchoolId) {
+                $request->attributes->set('current_school_id', (int) $requestedSchoolId);
+            }
+
+            return $next($request);
+        }
+
+        if (! $resolvedSchoolId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Access Denied: Unassigned or invalid school context.',
+            ], 403);
+        }
+
+        // Reject user-supplied school IDs that do not match the trusted context.
+        if ($request->has('school_id') && (int) $request->input('school_id') !== (int) $resolvedSchoolId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Security Alert: Cross-tenant data modification attempt blocked.',
+            ], 403);
+        }
+
+        $request->attributes->set('current_school_id', (int) $resolvedSchoolId);
+
+        return $next($request);
+    }
+}
+backend/dono-api/app/Http/Middleware/OrganizationOwnerMiddleware.php
+--- backend/dono-api/app/Http/Middleware/OrganizationOwnerMiddleware.php
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Services\CurrentContextService;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class OrganizationOwnerMiddleware
+{
+    public function __construct(private readonly CurrentContextService $context)
+    {
+    }
+
+    public function handle(Request $request, Closure $next): Response
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        if (! $this->context->currentOrganization($user)) {
+            return response()->json(['message' => 'Access denied.'], 403);
+        }
+
+        return $next($request);
+    }
+}
+backend/dono-api/app/Http/Middleware/PermissionMiddleware.php
+--- backend/dono-api/app/Http/Middleware/PermissionMiddleware.php
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Models\Role;
+use App\Models\School;
+use App\Services\CurrentContextService;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class PermissionMiddleware
+{
+    public function __construct(private readonly CurrentContextService $context)
+    {
+    }
+
+    public function handle(Request $request, Closure $next, string $permission): Response
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        if ($user->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        $schoolId = $this->context->currentSchool($user)?->id;
+
+        $hasPermission = $schoolId && $user->hasPermission($permission, (int) $schoolId);
+        if (! $hasPermission && $schoolId) {
+            $isOwnedOrganizationSchool = School::query()
+                ->whereKey($schoolId)
+                ->where(function ($query) use ($user) {
+                    $query->where('owner_id', $user->id)
+                        ->orWhereHas('organization', fn ($organization) => $organization->where('owner_id', $user->id));
+                })
+                ->exists();
+            $hasPermission = $isOwnedOrganizationSchool && Role::query()
+                ->where('slug', 'proprietor')
+                ->whereHas('permissions', fn ($query) => $query->where('slug', $permission))
+                ->exists();
+        }
+
+        if (! $schoolId || ! $hasPermission) {
+            return response()->json([
+                'message' => 'Forbidden. You do not have the required permission for this school.',
+            ], 403);
+        }
+
+        return $next($request);
+    }
+}
+backend/dono-api/app/Http/Middleware/RoleMiddleware.php
+--- backend/dono-api/app/Http/Middleware/RoleMiddleware.php
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Models\School;
+use App\Services\CurrentContextService;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class RoleMiddleware
+{
+    public function __construct(private readonly CurrentContextService $context)
+    {
+    }
+
+    public function handle(Request $request, Closure $next, ...$roles): Response
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        // The only platform-wide role is super_admin. It is intentionally
+        // evaluated without a school context.
+        if (in_array('super_admin', $roles, true) && $user->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        // All operational roles must match the trusted current school. Routes
+        // inside the has.school group provide this attribute; other role-gated
+        // routes resolve it through the same CurrentContextService source.
+        $schoolId = $this->context->currentSchool($user)?->id;
+
+        if (! $schoolId) {
+            return response()->json(['message' => 'Access denied.'], 403);
+        }
+
+        foreach ($roles as $role) {
+            if ($role !== 'super_admin' && $user->hasRole($role, (int) $schoolId)) {
+                return $next($request);
+            }
+
+            if ($role === 'proprietor' && School::query()
+                ->whereKey($schoolId)
+                ->where(function ($query) use ($user) {
+                    $query->where('owner_id', $user->id)
+                        ->orWhereHas('organization', fn ($organization) => $organization->where('owner_id', $user->id));
+                })
+                ->exists()) {
+                return $next($request);
+            }
+        }
+
+        return response()->json(['message' => 'Access denied.'], 403);
+    }
+}
+backend/dono-api/app/Http/Middleware/EnsurePasswordChanged.php
+--- backend/dono-api/app/Http/Middleware/EnsurePasswordChanged.php
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class EnsurePasswordChanged
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        $user = $request->user();
+
+        if ($user?->must_change_password) {
+            return response()->json([
+                'message' => 'You must change your temporary password before using the school portal.',
+                'code' => 'PASSWORD_CHANGE_REQUIRED',
+                'must_change_password' => true,
+            ], 403);
+        }
+
+        return $next($request);
+    }
+}
+backend/dono-api/app/Http/Middleware/EnsureIdempotency.php
+--- backend/dono-api/app/Http/Middleware/EnsureIdempotency.php
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Symfony\Component\HttpFoundation\Response;
+
+class EnsureIdempotency
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        if (! in_array(strtoupper($request->method()), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
+            return $next($request);
+        }
+
+        $key = trim((string) $request->header('Idempotency-Key'));
+        if ($key === '') {
+            return $next($request);
+        }
+
+        if (strlen($key) > 200) {
+            return response()->json(['message' => 'Idempotency-Key must not exceed 200 characters.'], 422);
+        }
+
+        $identity = $request->attributes->get('oauth_client')?->getKey()
+            ?? $request->user()?->getAuthIdentifier()
+            ?? $request->ip();
+
+        $fingerprint = hash('sha256', implode('|', [
+            $identity,
+            strtoupper($request->method()),
+            $request->path(),
+            $key,
+        ]));
+        $cacheKey = 'idempotency:response:'.$fingerprint;
+        $lockKey = 'idempotency:lock:'.$fingerprint;
+
+        if ($cached = Cache::get($cacheKey)) {
+            return response($cached['content'], $cached['status'], $cached['headers'] ?? [])
+                ->header('Idempotent-Replayed', 'true');
+        }
+
+        $lock = Cache::lock($lockKey, 15);
+        if (! $lock->get()) {
+            return response()->json(['message' => 'This request is already being processed. Retry with the same Idempotency-Key.'], 409);
+        }
+
+        try {
+            if ($cached = Cache::get($cacheKey)) {
+                return response($cached['content'], $cached['status'], $cached['headers'] ?? [])
+                    ->header('Idempotent-Replayed', 'true');
+            }
+
+            $response = $next($request);
+            if ($response->isSuccessful() || $response->isRedirection()) {
+                $content = $response->getContent();
+                if ($content !== false) {
+                    Cache::put($cacheKey, [
+                        'content' => $content,
+                        'status' => $response->getStatusCode(),
+                        'headers' => ['Content-Type' => $response->headers->get('Content-Type', 'application/json')],
+                    ], now()->addHours(24));
+                }
+            }
+
+            return $response;
+        } finally {
+            optional($lock)->release();
+        }
+    }
+}
+backend/dono-api/app/Http/Middleware/AttachRequestId.php
+--- backend/dono-api/app/Http/Middleware/AttachRequestId.php
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
+
+class AttachRequestId
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        $incoming = trim((string) $request->header('X-Request-ID', ''));
+        $requestId = preg_match('/^[A-Za-z0-9._:-]{8,120}$/', $incoming) ? $incoming : (string) Str::uuid();
+
+        $request->attributes->set('request_id', $requestId);
+        Log::withContext(['request_id' => $requestId]);
+
+        $startedAt = hrtime(true);
+        $response = $next($request);
+        $durationMs = round((hrtime(true) - $startedAt) / 1_000_000, 2);
+        $response->headers->set('X-Request-ID', $requestId);
+        $response->headers->set('X-Response-Time-ms', (string) $durationMs);
+        if ($durationMs >= (float) env('SLOW_REQUEST_MS', 1000)) {
+            Log::warning('Slow HTTP request', [
+                'method' => $request->method(),
+                'path' => $request->path(),
+                'status' => $response->getStatusCode(),
+                'duration_ms' => $durationMs,
+            ]);
+        }
+
+        return $response;
+    }
+}
+backend/dono-api/app/Http/Middleware/SecurityHeaders.php
+--- backend/dono-api/app/Http/Middleware/SecurityHeaders.php
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class SecurityHeaders
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        $response = $next($request);
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+        $response->headers->set('X-Frame-Options', 'DENY');
+        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
+        if ($request->isSecure()) {
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        }
+
+        return $response;
+    }
+}
+backend/dono-api/app/Http/Middleware/AuthenticateSchoolApiKey.php
+--- backend/dono-api/app/Http/Middleware/AuthenticateSchoolApiKey.php
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Models\SchoolApiKey;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class AuthenticateSchoolApiKey
+{
+    public function handle(Request $request, Closure $next, ?string $requiredScope = null): Response
+    {
+        $header = (string) $request->header('Authorization');
+        $token = str_starts_with($header, 'Bearer ') ? trim(substr($header, 7)) : '';
+        if (! str_starts_with($token, 'dono_sk_') || strlen($token) < 40) {
+            return response()->json(['message' => 'A valid school API key is required.'], 401);
+        }
+
+        $key = SchoolApiKey::where('key_hash', hash('sha256', $token))->whereNull('revoked_at')->first();
+        if (! $key || ($key->expires_at && $key->expires_at->isPast())) {
+            return response()->json(['message' => 'This school API key is invalid or expired.'], 401);
+        }
+        if ($requiredScope && ! in_array($requiredScope, (array) $key->scopes, true)) {
+            return response()->json(['message' => 'This API key does not have the required scope.'], 403);
+        }
+
+        $key->forceFill(['last_used_at' => now()])->saveQuietly();
+        $request->attributes->set('school_api_key', $key);
+        $request->attributes->set('school_api_key_school_id', (int) $key->school_id);
+        return $next($request);
+    }
+}
+backend/dono-api/app/Http/Middleware/AuthenticateOAuthClient.php
+--- backend/dono-api/app/Http/Middleware/AuthenticateOAuthClient.php
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
+
+class AuthenticateOAuthClient
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        $client = Auth::guard('api')->client();
+
+        if (! $client || $client->revoked || ! $client->school_id) {
+            return response()->json(['message' => 'A valid school OAuth client is required.'], 401);
+        }
+
+        $request->attributes->set('oauth_client', $client);
+        $request->attributes->set('oauth_client_school_id', (int) $client->school_id);
+
+        return $next($request);
+    }
+}
+backend/dono-api/app/Http/Middleware/RequireOAuthScope.php
+--- backend/dono-api/app/Http/Middleware/RequireOAuthScope.php
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Laravel\Passport\AccessToken;
+use Laravel\Passport\Contracts\ScopeAuthorizable;
+use League\OAuth2\Server\Exception\OAuthServerException;
+use League\OAuth2\Server\ResourceServer;
+use Symfony\Bridge\PsrHttpMessage\Factory\PsrHttpFactory;
+use Symfony\Component\HttpFoundation\Response;
+
+class RequireOAuthScope
+{
+    public function __construct(private ResourceServer $server) {}
+
+    public function handle(Request $request, Closure $next, string ...$scopes): Response
+    {
+        $client = $request->attributes->get('oauth_client');
+        $expectedClientId = $client?->getKey();
+        if (! $client || ! $expectedClientId) {
+            return response()->json(['message' => 'OAuth client authentication is required.'], 401);
+        }
+
+        try {
+            $psrRequest = (new PsrHttpFactory)->createRequest($request);
+            $psrRequest = $this->server->validateAuthenticatedRequest($psrRequest);
+            $token = AccessToken::fromPsrRequest($psrRequest);
+        } catch (OAuthServerException) {
+            return response()->json(['message' => 'The OAuth access token is invalid or expired.'], 401);
+        }
+
+        if ((string) ($token->oauth_client_id ?? '') !== (string) $expectedClientId) {
+            return response()->json(['message' => 'OAuth client context mismatch.'], 403);
+        }
+
+        $requested = array_values(array_filter($scopes));
+        if ($requested !== [] && ! $this->hasAnyScope($token, $requested)) {
+            return response()->json([
+                'message' => 'The OAuth access token does not include a required scope.',
+                'required_scopes' => $requested,
+            ], 403);
+        }
+
+        $request->attributes->set('oauth_access_token', $token);
+
+        return $next($request);
+    }
+
+    private function hasAnyScope(ScopeAuthorizable $token, array $scopes): bool
+    {
+        foreach ($scopes as $scope) {
+            if ($token->can($scope)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+=== POLICIES ===
+backend/dono-api/app/Policies/SystemSettingPolicy.php

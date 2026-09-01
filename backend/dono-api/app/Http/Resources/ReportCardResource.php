@@ -47,6 +47,7 @@ class ReportCardResource extends JsonResource
             'promotion_status' => $this->promotion_status,
 
             'is_published' => $this->is_published,
+            'verification_token' => $this->when($this->is_published, $this->verification_token),
 
             'created_at' => $this->created_at,
 

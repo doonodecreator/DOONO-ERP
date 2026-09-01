@@ -8,10 +8,17 @@ use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Http\Resources\StudentResource;
 use App\Models\FormTeacherAssignment;
+use App\Models\Assignment;
+use App\Models\Attendance;
+use App\Models\StudentEnrollment;
+use App\Models\StudentFee;
+use App\Models\StudentResultSummary;
 use App\Models\Staff;
 use App\Models\Student;
 use App\Models\Timetable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Services\StudentAdmissionNumberService;
 
 class StudentController extends Controller
 {
@@ -19,13 +26,10 @@ class StudentController extends Controller
         private readonly CurrentContextService $context,
         private readonly \App\Services\MediaStorageService $media,
         private readonly \App\Services\SubscriptionQuotaService $quotas,
+        private readonly StudentAdmissionNumberService $admissionNumbers,
     ) {}
 
-    private function currentContextSchoolId(Request $request): ?int
-    {
-        return $request->attributes->get('current_school_id')
-            ?? $this->context->currentSchool($request->user())?->id;
-    }
+
     public function index(Request $request)
     {
         $validated = $request->validate([
@@ -41,7 +45,7 @@ class StudentController extends Controller
             'academicSession',
         ]);
 
-        $schoolId = $this->currentContextSchoolId($request);
+        $schoolId = $this->context->currentSchool($request->user())?->id;
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin()
@@ -90,7 +94,7 @@ class StudentController extends Controller
         ) {
             $students->where(
                 'school_id',
-                $this->currentContextSchoolId($request)
+                $this->context->currentSchool($request->user())?->id
             );
         }
 
@@ -107,24 +111,24 @@ class StudentController extends Controller
     public function store(StoreStudentRequest $request)
     {
         $data = $request->validated();
-        $schoolId = $this->currentContextSchoolId($request);
+        $schoolId = $this->context->currentSchool($request->user())?->id;
 
-        if (
-            method_exists($request->user(), 'isSuperAdmin') &&
-            ! $request->user()->isSuperAdmin()
-        ) {
-            $data['school_id'] = $schoolId;
-        }
+        abort_unless($schoolId, 422, 'A school context is required to register a student.');
 
-        if ($schoolId) {
-            $this->quotas->assertCanAddStudent((int) $schoolId);
-        }
+        $data = array_diff_key($data, ['admission_number' => true, 'school_id' => true]);
 
         if ($request->hasFile('photo')) {
             $data['photo'] = $this->media->storeImage($request->file('photo'), 'schools/' . $schoolId . '/students');
         }
 
-        $student = Student::create($data);
+        $student = DB::transaction(function () use ($data, $schoolId) {
+            $this->quotas->assertCanAddStudent((int) $schoolId);
+
+            $data['school_id'] = (int) $schoolId;
+            $data['admission_number'] = $this->admissionNumbers->allocate((int) $schoolId);
+
+            return Student::create($data);
+        });
 
         return (new StudentResource(
             $student->load([
@@ -139,9 +143,80 @@ class StudentController extends Controller
             ->setStatusCode(201);
     }
 
+    public function student360(Request $request, Student $student)
+    {
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+        if (! $request->user()->isSuperAdmin()) {
+            abort_unless($schoolId && (int) $student->school_id === (int) $schoolId, 403, 'Unauthorized.');
+            $assignedClassIds = $this->assignedClassIds($request, $schoolId);
+            if ($assignedClassIds !== null) {
+                abort_unless(in_array((int) $student->class_id, $assignedClassIds, true), 403, 'You may only view students in your assigned classes.');
+            }
+        }
+
+        $enrollments = StudentEnrollment::query()
+            ->where('student_id', $student->id)
+            ->where('school_id', $student->school_id)
+            ->with(['academicSession:id,name', 'term:id,name', 'class:id,name', 'stream:id,name'])
+            ->latest('id')
+            ->get();
+
+        $attendance = Attendance::query()
+            ->where('school_id', $student->school_id)
+            ->whereHas('studentEnrollment', fn ($query) => $query->where('student_id', $student->id))
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $results = StudentResultSummary::query()
+            ->where('school_id', $student->school_id)
+            ->where('is_published', true)
+            ->whereHas('studentEnrollment', fn ($query) => $query->where('student_id', $student->id))
+            ->with(['academicSession:id,name', 'term:id,name'])
+            ->latest('published_at')
+            ->limit(8)
+            ->get();
+
+        $fees = StudentFee::query()
+            ->whereHas('studentEnrollment', fn ($query) => $query->where('student_id', $student->id)->where('school_id', $student->school_id))
+            ->with(['feeCategory:id,name', 'academicSession:id,name', 'term:id,name'])
+            ->latest('id')
+            ->limit(20)
+            ->get()
+            ->map(fn ($fee) => [
+                'id' => $fee->id,
+                'category' => $fee->feeCategory?->name,
+                'session' => $fee->academicSession?->name,
+                'term' => $fee->term?->name,
+                'amount_due' => $fee->amount_due,
+                'total_paid' => $fee->total_paid,
+                'balance' => $fee->balance,
+            ])->values();
+
+        $assignments = Assignment::query()
+            ->where('school_id', $student->school_id)
+            ->where('class_id', $student->class_id)
+            ->where('status', 'Published')
+            ->when($student->stream_id, fn ($query) => $query->where(fn ($inner) => $inner->whereNull('stream_id')->orWhere('stream_id', $student->stream_id)))
+            ->latest('id')
+            ->limit(10)
+            ->get(['id', 'title', 'subject_id', 'due_date', 'status']);
+
+        return response()->json([
+            'data' => [
+                'student' => new StudentResource($student->load(['school', 'division', 'class', 'stream', 'academicSession', 'guardians'])),
+                'enrollments' => $enrollments,
+                'attendance' => $attendance->map(fn ($total, $status) => ['status' => $status, 'total' => (int) $total])->values(),
+                'published_results' => $results,
+                'fees' => $fees,
+                'recent_assignments' => $assignments,
+            ],
+        ]);
+    }
+
     public function show(Request $request, Student $student)
     {
-        $schoolId = $this->currentContextSchoolId($request);
+        $schoolId = $this->context->currentSchool($request->user())?->id;
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin()
@@ -198,12 +273,13 @@ class StudentController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $student->school_id !== $this->currentContextSchoolId($request)
+            $student->school_id !== $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized.');
         }
 
         $data = $request->validated();
+        unset($data['admission_number']);
 
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
@@ -236,7 +312,7 @@ class StudentController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $student->school_id !== $this->currentContextSchoolId($request)
+            $student->school_id !== $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized.');
         }

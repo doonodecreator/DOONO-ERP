@@ -18,7 +18,6 @@ class UpdateStudentEnrollmentRequest extends FormRequest
         }
 
         $this->merge([
-            'student_id' => $this->input('student_id', $enrollment->student_id),
             'academic_session_id' => $this->input(
                 'academic_session_id',
                 $enrollment->academic_session_id
@@ -37,13 +36,10 @@ class UpdateStudentEnrollmentRequest extends FormRequest
 
     public function rules(): array
     {
-        $schoolId = $this->currentSchoolId();
+        $schoolId = app(CurrentContextService::class)->currentSchool($this->user())?->id;
 
         return [
-            'student_id' => [
-                'required',
-                Rule::exists('students', 'id')->where('school_id', $schoolId),
-            ],
+            'student_id' => ['prohibited'],
             'academic_session_id' => [
                 'required',
                 Rule::exists('academic_sessions', 'id')->where('school_id', $schoolId),
@@ -74,32 +70,8 @@ class UpdateStudentEnrollmentRequest extends FormRequest
                 ),
             ],
             'enrollment_date' => 'sometimes|date',
-            'status' => [
-                'sometimes',
-                Rule::in([
-                    'Active',
-                    'Promoted',
-                    'Repeated',
-                    'Graduated',
-                    'Transferred',
-                    'Withdrawn',
-                ]),
-            ],
+            'status' => ['prohibited'],
         ];
     }
 
-    private function currentSchoolId(): ?int
-    {
-        $schoolId = $this->attributes->get('current_school_id');
-
-        if ($schoolId) {
-            return (int) $schoolId;
-        }
-
-        $user = $this->user();
-
-        return $user
-            ? app(CurrentContextService::class)->currentSchool($user)?->id
-            : null;
-    }
 }

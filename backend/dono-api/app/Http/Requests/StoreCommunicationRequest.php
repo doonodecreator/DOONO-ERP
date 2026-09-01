@@ -28,6 +28,16 @@ class StoreCommunicationRequest extends FormRequest
             'subject' => ['nullable', 'string', 'max:180'],
             'body' => ['required', 'string', 'max:10000'],
             'is_published' => ['sometimes', 'boolean'],
+            'delivery_channel' => ['sometimes', Rule::in(['in_app', 'sms', 'push'])],
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator): void {
+            if ($this->input('audience') !== 'individual' && $this->filled('recipient_id')) {
+                $validator->errors()->add('recipient_id', 'A recipient can be selected only for an individual communication.');
+            }
+        });
     }
 }

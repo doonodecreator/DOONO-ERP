@@ -1,0 +1,630 @@
+=== API ROUTE FILE SUMMARY ===
+553 backend/dono-api/routes/api.php
+136:Route::prefix('v1')->group(function () {
+137:    Route::post('payments/paystack/webhook', [PaymentController::class, 'webhook']);
+138:    Route::post('webhooks/twilio/status', [TwilioWebhookController::class, 'status'])->middleware('throttle:api');
+139:    Route::post('webhooks/livekit', [LiveRoomController::class, 'livekitWebhook'])->middleware('throttle:api');
+141:    Route::get('/countries', [SchoolController::class, 'countries']);
+142:    Route::get('/roles', [\App\Http\Controllers\Api\RoleController::class, 'index'])->middleware('auth:sanctum');
+143:    Route::get('role-invitations/preview/{token}', [RoleInvitationController::class, 'preview']);
+144:    Route::get('verify/report-card/{token}', [ReportCardVerificationController::class, 'show']);
+145:    Route::post('role-invitations/accept', [RoleInvitationController::class, 'accept']);
+146:    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth');
+147:    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth');
+148:    Route::get('email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed:relative')->name('verification.verify');
+149:    Route::post('email/resend-verification', [EmailVerificationController::class, 'resend'])->middleware('throttle:auth');
+150:    Route::post('forgot-password', [PasswordResetController::class, 'sendLink'])->middleware('throttle:auth');
+151:    Route::post('reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:auth');
+152:    Route::post('mfa/verify', [MfaController::class, 'verify'])->middleware('throttle:auth');
+153:    Route::middleware(['api.key:school.read', 'throttle:api'])->get('public/school', [PublicIntegrationController::class, 'school']);
+154:    Route::middleware(['api.key:students.read', 'throttle:api'])->get('public/students', [PublicIntegrationController::class, 'students']);
+155:    Route::middleware(['api.key:fees.read', 'throttle:api'])->get('public/student-fees', [PublicIntegrationController::class, 'fees']);
+156:    Route::get('oauth/integration/capabilities', [PublicIntegrationController::class, 'capabilities']);
+158:        Route::middleware(['oauth.client', 'oauth.scope:school.read', 'throttle:api'])->get('oauth/integration/school', [PublicIntegrationController::class, 'school']);
+159:        Route::middleware(['oauth.client', 'oauth.scope:students.read', 'throttle:api'])->get('oauth/integration/students', [PublicIntegrationController::class, 'students']);
+160:        Route::middleware(['oauth.client', 'oauth.scope:fees.read', 'throttle:api'])->get('oauth/integration/student-fees', [PublicIntegrationController::class, 'fees']);
+161:        Route::middleware(['oauth.client', 'oauth.scope:fees.write', 'throttle:api', 'idempotency'])->post('oauth/integration/fee-payments', [PublicIntegrationController::class, 'recordPayment']);
+162:        Route::middleware(['oauth.client', 'oauth.scope:attendance.write', 'throttle:api', 'idempotency'])->post('oauth/integration/attendance', [PublicIntegrationController::class, 'recordAttendance']);
+165:    Route::middleware(['auth:sanctum', 'throttle:api', 'idempotency'])->group(function () {
+166:        Route::get('/me/context', [AuthController::class, 'context']);
+167:        Route::post('/me/profile', [AuthController::class, 'profile']);
+168:        Route::put('/me/change-password', [AuthController::class, 'changePassword']);
+169:        Route::get('/me/mfa', [MfaController::class, 'status']);
+170:        Route::get('/me/push-tokens', [PushTokenController::class, 'index']);
+171:        Route::post('/me/push-tokens', [PushTokenController::class, 'store']);
+172:        Route::delete('/me/push-tokens/{pushToken}', [PushTokenController::class, 'revoke']);
+173:        Route::post('/me/mfa/setup', [MfaController::class, 'setup']);
+174:        Route::post('/me/mfa/confirm', [MfaController::class, 'confirm']);
+175:        Route::delete('/me/mfa', [MfaController::class, 'disable']);
+176:        Route::get('/me/staff-profile', [AuthController::class, 'staffProfile']);
+177:        Route::put('/me/staff-profile', [AuthController::class, 'updateStaffProfile']);
+178:        Route::post('/me/switch-school', [AuthController::class, 'switchSchool']);
+179:        Route::post('/logout', [AuthController::class, 'logout']);
+180:        Route::middleware(['has.school', 'role:proprietor', 'permission:manage_api_keys'])->prefix('school-api-keys')->group(function () {
+181:            Route::get('/', [SchoolApiKeyController::class, 'index']);
+182:            Route::post('/', [SchoolApiKeyController::class, 'store']);
+183:            Route::post('/{schoolApiKey}/revoke', [SchoolApiKeyController::class, 'revoke']);
+186:            Route::middleware(['has.school', 'role:proprietor', 'permission:manage_oauth_clients'])->prefix('oauth-clients')->group(function () {
+187:                Route::get('/', [OAuthClientController::class, 'index']);
+188:                Route::post('/', [OAuthClientController::class, 'store']);
+189:                Route::post('/{oauthClient}/revoke', [OAuthClientController::class, 'revoke']);
+192:        Route::middleware(['has.school'])->prefix('benchmarks')->group(function () {
+193:            Route::get('/status', [BenchmarkController::class, 'status']);
+195:        Route::middleware(['has.school', 'role:proprietor', 'permission:manage_benchmarking'])->prefix('benchmarks')->group(function () {
+196:            Route::put('/consent', [BenchmarkController::class, 'consent']);
+198:        Route::get('marketplace/apps', [MarketplaceController::class, 'catalog']);
+199:        Route::get('marketplace/installations', [MarketplaceController::class, 'installations']);
+200:        Route::middleware(['has.school', 'role:proprietor', 'permission:manage_marketplace'])->group(function () {
+201:            Route::post('marketplace/apps/{marketplaceApp}/install', [MarketplaceController::class, 'install']);
+202:            Route::post('marketplace/installations/{installation}/uninstall', [MarketplaceController::class, 'uninstall']);
+204:        Route::get('/me/sessions', [SessionController::class, 'index']);
+205:        Route::delete('/me/sessions/{token}', [SessionController::class, 'destroy']);
+206:        Route::delete('/me/sessions', [SessionController::class, 'destroyOthers']);
+207:        Route::get('/dashboard', [DashboardController::class, 'index']);
+208:        Route::get('/work-inbox', [WorkInboxController::class, 'index']);
+209:        Route::get('/global-search', [GlobalSearchController::class, 'index']);
+210:        Route::get('support-tickets', [SupportTicketController::class, 'index']);
+211:        Route::post('support-tickets', [SupportTicketController::class, 'store']);
+212:        Route::get('support-tickets/{supportTicket}', [SupportTicketController::class, 'show']);
+213:        Route::get('support-ticket-messages/{message}/attachment-url', [SupportTicketAttachmentController::class, 'url']);
+214:        Route::get('support-ticket-messages/{message}/attachment', [SupportTicketAttachmentController::class, 'download'])->middleware('signed')->name('support-attachments.download');
+215:        Route::get('support/canned-replies', [SupportTicketController::class, 'cannedReplies']);
+216:        Route::post('support-tickets/{supportTicket}/replies', [SupportTicketController::class, 'reply']);
+217:        Route::patch('support-tickets/{supportTicket}/status', [SupportTicketController::class, 'updateStatus']);
+218:        Route::get('notifications', [NotificationController::class, 'index']);
+219:        Route::post('notifications/read-all', [NotificationController::class, 'markAllRead']);
+220:        Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead']);
+221:        Route::get('notification-preferences', [NotificationPreferenceController::class, 'index']);
+222:        Route::put('notification-preferences', [NotificationPreferenceController::class, 'update']);
+223:        Route::get('/org-owner/dashboard', [OrganizationOwnerController::class, 'dashboard']);
+224:        Route::get('/org-owner/workspace', [OrganizationOwnerController::class, 'workspace']);
+225:        Route::get('/activity-logs', [ActivityLogController::class, 'index']);
+226:        Route::get('payment-transactions', [PaymentTransactionController::class, 'index']);
+227:        Route::get('payment-transactions/{paymentTransaction}', [PaymentTransactionController::class, 'show']);
+228:        Route::middleware('role:super_admin')->post('payment-transactions/{paymentTransaction}/review', [PaymentTransactionController::class, 'review']);
+229:        Route::middleware('role:super_admin')->post('payment-transactions/{paymentTransaction}/refund', [PaymentTransactionController::class, 'refund']);
+230:        Route::post('role-invitations/accept-authenticated', [RoleInvitationController::class, 'acceptAuthenticated']);
+231:        Route::middleware(['has.school', 'role:proprietor'])->apiResource('role-invitations', RoleInvitationController::class)->except(['show', 'update']);
+232:        Route::middleware(['has.school', 'role:proprietor'])->post('role-invitations/{roleInvitation}/revoke', [RoleInvitationController::class, 'revoke']);
+234:        Route::middleware('role:super_admin')->group(function () {
+235:            Route::get('system-settings', [SystemSettingController::class, 'index']);
+236:            Route::put('system-settings', [SystemSettingController::class, 'update']);
+237:            Route::apiResource('subscription-plans', SubscriptionPlanController::class)->except(['index', 'show']);
+238:            Route::apiResource('school-subscriptions', SchoolSubscriptionController::class);
+239:            Route::post('schools/{school}/toggle-exemption', [SchoolController::class, 'toggleExemption']);
+240:            Route::post('schools/{school}/extend-trial', [SchoolController::class, 'extendTrial']);
+241:            Route::post('schools/{school}/subscription-status', [SchoolController::class, 'updateSubscriptionStatus']);
+242:            Route::post('schools/{school}/grant-custom-timeframe', [SchoolController::class, 'grantCustomTimeframe']);
+243:            Route::post('schools/{school}/set-discount', [SchoolController::class, 'setDiscount']);
+244:            Route::apiResource('coupons', CouponController::class);
+245:            Route::apiResource('promo-campaigns', PromoCampaignController::class);
+246:            Route::apiResource('currencies', CurrencyController::class);
+247:            Route::apiResource('features', FeatureController::class);
+248:            Route::apiResource('feature-flags', FeatureFlagController::class)->except(['show']);
+249:            Route::get('platform-announcements', [PlatformAnnouncementController::class, 'index']);
+250:            Route::post('platform-announcements/preview-recipients', [PlatformAnnouncementController::class, 'previewRecipients']);
+251:            Route::post('platform-announcements', [PlatformAnnouncementController::class, 'store']);
+252:            Route::put('platform-announcements/{platformAnnouncement}', [PlatformAnnouncementController::class, 'update']);
+253:            Route::delete('platform-announcements/{platformAnnouncement}', [PlatformAnnouncementController::class, 'destroy']);
+254:            Route::post('platform-announcements/{platformAnnouncement}/send', [PlatformAnnouncementController::class, 'send']);
+255:            Route::get('platform-email/status', [PlatformAnnouncementController::class, 'emailStatus']);
+256:            Route::post('platform-email/test', [PlatformAnnouncementController::class, 'testEmail']);
+257:            Route::get('local-email-messages', [LocalEmailController::class, 'index']);
+258:            Route::get('local-email-messages/{localEmailMessage}', [LocalEmailController::class, 'show']);
+259:            Route::post('local-email-messages/{localEmailMessage}/read', [LocalEmailController::class, 'markRead']);
+260:            Route::delete('local-email-messages', [LocalEmailController::class, 'clear']);
+261:            Route::get('admin/revenue-dashboard', [AdminRevenueController::class, 'index']);
+262:            Route::get('platform-owner/dashboard', [PlatformOwnerController::class, 'dashboard']);
+263:            Route::get('platform/system-health', [PlatformOperationsController::class, 'health']);
+264:            Route::get('platform/backups', [BackupController::class, 'index']);
+265:            Route::post('platform/backups', [BackupController::class, 'store']);
+266:            Route::post('platform/backups/{backupRun}/verify', [BackupController::class, 'verify']);
+267:            Route::get('platform/benchmarks', [BenchmarkController::class, 'platformSummary']);
+268:            Route::get('platform/marketplace/apps', [MarketplaceController::class, 'adminIndex']);
+269:            Route::post('platform/marketplace/apps', [MarketplaceController::class, 'adminStore']);
+270:            Route::put('platform/marketplace/apps/{marketplaceApp}', [MarketplaceController::class, 'adminUpdate']);
+271:            Route::delete('platform/marketplace/apps/{marketplaceApp}', [MarketplaceController::class, 'adminDestroy']);
+274:        Route::get('subscription-plans', [SubscriptionPlanController::class, 'index']);
+275:        Route::get('subscription-plans/{subscriptionPlan}', [SubscriptionPlanController::class, 'show']);
+276:        Route::apiResource('organizations', OrganizationController::class)->except(['store']);
+277:        Route::middleware('role:super_admin')->post('organizations', [OrganizationController::class, 'store']);
+278:        Route::apiResource('schools', SchoolController::class);
+279:        Route::get('my-subscription', [SchoolSubscriptionController::class, 'mySubscription']);
+280:        Route::middleware('role:proprietor')->post('payments/initialize-subscription', [PaymentController::class, 'initializeSubscription']);
+281:        Route::middleware('role:proprietor')->get('payments/verify-subscription/{reference}', [PaymentController::class, 'verifySubscription']);
+283:        Route::middleware(['has.school', 'role:proprietor'])->prefix('school-setup')->group(function () {
+284:            Route::get('progress', [SchoolSetupController::class, 'progress']);
+285:            Route::patch('progress/{stepKey}', [SchoolSetupController::class, 'updateStep']);
+286:            Route::get('delegations', [SchoolSetupDelegationController::class, 'index']);
+287:            Route::put('delegations/{user}', [SchoolSetupDelegationController::class, 'update']);
+288:            Route::delete('delegations/{user}', [SchoolSetupDelegationController::class, 'destroy']);
+291:        Route::middleware(['has.school', 'password.changed', 'subscription'])->group(function () {
+292:            Route::middleware('role:student')->group(function () {
+293:                Route::get('student/dashboard', [StudentPortalController::class, 'dashboard']);
+294:                Route::middleware('permission:portal_student_access')->get('student/ai/conversations', [AiTutorController::class, 'index']);
+295:                Route::middleware('permission:portal_student_access')->get('student/ai/conversations/{conversation}', [AiTutorController::class, 'show']);
+296:                Route::middleware('permission:portal_student_access')->post('student/ai/conversations', [AiTutorController::class, 'store']);
+297:                Route::middleware('permission:portal_student_access')->get('student/community', [CommunityController::class, 'feed']);
+298:                Route::middleware('permission:portal_student_access')->post('student/community/posts', [CommunityController::class, 'storePost']);
+299:                Route::middleware('permission:portal_student_access')->post('student/community/posts/{communityPost}/comments', [CommunityController::class, 'storeComment']);
+300:                Route::middleware('permission:portal_student_access')->post('student/community/reports', [CommunityController::class, 'report']);
+301:                Route::middleware('permission:use_exchange')->get('student/exchange', [ExchangeController::class, 'studentIndex']);
+302:                Route::middleware('permission:use_exchange')->post('student/exchange/projects/{exchangeProject}/join', [ExchangeController::class, 'join']);
+303:                Route::middleware('permission:use_exchange')->delete('student/exchange/participants/{exchangeParticipant}', [ExchangeController::class, 'leave']);
+304:                Route::middleware('permission:use_live_rooms')->get('student/live-rooms/configuration', [LiveRoomController::class, 'configuration']);
+305:                Route::middleware('permission:use_live_rooms')->get('student/live-rooms', [LiveRoomController::class, 'studentIndex']);
+306:                Route::middleware('permission:use_live_rooms')->post('student/live-rooms/{liveRoom}/join', [LiveRoomController::class, 'requestJoin']);
+307:                Route::middleware('permission:use_live_rooms')->post('student/live-rooms/{liveRoom}/token', [LiveRoomController::class, 'joinToken']);
+308:                Route::middleware('permission:use_live_rooms')->post('student/live-rooms/{liveRoom}/reports', [LiveRoomController::class, 'report']);
+309:                Route::middleware('permission:portal_student_access')->get('student/community/posts/{communityPost}/video-url', [CommunityController::class, 'videoUrl']);
+310:                Route::middleware('permission:portal_student_access')->get('student/community/posts/{communityPost}/video', [CommunityController::class, 'video'])->middleware('signed')->name('community.video.download');
+311:                Route::get('student/report-card/download', [StudentPortalController::class, 'downloadLatestReportCard']);
+312:                Route::middleware('permission:portal_student_access')->get('student/library', [LibraryController::class, 'studentLibrary']);
+313:                Route::middleware('permission:portal_student_access')->get('student/library/reservations', [BookReservationController::class, 'studentIndex']);
+314:                Route::middleware('permission:portal_student_access')->post('student/library/reservations', [BookReservationController::class, 'studentStore']);
+315:                Route::middleware('permission:portal_student_access')->get('student/assignments', [AssignmentController::class, 'studentAssignments']);
+316:                Route::middleware('permission:portal_student_access')->get('student/transport-tracking', [TransportAllocationController::class, 'tracking']);
+317:                Route::middleware('permission:portal_student_access')->get('student/leave-applications', [StudentLeaveApplicationController::class, 'index']);
+318:                Route::middleware('permission:portal_student_access')->post('student/leave-applications', [StudentLeaveApplicationController::class, 'store']);
+319:                Route::middleware('permission:portal_student_access')->get('student/cbt-assessments', [CbtAssessmentController::class, 'availableForStudent']);
+320:                Route::middleware('permission:portal_student_access')->post('student/cbt-assessments/{cbtAssessment}/start', [CbtAssessmentController::class, 'startForStudent']);
+321:                Route::middleware('permission:portal_student_access')->post('student/cbt-attempts/{cbtAttempt}/answers', [CbtAssessmentController::class, 'answer']);
+322:                Route::middleware('permission:portal_student_access')->post('student/cbt-attempts/{cbtAttempt}/submit', [CbtAssessmentController::class, 'submit']);
+323:                Route::middleware('permission:portal_student_access')->get('student/cbt-attempts/{cbtAttempt}/result', [CbtAssessmentController::class, 'studentResult']);
+325:            Route::middleware('role:parent')->group(function () {
+326:                Route::get('parent/dashboard', [ParentPortalController::class, 'dashboard']);
+327:                Route::get('parent/report-cards/{student}/download', [ParentPortalController::class, 'downloadReportCard']);
+328:                Route::middleware('permission:portal_parent_access')->get('portal/transport-tracking', [TransportAllocationController::class, 'tracking']);
+329:                Route::middleware('permission:portal_parent_access')->get('portal/leave-applications', [StudentLeaveApplicationController::class, 'index']);
+330:                Route::middleware('permission:portal_parent_access')->post('portal/leave-applications', [StudentLeaveApplicationController::class, 'store']);
+331:                Route::middleware('permission:portal_parent_access')->get('portal/community/consents', [CommunityController::class, 'parentConsents']);
+332:                Route::middleware('permission:portal_parent_access')->patch('portal/community/consents/{studentCommunityConsent}', [CommunityController::class, 'decideParentConsent']);
+336:        Route::middleware(['has.school', 'password.changed', 'staff.active', 'subscription'])->group(function () {
+337:            Route::post('payments/paystack/initialize', [PaymentController::class, 'initialize']);
+338:            Route::get('payments/paystack/verify/{reference}', [PaymentController::class, 'verify']);
+339:            Route::get('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'show']);
+340:            Route::put('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'update']);
+341:            Route::get('school-branding', [SchoolBrandingController::class, 'show']);
+342:            Route::post('school-branding', [SchoolBrandingController::class, 'update']);
+343:            Route::get('proprietor/dashboard', [ProprietorController::class, 'dashboard']);
+344:            Route::middleware('role:principal')->get('principal/dashboard', [PrincipalController::class, 'dashboard']);
+345:            Route::get('vp-academic/dashboard', [VicePrincipalAcademicController::class, 'dashboard']);
+346:            Route::get('vp-admin/dashboard', [VicePrincipalAdminController::class, 'dashboard']);
+347:            Route::get('teacher/dashboard', [TeacherPortalController::class, 'dashboard']);
+348:            Route::get('form-teacher/dashboard', [FormTeacherPortalController::class, 'dashboard']);
+349:            Route::get('nursery-head/dashboard', [NurseryHeadController::class, 'dashboard']);
+350:            Route::get('primary-head/dashboard', [PrimaryHeadmasterController::class, 'dashboard']);
+351:            Route::get('secondary-head/dashboard', [SecondaryPrincipalController::class, 'dashboard']);
+352:            Route::middleware('permission:view_students')->get('academic-sessions', [AcademicSessionController::class, 'index']);
+353:            Route::middleware('permission:manage_academic_sessions')->apiResource('academic-sessions', AcademicSessionController::class)->except(['index']);
+354:            Route::middleware('permission:view_students')->get('terms', [TermController::class, 'index']);
+355:            Route::middleware('permission:manage_terms')->apiResource('terms', TermController::class)->except(['index']);
+356:            Route::middleware('permission:view_students')->get('divisions', [DivisionController::class, 'index']);
+357:            Route::middleware('permission:manage_divisions')->apiResource('divisions', DivisionController::class)->except(['index']);
+358:            Route::middleware('permission:view_students')->get('classes', [ClassController::class, 'index']);
+359:            Route::middleware('permission:manage_classes')->apiResource('classes', ClassController::class)->except(['index']);
+360:            Route::middleware('permission:view_students')->get('streams', [StreamController::class, 'index']);
+361:            Route::middleware('permission:manage_streams')->apiResource('streams', StreamController::class)->except(['index']);
+362:            Route::middleware('permission:view_students')->get('subjects', [SubjectController::class, 'index']);
+363:            Route::middleware('permission:manage_subjects')->apiResource('subjects', SubjectController::class)->except(['index']);
+364:            Route::middleware('permission:view_staff')->get('staff', [StaffController::class, 'index']);
+365:            Route::middleware('permission:view_staff')->get('exports/staff.csv', [StaffExportController::class, 'csv']);
+366:            Route::middleware('permission:view_staff')->get('staff/{staff}', [StaffController::class, 'show']);
+367:            Route::middleware(['role:proprietor', 'permission:manage_staff'])->post('staff', [StaffController::class, 'store']);
+368:            Route::middleware(['role:proprietor', 'permission:manage_staff'])->put('staff/{staff}', [StaffController::class, 'update']);
+369:            Route::middleware(['role:proprietor', 'permission:manage_staff'])->patch('staff/{staff}', [StaffController::class, 'update']);
+370:            Route::middleware(['role:proprietor', 'permission:manage_staff'])->delete('staff/{staff}', [StaffController::class, 'destroy']);
+371:            Route::middleware('permission:view_students')->get('students', [StudentController::class, 'index']);
+372:            Route::middleware('permission:view_students')->get('exports/students.csv', [StudentExportController::class, 'csv']);
+373:            Route::middleware('permission:view_students')->get('students/{student}/360', [StudentController::class, 'student360']);
+374:            Route::middleware('permission:view_students')->get('students/{student}', [StudentController::class, 'show']);
+375:            Route::middleware('permission:manage_students')->post('students', [StudentController::class, 'store']);
+376:            Route::middleware('permission:manage_students')->put('students/{student}', [StudentController::class, 'update']);
+377:            Route::middleware('permission:manage_students')->patch('students/{student}', [StudentController::class, 'update']);
+378:            Route::middleware('permission:manage_students')->delete('students/{student}', [StudentController::class, 'destroy']);
+379:            Route::middleware('permission:manage_students')->post('students/{student}/portal-account', [PortalAccountController::class, 'linkStudent']);
+380:            Route::middleware('permission:view_students')->get('parents', [ParentController::class, 'index']);
+381:            Route::middleware('permission:view_students')->get('parents/{parent}', [ParentController::class, 'show']);
+382:            Route::middleware('permission:manage_students')->post('parents', [ParentController::class, 'store']);
+383:            Route::middleware('permission:manage_students')->put('parents/{parent}', [ParentController::class, 'update']);
+384:            Route::middleware('permission:manage_students')->patch('parents/{parent}', [ParentController::class, 'update']);
+385:            Route::middleware('permission:manage_students')->delete('parents/{parent}', [ParentController::class, 'destroy']);
+386:            Route::middleware('permission:manage_students')->post('parents/{parent}/portal-account', [PortalAccountController::class, 'linkParent']);
+387:            Route::middleware('permission:view_finance_reports')->get('fees', [FeeController::class, 'index']);
+388:            Route::middleware(['role:proprietor', 'permission:manage_student_fees'])->post('fees/generate-invoices', [FeeController::class, 'generateInvoices']);
+389:            Route::middleware(['role:proprietor', 'permission:manage_fee_categories'])->apiResource('fees', FeeController::class)->except(['index']);
+390:            Route::middleware('permission:view_finance_reports')->get('student-fees', [StudentFeeController::class, 'index']);
+391:            Route::middleware('permission:manage_student_fees')->apiResource('student-fees', StudentFeeController::class)->except(['index']);
+392:            Route::middleware('permission:manage_students')->apiResource('enrollments', StudentEnrollmentController::class);
+393:            Route::middleware('permission:approve_admissions')->post('admissions', [AdmissionController::class, 'store']);
+394:            Route::middleware('permission:view_finance_reports')->apiResource('fee-payments', FeePaymentController::class)->only(['index', 'show']);
+395:            Route::middleware('permission:receive_payments')->apiResource('fee-payments', FeePaymentController::class)->only(['store']);
+396:            Route::middleware('permission:view_finance_reports')->get('fee-adjustments/discounts', [FeeAdjustmentController::class, 'discounts']);
+397:            Route::middleware('permission:manage_student_fees')->put('student-fees/{studentFee}/discount', [FeeAdjustmentController::class, 'applyDiscount']);
+398:            Route::middleware('permission:receive_payments')->post('fee-payments/{feePayment}/reverse', [FeeAdjustmentController::class, 'reversePayment']);
+399:            Route::middleware('permission:view_finance_reports')->apiResource('payment-receipts', PaymentReceiptController::class)->only(['index', 'show']);
+400:            Route::middleware('permission:manage_promotions')->apiResource('promotions', StudentPromotionController::class);
+401:            Route::middleware('permission:manage_promotions')->apiResource('graduation-records', GraduationRecordController::class);
+402:            Route::middleware('permission:view_results')->get('graduation-records/{graduationRecord}/certificate', [StudentOfficialDocumentController::class, 'certificate']);
+403:            Route::middleware('permission:view_students')->get('students/{student}/documents/transcript', [StudentOfficialDocumentController::class, 'transcript']);
+404:            Route::middleware('permission:issue_student_id_cards')->get('students/{student}/documents/id-card', [StudentOfficialDocumentController::class, 'idCard']);
+405:            Route::middleware('permission:view_students')->get('attendance', [AttendanceController::class, 'index']);
+406:            Route::middleware('permission:view_students')->get('attendance/class-list', [AttendanceController::class, 'classList']);
+407:            Route::middleware('permission:view_students')->get('attendance/{attendance}/corrections', [AttendanceController::class, 'corrections']);
+408:            Route::middleware('permission:manage_attendance')->post('attendance/bulk', [AttendanceController::class, 'bulkStore']);
+409:            Route::middleware('permission:view_results')->get('results', [ResultController::class, 'index']);
+410:            Route::middleware(['role:proprietor', 'permission:manage_assessments'])->apiResource('assessment-structures', AssessmentStructureController::class);
+411:            Route::middleware('permission:approve_results')->post('results/{result}/publish', [ResultController::class, 'publish']);
+412:            Route::middleware('permission:view_results')->get('report-cards', [ReportCardController::class, 'index']);
+413:            Route::middleware('permission:view_results')->get('report-cards/{reportCard}/download', [ReportCardController::class, 'downloadPdf']);
+414:            Route::middleware('permission:manage_exam_scores')->prefix('result-entry')->group(function () {
+415:                Route::get('/students', [ResultEntryController::class, 'students']);
+416:                Route::post('/save', [ResultEntryController::class, 'save']);
+=== CURRENT SCHOOL ID CALLS ===
+backend/dono-api/app/Models/User.php:113:    public function currentSchoolId(): ?int
+=== ROLE DETECTION LEGACY PATTERNS ===
+=== DOUBLE V1 / MISSING LEADING SLASH CANDIDATES ===
+=== MODEL FILLABLE DECLARATIONS ===
+backend/dono-api/app/Models/AcademicConfiguration.php:12:    protected $fillable = [
+backend/dono-api/app/Models/AcademicSession.php:11:    protected $fillable = [
+backend/dono-api/app/Models/ActivityLog.php:14:    protected $fillable = [
+backend/dono-api/app/Models/AssessmentStructure.php:10:    protected $fillable = [
+backend/dono-api/app/Models/Asset.php:10:    protected $fillable = [
+backend/dono-api/app/Models/Attendance.php:10:    protected $fillable = [
+backend/dono-api/app/Models/Book.php:9:    protected $fillable = [
+backend/dono-api/app/Models/BookLoan.php:9:    protected $fillable = [
+backend/dono-api/app/Models/ClassModel.php:14:    protected $fillable = [
+backend/dono-api/app/Models/ClinicVisit.php:9:    protected $fillable = [
+backend/dono-api/app/Models/Country.php:11:    protected $fillable = [
+backend/dono-api/app/Models/Coupon.php:10:    protected $fillable = [
+backend/dono-api/app/Models/Currency.php:9:    protected $fillable = [
+backend/dono-api/app/Models/Department.php:10:    protected $fillable = [
+backend/dono-api/app/Models/DisciplineCase.php:10:    protected $fillable = [
+backend/dono-api/app/Models/Division.php:11:    protected $fillable = [
+backend/dono-api/app/Models/ExamScore.php:10:    protected $fillable = [
+backend/dono-api/app/Models/Examination.php:11:    protected $fillable = [
+backend/dono-api/app/Models/Expense.php:9:    protected $fillable = [
+backend/dono-api/app/Models/Feature.php:10:    protected $fillable = [
+backend/dono-api/app/Models/Fee.php:10:    protected $fillable = [
+backend/dono-api/app/Models/FeeCategory.php:11:    protected $fillable = [
+backend/dono-api/app/Models/FeePayment.php:11:    protected $fillable = [
+backend/dono-api/app/Models/GradingSystem.php:15:    protected $fillable = [
+backend/dono-api/app/Models/Guardian.php:14:    protected $fillable = [
+backend/dono-api/app/Models/Hostel.php:9:    protected $fillable = [
+backend/dono-api/app/Models/HostelAllocation.php:9:    protected $fillable = [
+backend/dono-api/app/Models/HostelRoom.php:9:    protected $fillable = [
+backend/dono-api/app/Models/LeaveRequest.php:10:    protected $fillable = [
+backend/dono-api/app/Models/MedicalRecord.php:9:    protected $fillable = [
+backend/dono-api/app/Models/Organization.php:12:    protected $fillable = [
+backend/dono-api/app/Models/ParentModel.php:15:    protected $fillable = [
+backend/dono-api/app/Models/ParentStudent.php:12:    protected $fillable = [
+backend/dono-api/app/Models/PaymentReceipt.php:10:    protected $fillable = [
+backend/dono-api/app/Models/PaymentTransaction.php:10:    protected $fillable = [
+backend/dono-api/app/Models/Permission.php:9:    protected $fillable = [
+backend/dono-api/app/Models/PromoCampaign.php:10:    protected $fillable = [
+backend/dono-api/app/Models/ReceptionAppointment.php:9:    protected $fillable = [
+backend/dono-api/app/Models/ReportCard.php:10:    protected $fillable = [
+backend/dono-api/app/Models/Result.php:11:    protected $fillable = [
+backend/dono-api/app/Models/ResultComponent.php:10:    protected $fillable = [
+backend/dono-api/app/Models/ResultSubmission.php:11:    protected $fillable = [
+backend/dono-api/app/Models/Role.php:9:    protected $fillable = [
+backend/dono-api/app/Models/RoleInvitation.php:10:    protected $fillable = [
+backend/dono-api/app/Models/RolePermission.php:11:    protected $fillable = [
+backend/dono-api/app/Models/SafetyIncident.php:10:    protected $fillable = [
+backend/dono-api/app/Models/School.php:9:    protected $fillable = [
+backend/dono-api/app/Models/SchoolEvent.php:10:    protected $fillable = [
+backend/dono-api/app/Models/SchoolFacility.php:10:    protected $fillable = [
+backend/dono-api/app/Models/SchoolSubscription.php:10:    protected $fillable = [
+backend/dono-api/app/Models/Staff.php:12:    protected $fillable = [
+backend/dono-api/app/Models/StaffAttendance.php:10:    protected $fillable = [
+backend/dono-api/app/Models/Stream.php:11:    protected $fillable = [
+backend/dono-api/app/Models/Student.php:12:    protected $fillable = [
+backend/dono-api/app/Models/StudentEnrollment.php:10:    protected $fillable = [
+backend/dono-api/app/Models/StudentFee.php:11:    protected $fillable = [
+backend/dono-api/app/Models/StudentGatePass.php:9:    protected $fillable = [
+backend/dono-api/app/Models/StudentPromotion.php:10:    protected $fillable = [
+backend/dono-api/app/Models/StudentResultSummary.php:13:    protected $fillable = [
+backend/dono-api/app/Models/Subject.php:12:    protected $fillable = [
+backend/dono-api/app/Models/SubscriptionPlan.php:11:    protected $fillable = [
+backend/dono-api/app/Models/SystemSetting.php:10:    protected $fillable = [
+backend/dono-api/app/Models/Term.php:11:    protected $fillable = [
+backend/dono-api/app/Models/Timetable.php:10:    protected $fillable = [
+backend/dono-api/app/Models/TransportAllocation.php:9:    protected $fillable = [
+backend/dono-api/app/Models/TransportRoute.php:9:    protected $fillable = [
+backend/dono-api/app/Models/User.php:19:    protected $fillable = [
+backend/dono-api/app/Models/Vehicle.php:9:    protected $fillable = [
+backend/dono-api/app/Models/Visitor.php:9:    protected $fillable = [
+backend/dono-api/app/Models/SchoolSetupDelegation.php:10:    protected $fillable = [
+backend/dono-api/app/Models/Assignment.php:15:    protected $fillable = [
+backend/dono-api/app/Models/Communication.php:11:    protected $fillable = [
+backend/dono-api/app/Models/CbtQuestion.php:10:    protected $fillable = [
+backend/dono-api/app/Models/StudentLeaveApplication.php:10:    protected $fillable = [
+backend/dono-api/app/Models/AssessmentActivity.php:10:    protected $fillable = [
+backend/dono-api/app/Models/PayrollEntry.php:10:    protected $fillable = ['school_id', 'staff_id', 'contract_id', 'pay_period', 'gross_amount', 'allowances', 'deductions', 'net_amount', 'status', 'paid_at', 'created_by'];
+backend/dono-api/app/Models/ReceptionActivity.php:10:    protected $fillable = [
+backend/dono-api/app/Models/TransportLog.php:10:    protected $fillable = [
+backend/dono-api/app/Models/GraduationRecord.php:10:    protected $fillable = [
+backend/dono-api/app/Models/CbtAssessment.php:11:    protected $fillable = [
+backend/dono-api/app/Models/CbtAssessmentQuestion.php:11:    protected $fillable = [
+backend/dono-api/app/Models/CbtAttempt.php:11:    protected $fillable = [
+backend/dono-api/app/Models/CbtAttemptAnswer.php:10:    protected $fillable = [
+backend/dono-api/app/Models/FormTeacherAssignment.php:10:    protected $fillable = [
+backend/dono-api/app/Models/AssignmentSubmission.php:14:    protected $fillable = [
+backend/dono-api/app/Models/PlatformAnnouncement.php:10:    protected $fillable = [
+backend/dono-api/app/Models/LocalEmailMessage.php:10:    protected $fillable = [
+backend/dono-api/app/Models/TenantPartition.php:10:    protected $fillable = [
+backend/dono-api/app/Models/FeePaymentTransaction.php:10:    protected $fillable = [
+backend/dono-api/app/Models/CommunicationRead.php:10:    protected $fillable = [
+backend/dono-api/app/Models/SupportTicket.php:14:    protected $fillable = [
+backend/dono-api/app/Models/SupportTicketMessage.php:13:    protected $fillable = [
+backend/dono-api/app/Models/AppNotification.php:11:    protected $fillable = [
+backend/dono-api/app/Models/SchoolInsightAlert.php:10:    protected $fillable = [
+backend/dono-api/app/Models/FeatureFlag.php:10:    protected $fillable = [
+backend/dono-api/app/Models/NotificationPreference.php:10:    protected $fillable = [
+backend/dono-api/app/Models/AttendanceCorrection.php:10:    protected $fillable = [
+backend/dono-api/app/Models/SchoolInsightSnapshot.php:10:    protected $fillable = [
+backend/dono-api/app/Models/TransportStop.php:10:    protected $fillable = [
+backend/dono-api/app/Models/VehicleInspection.php:10:    protected $fillable = [
+backend/dono-api/app/Models/BookReservation.php:10:    protected $fillable = [
+backend/dono-api/app/Models/StaffContract.php:10:    protected $fillable = [
+backend/dono-api/app/Models/AssetLifecycleEvent.php:10:    protected $fillable = [
+backend/dono-api/app/Models/SchoolSetupChecklistState.php:10:    protected $fillable = [
+backend/dono-api/app/Models/MfaChallenge.php:10:    protected $fillable = [
+backend/dono-api/app/Models/SchoolApiKey.php:10:    protected $fillable = [
+backend/dono-api/app/Models/Passport/Client.php:12:    protected $fillable = [
+backend/dono-api/app/Models/UserPushToken.php:10:    protected $fillable = [
+backend/dono-api/app/Models/CommunicationDelivery.php:10:    protected $fillable = [
+backend/dono-api/app/Models/BackupRun.php:10:    protected $fillable = [
+backend/dono-api/app/Models/MarketplaceApp.php:10:    protected $fillable = [
+backend/dono-api/app/Models/SchoolMarketplaceInstallation.php:10:    protected $fillable = [
+backend/dono-api/app/Models/SchoolBenchmarkConsent.php:10:    protected $fillable = [
+backend/dono-api/app/Models/AiConversation.php:11:    protected $fillable = [
+backend/dono-api/app/Models/AiMessage.php:10:    protected $fillable = [
+backend/dono-api/app/Models/StudentCommunityConsent.php:10:    protected $fillable = [
+backend/dono-api/app/Models/CommunityPost.php:11:    protected $fillable = [
+backend/dono-api/app/Models/CommunityComment.php:10:    protected $fillable = [
+backend/dono-api/app/Models/CommunityReport.php:10:    protected $fillable = [
+backend/dono-api/app/Models/ExchangeProject.php:9:    protected $fillable = ['school_id', 'title', 'description', 'subject', 'age_band', 'country_focus', 'status', 'allow_international', 'created_by', 'approved_by', 'approved_at', 'starts_at', 'ends_at'];
+backend/dono-api/app/Models/SchoolExchangeSetting.php:9:    protected $fillable = ['school_id', 'enabled', 'international_enabled', 'safeguarding_note', 'approved_by', 'approved_at'];
+backend/dono-api/app/Models/ExchangeProjectSchool.php:9:    protected $fillable = ['exchange_project_id', 'school_id', 'status', 'invited_by', 'responded_by', 'responded_at'];
+backend/dono-api/app/Models/ExchangeParticipant.php:9:    protected $fillable = ['exchange_project_id', 'school_id', 'student_id', 'display_alias', 'status', 'approved_by', 'approved_at'];
+backend/dono-api/app/Models/LiveRoom.php:9:    protected $fillable = ['school_id', 'exchange_project_id', 'host_user_id', 'title', 'description', 'audience_type', 'status', 'provider', 'provider_room_id', 'max_participants', 'recording_enabled', 'recording_consent_required', 'starts_at', 'ends_at', 'approved_by', 'approved_at', 'closed_at'];
+backend/dono-api/app/Models/LiveRoomParticipant.php:9:    protected $fillable = ['live_room_id', 'school_id', 'user_id', 'student_id', 'display_alias', 'provider_identity', 'status', 'recording_consent', 'recording_consent_at', 'requested_at', 'admitted_at', 'removed_at', 'removed_by'];
+backend/dono-api/app/Models/LiveRoomReport.php:9:    protected $fillable = ['live_room_id', 'school_id', 'reporter_user_id', 'participant_user_id', 'reason', 'details', 'status', 'resolved_by', 'resolved_at'];
+backend/dono-api/app/Models/LiveRoomProviderEvent.php:9:    protected $fillable = ['provider', 'event_id', 'event_name', 'provider_room_id', 'payload', 'processed_at'];
+backend/dono-api/app/Models/LiveRoomProviderOperation.php:9:    protected $fillable = ['live_room_id', 'school_id', 'operation', 'status', 'provider_status', 'error_message', 'attempted_at', 'completed_at'];
+backend/dono-api/app/Models/LiveRoomRecording.php:9:    protected $fillable = ['live_room_id', 'school_id', 'provider', 'provider_egress_id', 'status', 'file_path', 'file_mime', 'file_size', 'duration_seconds', 'failure_message', 'started_at', 'ended_at', 'expires_at'];
+=== EMPTY/SHORT FILLABLE CANDIDATES ===
+=== PLATFORM SUBSCRIPTION ROUTES ===
+52:use App\Http\Controllers\Api\CouponController;
+237:            Route::apiResource('subscription-plans', SubscriptionPlanController::class)->except(['index', 'show']);
+238:            Route::apiResource('school-subscriptions', SchoolSubscriptionController::class);
+244:            Route::apiResource('coupons', CouponController::class);
+245:            Route::apiResource('promo-campaigns', PromoCampaignController::class);
+274:        Route::get('subscription-plans', [SubscriptionPlanController::class, 'index']);
+275:        Route::get('subscription-plans/{subscriptionPlan}', [SubscriptionPlanController::class, 'show']);
+=== CONTROLLER SCHOOL/USER RESOLVER CANDIDATES ===
+backend/dono-api/app/Http/Controllers/Api/AcademicSessionController.php:28:        if (!$user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/AcademicSessionController.php:45:            if (!$user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/AcademicSessionController.php:70:            !$user->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/AcademicSessionController.php:86:            !$user->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/AcademicSessionController.php:115:            !$user->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php:192:        if (! $user->hasRole('teacher', $schoolId) && ! $user->hasRole('form_teacher', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php:196:        $staffId = Staff::where('school_id', $schoolId)->where('user_id', $user->id)->value('id');
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php:199:        if ($user->hasRole('teacher', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:69:                    'owner_id' => $user->id,
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:97:                'email' => $user->email,
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:118:        if (!$user || !Hash::check($request->password, $user->password)) {
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:124:        if ($this->requiresEmailVerification() && ! $user->hasVerifiedEmail()) {
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:128:                'email' => $user->email,
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:132:        if ($user->mfa_enabled) {
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:137:                'email' => $user->email,
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:141:        $user->tokens()->delete();
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:142:        $token = $user->createToken('api-token')->plainTextToken;
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:159:        if (! Hash::check($validated['current_password'], $user->password)) {
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:165:        $user->update([
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:173:            ...$this->context->resolve($user->fresh()),
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:205:            $user->name = $validated['name'];
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:209:            $this->media->delete($user->avatar);
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:210:            $user->avatar = null;
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:212:            $user->avatar = $this->media->storeImage(
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:214:                'users/' . $user->id,
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:215:                $user->avatar,
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:219:        $user->save();
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:224:            description: "User profile updated for {$user->email}.",
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:231:            ...$this->context->resolve($user->fresh()),
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:274:        $schoolId = $request->school_id;
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:278:            $isOwner = DB::table('schools')->where('id', $schoolId)->where('owner_id', $user->id)->exists();
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:279:            $hasRole = $user->roles()->wherePivot('school_id', $schoolId)->exists();
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:288:        $user->update(['current_school_id' => $schoolId]);
+backend/dono-api/app/Http/Controllers/Api/DashboardController.php:33:        if ($user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php:215:        if ($user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/FormTeacherPortalController.php:26:            ->where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/GradingSystemController.php:23:                $request->school_id
+backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php:220:        if ($user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/OrganizationOwnerController.php:106:                'owner_name' => $user->name,
+backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php:32:        $guardian = Guardian::where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php:39:                'parent_profile' => ['first_name' => $user->name, 'last_name' => ''],
+backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php:52:                })->orWhere('recipient_id', $user->id);
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:231:            'email' => strtolower(trim($user->email)),
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:26:        $isPlatformAdmin = $user->isSuperAdmin();
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:30:            abort_unless($schoolId && $user->hasPermission('view_finance_reports', $schoolId), 403, 'You are not permitted to view payment reconciliation records.');
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:180:        if ($user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php:185:        abort_unless($schoolId && (int) $paymentTransaction->school_id === (int) $schoolId && $user->hasPermission('view_finance_reports', $schoolId), 404, 'Payment transaction not found in the active school.');
+backend/dono-api/app/Http/Controllers/Api/PlatformOwnerController.php:24:        if (!$user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/ResultEntryController.php:177:        if (! $user->hasRole('teacher', $schoolId) && ! $user->hasRole('form_teacher', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/ResultEntryController.php:183:            ->where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/ResultEntryController.php:188:        if ($user->hasRole('teacher', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php:251:        if (! $user->hasRole('teacher', $schoolId) && ! $user->hasRole('form_teacher', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php:257:            ->where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php:261:        if ($user->hasRole('teacher', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:204:            description: "{$user->email} accepted the {$invitation->role?->name} invitation.",
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:213:            'email' => $user->email,
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:278:        $hasRole = $user->roles()
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:284:            $user->roles()->attach($invitation->role_id, [
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:291:        $user->update(['current_school_id' => $invitation->school_id]);
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:297:            ->where('user_id', '!=', $user->id)
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:305:                $query->where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:315:            'user_id' => $user->id,
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:344:            'accepted_user_id' => $user->id,
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:427:            'assigned_by' => $invitation->invited_by ?: $user->id,
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php:294:        if ($user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:33:        if (!$user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:34:            $query->where('owner_id', $user->id);
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:46:        abort_unless($user->isSuperAdmin() || $this->context->isOrganizationOwner($user), 403, 'Only the Software Owner or Organization Owner can create a school.');
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:73:                'owner_id' => $user->id,
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:98:                $user->roles()->attach($proprietorRole->id, [
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:502:        if ($user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:506:        if ((int) $user->id === (int) $school->owner_id) {
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:510:        return $user->hasRole('proprietor', (int) $school->id);
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:515:        if ($user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:519:        return (int) $school->owner_id === (int) $user->id
+backend/dono-api/app/Http/Controllers/Api/SchoolSettingController.php:84:        $isOwner = (int) $school->owner_id === (int) $user->id;
+backend/dono-api/app/Http/Controllers/Api/SchoolSettingController.php:85:        $isProprietor = $user->isSuperAdmin() || $user->hasRole('proprietor', $schoolId);
+backend/dono-api/app/Http/Controllers/Api/StaffController.php:75:        $user->roles()->wherePivot('school_id', $schoolId)->detach();
+backend/dono-api/app/Http/Controllers/Api/StaffController.php:76:        $user->tokens()->delete();
+backend/dono-api/app/Http/Controllers/Api/StaffController.php:77:        if ((int) $user->current_school_id === $schoolId) $user->update(['current_school_id' => null]);
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:249:        if (! $user->hasRole('teacher', $schoolId) && ! $user->hasRole('form_teacher', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:255:            ->where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:262:        $query = $user->hasRole('teacher', $schoolId)
+backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php:36:        $student = Student::where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php:44:                'student_profile' => ['first_name' => $user->name, 'last_name' => '', 'admission_number' => 'UNLINKED'],
+backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php:69:                })->orWhere('recipient_id', $user->id);
+backend/dono-api/app/Http/Controllers/Api/TeacherPortalController.php:29:            ->where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/TermController.php:29:        if (!$user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/TermController.php:54:                !$user->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/TermController.php:92:            !$user->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/TermController.php:110:            !$user->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/TermController.php:153:            !$user->isSuperAdmin() &&
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:242:        if ($user->isSuperAdmin() || $user->hasPermission('manage_timetable', $schoolId) || $user->hasPermission('approve_timetable', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:279:        if ($user->isSuperAdmin() || $user->hasPermission('manage_timetable', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:283:        if ($user->hasRole('teacher', $schoolId) || $user->hasRole('form_teacher', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:284:            $staffId = Staff::query()->where('school_id', $schoolId)->where('user_id', $user->id)->value('id');
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:319:            ->where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/TransportAllocationController.php:38:                $query->where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/TransportAllocationController.php:39:                    ->orWhereHas('guardians', fn ($guardianQuery) => $guardianQuery->where('user_id', $user->id));
+backend/dono-api/app/Http/Controllers/Api/VicePrincipalAcademicController.php:33:            ->where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/ActivityLogController.php:20:        if ($user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/ActivityLogController.php:64:                        ->orWhereHas('user', fn (Builder $user) => $user->where('name', 'like', "%{$search}%"));
+backend/dono-api/app/Http/Controllers/Api/SchoolSetupDelegationController.php:57:        if (! $user->hasRole('principal', $schoolId)
+backend/dono-api/app/Http/Controllers/Api/SchoolSetupDelegationController.php:58:            && ! $user->hasRole('vice_principal_academic', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/SchoolSetupDelegationController.php:76:                ->where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/SchoolSetupDelegationController.php:82:                    'user_id' => $user->id,
+backend/dono-api/app/Http/Controllers/Api/SchoolSetupDelegationController.php:101:            ->where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:75:                'reads' => fn ($readQuery) => $readQuery->where('user_id', $user->id),
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:85:                ->orWhere('recipient_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:86:                ->orWhere('sender_id', $user->id);
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:95:                ?? ((int) $communication->recipient_id === (int) $user->id ? $communication->getRawOriginal('read_at') : null);
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:346:        if ($user->isSuperAdmin() || $user->hasRole('proprietor', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:351:            ->contains(fn (string $role) => $user->hasRole($role, $schoolId));
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:353:        abort_unless($hasManagementRole || (int) $communication->sender_id === (int) $user->id, 403, 'You may only manage communications created by you unless you are school leadership.');
+backend/dono-api/app/Http/Controllers/Api/EmailVerificationController.php:18:        abort_unless(hash_equals($hash, sha1($user->getEmailForVerification())), 403, 'This verification link is invalid.');
+backend/dono-api/app/Http/Controllers/Api/EmailVerificationController.php:20:        if (! $user->hasVerifiedEmail()) {
+backend/dono-api/app/Http/Controllers/Api/EmailVerificationController.php:21:            $user->markEmailAsVerified();
+backend/dono-api/app/Http/Controllers/Api/EmailVerificationController.php:86:        if ($user && ! $user->hasVerifiedEmail()) {
+backend/dono-api/app/Http/Controllers/Api/PasswordResetController.php:44:                $user->forceFill([
+backend/dono-api/app/Http/Controllers/Api/PasswordResetController.php:49:                    'email_verified_at' => $user->email_verified_at ?: now(),
+backend/dono-api/app/Http/Controllers/Api/PlatformAnnouncementController.php:87:                        email: $user->email,
+backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php:149:            $user->isSuperAdmin()
+backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php:150:                || (int) $school->owner_id === (int) $user->id
+backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php:151:                || $user->hasRole('proprietor', (int) $school->id),
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:77:                'created_by' => $user->id,
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:90:                'user_id' => $user->id,
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:129:        abort_if(! empty($validated['canned_reply_key']) && ! $user->isSuperAdmin(), 403, 'Only authorized support administrators can use canned replies.');
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:130:        $internal = $user->isSuperAdmin() && (bool) ($validated['is_internal_note'] ?? false);
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:135:                'user_id' => $user->id,
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:144:                    'status' => $user->isSuperAdmin() ? 'waiting_on_user' : 'in_progress',
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:145:                    'first_response_due_at' => $user->isSuperAdmin() ? null : $supportTicket->first_response_due_at,
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:211:        if ($user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:226:        return ['created_by' => $user->id];
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:231:        if ($user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:247:        if ($organization?->owner_id === $user->id) {
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php:252:            ->contains(fn (string $role) => $user->hasRole($role, $school->id));
+backend/dono-api/app/Http/Controllers/Api/NotificationController.php:18:            ->where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/NotificationController.php:28:                ->where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/NotificationController.php:47:            ->where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/NotificationController.php:57:        if ($user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/NotificationController.php:77:            (int) $notification->user_id === (int) $user->id
+backend/dono-api/app/Http/Controllers/Api/NotificationController.php:86:        if ($user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/AssignmentAttachmentController.php:61:        $student = Student::query()->where('school_id', $schoolId)->where('user_id', $user->id)->first();
+backend/dono-api/app/Http/Controllers/Api/AssignmentAttachmentController.php:63:        abort_unless($isOwner || $user->hasPermission('manage_assignments', $schoolId), 403);
+backend/dono-api/app/Http/Controllers/Api/AssignmentAttachmentController.php:72:        if ($user->hasPermission('manage_assignments', $schoolId) || $user->hasPermission('view_assignments', $schoolId)) {
+backend/dono-api/app/Http/Controllers/Api/AssignmentAttachmentController.php:76:        $student = Student::query()->where('school_id', $schoolId)->where('user_id', $user->id)->first();
+backend/dono-api/app/Http/Controllers/Api/SupportTicketAttachmentController.php:34:        if (! $user->isSuperAdmin()) {
+backend/dono-api/app/Http/Controllers/Api/SupportTicketAttachmentController.php:37:            $visible = ($school && (int) $ticket->school_id === (int) $school->id && ($organization?->owner_id === $user->id || collect(['proprietor', 'principal', 'vice_principal_academic', 'vice_principal_admin'])->contains(fn (string $role) => $user->hasRole($role, $school->id))))
+backend/dono-api/app/Http/Controllers/Api/SupportTicketAttachmentController.php:38:                || ($school && (int) $ticket->school_id === (int) $school->id && (int) $ticket->created_by === (int) $user->id)
+backend/dono-api/app/Http/Controllers/Api/SupportTicketAttachmentController.php:39:                || (! $school && $organization && (int) $ticket->organization_id === (int) $organization->id && (int) $ticket->created_by === (int) $user->id);
+backend/dono-api/app/Http/Controllers/Api/SupportTicketAttachmentController.php:42:        abort_unless($message->is_internal_note === false || $user->isSuperAdmin(), 404, 'Attachment not found.');
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:24:            'enabled' => (bool) $user->mfa_enabled,
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:25:            'confirmed_at' => $user->mfa_confirmed_at,
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:26:            'recovery_codes_remaining' => count(is_array($user->mfa_recovery_codes) ? $user->mfa_recovery_codes : []),
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:33:        abort_if($user->mfa_enabled, 409, 'MFA is already enabled. Disable it before creating a new authenticator setup.');
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:35:        $user->mfa_secret = $secret;
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:36:        $user->mfa_confirmed_at = null;
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:37:        $user->save();
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:49:        abort_unless($user->mfa_secret, 409, 'Start MFA setup before confirming an authenticator code.');
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:50:        abort_if($user->mfa_enabled, 409, 'MFA is already enabled.');
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:51:        abort_unless($this->mfa->verifyCode($user->mfa_secret, $data['code']), 422, 'The authenticator code is invalid or expired.');
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:54:        $user->forceFill([
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:67:        abort_unless($user->mfa_enabled, 409, 'MFA is not enabled.');
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:68:        abort_unless(Hash::check($data['current_password'], $user->password), 422, 'The current password is incorrect.');
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:69:        $valid = $this->mfa->verifyCode((string) $user->mfa_secret, $data['code']) || $this->mfa->consumeRecoveryCode($user, $data['code']);
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:71:        $user->forceFill(['mfa_enabled' => false, 'mfa_secret' => null, 'mfa_recovery_codes' => null, 'mfa_confirmed_at' => null])->save();
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:85:            $valid = $this->mfa->verifyCode((string) $user->mfa_secret, $data['code']);
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:93:            $user->forceFill(['mfa_last_used_at' => now()])->save();
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:99:        $user->tokens()->delete();
+backend/dono-api/app/Http/Controllers/Api/MfaController.php:100:        $token = $user->createToken('api-token')->plainTextToken;
+backend/dono-api/app/Http/Controllers/Api/AiTutorController.php:60:            ->where('user_id', $user->id)
+backend/dono-api/app/Http/Controllers/Api/AiTutorController.php:68:            ? AiConversation::query()->whereKey($validated['conversation_id'])->where('school_id', $schoolId)->where('user_id', $user->id)->where('status', 'active')->firstOrFail()
+backend/dono-api/app/Http/Controllers/Api/AiTutorController.php:71:                'user_id' => $user->id,
+backend/dono-api/app/Http/Controllers/Api/AiTutorController.php:85:            'user_id' => $user->id,
+backend/dono-api/app/Services/ActivityLogService.php:31:        $user = Auth::user();
+backend/dono-api/app/Services/CurrentContextService.php:30:        $isPlatformAdmin = $user->isSuperAdmin();
+backend/dono-api/app/Services/CurrentContextService.php:38:        $allRoles = $user->roles()
+backend/dono-api/app/Services/CurrentContextService.php:50:        if ($isOrgOwner && $school && $organization && $organization->owner_id === $user->id) {
+backend/dono-api/app/Services/CurrentContextService.php:68:                'id' => $user->id,
+backend/dono-api/app/Services/CurrentContextService.php:69:                'name' => $user->name,
+backend/dono-api/app/Services/CurrentContextService.php:70:                'email' => $user->email,
+backend/dono-api/app/Services/CurrentContextService.php:71:                'avatar' => $user->avatar,
+backend/dono-api/app/Services/CurrentContextService.php:72:                'avatar_url' => $this->media->url($user->avatar),
+backend/dono-api/app/Services/CurrentContextService.php:73:                'must_change_password' => (bool) $user->must_change_password,
+backend/dono-api/app/Services/CurrentContextService.php:74:                'password_changed_at' => $user->password_changed_at,
+backend/dono-api/app/Services/CurrentContextService.php:105:        if ($user->current_school_id) {
+backend/dono-api/app/Services/CurrentContextService.php:106:            $selectedSchool = School::find($user->current_school_id);
+backend/dono-api/app/Services/CurrentContextService.php:109:                $isOwner = $selectedSchool->owner_id === $user->id;
+backend/dono-api/app/Services/CurrentContextService.php:110:                $hasRole = $user->roles()->wherePivot('school_id', $selectedSchool->id)->exists();
+backend/dono-api/app/Services/CurrentContextService.php:125:        $roleWithSchool = $user->roles()
+backend/dono-api/app/Services/CurrentContextService.php:135:        return $user->ownedSchools()
+backend/dono-api/app/Services/CurrentContextService.php:151:        return Organization::where('owner_id', $user->id)
+backend/dono-api/app/Services/CurrentContextService.php:161:        return Organization::where('owner_id', $user->id)->exists();
+backend/dono-api/app/Services/CurrentContextService.php:171:        return $user->isSuperAdmin() || $organization->owner_id === $user->id;
+backend/dono-api/app/Services/PortalAccountService.php:36:            $student->update(['user_id' => $user->id]);
+backend/dono-api/app/Services/PortalAccountService.php:73:                'user_id' => $user->id,
+backend/dono-api/app/Services/PortalAccountService.php:144:        $user->roles()->attach($role->id, [
+backend/dono-api/app/Services/EmailVerificationService.php:18:                'id' => $user->getKey(),
+backend/dono-api/app/Services/EmailVerificationService.php:19:                'hash' => sha1($user->getEmailForVerification()),
+backend/dono-api/app/Services/EmailVerificationService.php:23:                email: $user->email,
+backend/dono-api/app/Services/EmailVerificationService.php:26:                bodyText: "Hello {$user->name},\n\nVerify your email address here:\n{$url}\n\nThis link expires in 24 hours.",
+backend/dono-api/app/Services/MfaService.php:20:        $label = rawurlencode($issuer.':'.$user->email);
+backend/dono-api/app/Services/MfaService.php:58:        $codes = is_array($user->mfa_recovery_codes) ? $user->mfa_recovery_codes : [];
+backend/dono-api/app/Services/MfaService.php:63:                $user->mfa_recovery_codes = array_values($codes);
+backend/dono-api/app/Services/MfaService.php:73:        MfaChallenge::where('user_id', $user->id)->whereNull('used_at')->update(['used_at' => now()]);
+backend/dono-api/app/Services/MfaService.php:75:            'user_id' => $user->id,
+backend/dono-api/app/Services/WorkInboxService.php:87:            if ((int) $definition['count'] > 0 || ! $user->hasPermission($definition['permission'], $schoolId)) {
+backend/dono-api/app/Services/WorkInboxService.php:109:        if (! $user->hasPermission('approve_results', $schoolId)) {
+backend/dono-api/app/Services/WorkInboxService.php:120:        if (! $user->hasPermission('approve_timetable', $schoolId)) {
+backend/dono-api/app/Services/WorkInboxService.php:131:        if (! $user->hasRole('proprietor', $schoolId)
+backend/dono-api/app/Services/WorkInboxService.php:132:            && ! $user->hasRole('principal', $schoolId)
+backend/dono-api/app/Services/WorkInboxService.php:133:            && ! $user->hasRole('vice_principal_admin', $schoolId)
+backend/dono-api/app/Services/WorkInboxService.php:145:        if (! $user->hasPermission('assign_roles', $schoolId)) {
+backend/dono-api/app/Services/WorkInboxService.php:156:        if (! $user->hasPermission('send_communication', $schoolId)) {
+backend/dono-api/app/Services/WorkInboxService.php:169:        $query = AppNotification::where('user_id', $user->id)->whereNull('read_at');
+backend/dono-api/app/Services/WorkInboxService.php:170:        if ($user->isSuperAdmin()) {
+backend/dono-api/app/Services/GlobalSearchService.php:33:            if (in_array('organizations', $types, true) && ($user->isSuperAdmin() || $organization?->owner_id === $user->id)) {
+backend/dono-api/app/Services/GlobalSearchService.php:35:                if (! $user->isSuperAdmin()) {
+backend/dono-api/app/Services/GlobalSearchService.php:45:                if (! $user->isSuperAdmin()) {
+backend/dono-api/app/Services/GlobalSearchService.php:52:            if (in_array('students', $types, true) && $user->hasPermission('view_students', $schoolId)) {
+backend/dono-api/app/Services/GlobalSearchService.php:63:            if (in_array('parents', $types, true) && $user->hasPermission('manage_parents', $schoolId)) {
+backend/dono-api/app/Services/GlobalSearchService.php:71:            if (in_array('staff', $types, true) && $user->hasPermission('view_staff', $schoolId)) {
+backend/dono-api/app/Services/GlobalSearchService.php:79:            if (in_array('enrollments', $types, true) && $user->hasPermission('view_students', $schoolId)) {
+backend/dono-api/app/Services/GlobalSearchService.php:87:            if (in_array('results', $types, true) && $user->hasPermission('view_results', $schoolId)) {

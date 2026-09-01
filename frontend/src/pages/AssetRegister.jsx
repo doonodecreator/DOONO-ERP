@@ -4,6 +4,7 @@ import PageHeader from "../components/layout/PageHeader";
 import DataTable from "../components/tables/DataTable";
 import LoadingSpinner from "../components/feedback/LoadingSpinner";
 import EmptyState from "../components/feedback/EmptyState";
+import Modal from "../components/modals/Modal";
 
 const CATEGORIES = [
   "IT Equipment",
@@ -17,7 +18,7 @@ const CATEGORIES = [
 ];
 
 const CONDITIONS = ["New", "Good", "Fair", "Poor"];
-const STATUSES = ["Active", "In Repair", "Lost", "Disposed"];
+const LIFECYCLE_EVENTS = { maintenance_start: "Send to maintenance", maintenance_complete: "Complete maintenance", mark_lost: "Mark as lost", recover: "Recover lost asset", dispose: "Dispose asset", handover: "Record handover" };
 
 const initialForm = {
   name: "",
@@ -30,7 +31,6 @@ const initialForm = {
   acquisition_cost: "",
   warranty_expires_at: "",
   condition: "Good",
-  status: "Active",
   notes: "",
 };
 
@@ -44,6 +44,12 @@ export default function AssetRegister() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [historyAsset, setHistoryAsset] = useState(null);
+  const [historyItems, setHistoryItems] = useState([]);
+  const [historyPagination, setHistoryPagination] = useState(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [transitionAsset, setTransitionAsset] = useState(null);
+  const [transitionForm, setTransitionForm] = useState({ event_type: "maintenance_start", notes: "", location: "", custodian_staff_id: "", condition: "" });
 
   const loadAssets = async () => {
     const response = await api.get("/assets", { params: { per_page: 50 } });
@@ -112,12 +118,37 @@ export default function AssetRegister() {
       acquisition_cost: asset.acquisition_cost ?? "",
       warranty_expires_at: asset.warranty_expires_at || "",
       condition: asset.condition || "Good",
-      status: asset.status || "Active",
       notes: asset.notes || "",
     });
     setMessage("");
     setError("");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const openHistory = async (asset, page = 1) => {
+    try {
+      setHistoryAsset(asset); setHistoryLoading(true); setError("");
+      const response = await api.get(`/assets/${asset.id}/history`, { params: { page, per_page: 15 } });
+      const data = Array.isArray(response?.data?.data) ? response.data.data : [];
+      setHistoryItems(data); setHistoryPagination(response?.data?.meta || null);
+    } catch (requestError) { setHistoryItems([]); setHistoryPagination(null); setError(requestError.message || "Unable to load asset history."); }
+    finally { setHistoryLoading(false); }
+  };
+
+  const openTransition = (asset) => {
+    setTransitionAsset(asset);
+    setTransitionForm({ event_type: "maintenance_start", notes: "", location: asset.location || "", custodian_staff_id: asset.custodian_staff_id ? String(asset.custodian_staff_id) : "", condition: asset.condition || "" });
+  };
+
+  const submitTransition = async (event) => {
+    event.preventDefault();
+    if (!transitionAsset) return;
+    try {
+      setSubmitting(true); setError("");
+      await api.post(`/assets/${transitionAsset.id}/transition`, { ...transitionForm, custodian_staff_id: transitionForm.custodian_staff_id ? Number(transitionForm.custodian_staff_id) : null, condition: transitionForm.condition || null, location: transitionForm.location || null });
+      setMessage(`Asset ${transitionAsset.asset_number} lifecycle updated.`); setTransitionAsset(null); await loadAssets();
+    } catch (requestError) { setError(requestError.message || "Unable to record the asset lifecycle event."); }
+    finally { setSubmitting(false); }
   };
 
   const resetForm = () => {
@@ -186,7 +217,7 @@ export default function AssetRegister() {
     {
       key: "actions",
       label: "Actions",
-      render: (row) => <button type="button" onClick={() => editAsset(row)}>Edit</button>,
+      render: (row) => <div className="flex flex-wrap gap-2"><button type="button" onClick={() => editAsset(row)}>Edit</button><button type="button" onClick={() => openHistory(row)}>History</button><button type="button" onClick={() => openTransition(row)}>Lifecycle</button></div>,
     },
   ];
 
@@ -253,16 +284,7 @@ export default function AssetRegister() {
             {CONDITIONS.map((condition) => <option key={condition} value={condition}>{condition}</option>)}
           </select>
         </label>
-        {editingAsset ? (
-          <label>
-            Lifecycle status
-            <select value={form.status} onChange={(event) => setField("status", event.target.value)}>
-              {STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
-            </select>
-          </label>
-        ) : (
-          <p>New assets are registered with an <strong>Active</strong> lifecycle status.</p>
-        )}
+        <p className="text-sm text-slate-600">Lifecycle status changes must be recorded through the <strong>Lifecycle</strong> action so the reason, before/after state, and audit entry are preserved.</p>
         <label>
           Notes (optional)
           <textarea value={form.notes} onChange={(event) => setField("notes", event.target.value)} maxLength={4000} />
@@ -273,6 +295,7 @@ export default function AssetRegister() {
         </div>
       </form>
 
+      <Modal open={Boolean(transitionAsset)} title={transitionAsset ? `Lifecycle: ${transitionAsset.asset_number}` : "Asset lifecycle"} description="Every transition requires a reason and is stored in the school audit history." onClose={() => setTransitionAsset(null)}><form onSubmit={submitTransition} className="space-y-4"><label>Lifecycle action<select value={transitionForm.event_type} onChange={(event) => setTransitionForm({ ...transitionForm, event_type: event.target.value })}>{Object.entries(LIFECYCLE_EVENTS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>{transitionForm.event_type === "handover" && <><label>New location<input value={transitionForm.location} onChange={(event) => setTransitionForm({ ...transitionForm, location: event.target.value })} maxLength={255} /></label><label>New custodian<select value={transitionForm.custodian_staff_id} onChange={(event) => setTransitionForm({ ...transitionForm, custodian_staff_id: event.target.value })}><option value="">Unassigned</option>{staffOptions.map((staff) => <option key={staff.id} value={staff.id}>{staff.label}</option>)}</select></label><label>Condition<select value={transitionForm.condition} onChange={(event) => setTransitionForm({ ...transitionForm, condition: event.target.value })}><option value="">Keep current</option>{CONDITIONS.map((condition) => <option key={condition}>{condition}</option>)}</select></label></>}<label>Reason and notes<textarea required minLength={2} maxLength={2000} value={transitionForm.notes} onChange={(event) => setTransitionForm({ ...transitionForm, notes: event.target.value })} placeholder="Explain what happened, who approved it, or what work was completed." /></label><div className="flex flex-wrap justify-end gap-2"><button type="button" onClick={() => setTransitionAsset(null)}>Cancel</button><button type="submit" disabled={submitting}>{submitting ? "Saving..." : "Record lifecycle event"}</button></div></form></Modal><Modal open={Boolean(historyAsset)} title={historyAsset ? `History: ${historyAsset.asset_number}` : "Asset history"} description="This immutable event history shows lifecycle changes and their recorded reasons." onClose={() => setHistoryAsset(null)}>{historyLoading ? <LoadingSpinner text="Loading asset history..." /> : historyItems.length === 0 ? <EmptyState title="No lifecycle events" message="No lifecycle history has been recorded for this asset yet." /> : <DataTable columns={[{ key: "event_type", label: "Event", render: (event) => LIFECYCLE_EVENTS[event.event_type] || event.event_type }, { key: "notes", label: "Reason", render: (event) => event.notes || "—" }, { key: "actor", label: "Recorded by", render: (event) => event.actor?.name || "System" }, { key: "occurred_at", label: "When", render: (event) => event.occurred_at ? new Date(event.occurred_at).toLocaleString() : "—" }]} data={Array.isArray(historyItems) ? historyItems : []} pagination={historyPagination} onPageChange={(page) => openHistory(historyAsset, page)} rowKey={(event) => event.id} />}</Modal>
       {message && <div role="status" className="success-message">{message}</div>}
       {error && <div role="alert" className="error-message">{error}</div>}
 

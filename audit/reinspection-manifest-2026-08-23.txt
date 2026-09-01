@@ -1,0 +1,1284 @@
+=== ROOT ===
+/home/ubuntu/DOONO-ERP
+## [32mmain[m...[31morigin/main[m [ahead [32m2[m]
+[32mA[m  .screenshot-findings.md
+[32mA[m  .ui-pass-notes.md
+[32mA[m  DASHBOARD_RELEASE_NOTES.md
+ [31mM[m Dockerfile
+[32mA[m  architecture-acceptance-matrix.md
+[32mA[m  architecture-gap-report.md
+[32mA[m  architecture-implementation-notes.md
+[32mA[m  architecture-progress.md
+[32mM[m[31mM[m backend/dono-api/.env.example
+ [31mM[m backend/dono-api/Dockerfile
+ [31mM[m backend/dono-api/app/Console/Commands/ExpireSubscriptions.php
+ [31mM[m backend/dono-api/app/Console/Commands/SendSubscriptionReminders.php
+[32mM[m  backend/dono-api/app/Http/Controllers/AcademicSessionController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/AcademicSessionController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/ActivityLogController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/AssessmentActivityController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/AssessmentStructureController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/AssetController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/AssignmentController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/AttendanceController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/AuthController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/CbtQuestionController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/ClassController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/CommunicationController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/CouponController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/CurrencyController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/EmailVerificationController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/FeatureController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/FeeAdjustmentController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/FeeCategoryController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/FeePaymentController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/FinancialReportController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/FormTeacherPortalController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/GraduationRecordController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/HostelAllocationController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/HostelRoomController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/LibraryController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/LocalEmailController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/OrganizationOwnerController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/PasswordResetController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/PaymentController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/PaymentReceiptController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/PayrollEntryController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/PlatformAnnouncementController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/PlatformOperationsController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/PlatformOwnerController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/PortalAccountController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/PrincipalController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/PromoCampaignController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/ReceptionActivityController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/ReceptionAppointmentController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/ReportCardController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/ResultController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/ResultEntryController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/SchoolController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SchoolEventController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SchoolFacilityController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SchoolSettingController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/SchoolSetupController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/SchoolSetupDelegationController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/SchoolSubscriptionController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/StaffAttendanceController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/StaffController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/StudentController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/StudentGatePassController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/StudentLeaveApplicationController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SubscriptionPlanController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SystemSettingController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/TeacherPortalController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/TermController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/TimetableController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/TransportAllocationController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/TransportLogController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/TransportRouteController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/VicePrincipalAcademicController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/VicePrincipalAdminController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Controller.php
+[32mD[m  backend/dono-api/app/Http/Controllers/ResultEntryController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/TermController.php
+ [31mM[m backend/dono-api/app/Http/Middleware/CheckActiveSubscription.php
+ [31mM[m backend/dono-api/app/Http/Middleware/CheckStaffActive.php
+ [31mM[m backend/dono-api/app/Http/Middleware/CheckSubscriptionFeature.php
+[32mA[m  backend/dono-api/app/Http/Middleware/EnsureIdempotency.php
+[32mA[m  backend/dono-api/app/Http/Middleware/EnsurePasswordChanged.php
+[32mM[m  backend/dono-api/app/Http/Middleware/PermissionMiddleware.php
+[32mM[m  backend/dono-api/app/Http/Middleware/RoleMiddleware.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreAssessmentStructureRequest.php
+[32mA[m  backend/dono-api/app/Http/Requests/StoreCommunicationRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreDivisionRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreFeatureRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreFeePaymentRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreFeeRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreRoleInvitationRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreStreamRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreStudentRequest.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Requests/StoreSubscriptionPlanRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreTimetableRequest.php
+[32mA[m  backend/dono-api/app/Http/Requests/UpdateAssessmentStructureRequest.php
+[32mA[m  backend/dono-api/app/Http/Requests/UpdateCommunicationRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/UpdateFeatureRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/UpdateFeeRequest.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Requests/UpdateStaffRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/UpdateStreamRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/UpdateStudentRequest.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Requests/UpdateSubscriptionPlanRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/UpdateSystemSettingRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/UpdateTimetableRequest.php
+[32mA[m  backend/dono-api/app/Http/Resources/AssessmentStructureResource.php
+ [31mM[m backend/dono-api/app/Http/Resources/ReportCardResource.php
+ [31mM[m backend/dono-api/app/Http/Resources/SchoolResource.php
+ [31mM[m backend/dono-api/app/Http/Resources/StaffResource.php
+[32mM[m  backend/dono-api/app/Http/Resources/StudentFeeResource.php
+ [31mM[m backend/dono-api/app/Http/Resources/StudentResource.php
+[32mM[m  backend/dono-api/app/Http/Resources/SubscriptionPlanResource.php
+[32mM[m  backend/dono-api/app/Http/Resources/SystemSettingResource.php
+[32mM[m  backend/dono-api/app/Http/Resources/TimetableResource.php
+[32mA[m  backend/dono-api/app/Mail/PasswordResetMail.php
+[32mA[m  backend/dono-api/app/Mail/PlatformAnnouncementMail.php
+[32mA[m  backend/dono-api/app/Mail/PlatformTestMail.php
+[32mA[m  backend/dono-api/app/Mail/VerifyEmailMail.php
+[32mA[m  backend/dono-api/app/Models/AssessmentActivity.php
+[32mA[m  backend/dono-api/app/Models/Assignment.php
+[32mA[m  backend/dono-api/app/Models/AssignmentSubmission.php
+[32mA[m  backend/dono-api/app/Models/CbtAssessment.php
+[32mA[m  backend/dono-api/app/Models/CbtAssessmentQuestion.php
+[32mA[m[31mM[m backend/dono-api/app/Models/CbtAttempt.php
+[32mA[m  backend/dono-api/app/Models/CbtAttemptAnswer.php
+[32mA[m  backend/dono-api/app/Models/CbtQuestion.php
+[32mA[m[31mM[m backend/dono-api/app/Models/Communication.php
+[32mM[m  backend/dono-api/app/Models/Feature.php
+[32mM[m  backend/dono-api/app/Models/FeePayment.php
+[32mA[m  backend/dono-api/app/Models/FormTeacherAssignment.php
+ [31mM[m backend/dono-api/app/Models/GradingSystem.php
+[32mA[m  backend/dono-api/app/Models/GraduationRecord.php
+[32mA[m  backend/dono-api/app/Models/LocalEmailMessage.php
+[32mA[m  backend/dono-api/app/Models/PayrollEntry.php
+[32mA[m  backend/dono-api/app/Models/PlatformAnnouncement.php
+[32mA[m  backend/dono-api/app/Models/ReceptionActivity.php
+ [31mM[m backend/dono-api/app/Models/ReportCard.php
+[32mM[m  backend/dono-api/app/Models/ResultSubmission.php
+[32mM[m  backend/dono-api/app/Models/RoleInvitation.php
+[32mM[m[31mM[m backend/dono-api/app/Models/School.php
+[32mA[m  backend/dono-api/app/Models/SchoolSetupDelegation.php
+ [31mM[m backend/dono-api/app/Models/SchoolSubscription.php
+ [31mM[m backend/dono-api/app/Models/Student.php
+[32mA[m  backend/dono-api/app/Models/StudentLeaveApplication.php
+[32mM[m[31mM[m backend/dono-api/app/Models/SubscriptionPlan.php
+[32mM[m  backend/dono-api/app/Models/SystemSetting.php
+[32mA[m  backend/dono-api/app/Models/TenantPartition.php
+[32mM[m  backend/dono-api/app/Models/Timetable.php
+[32mA[m  backend/dono-api/app/Models/TransportLog.php
+[32mM[m[31mM[m backend/dono-api/app/Models/User.php
+[32mM[m  backend/dono-api/app/Providers/AppServiceProvider.php
+ [31mM[m backend/dono-api/app/Services/Academic/AssessmentComputationService.php
+ [31mM[m backend/dono-api/app/Services/Academic/PromotionService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/Academic/ReportCardService.php
+ [31mM[m backend/dono-api/app/Services/Academic/ResultEntryService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/Academic/ResultProcessingService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/Academic/ResultSubmissionService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/AdmissionService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/CurrentContextService.php
+[32mA[m  backend/dono-api/app/Services/EmailDeliveryService.php
+[32mA[m[31mM[m backend/dono-api/app/Services/EmailVerificationService.php
+[32mM[m  backend/dono-api/app/Services/Finance/FeeService.php
+[32mM[m  backend/dono-api/app/Services/PortalAccountService.php
+[32mA[m[31mM[m backend/dono-api/app/Services/TenantPartitionService.php
+[32mM[m  backend/dono-api/app/Services/TimetableService.php
+[32mM[m  backend/dono-api/bootstrap/app.php
+[32mM[m  backend/dono-api/composer.json
+[32mM[m  backend/dono-api/composer.lock
+ [31mM[m backend/dono-api/config/app.php
+[32mA[m  backend/dono-api/config/dono.php
+[32mM[m  backend/dono-api/config/services.php
+[32mM[m  backend/dono-api/database/migrations/2026_08_15_000000_add_user_id_to_students_table.php
+[32mM[m  backend/dono-api/database/migrations/2026_08_16_010000_add_user_id_to_students_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_17_000000_create_school_setup_delegations_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_18_000000_add_current_school_id_to_users_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_18_120000_repair_school_setup_tables.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_140000_align_principal_role_permissions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_150000_seed_architecture_roles.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_160000_add_admin_module_permissions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_170000_create_assignments_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_180000_add_assignment_permissions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_190000_enforce_employment_authority.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_200000_allow_pending_school_subscriptions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_000000_create_communications_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_010000_create_cbt_questions_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_020000_add_communication_cbt_permissions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_030000_create_student_leave_applications_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_040000_create_assessment_activities_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_050000_create_payroll_entries_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_060000_create_reception_activities_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_070000_create_transport_logs_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_080000_add_reversal_fields_to_fee_payments_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_090000_create_graduation_records_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_110000_harden_role_permission_boundaries.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_070000_create_form_teacher_assignments_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_071000_add_form_assignment_to_role_invitations_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_072000_seed_default_assessment_structures.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_073000_repair_teacher_academic_permissions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_080000_extend_timetables_for_school_configurable_entries.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_090000_extend_cbt_questions_for_bulk_authoring.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_091000_create_assignment_submissions_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_100000_add_password_change_state_to_users_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_110000_enable_email_verification_for_users.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_120000_create_platform_announcements_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_130000_add_local_email_outbox_and_announcement_targets.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_140000_create_tenant_partition_directory.php
+[32mM[m  backend/dono-api/database/seeders/PermissionSeeder.php
+[32mM[m  backend/dono-api/database/seeders/RolePermissionSeeder.php
+[32mM[m  backend/dono-api/database/seeders/RoleSeeder.php
+[32mA[m  backend/dono-api/resources/views/emails/password-reset.blade.php
+[32mA[m  backend/dono-api/resources/views/emails/platform-announcement.blade.php
+[32mA[m  backend/dono-api/resources/views/emails/platform-test.blade.php
+[32mA[m  backend/dono-api/resources/views/emails/verify-email.blade.php
+[32mM[m[31mM[m backend/dono-api/routes/api.php
+ [31mM[m backend/dono-api/routes/console.php
+[32mA[m  frontend/public/manifest.webmanifest
+[32mA[m  frontend/public/sw.js
+[32mM[m[31mM[m frontend/src/App.jsx
+ [31mM[m frontend/src/components/CreateSchoolModal.jsx
+ [31mM[m frontend/src/components/FeePaymentModal.jsx
+[32mM[m[31mM[m frontend/src/components/Navbar.jsx
+[32mM[m[31mM[m frontend/src/components/Sidebar.jsx
+[32mM[m  frontend/src/components/dashboard/DashboardGrid.css
+[32mM[m[31mM[m frontend/src/components/dashboard/DashboardGrid.jsx
+[32mM[m  frontend/src/components/dashboard/StatCard.css
+[32mM[m  frontend/src/components/dashboard/StatCard.jsx
+[32mA[m  frontend/src/components/dashboard/dashboard.css
+[32mA[m  frontend/src/components/feedback/Alert.css
+[32mA[m  frontend/src/components/feedback/Alert.jsx
+[32mA[m[31mM[m frontend/src/components/feedback/DONOGuide.jsx
+[32mM[m  frontend/src/components/feedback/EmptyState.css
+[32mM[m  frontend/src/components/feedback/EmptyState.jsx
+[32mM[m  frontend/src/components/feedback/LoadingSpinner.css
+[32mA[m[31mM[m frontend/src/components/forms/Button.jsx
+[32mA[m[31mM[m frontend/src/components/forms/FormField.jsx
+[32mA[m[31mM[m frontend/src/components/forms/button.css
+[32mA[m[31mM[m frontend/src/components/forms/forms.css
+[32mM[m  frontend/src/components/layout/PageContainer.css
+[32mM[m[31mM[m frontend/src/components/layout/PageHeader.css
+[32mA[m  frontend/src/components/layout/SectionCard.css
+[32mA[m  frontend/src/components/layout/SectionCard.jsx
+[32mA[m  frontend/src/components/modals/Modal.css
+[32mA[m  frontend/src/components/modals/Modal.jsx
+[32mM[m  frontend/src/components/modals/PortalAccountModal.jsx
+[32mM[m[31mM[m frontend/src/components/tables/DataTable.css
+[32mM[m[31mM[m frontend/src/components/tables/DataTable.jsx
+[32mA[m[31mM[m frontend/src/config/architectureModules.js
+[32mM[m  frontend/src/context/AuthContext.jsx
+[32mM[m[31mM[m frontend/src/layouts/DashboardLayout.jsx
+[32mM[m[31mM[m frontend/src/main.jsx
+[32mM[m  frontend/src/pages/AcademicSessions.jsx
+[32mM[m  frontend/src/pages/AcceptRoleInvitation.jsx
+[32mM[m  frontend/src/pages/AccountantDashboard.jsx
+ [31mM[m frontend/src/pages/AddParent.jsx
+[32mM[m[31mM[m frontend/src/pages/AddSchool.jsx
+[32mM[m  frontend/src/pages/AddStaff.jsx
+[32mM[m[31mM[m frontend/src/pages/AddStudent.jsx
+[32mM[m  frontend/src/pages/AddSubject.jsx
+[32mM[m  frontend/src/pages/AddTeacher.jsx
+[32mM[m  frontend/src/pages/Admissions.jsx
+[32mA[m[31mM[m frontend/src/pages/AssessmentActivities.jsx
+[32mA[m  frontend/src/pages/AssessmentStructures.jsx
+[32mA[m  frontend/src/pages/Assignments.jsx
+[32mM[m[31mM[m frontend/src/pages/Attendance.jsx
+[32mM[m[31mM[m frontend/src/pages/AuditLogs.jsx
+ [31mM[m frontend/src/pages/Books.jsx
+[32mM[m[31mM[m frontend/src/pages/CashierDashboard.jsx
+[32mA[m  frontend/src/pages/CbtAssessments.jsx
+[32mA[m  frontend/src/pages/CbtQuestionBank.jsx
+[32mA[m  frontend/src/pages/ChangePassword.jsx
+[32mM[m[31mM[m frontend/src/pages/Classes.jsx
+ [31mM[m frontend/src/pages/Clinic.jsx
+[32mA[m[31mM[m frontend/src/pages/Communication.jsx
+[32mM[m[31mM[m frontend/src/pages/Dashboard.jsx
+[32mA[m  frontend/src/pages/Divisions.jsx
+ [31mM[m frontend/src/pages/EditParent.jsx
+ [31mM[m frontend/src/pages/EditStaff.jsx
+ [31mM[m frontend/src/pages/EditStudent.jsx
+[32mA[m[31mM[m frontend/src/pages/EmailVerification.jsx
+[32mA[m  frontend/src/pages/EmailVerified.jsx
+[32mA[m  frontend/src/pages/Examinations.jsx
+ [31mM[m frontend/src/pages/Expenses.jsx
+[32mA[m[31mM[m frontend/src/pages/FeeAdjustments.jsx
+[32mM[m[31mM[m frontend/src/pages/Fees.jsx
+[32mM[m  frontend/src/pages/FeesAndPayments.jsx
+[32mA[m  frontend/src/pages/FinancialReports.jsx
+[32mA[m[31mM[m frontend/src/pages/ForgotPassword.jsx
+[32mM[m[31mM[m frontend/src/pages/FormTeacherDashboard.jsx
+[32mA[m[31mM[m frontend/src/pages/Graduation.jsx
+[32mM[m[31mM[m frontend/src/pages/HostelDashboard.jsx
+[32mM[m[31mM[m frontend/src/pages/Hostels.jsx
+[32mA[m  frontend/src/pages/InvitationProfileSetup.jsx
+[32mA[m[31mM[m frontend/src/pages/LeaveApplication.jsx
+[32mM[m  frontend/src/pages/LeaveRequests.jsx
+[32mM[m[31mM[m frontend/src/pages/LibrarianDashboard.jsx
+[32mA[m  frontend/src/pages/LibraryWorkspace.jsx
+[32mM[m[31mM[m frontend/src/pages/Login.jsx
+[32mM[m[31mM[m frontend/src/pages/NurseDashboard.jsx
+[32mM[m[31mM[m frontend/src/pages/NurseryHeadDashboard.jsx
+[32mA[m  frontend/src/pages/OperationalReports.jsx
+[32mM[m  frontend/src/pages/OrganizationOwnerDashboard.jsx
+[32mA[m  frontend/src/pages/OrganizationOwnerWorkspace.jsx
+ [31mM[m frontend/src/pages/Organizations.jsx
+[32mM[m[31mM[m frontend/src/pages/ParentPortal.jsx
+[32mM[m[31mM[m frontend/src/pages/ParentProfile.jsx
+[32mM[m  frontend/src/pages/Parents.jsx
+[32mA[m[31mM[m frontend/src/pages/Payroll.jsx
+[32mA[m[31mM[m frontend/src/pages/PlatformEmailCenter.jsx
+[32mA[m[31mM[m frontend/src/pages/PlatformOperations.jsx
+ [31mM[m frontend/src/pages/PlatformOwnerDashboard.jsx
+[32mM[m[31mM[m frontend/src/pages/PrimaryHeadmasterDashboard.jsx
+[32mM[m  frontend/src/pages/PrincipalDashboard.jsx
+[32mM[m[31mM[m frontend/src/pages/Promotions.jsx
+[32mM[m  frontend/src/pages/ProprietorDashboard.jsx
+ [31mM[m frontend/src/pages/PublicHome.jsx
+[32mM[m[31mM[m frontend/src/pages/PublicRegister.jsx
+[32mA[m[31mM[m frontend/src/pages/ReceptionActivities.jsx
+[32mM[m[31mM[m frontend/src/pages/ReceptionDashboard.jsx
+[32mM[m[31mM[m frontend/src/pages/ReportCards.jsx
+[32mA[m[31mM[m frontend/src/pages/ResetPassword.jsx
+[32mM[m[31mM[m frontend/src/pages/ResultEntry.jsx
+[32mM[m  frontend/src/pages/Results.jsx
+[32mM[m[31mM[m frontend/src/pages/RoleInvitations.jsx
+[32mA[m  frontend/src/pages/SchoolSetup.jsx
+[32mM[m[31mM[m frontend/src/pages/Schools.jsx
+[32mM[m[31mM[m frontend/src/pages/SecondaryPrincipalDashboard.jsx
+[32mM[m[31mM[m frontend/src/pages/Settings.jsx
+[32mM[m  frontend/src/pages/Staff.jsx
+[32mM[m[31mM[m frontend/src/pages/Streams.jsx
+[32mA[m[31mM[m frontend/src/pages/StudentCbt.jsx
+[32mM[m  frontend/src/pages/StudentEnrollments.jsx
+[32mM[m[31mM[m frontend/src/pages/StudentPortal.jsx
+[32mM[m[31mM[m frontend/src/pages/StudentProfile.jsx
+[32mM[m  frontend/src/pages/Students.jsx
+[32mM[m[31mM[m frontend/src/pages/Subjects.jsx
+[32mA[m  frontend/src/pages/SubscriptionPayment.jsx
+[32mM[m[31mM[m frontend/src/pages/Subscriptions.jsx
+[32mM[m[31mM[m frontend/src/pages/TeacherDashboard.jsx
+ [31mM[m frontend/src/pages/TeacherProfile.jsx
+[32mM[m[31mM[m frontend/src/pages/Teachers.jsx
+[32mM[m  frontend/src/pages/Terms.jsx
+[32mM[m  frontend/src/pages/Timetable.jsx
+[32mM[m[31mM[m frontend/src/pages/Transport.jsx
+[32mM[m[31mM[m frontend/src/pages/TransportDashboard.jsx
+[32mA[m[31mM[m frontend/src/pages/TransportLogs.jsx
+[32mA[m  frontend/src/pages/TransportTracking.jsx
+[32mM[m[31mM[m frontend/src/pages/VicePrincipalAcademicDashboard.jsx
+ [31mM[m frontend/src/pages/VicePrincipalAdminDashboard.jsx
+ [31mM[m frontend/src/pages/Visitors.jsx
+[32mM[m[31mM[m frontend/src/services/api.js
+[32mM[m  frontend/src/styles/components.css
+[32mM[m  frontend/src/styles/dashboard.css
+ [31mM[m frontend/src/styles/globals.css
+ [31mM[m frontend/src/styles/responsive.css
+ [31mM[m frontend/src/styles/variables.css
+[32mA[m[31mM[m frontend/src/utils/response.js
+[32mM[m  frontend/src/utils/role.js
+[32mM[m  frontend/vite.config.js
+ [31mM[m nixpacks.toml
+[32mA[m  scripts/standardize-controller-school-context.py
+[31m??[m .audit_static.py
+[31m??[m .cbt-audit-findings.md
+[31m??[m .controls-forms-audit-findings.md
+[31m??[m .guide-audit-findings.md
+[31m??[m .header-footer-audit-findings.md
+[31m??[m .mobile-shell-audit-findings.md
+[31m??[m .readiness-findings.md
+[31m??[m .readiness-inventory.txt
+[31m??[m .readiness-security-scan.txt
+[31m??[m .results-audit-findings.md
+[31m??[m audit/
+[31m??[m backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php
+[31m??[m backend/dono-api/app/Models/CommunicationRead.php
+[31m??[m backend/dono-api/app/Models/FeePaymentTransaction.php
+[31m??[m backend/dono-api/app/Models/SupportTicket.php
+[31m??[m backend/dono-api/app/Models/SupportTicketMessage.php
+[31m??[m backend/dono-api/app/Services/MediaStorageService.php
+[31m??[m backend/dono-api/app/Services/SubscriptionAccessService.php
+[31m??[m backend/dono-api/app/Services/SubscriptionQuotaService.php
+[31m??[m backend/dono-api/config/cors.php
+[31m??[m backend/dono-api/database/migrations/2026_08_21_150000_expand_school_communication_visibility.php
+[31m??[m backend/dono-api/database/migrations/2026_08_21_160000_create_fee_payment_transactions_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_21_190000_add_question_order_to_cbt_attempts_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_21_210000_create_communication_reads_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_21_220000_add_avatar_to_users_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_120000_create_support_tickets_tables.php
+[31m??[m backend/dono-api/resources/views/pdf/
+[31m??[m backend/dono-api/tests/Unit/AcademicComputationTest.php
+[31m??[m backend/dono-api/tests/Unit/EmailVerificationTest.php
+[31m??[m backend/dono-api/tests/Unit/SchoolSubscriptionTest.php
+[31m??[m backend/dono-api/tests/Unit/SubscriptionAccessServiceTest.php
+[31m??[m dono-erp-design-system-final.zip
+[31m??[m dono-erp-partition-fix.zip
+[31m??[m dono-erp-ui-pass-clean.zip
+[31m??[m dono-erp-ui-pass-final.zip
+[31m??[m doono-api-origin-connectivity-fix.zip
+[31m??[m doono-cbt-audit-release.zip
+[31m??[m doono-communication-lifecycle-fix.zip
+[31m??[m doono-complete-vision-release.zip
+[31m??[m doono-controls-forms-audit-release.zip
+[31m??[m doono-de-creator-erp-designer-masterclass.zip
+[31m??[m doono-de-creator-erp-final-complete.zip
+[31m??[m doono-de-creator-erp-final-design-polish.zip
+[31m??[m doono-de-creator-erp-final.zip
+[31m??[m doono-de-creator-erp-footer.zip
+[31m??[m doono-email-verification-termux-fix.zip
+[31m??[m doono-email-verification-tunnel-fix.zip
+[31m??[m doono-footer-visible-fix.zip
+[31m??[m doono-guide-audit-release.zip
+[31m??[m doono-header-footer-audit-release.zip
+[31m??[m doono-local-email-bypass.zip
+[31m??[m doono-mobile-header-composition-fix.zip
+[31m??[m doono-mobile-shell-audit-release.zip
+[31m??[m doono-mobile-ui-fix.zip
+[31m??[m doono-mobile-ui-release.zip
+[31m??[m doono-pagination-notification-release.zip
+[31m??[m doono-parallel-saas-standardization-overlay.zip
+[31m??[m doono-parallel-saas-standardization-release.zip
+[31m??[m doono-profile-avatar-mobile-fix.zip
+[31m??[m doono-profile-upload-persistence-fix.zip
+[31m??[m doono-readiness-audit-final.zip
+[31m??[m doono-render-deployment-release.zip
+[31m??[m doono-results-computation-audit.zip
+[31m??[m doono-school-wide-communication-fix.zip
+[31m??[m doono-scroll-dashboard-fix.zip
+[31m??[m doono-sticky-footer-fix.zip
+[31m??[m doono-subscription-access-release.zip
+[31m??[m doono-subscription-plan-edit-fix.zip
+[31m??[m doono-support-centre-guide-release.zip
+[31m??[m doono-teacher-module-fix.zip
+[31m??[m frontend/.env.example
+[31m??[m frontend/scripts/
+[31m??[m frontend/src/components/Navbar.css
+[31m??[m frontend/src/components/feedback/DONOGuide.css
+[31m??[m frontend/src/components/feedback/ErrorBoundary.jsx
+[31m??[m frontend/src/components/feedback/SubscriptionRequiredNotice.css
+[31m??[m frontend/src/components/feedback/SubscriptionRequiredNotice.jsx
+[31m??[m frontend/src/components/layout/Footer.css
+[31m??[m frontend/src/components/layout/Footer.jsx
+[31m??[m frontend/src/components/layout/PublicHeader.css
+[31m??[m frontend/src/components/layout/PublicHeader.jsx
+[31m??[m frontend/src/components/layout/PublicShell.css
+[31m??[m frontend/src/components/layout/PublicShell.jsx
+[31m??[m frontend/src/components/layout/ScrollNavigator.css
+[31m??[m frontend/src/components/layout/ScrollNavigator.jsx
+[31m??[m frontend/src/components/tables/Pagination.css
+[31m??[m frontend/src/components/tables/Pagination.jsx
+[31m??[m frontend/src/config/guideKnowledge.js
+[31m??[m frontend/src/layouts/DashboardLayout.css
+[31m??[m frontend/src/pages/AuditLogs.css
+[31m??[m frontend/src/pages/Communication.css
+[31m??[m frontend/src/pages/OnboardingForm.css
+[31m??[m frontend/src/pages/PlatformEmailCenter.css
+[31m??[m frontend/src/pages/PortalFees.jsx
+[31m??[m frontend/src/pages/ProfileSettings.css
+[31m??[m frontend/src/pages/ProfileSettings.jsx
+[31m??[m frontend/src/pages/PublicAuth.css
+[31m??[m frontend/src/pages/PublicHome.css
+[31m??[m frontend/src/pages/RoleInvitations.css
+[31m??[m frontend/src/pages/SchoolBranding.css
+[31m??[m frontend/src/pages/SchoolBranding.jsx
+[31m??[m frontend/src/pages/Schools.css
+[31m??[m frontend/src/pages/StudentLibrary.jsx
+[31m??[m frontend/src/pages/SupportCentre.jsx
+[31m??[m frontend/src/pages/TeacherDashboard.css
+[31m??[m frontend/src/styles/control-normalization.css
+[31m??[m render.yaml
+[31m??[m scripts/validate-render-config.py
+=== BACKEND COUNTS ===
+112
+92
+30
+11
+154
+=== FRONTEND COUNTS ===
+113
+27
+=== BACKEND FILES ===
+backend/dono-api/app/Http/Controllers/AcademicSessionController.php
+backend/dono-api/app/Http/Controllers/Api/AcademicSessionController.php
+backend/dono-api/app/Http/Controllers/Api/AcademicSettingController.php
+backend/dono-api/app/Http/Controllers/Api/ActivityLogController.php
+backend/dono-api/app/Http/Controllers/Api/AdminRevenueController.php
+backend/dono-api/app/Http/Controllers/Api/AdmissionController.php
+backend/dono-api/app/Http/Controllers/Api/AssessmentActivityController.php
+backend/dono-api/app/Http/Controllers/Api/AssessmentStructureController.php
+backend/dono-api/app/Http/Controllers/Api/AssetController.php
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php
+backend/dono-api/app/Http/Controllers/Api/AuthController.php
+backend/dono-api/app/Http/Controllers/Api/BookController.php
+backend/dono-api/app/Http/Controllers/Api/BookLoanController.php
+backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php
+backend/dono-api/app/Http/Controllers/Api/CbtQuestionController.php
+backend/dono-api/app/Http/Controllers/Api/ClassController.php
+backend/dono-api/app/Http/Controllers/Api/ClinicVisitController.php
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php
+backend/dono-api/app/Http/Controllers/Api/CountryController.php
+backend/dono-api/app/Http/Controllers/Api/CouponController.php
+backend/dono-api/app/Http/Controllers/Api/CurrencyController.php
+backend/dono-api/app/Http/Controllers/Api/DashboardController.php
+backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php
+backend/dono-api/app/Http/Controllers/Api/EmailVerificationController.php
+backend/dono-api/app/Http/Controllers/Api/ExamScoreController.php
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php
+backend/dono-api/app/Http/Controllers/Api/ExpenseController.php
+backend/dono-api/app/Http/Controllers/Api/FeatureController.php
+backend/dono-api/app/Http/Controllers/Api/FeeAdjustmentController.php
+backend/dono-api/app/Http/Controllers/Api/FeeCategoryController.php
+backend/dono-api/app/Http/Controllers/Api/FeeController.php
+backend/dono-api/app/Http/Controllers/Api/FeePaymentController.php
+backend/dono-api/app/Http/Controllers/Api/FinancialReportController.php
+backend/dono-api/app/Http/Controllers/Api/FormTeacherPortalController.php
+backend/dono-api/app/Http/Controllers/Api/GradingSystemController.php
+backend/dono-api/app/Http/Controllers/Api/GraduationRecordController.php
+backend/dono-api/app/Http/Controllers/Api/HostelAllocationController.php
+backend/dono-api/app/Http/Controllers/Api/HostelController.php
+backend/dono-api/app/Http/Controllers/Api/HostelRoomController.php
+backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php
+backend/dono-api/app/Http/Controllers/Api/LibraryController.php
+backend/dono-api/app/Http/Controllers/Api/LocalEmailController.php
+backend/dono-api/app/Http/Controllers/Api/MedicalRecordController.php
+backend/dono-api/app/Http/Controllers/Api/NurseryHeadController.php
+backend/dono-api/app/Http/Controllers/Api/OrganizationController.php
+backend/dono-api/app/Http/Controllers/Api/OrganizationOwnerController.php
+backend/dono-api/app/Http/Controllers/Api/ParentController.php
+backend/dono-api/app/Http/Controllers/Api/ParentDashboardController.php
+backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php
+backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php
+backend/dono-api/app/Http/Controllers/Api/PasswordResetController.php
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php
+backend/dono-api/app/Http/Controllers/Api/PaymentReceiptController.php
+backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php
+backend/dono-api/app/Http/Controllers/Api/PayrollEntryController.php
+backend/dono-api/app/Http/Controllers/Api/PlatformAnnouncementController.php
+backend/dono-api/app/Http/Controllers/Api/PlatformOperationsController.php
+backend/dono-api/app/Http/Controllers/Api/PlatformOwnerController.php
+backend/dono-api/app/Http/Controllers/Api/PortalAccountController.php
+backend/dono-api/app/Http/Controllers/Api/PrimaryHeadmasterController.php
+backend/dono-api/app/Http/Controllers/Api/PrincipalController.php
+backend/dono-api/app/Http/Controllers/Api/PromoCampaignController.php
+backend/dono-api/app/Http/Controllers/Api/ProprietorController.php
+backend/dono-api/app/Http/Controllers/Api/ReceiptController.php
+backend/dono-api/app/Http/Controllers/Api/ReceptionActivityController.php
+backend/dono-api/app/Http/Controllers/Api/ReceptionAppointmentController.php
+backend/dono-api/app/Http/Controllers/Api/ReportCardController.php
+backend/dono-api/app/Http/Controllers/Api/ResultController.php
+backend/dono-api/app/Http/Controllers/Api/ResultEntryController.php
+backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php
+backend/dono-api/app/Http/Controllers/Api/RoleController.php
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolEventController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolFacilityController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolSettingController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolSetupController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolSetupDelegationController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolSubscriptionController.php
+backend/dono-api/app/Http/Controllers/Api/SecondaryPrincipalController.php
+backend/dono-api/app/Http/Controllers/Api/StaffAttendanceController.php
+backend/dono-api/app/Http/Controllers/Api/StaffController.php
+backend/dono-api/app/Http/Controllers/Api/StreamController.php
+backend/dono-api/app/Http/Controllers/Api/StudentController.php
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php
+backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php
+backend/dono-api/app/Http/Controllers/Api/StudentGatePassController.php
+backend/dono-api/app/Http/Controllers/Api/StudentLeaveApplicationController.php
+backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php
+backend/dono-api/app/Http/Controllers/Api/StudentPromotionController.php
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php
+backend/dono-api/app/Http/Controllers/Api/SubscriptionPlanController.php
+backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php
+backend/dono-api/app/Http/Controllers/Api/SystemSettingController.php
+backend/dono-api/app/Http/Controllers/Api/TeacherDashboardController.php
+backend/dono-api/app/Http/Controllers/Api/TeacherPortalController.php
+backend/dono-api/app/Http/Controllers/Api/TermController.php
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php
+backend/dono-api/app/Http/Controllers/Api/TransportAllocationController.php
+backend/dono-api/app/Http/Controllers/Api/TransportLogController.php
+backend/dono-api/app/Http/Controllers/Api/TransportRouteController.php
+backend/dono-api/app/Http/Controllers/Api/VehicleController.php
+backend/dono-api/app/Http/Controllers/Api/VicePrincipalAcademicController.php
+backend/dono-api/app/Http/Controllers/Api/VicePrincipalAdminController.php
+backend/dono-api/app/Http/Controllers/Api/VisitorController.php
+backend/dono-api/app/Http/Controllers/Controller.php
+backend/dono-api/app/Http/Controllers/PromoCampaignController.php
+backend/dono-api/app/Http/Controllers/TermController.php
+backend/dono-api/app/Http/Middleware/Authenticate.php
+backend/dono-api/app/Http/Middleware/CheckActiveSubscription.php
+backend/dono-api/app/Http/Middleware/CheckMaintenanceMode.php
+backend/dono-api/app/Http/Middleware/CheckStaffActive.php
+backend/dono-api/app/Http/Middleware/CheckSubscriptionFeature.php
+backend/dono-api/app/Http/Middleware/EnsureIdempotency.php
+backend/dono-api/app/Http/Middleware/EnsurePasswordChanged.php
+backend/dono-api/app/Http/Middleware/HasSchool.php
+backend/dono-api/app/Http/Middleware/OrganizationOwnerMiddleware.php
+backend/dono-api/app/Http/Middleware/PermissionMiddleware.php
+backend/dono-api/app/Http/Middleware/RoleMiddleware.php
+backend/dono-api/app/Services/Academic/AssessmentComputationService.php
+backend/dono-api/app/Services/Academic/GradeService.php
+backend/dono-api/app/Services/Academic/PromotionService.php
+backend/dono-api/app/Services/Academic/RankingService.php
+backend/dono-api/app/Services/Academic/ReportCardService.php
+backend/dono-api/app/Services/Academic/ResultEntryService.php
+backend/dono-api/app/Services/Academic/ResultProcessingService.php
+backend/dono-api/app/Services/Academic/ResultSubmissionService.php
+backend/dono-api/app/Services/ActivityLogService.php
+backend/dono-api/app/Services/AdmissionService.php
+backend/dono-api/app/Services/AssetService.php
+backend/dono-api/app/Services/AttendanceService.php
+backend/dono-api/app/Services/CurrentContextService.php
+backend/dono-api/app/Services/DisciplineCaseService.php
+backend/dono-api/app/Services/EmailDeliveryService.php
+backend/dono-api/app/Services/EmailVerificationService.php
+backend/dono-api/app/Services/Finance/FeeService.php
+backend/dono-api/app/Services/Finance/PaymentService.php
+backend/dono-api/app/Services/LeaveRequestService.php
+backend/dono-api/app/Services/MediaStorageService.php
+backend/dono-api/app/Services/PaystackService.php
+backend/dono-api/app/Services/PortalAccountService.php
+backend/dono-api/app/Services/ResultComputationService.php
+backend/dono-api/app/Services/SafetyIncidentService.php
+backend/dono-api/app/Services/StaffAttendanceService.php
+backend/dono-api/app/Services/StudentPerformanceService.php
+backend/dono-api/app/Services/SubscriptionAccessService.php
+backend/dono-api/app/Services/SubscriptionQuotaService.php
+backend/dono-api/app/Services/TenantPartitionService.php
+backend/dono-api/app/Services/TimetableService.php
+=== ROUTES ===
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\OrganizationController;
+use App\Http\Controllers\Api\SchoolController;
+use App\Http\Controllers\Api\SchoolBrandingController;
+use App\Http\Controllers\Api\AcademicSessionController;
+use App\Http\Controllers\Api\TermController;
+use App\Http\Controllers\Api\DivisionController;
+use App\Http\Controllers\Api\ClassController;
+use App\Http\Controllers\Api\StreamController;
+use App\Http\Controllers\Api\StudentController;
+use App\Http\Controllers\Api\ParentController;
+use App\Http\Controllers\Api\SubjectController;
+use App\Http\Controllers\Api\StaffController;
+use App\Http\Controllers\Api\ExaminationController;
+use App\Http\Controllers\Api\ExamScoreController;
+use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\FeeCategoryController;
+use App\Http\Controllers\Api\StudentFeeController;
+use App\Http\Controllers\Api\FeePaymentController;
+use App\Http\Controllers\Api\PaymentReceiptController;
+use App\Http\Controllers\Api\StudentEnrollmentController;
+use App\Http\Controllers\Api\ParentStudentController;
+use App\Http\Controllers\Api\StudentPromotionController;
+use App\Http\Controllers\Api\ResultController;
+use App\Http\Controllers\Api\ResultSubmissionController;
+use App\Http\Controllers\Api\AssessmentStructureController;
+use App\Http\Controllers\Api\TimetableController;
+use App\Http\Controllers\Api\ReportCardController;
+use App\Http\Controllers\Api\FeeController;
+use App\Http\Controllers\Api\SubscriptionPlanController;
+use App\Http\Controllers\Api\SchoolSubscriptionController;
+use App\Http\Controllers\Api\SystemSettingController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\ReceiptController;
+use App\Http\Controllers\Api\AdminRevenueController;
+use App\Http\Controllers\Api\ParentDashboardController;
+use App\Http\Controllers\Api\TeacherDashboardController;
+use App\Http\Controllers\Api\ResultEntryController;
+use App\Http\Controllers\Api\PromoCampaignController;
+use App\Http\Controllers\Api\CurrencyController;
+use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\BookController;
+use App\Http\Controllers\Api\BookLoanController;
+use App\Http\Controllers\Api\HostelController;
+use App\Http\Controllers\Api\HostelRoomController;
+use App\Http\Controllers\Api\HostelAllocationController;
+use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\Api\MedicalRecordController;
+use App\Http\Controllers\Api\ClinicVisitController;
+use App\Http\Controllers\Api\VehicleController;
+use App\Http\Controllers\Api\TransportRouteController;
+use App\Http\Controllers\Api\TransportAllocationController;
+use App\Http\Controllers\Api\VisitorController;
+use App\Http\Controllers\Api\StudentGatePassController;
+use App\Http\Controllers\Api\ReceptionAppointmentController;
+use App\Http\Controllers\Api\TeacherPortalController;
+use App\Http\Controllers\Api\FormTeacherPortalController;
+use App\Http\Controllers\Api\PlatformOwnerController;
+use App\Http\Controllers\Api\OrganizationOwnerController;
+use App\Http\Controllers\Api\ProprietorController;
+use App\Http\Controllers\Api\PrincipalController;
+use App\Http\Controllers\Api\VicePrincipalAcademicController;
+use App\Http\Controllers\Api\VicePrincipalAdminController;
+use App\Http\Controllers\Api\NurseryHeadController;
+use App\Http\Controllers\Api\PrimaryHeadmasterController;
+use App\Http\Controllers\Api\SecondaryPrincipalController;
+use App\Http\Controllers\Api\StudentPortalController;
+use App\Http\Controllers\Api\ParentPortalController;
+use App\Http\Controllers\Api\RoleInvitationController;
+use App\Http\Controllers\Api\PortalAccountController;
+use App\Http\Controllers\Api\EmailVerificationController;
+use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\Api\PlatformAnnouncementController;
+use App\Http\Controllers\Api\LocalEmailController;
+use App\Http\Controllers\Api\ActivityLogController;
+use App\Http\Controllers\Api\SchoolSetupDelegationController;
+use App\Http\Controllers\Api\SchoolSetupController;
+use App\Http\Controllers\Api\AdmissionController;
+use App\Http\Controllers\Api\SchoolEventController;
+use App\Http\Controllers\Api\SchoolFacilityController;
+use App\Http\Controllers\Api\AssignmentController;
+use App\Http\Controllers\Api\CommunicationController;
+use App\Http\Controllers\Api\CbtQuestionController;
+use App\Http\Controllers\Api\CbtAssessmentController;
+use App\Http\Controllers\Api\StudentLeaveApplicationController;
+use App\Http\Controllers\Api\AssessmentActivityController;
+use App\Http\Controllers\Api\PlatformOperationsController;
+use App\Http\Controllers\Api\PayrollEntryController;
+use App\Http\Controllers\Api\FinancialReportController;
+use App\Http\Controllers\Api\LibraryController;
+use App\Http\Controllers\Api\ReceptionActivityController;
+use App\Http\Controllers\Api\TransportLogController;
+use App\Http\Controllers\Api\FeeAdjustmentController;
+use App\Http\Controllers\Api\FeatureController;
+use App\Http\Controllers\Api\GraduationRecordController;
+use App\Http\Controllers\Api\SupportTicketController;
+
+Route::prefix('v1')->group(function () {
+    Route::post('payments/paystack/webhook', [PaymentController::class, 'webhook']);
+
+    Route::get('/countries', [SchoolController::class, 'countries']);
+    Route::get('/roles', [\App\Http\Controllers\Api\RoleController::class, 'index'])->middleware('auth:sanctum');
+    Route::get('role-invitations/preview/{token}', [RoleInvitationController::class, 'preview']);
+    Route::post('role-invitations/accept', [RoleInvitationController::class, 'accept']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth');
+    Route::get('email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed:relative')->name('verification.verify');
+    Route::post('email/resend-verification', [EmailVerificationController::class, 'resend'])->middleware('throttle:auth');
+    Route::post('forgot-password', [PasswordResetController::class, 'sendLink'])->middleware('throttle:auth');
+    Route::post('reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:auth');
+
+    Route::middleware(['auth:sanctum', 'throttle:api', 'idempotency'])->group(function () {
+        Route::get('/me/context', [AuthController::class, 'context']);
+        Route::post('/me/profile', [AuthController::class, 'profile']);
+        Route::put('/me/change-password', [AuthController::class, 'changePassword']);
+        Route::get('/me/staff-profile', [AuthController::class, 'staffProfile']);
+        Route::put('/me/staff-profile', [AuthController::class, 'updateStaffProfile']);
+        Route::post('/me/switch-school', [AuthController::class, 'switchSchool']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::get('/dashboard', [DashboardController::class, 'index']);
+        Route::get('support-tickets', [SupportTicketController::class, 'index']);
+        Route::post('support-tickets', [SupportTicketController::class, 'store']);
+        Route::get('support-tickets/{supportTicket}', [SupportTicketController::class, 'show']);
+        Route::post('support-tickets/{supportTicket}/replies', [SupportTicketController::class, 'reply']);
+        Route::patch('support-tickets/{supportTicket}/status', [SupportTicketController::class, 'updateStatus']);
+        Route::get('/org-owner/dashboard', [OrganizationOwnerController::class, 'dashboard']);
+        Route::get('/org-owner/workspace', [OrganizationOwnerController::class, 'workspace']);
+        Route::get('/activity-logs', [ActivityLogController::class, 'index']);
+        Route::post('role-invitations/accept-authenticated', [RoleInvitationController::class, 'acceptAuthenticated']);
+        Route::middleware(['has.school', 'role:proprietor'])->apiResource('role-invitations', RoleInvitationController::class)->except(['show', 'update']);
+        Route::middleware(['has.school', 'role:proprietor'])->post('role-invitations/{roleInvitation}/revoke', [RoleInvitationController::class, 'revoke']);
+
+        Route::middleware('role:super_admin')->group(function () {
+            Route::get('system-settings', [SystemSettingController::class, 'index']);
+            Route::put('system-settings', [SystemSettingController::class, 'update']);
+            Route::apiResource('subscription-plans', SubscriptionPlanController::class)->except(['index', 'show']);
+            Route::apiResource('school-subscriptions', SchoolSubscriptionController::class);
+            Route::post('schools/{school}/toggle-exemption', [SchoolController::class, 'toggleExemption']);
+            Route::post('schools/{school}/extend-trial', [SchoolController::class, 'extendTrial']);
+            Route::post('schools/{school}/subscription-status', [SchoolController::class, 'updateSubscriptionStatus']);
+            Route::post('schools/{school}/grant-custom-timeframe', [SchoolController::class, 'grantCustomTimeframe']);
+            Route::post('schools/{school}/set-discount', [SchoolController::class, 'setDiscount']);
+            Route::apiResource('coupons', CouponController::class);
+            Route::apiResource('promo-campaigns', PromoCampaignController::class);
+            Route::apiResource('currencies', CurrencyController::class);
+            Route::apiResource('features', FeatureController::class);
+            Route::get('platform-announcements', [PlatformAnnouncementController::class, 'index']);
+            Route::post('platform-announcements/preview-recipients', [PlatformAnnouncementController::class, 'previewRecipients']);
+            Route::post('platform-announcements', [PlatformAnnouncementController::class, 'store']);
+            Route::put('platform-announcements/{platformAnnouncement}', [PlatformAnnouncementController::class, 'update']);
+            Route::delete('platform-announcements/{platformAnnouncement}', [PlatformAnnouncementController::class, 'destroy']);
+            Route::post('platform-announcements/{platformAnnouncement}/send', [PlatformAnnouncementController::class, 'send']);
+            Route::get('platform-email/status', [PlatformAnnouncementController::class, 'emailStatus']);
+            Route::post('platform-email/test', [PlatformAnnouncementController::class, 'testEmail']);
+            Route::get('local-email-messages', [LocalEmailController::class, 'index']);
+            Route::get('local-email-messages/{localEmailMessage}', [LocalEmailController::class, 'show']);
+            Route::post('local-email-messages/{localEmailMessage}/read', [LocalEmailController::class, 'markRead']);
+            Route::delete('local-email-messages', [LocalEmailController::class, 'clear']);
+            Route::get('admin/revenue-dashboard', [AdminRevenueController::class, 'index']);
+            Route::get('platform-owner/dashboard', [PlatformOwnerController::class, 'dashboard']);
+            Route::get('platform/system-health', [PlatformOperationsController::class, 'health']);
+        });
+
+        Route::get('subscription-plans', [SubscriptionPlanController::class, 'index']);
+        Route::get('subscription-plans/{subscriptionPlan}', [SubscriptionPlanController::class, 'show']);
+        Route::apiResource('organizations', OrganizationController::class)->except(['store']);
+        Route::middleware('role:super_admin')->post('organizations', [OrganizationController::class, 'store']);
+        Route::apiResource('schools', SchoolController::class);
+        Route::get('my-subscription', [SchoolSubscriptionController::class, 'mySubscription']);
+        Route::middleware('role:proprietor')->post('payments/initialize-subscription', [PaymentController::class, 'initializeSubscription']);
+        Route::middleware('role:proprietor')->get('payments/verify-subscription/{reference}', [PaymentController::class, 'verifySubscription']);
+
+        Route::middleware(['has.school', 'role:proprietor'])->prefix('school-setup')->group(function () {
+            Route::get('progress', [SchoolSetupController::class, 'progress']);
+            Route::get('delegations', [SchoolSetupDelegationController::class, 'index']);
+            Route::put('delegations/{user}', [SchoolSetupDelegationController::class, 'update']);
+            Route::delete('delegations/{user}', [SchoolSetupDelegationController::class, 'destroy']);
+        });
+
+        Route::middleware(['has.school', 'password.changed', 'staff.active', 'subscription'])->group(function () {
+            Route::post('payments/paystack/initialize', [PaymentController::class, 'initialize']);
+            Route::get('payments/paystack/verify/{reference}', [PaymentController::class, 'verify']);
+            Route::get('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'show']);
+            Route::put('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'update']);
+            Route::get('school-branding', [SchoolBrandingController::class, 'show']);
+            Route::post('school-branding', [SchoolBrandingController::class, 'update']);
+            Route::get('proprietor/dashboard', [ProprietorController::class, 'dashboard']);
+            Route::middleware('role:principal')->get('principal/dashboard', [PrincipalController::class, 'dashboard']);
+            Route::get('vp-academic/dashboard', [VicePrincipalAcademicController::class, 'dashboard']);
+            Route::get('vp-admin/dashboard', [VicePrincipalAdminController::class, 'dashboard']);
+            Route::get('teacher/dashboard', [TeacherPortalController::class, 'dashboard']);
+            Route::get('form-teacher/dashboard', [FormTeacherPortalController::class, 'dashboard']);
+            Route::get('nursery-head/dashboard', [NurseryHeadController::class, 'dashboard']);
+            Route::get('primary-head/dashboard', [PrimaryHeadmasterController::class, 'dashboard']);
+            Route::get('secondary-head/dashboard', [SecondaryPrincipalController::class, 'dashboard']);
+            Route::get('student/dashboard', [StudentPortalController::class, 'dashboard']);
+            Route::middleware('permission:portal_student_access')->get('student/library', [LibraryController::class, 'studentLibrary']);
+            Route::get('student/report-card/download', [StudentPortalController::class, 'downloadLatestReportCard']);
+            Route::get('parent/dashboard', [ParentPortalController::class, 'dashboard']);
+            Route::get('parent/report-cards/{student}/download', [ParentPortalController::class, 'downloadReportCard']);
+            Route::middleware('permission:view_students')->get('academic-sessions', [AcademicSessionController::class, 'index']);
+            Route::middleware('permission:manage_academic_sessions')->apiResource('academic-sessions', AcademicSessionController::class)->except(['index']);
+            Route::middleware('permission:view_students')->get('terms', [TermController::class, 'index']);
+            Route::middleware('permission:manage_terms')->apiResource('terms', TermController::class)->except(['index']);
+            Route::middleware('permission:view_students')->get('divisions', [DivisionController::class, 'index']);
+            Route::middleware('permission:manage_divisions')->apiResource('divisions', DivisionController::class)->except(['index']);
+            Route::middleware('permission:view_students')->get('classes', [ClassController::class, 'index']);
+            Route::middleware('permission:manage_classes')->apiResource('classes', ClassController::class)->except(['index']);
+            Route::middleware('permission:view_students')->get('streams', [StreamController::class, 'index']);
+            Route::middleware('permission:manage_streams')->apiResource('streams', StreamController::class)->except(['index']);
+            Route::middleware('permission:view_students')->get('subjects', [SubjectController::class, 'index']);
+            Route::middleware('permission:manage_subjects')->apiResource('subjects', SubjectController::class)->except(['index']);
+            Route::middleware('permission:view_staff')->get('staff', [StaffController::class, 'index']);
+            Route::middleware('permission:view_staff')->get('staff/{staff}', [StaffController::class, 'show']);
+            Route::middleware(['role:proprietor', 'permission:manage_staff'])->post('staff', [StaffController::class, 'store']);
+            Route::middleware(['role:proprietor', 'permission:manage_staff'])->put('staff/{staff}', [StaffController::class, 'update']);
+            Route::middleware(['role:proprietor', 'permission:manage_staff'])->patch('staff/{staff}', [StaffController::class, 'update']);
+            Route::middleware(['role:proprietor', 'permission:manage_staff'])->delete('staff/{staff}', [StaffController::class, 'destroy']);
+            Route::middleware('permission:view_students')->get('students', [StudentController::class, 'index']);
+            Route::middleware('permission:view_students')->get('students/{student}', [StudentController::class, 'show']);
+            Route::middleware('permission:manage_students')->post('students', [StudentController::class, 'store']);
+            Route::middleware('permission:manage_students')->put('students/{student}', [StudentController::class, 'update']);
+            Route::middleware('permission:manage_students')->patch('students/{student}', [StudentController::class, 'update']);
+            Route::middleware('permission:manage_students')->delete('students/{student}', [StudentController::class, 'destroy']);
+            Route::middleware('permission:manage_students')->post('students/{student}/portal-account', [PortalAccountController::class, 'linkStudent']);
+            Route::middleware('permission:view_students')->get('parents', [ParentController::class, 'index']);
+            Route::middleware('permission:view_students')->get('parents/{parent}', [ParentController::class, 'show']);
+            Route::middleware('permission:manage_students')->post('parents', [ParentController::class, 'store']);
+            Route::middleware('permission:manage_students')->put('parents/{parent}', [ParentController::class, 'update']);
+            Route::middleware('permission:manage_students')->patch('parents/{parent}', [ParentController::class, 'update']);
+            Route::middleware('permission:manage_students')->delete('parents/{parent}', [ParentController::class, 'destroy']);
+            Route::middleware('permission:manage_students')->post('parents/{parent}/portal-account', [PortalAccountController::class, 'linkParent']);
+            Route::middleware('permission:view_finance_reports')->get('fees', [FeeController::class, 'index']);
+            Route::middleware(['role:proprietor', 'permission:manage_fee_categories'])->apiResource('fees', FeeController::class)->except(['index']);
+            Route::middleware('permission:view_finance_reports')->get('student-fees', [StudentFeeController::class, 'index']);
+            Route::middleware('permission:manage_student_fees')->apiResource('student-fees', StudentFeeController::class)->except(['index']);
+            Route::middleware('permission:manage_students')->apiResource('enrollments', StudentEnrollmentController::class);
+            Route::middleware('permission:approve_admissions')->post('admissions', [AdmissionController::class, 'store']);
+            Route::middleware('permission:view_finance_reports')->apiResource('fee-payments', FeePaymentController::class)->only(['index', 'show']);
+            Route::middleware('permission:receive_payments')->apiResource('fee-payments', FeePaymentController::class)->only(['store', 'destroy']);
+            Route::middleware('permission:view_finance_reports')->get('fee-adjustments/discounts', [FeeAdjustmentController::class, 'discounts']);
+            Route::middleware('permission:manage_student_fees')->put('student-fees/{studentFee}/discount', [FeeAdjustmentController::class, 'applyDiscount']);
+            Route::middleware('permission:receive_payments')->post('fee-payments/{feePayment}/reverse', [FeeAdjustmentController::class, 'reversePayment']);
+            Route::middleware('permission:view_finance_reports')->apiResource('payment-receipts', PaymentReceiptController::class)->only(['index', 'show']);
+            Route::middleware('permission:manage_promotions')->apiResource('promotions', StudentPromotionController::class);
+            Route::middleware('permission:manage_promotions')->apiResource('graduation-records', GraduationRecordController::class);
+            Route::middleware('permission:view_students')->get('attendance', [AttendanceController::class, 'index']);
+            Route::middleware('permission:view_students')->get('attendance/class-list', [AttendanceController::class, 'classList']);
+            Route::middleware('permission:manage_attendance')->post('attendance/bulk', [AttendanceController::class, 'bulkStore']);
+            Route::middleware('permission:view_results')->get('results', [ResultController::class, 'index']);
+            Route::middleware(['role:proprietor', 'permission:manage_assessments'])->apiResource('assessment-structures', AssessmentStructureController::class);
+            Route::middleware('permission:approve_results')->post('results/{result}/publish', [ResultController::class, 'publish']);
+            Route::middleware('permission:view_results')->get('report-cards', [ReportCardController::class, 'index']);
+            Route::middleware('permission:view_results')->get('report-cards/{reportCard}/download', [ReportCardController::class, 'downloadPdf']);
+            Route::middleware('permission:manage_exam_scores')->prefix('result-entry')->group(function () {
+                Route::get('/students', [ResultEntryController::class, 'students']);
+=== FRONTEND PAGES ===
+frontend/src/pages/AcademicSessions.jsx
+frontend/src/pages/AcceptRoleInvitation.jsx
+frontend/src/pages/AccountantDashboard.jsx
+frontend/src/pages/AddParent.jsx
+frontend/src/pages/AddSchool.jsx
+frontend/src/pages/AddStaff.jsx
+frontend/src/pages/AddStudent.jsx
+frontend/src/pages/AddSubject.jsx
+frontend/src/pages/AddTeacher.jsx
+frontend/src/pages/Admissions.jsx
+frontend/src/pages/AssessmentActivities.jsx
+frontend/src/pages/AssessmentStructures.jsx
+frontend/src/pages/AssetRegister.jsx
+frontend/src/pages/Assignments.jsx
+frontend/src/pages/Attendance.jsx
+frontend/src/pages/AuditLogs.jsx
+frontend/src/pages/Books.jsx
+frontend/src/pages/CashierDashboard.jsx
+frontend/src/pages/CbtAssessments.jsx
+frontend/src/pages/CbtQuestionBank.jsx
+frontend/src/pages/ChangePassword.jsx
+frontend/src/pages/Classes.jsx
+frontend/src/pages/Clinic.jsx
+frontend/src/pages/Communication.jsx
+frontend/src/pages/Dashboard.jsx
+frontend/src/pages/DisciplineCases.jsx
+frontend/src/pages/Divisions.jsx
+frontend/src/pages/EditParent.jsx
+frontend/src/pages/EditStaff.jsx
+frontend/src/pages/EditStudent.jsx
+frontend/src/pages/EditTeacher.jsx
+frontend/src/pages/EmailVerification.jsx
+frontend/src/pages/EmailVerified.jsx
+frontend/src/pages/Examinations.jsx
+frontend/src/pages/Expenses.jsx
+frontend/src/pages/FeeAdjustments.jsx
+frontend/src/pages/FeePayments.jsx
+frontend/src/pages/Fees.jsx
+frontend/src/pages/FeesAndPayments.jsx
+frontend/src/pages/FinancialReports.jsx
+frontend/src/pages/ForgotPassword.jsx
+frontend/src/pages/FormTeacherDashboard.jsx
+frontend/src/pages/Graduation.jsx
+frontend/src/pages/HostelDashboard.jsx
+frontend/src/pages/Hostels.jsx
+frontend/src/pages/InvitationProfileSetup.jsx
+frontend/src/pages/LeaveApplication.jsx
+frontend/src/pages/LeaveRequests.jsx
+frontend/src/pages/LibrarianDashboard.jsx
+frontend/src/pages/LibraryWorkspace.jsx
+frontend/src/pages/LinkStudentToParent.jsx
+frontend/src/pages/Login.jsx
+frontend/src/pages/NurseDashboard.jsx
+frontend/src/pages/NurseryHeadDashboard.jsx
+frontend/src/pages/OperationalReports.jsx
+frontend/src/pages/OrganizationOwnerDashboard.jsx
+frontend/src/pages/OrganizationOwnerWorkspace.jsx
+frontend/src/pages/Organizations.jsx
+frontend/src/pages/ParentPortal.jsx
+frontend/src/pages/ParentProfile.jsx
+frontend/src/pages/Parents.jsx
+frontend/src/pages/Payroll.jsx
+frontend/src/pages/PlatformEmailCenter.jsx
+frontend/src/pages/PlatformOperations.jsx
+frontend/src/pages/PlatformOwnerDashboard.jsx
+frontend/src/pages/PortalFees.jsx
+frontend/src/pages/PrimaryHeadmasterDashboard.jsx
+frontend/src/pages/PrincipalDashboard.jsx
+frontend/src/pages/ProfileSettings.jsx
+frontend/src/pages/Promotions.jsx
+frontend/src/pages/ProprietorDashboard.jsx
+frontend/src/pages/PublicHome.jsx
+frontend/src/pages/PublicRegister.jsx
+frontend/src/pages/ReceptionActivities.jsx
+frontend/src/pages/ReceptionDashboard.jsx
+frontend/src/pages/ReportCards.jsx
+frontend/src/pages/ResetPassword.jsx
+frontend/src/pages/ResultEntry.jsx
+frontend/src/pages/Results.jsx
+frontend/src/pages/RoleInvitations.jsx
+frontend/src/pages/SafetyIncidents.jsx
+frontend/src/pages/SchoolBranding.jsx
+frontend/src/pages/SchoolEvents.jsx
+frontend/src/pages/SchoolFacilities.jsx
+frontend/src/pages/SchoolSetup.jsx
+frontend/src/pages/Schools.jsx
+frontend/src/pages/SecondaryPrincipalDashboard.jsx
+frontend/src/pages/Settings.jsx
+frontend/src/pages/Staff.jsx
+frontend/src/pages/StaffAttendance.jsx
+frontend/src/pages/Streams.jsx
+frontend/src/pages/StudentCbt.jsx
+frontend/src/pages/StudentEnrollments.jsx
+frontend/src/pages/StudentLibrary.jsx
+frontend/src/pages/StudentPortal.jsx
+frontend/src/pages/StudentProfile.jsx
+frontend/src/pages/Students.jsx
+frontend/src/pages/Subjects.jsx
+frontend/src/pages/SubscriptionPayment.jsx
+frontend/src/pages/Subscriptions.jsx
+frontend/src/pages/SupportCentre.jsx
+frontend/src/pages/TeacherDashboard.jsx
+frontend/src/pages/TeacherProfile.jsx
+frontend/src/pages/Teachers.jsx
+frontend/src/pages/Terms.jsx
+frontend/src/pages/Timetable.jsx
+frontend/src/pages/Transport.jsx
+frontend/src/pages/TransportDashboard.jsx
+frontend/src/pages/TransportLogs.jsx
+frontend/src/pages/TransportTracking.jsx
+frontend/src/pages/VicePrincipalAcademicDashboard.jsx
+frontend/src/pages/VicePrincipalAdminDashboard.jsx
+frontend/src/pages/Visitors.jsx
+=== CURRENT DIRTY FILES SUMMARY ===
+[32mA[m  .screenshot-findings.md
+[32mA[m  .ui-pass-notes.md
+[32mA[m  DASHBOARD_RELEASE_NOTES.md
+ [31mM[m Dockerfile
+[32mA[m  architecture-acceptance-matrix.md
+[32mA[m  architecture-gap-report.md
+[32mA[m  architecture-implementation-notes.md
+[32mA[m  architecture-progress.md
+[32mM[m[31mM[m backend/dono-api/.env.example
+ [31mM[m backend/dono-api/Dockerfile
+ [31mM[m backend/dono-api/app/Console/Commands/ExpireSubscriptions.php
+ [31mM[m backend/dono-api/app/Console/Commands/SendSubscriptionReminders.php
+[32mM[m  backend/dono-api/app/Http/Controllers/AcademicSessionController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/AcademicSessionController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/ActivityLogController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/AssessmentActivityController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/AssessmentStructureController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/AssetController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/AssignmentController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/AttendanceController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/AuthController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/CbtQuestionController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/ClassController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/CommunicationController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/CouponController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/CurrencyController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/EmailVerificationController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/FeatureController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/FeeAdjustmentController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/FeeCategoryController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/FeePaymentController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/FinancialReportController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/FormTeacherPortalController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/GraduationRecordController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/HostelAllocationController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/HostelRoomController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/LibraryController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/LocalEmailController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/OrganizationOwnerController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/PasswordResetController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/PaymentController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/PaymentReceiptController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/PayrollEntryController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/PlatformAnnouncementController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/PlatformOperationsController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/PlatformOwnerController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/PortalAccountController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/PrincipalController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/PromoCampaignController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/ReceptionActivityController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/ReceptionAppointmentController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/ReportCardController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/ResultController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/ResultEntryController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/SchoolController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SchoolEventController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SchoolFacilityController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SchoolSettingController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/SchoolSetupController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/SchoolSetupDelegationController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/SchoolSubscriptionController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/StaffAttendanceController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/StaffController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/StudentController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/StudentGatePassController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/StudentLeaveApplicationController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SubscriptionPlanController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SystemSettingController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/TeacherPortalController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/TermController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/TimetableController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/TransportAllocationController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/TransportLogController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/TransportRouteController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/VicePrincipalAcademicController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/VicePrincipalAdminController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Controller.php
+[32mD[m  backend/dono-api/app/Http/Controllers/ResultEntryController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/TermController.php
+ [31mM[m backend/dono-api/app/Http/Middleware/CheckActiveSubscription.php
+ [31mM[m backend/dono-api/app/Http/Middleware/CheckStaffActive.php
+ [31mM[m backend/dono-api/app/Http/Middleware/CheckSubscriptionFeature.php
+[32mA[m  backend/dono-api/app/Http/Middleware/EnsureIdempotency.php
+[32mA[m  backend/dono-api/app/Http/Middleware/EnsurePasswordChanged.php
+[32mM[m  backend/dono-api/app/Http/Middleware/PermissionMiddleware.php
+[32mM[m  backend/dono-api/app/Http/Middleware/RoleMiddleware.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreAssessmentStructureRequest.php
+[32mA[m  backend/dono-api/app/Http/Requests/StoreCommunicationRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreDivisionRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreFeatureRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreFeePaymentRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreFeeRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreRoleInvitationRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreStreamRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreStudentRequest.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Requests/StoreSubscriptionPlanRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreTimetableRequest.php
+[32mA[m  backend/dono-api/app/Http/Requests/UpdateAssessmentStructureRequest.php
+[32mA[m  backend/dono-api/app/Http/Requests/UpdateCommunicationRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/UpdateFeatureRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/UpdateFeeRequest.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Requests/UpdateStaffRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/UpdateStreamRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/UpdateStudentRequest.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Requests/UpdateSubscriptionPlanRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/UpdateSystemSettingRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/UpdateTimetableRequest.php
+[32mA[m  backend/dono-api/app/Http/Resources/AssessmentStructureResource.php
+ [31mM[m backend/dono-api/app/Http/Resources/ReportCardResource.php
+ [31mM[m backend/dono-api/app/Http/Resources/SchoolResource.php
+ [31mM[m backend/dono-api/app/Http/Resources/StaffResource.php
+[32mM[m  backend/dono-api/app/Http/Resources/StudentFeeResource.php
+ [31mM[m backend/dono-api/app/Http/Resources/StudentResource.php
+[32mM[m  backend/dono-api/app/Http/Resources/SubscriptionPlanResource.php
+[32mM[m  backend/dono-api/app/Http/Resources/SystemSettingResource.php
+[32mM[m  backend/dono-api/app/Http/Resources/TimetableResource.php
+[32mA[m  backend/dono-api/app/Mail/PasswordResetMail.php
+[32mA[m  backend/dono-api/app/Mail/PlatformAnnouncementMail.php
+[32mA[m  backend/dono-api/app/Mail/PlatformTestMail.php
+[32mA[m  backend/dono-api/app/Mail/VerifyEmailMail.php
+[32mA[m  backend/dono-api/app/Models/AssessmentActivity.php
+[32mA[m  backend/dono-api/app/Models/Assignment.php
+[32mA[m  backend/dono-api/app/Models/AssignmentSubmission.php
+[32mA[m  backend/dono-api/app/Models/CbtAssessment.php
+[32mA[m  backend/dono-api/app/Models/CbtAssessmentQuestion.php
+[32mA[m[31mM[m backend/dono-api/app/Models/CbtAttempt.php
+[32mA[m  backend/dono-api/app/Models/CbtAttemptAnswer.php
+[32mA[m  backend/dono-api/app/Models/CbtQuestion.php
+[32mA[m[31mM[m backend/dono-api/app/Models/Communication.php
+[32mM[m  backend/dono-api/app/Models/Feature.php
+[32mM[m  backend/dono-api/app/Models/FeePayment.php
+[32mA[m  backend/dono-api/app/Models/FormTeacherAssignment.php
+ [31mM[m backend/dono-api/app/Models/GradingSystem.php
+[32mA[m  backend/dono-api/app/Models/GraduationRecord.php
+[32mA[m  backend/dono-api/app/Models/LocalEmailMessage.php
+[32mA[m  backend/dono-api/app/Models/PayrollEntry.php
+[32mA[m  backend/dono-api/app/Models/PlatformAnnouncement.php
+[32mA[m  backend/dono-api/app/Models/ReceptionActivity.php
+ [31mM[m backend/dono-api/app/Models/ReportCard.php
+[32mM[m  backend/dono-api/app/Models/ResultSubmission.php
+[32mM[m  backend/dono-api/app/Models/RoleInvitation.php
+[32mM[m[31mM[m backend/dono-api/app/Models/School.php
+[32mA[m  backend/dono-api/app/Models/SchoolSetupDelegation.php
+ [31mM[m backend/dono-api/app/Models/SchoolSubscription.php
+ [31mM[m backend/dono-api/app/Models/Student.php
+[32mA[m  backend/dono-api/app/Models/StudentLeaveApplication.php
+[32mM[m[31mM[m backend/dono-api/app/Models/SubscriptionPlan.php
+[32mM[m  backend/dono-api/app/Models/SystemSetting.php
+[32mA[m  backend/dono-api/app/Models/TenantPartition.php
+[32mM[m  backend/dono-api/app/Models/Timetable.php
+[32mA[m  backend/dono-api/app/Models/TransportLog.php
+[32mM[m[31mM[m backend/dono-api/app/Models/User.php
+[32mM[m  backend/dono-api/app/Providers/AppServiceProvider.php
+ [31mM[m backend/dono-api/app/Services/Academic/AssessmentComputationService.php
+ [31mM[m backend/dono-api/app/Services/Academic/PromotionService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/Academic/ReportCardService.php
+ [31mM[m backend/dono-api/app/Services/Academic/ResultEntryService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/Academic/ResultProcessingService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/Academic/ResultSubmissionService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/AdmissionService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/CurrentContextService.php
+[32mA[m  backend/dono-api/app/Services/EmailDeliveryService.php
+[32mA[m[31mM[m backend/dono-api/app/Services/EmailVerificationService.php
+[32mM[m  backend/dono-api/app/Services/Finance/FeeService.php
+[32mM[m  backend/dono-api/app/Services/PortalAccountService.php
+[32mA[m[31mM[m backend/dono-api/app/Services/TenantPartitionService.php
+[32mM[m  backend/dono-api/app/Services/TimetableService.php
+[32mM[m  backend/dono-api/bootstrap/app.php
+[32mM[m  backend/dono-api/composer.json
+[32mM[m  backend/dono-api/composer.lock
+ [31mM[m backend/dono-api/config/app.php
+[32mA[m  backend/dono-api/config/dono.php
+[32mM[m  backend/dono-api/config/services.php
+[32mM[m  backend/dono-api/database/migrations/2026_08_15_000000_add_user_id_to_students_table.php
+[32mM[m  backend/dono-api/database/migrations/2026_08_16_010000_add_user_id_to_students_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_17_000000_create_school_setup_delegations_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_18_000000_add_current_school_id_to_users_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_18_120000_repair_school_setup_tables.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_140000_align_principal_role_permissions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_150000_seed_architecture_roles.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_160000_add_admin_module_permissions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_170000_create_assignments_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_180000_add_assignment_permissions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_190000_enforce_employment_authority.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_200000_allow_pending_school_subscriptions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_000000_create_communications_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_010000_create_cbt_questions_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_020000_add_communication_cbt_permissions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_030000_create_student_leave_applications_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_040000_create_assessment_activities_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_050000_create_payroll_entries_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_060000_create_reception_activities_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_070000_create_transport_logs_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_080000_add_reversal_fields_to_fee_payments_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_090000_create_graduation_records_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_110000_harden_role_permission_boundaries.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_070000_create_form_teacher_assignments_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_071000_add_form_assignment_to_role_invitations_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_072000_seed_default_assessment_structures.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_073000_repair_teacher_academic_permissions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_080000_extend_timetables_for_school_configurable_entries.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_090000_extend_cbt_questions_for_bulk_authoring.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_091000_create_assignment_submissions_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_100000_add_password_change_state_to_users_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_110000_enable_email_verification_for_users.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_120000_create_platform_announcements_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_130000_add_local_email_outbox_and_announcement_targets.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_140000_create_tenant_partition_directory.php
+[32mM[m  backend/dono-api/database/seeders/PermissionSeeder.php
+[32mM[m  backend/dono-api/database/seeders/RolePermissionSeeder.php
+[32mM[m  backend/dono-api/database/seeders/RoleSeeder.php
+[32mA[m  backend/dono-api/resources/views/emails/password-reset.blade.php
+[32mA[m  backend/dono-api/resources/views/emails/platform-announcement.blade.php
+[32mA[m  backend/dono-api/resources/views/emails/platform-test.blade.php
+[32mA[m  backend/dono-api/resources/views/emails/verify-email.blade.php
+[32mM[m[31mM[m backend/dono-api/routes/api.php
+ [31mM[m backend/dono-api/routes/console.php
+[32mA[m  frontend/public/manifest.webmanifest
+[32mA[m  frontend/public/sw.js
+[32mM[m[31mM[m frontend/src/App.jsx
+ [31mM[m frontend/src/components/CreateSchoolModal.jsx
+ [31mM[m frontend/src/components/FeePaymentModal.jsx
+[32mM[m[31mM[m frontend/src/components/Navbar.jsx
+[32mM[m[31mM[m frontend/src/components/Sidebar.jsx
+[32mM[m  frontend/src/components/dashboard/DashboardGrid.css
+[32mM[m[31mM[m frontend/src/components/dashboard/DashboardGrid.jsx
+[32mM[m  frontend/src/components/dashboard/StatCard.css
+[32mM[m  frontend/src/components/dashboard/StatCard.jsx
+[32mA[m  frontend/src/components/dashboard/dashboard.css
+[32mA[m  frontend/src/components/feedback/Alert.css
+[32mA[m  frontend/src/components/feedback/Alert.jsx
+[32mA[m[31mM[m frontend/src/components/feedback/DONOGuide.jsx
+[32mM[m  frontend/src/components/feedback/EmptyState.css
+[32mM[m  frontend/src/components/feedback/EmptyState.jsx
+[32mM[m  frontend/src/components/feedback/LoadingSpinner.css
+[32mA[m[31mM[m frontend/src/components/forms/Button.jsx
+[32mA[m[31mM[m frontend/src/components/forms/FormField.jsx
+[32mA[m[31mM[m frontend/src/components/forms/button.css
+[32mA[m[31mM[m frontend/src/components/forms/forms.css
+[32mM[m  frontend/src/components/layout/PageContainer.css
+[32mM[m[31mM[m frontend/src/components/layout/PageHeader.css
+[32mA[m  frontend/src/components/layout/SectionCard.css
+[32mA[m  frontend/src/components/layout/SectionCard.jsx
+[32mA[m  frontend/src/components/modals/Modal.css
+[32mA[m  frontend/src/components/modals/Modal.jsx
+[32mM[m  frontend/src/components/modals/PortalAccountModal.jsx
+[32mM[m[31mM[m frontend/src/components/tables/DataTable.css
+[32mM[m[31mM[m frontend/src/components/tables/DataTable.jsx
+[32mA[m[31mM[m frontend/src/config/architectureModules.js

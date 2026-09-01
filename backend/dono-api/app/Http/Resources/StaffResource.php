@@ -30,6 +30,13 @@ class StaffResource extends JsonResource
             'photo' => $this->photo,
             'photo_url' => app(\App\Services\MediaStorageService::class)->url($this->photo),
             'employment_status' => $this->employment_status ?? 'active',
+            'user_id' => $this->user_id,
+            'roles' => $this->whenLoaded('user', fn () => $this->user?->roles?->map(fn ($role) => [
+                'id' => $role->id,
+                'slug' => $role->slug,
+                'name' => $role->name,
+                'school_id' => $role->pivot?->school_id,
+            ])->values()->all()),
             'school' => $this->whenLoaded('school'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

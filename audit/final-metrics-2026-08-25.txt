@@ -1,0 +1,755 @@
+=== FILE COUNTS ===
+backend_controllers=144
+backend_models=129
+backend_migrations=211
+frontend_pages=131
+frontend_components=29
+=== DASHBOARD ROUTES ===
+            Route::put('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'update']);
+            Route::get('school-branding', [SchoolBrandingController::class, 'show']);
+            Route::post('school-branding', [SchoolBrandingController::class, 'update']);
+            Route::middleware('role:proprietor')->get('proprietor/dashboard', [ProprietorController::class, 'dashboard']);
+            Route::middleware('role:principal')->get('principal/dashboard', [PrincipalController::class, 'dashboard']);
+            Route::middleware('role:vice_principal_academic')->get('vp-academic/dashboard', [VicePrincipalAcademicController::class, 'dashboard']);
+            Route::middleware('role:vice_principal_admin')->get('vp-admin/dashboard', [VicePrincipalAdminController::class, 'dashboard']);
+            Route::middleware('role:teacher')->get('teacher/dashboard', [TeacherPortalController::class, 'dashboard']);
+            Route::middleware('role:form_teacher')->get('form-teacher/dashboard', [FormTeacherPortalController::class, 'dashboard']);
+            Route::middleware('role:nursery_head')->get('nursery-head/dashboard', [NurseryHeadController::class, 'dashboard']);
+            Route::middleware('role:primary_headmaster')->get('primary-head/dashboard', [PrimaryHeadmasterController::class, 'dashboard']);
+            Route::middleware('role:secondary_principal')->get('secondary-head/dashboard', [SecondaryPrincipalController::class, 'dashboard']);
+            Route::middleware('permission:view_students')->get('academic-sessions', [AcademicSessionController::class, 'index']);
+=== DEPENDENCY STATUS ===
+    "name": "dompdf/dompdf",
+            "name": "GNU Lesser General Public License v2.1 only",
+frontend@0.0.0 /home/ubuntu/DOONO-ERP/frontend
+└── react-router-dom@7.18.2
+
+=== STATUS ===
+[32mA[m  .screenshot-findings.md
+[32mA[m  .ui-pass-notes.md
+[32mA[m  DASHBOARD_RELEASE_NOTES.md
+ [31mM[m Dockerfile
+[32mA[m  architecture-acceptance-matrix.md
+[32mA[m  architecture-gap-report.md
+[32mA[m  architecture-implementation-notes.md
+[32mA[m  architecture-progress.md
+[32mM[m[31mM[m backend/dono-api/.env.example
+ [31mM[m backend/dono-api/Dockerfile
+ [31mM[m backend/dono-api/app/Console/Commands/ExpireSubscriptions.php
+ [31mM[m backend/dono-api/app/Console/Commands/SendSubscriptionReminders.php
+[32mM[m  backend/dono-api/app/Http/Controllers/AcademicSessionController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/AcademicSessionController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/ActivityLogController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/AdminRevenueController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/AdmissionController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/AssessmentActivityController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/AssessmentStructureController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/AssetController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/AssignmentController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/AttendanceController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/AuthController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/BookController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/BookLoanController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/CbtQuestionController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/ClassController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/ClinicVisitController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/CommunicationController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/CouponController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/CurrencyController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/DivisionController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/EmailVerificationController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/ExaminationController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/ExpenseController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/FeatureController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/FeeAdjustmentController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/FeeCategoryController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/FeeController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/FeePaymentController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/FinancialReportController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/FormTeacherPortalController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/GraduationRecordController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/HostelAllocationController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/HostelController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/HostelRoomController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/LibraryController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/LocalEmailController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/MedicalRecordController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/OrganizationOwnerController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/ParentController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/PasswordResetController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/PaymentController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/PaymentReceiptController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/PaymentTransactionController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/PayrollEntryController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/PlatformAnnouncementController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/PlatformOperationsController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/PlatformOwnerController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/PortalAccountController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/PrincipalController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/PromoCampaignController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/ReceptionActivityController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/ReceptionAppointmentController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/ReportCardController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/ResultController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/ResultEntryController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/SchoolController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SchoolEventController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SchoolFacilityController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/SchoolSettingController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/SchoolSetupController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/SchoolSetupDelegationController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/SchoolSubscriptionController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/StaffAttendanceController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/StaffController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/StreamController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/StudentController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/StudentGatePassController.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Controllers/Api/StudentLeaveApplicationController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/StudentPromotionController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/SubjectController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SubscriptionPlanController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/SystemSettingController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/TeacherPortalController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/TermController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/TimetableController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/TransportAllocationController.php
+[32mA[m  backend/dono-api/app/Http/Controllers/Api/TransportLogController.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Controllers/Api/TransportRouteController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/VehicleController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/VicePrincipalAcademicController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Api/VicePrincipalAdminController.php
+ [31mM[m backend/dono-api/app/Http/Controllers/Api/VisitorController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/Controller.php
+[32mD[m  backend/dono-api/app/Http/Controllers/ResultEntryController.php
+[32mM[m  backend/dono-api/app/Http/Controllers/TermController.php
+ [31mM[m backend/dono-api/app/Http/Middleware/CheckActiveSubscription.php
+ [31mM[m backend/dono-api/app/Http/Middleware/CheckStaffActive.php
+ [31mM[m backend/dono-api/app/Http/Middleware/CheckSubscriptionFeature.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Middleware/EnsureIdempotency.php
+[32mA[m  backend/dono-api/app/Http/Middleware/EnsurePasswordChanged.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Middleware/PermissionMiddleware.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Middleware/RoleMiddleware.php
+ [31mM[m backend/dono-api/app/Http/Requests/LinkParentPortalAccountRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/LinkStudentPortalAccountRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreAdmissionRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreAssessmentStructureRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreAssetRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreClassRequest.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Requests/StoreCommunicationRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreDisciplineCaseRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreDivisionRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreFeatureRequest.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Requests/StoreFeePaymentRequest.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Requests/StoreFeeRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreLeaveRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreParentRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreParentStudentRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreRoleInvitationRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreSafetyIncidentRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreSchoolEventRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreSchoolFacilityRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreStaffAttendanceBulkRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreStaffAttendanceRequest.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Requests/StoreStreamRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreStudentEnrollmentRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/StoreStudentRequest.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Requests/StoreSubscriptionPlanRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/StoreTimetableRequest.php
+[32mA[m  backend/dono-api/app/Http/Requests/UpdateAssessmentStructureRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/UpdateAssetRequest.php
+[32mA[m[31mM[m backend/dono-api/app/Http/Requests/UpdateCommunicationRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/UpdateFeatureRequest.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Requests/UpdateFeeRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/UpdateParentStudentRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/UpdateSchoolEventRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/UpdateSchoolFacilityRequest.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Requests/UpdateStaffRequest.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Requests/UpdateStreamRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/UpdateStudentEnrollmentRequest.php
+ [31mM[m backend/dono-api/app/Http/Requests/UpdateStudentRequest.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Requests/UpdateSubscriptionPlanRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/UpdateSystemSettingRequest.php
+[32mM[m  backend/dono-api/app/Http/Requests/UpdateTimetableRequest.php
+[32mA[m  backend/dono-api/app/Http/Resources/AssessmentStructureResource.php
+ [31mM[m backend/dono-api/app/Http/Resources/FeePaymentResource.php
+ [31mM[m backend/dono-api/app/Http/Resources/ReportCardResource.php
+ [31mM[m backend/dono-api/app/Http/Resources/SchoolResource.php
+ [31mM[m backend/dono-api/app/Http/Resources/StaffResource.php
+ [31mM[m backend/dono-api/app/Http/Resources/StudentEnrollmentResource.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Resources/StudentFeeResource.php
+ [31mM[m backend/dono-api/app/Http/Resources/StudentResource.php
+[32mM[m  backend/dono-api/app/Http/Resources/SubscriptionPlanResource.php
+[32mM[m  backend/dono-api/app/Http/Resources/SystemSettingResource.php
+[32mM[m[31mM[m backend/dono-api/app/Http/Resources/TimetableResource.php
+[32mA[m  backend/dono-api/app/Mail/PasswordResetMail.php
+[32mA[m  backend/dono-api/app/Mail/PlatformAnnouncementMail.php
+[32mA[m  backend/dono-api/app/Mail/PlatformTestMail.php
+[32mA[m  backend/dono-api/app/Mail/VerifyEmailMail.php
+[32mA[m  backend/dono-api/app/Models/AssessmentActivity.php
+[32mA[m[31mM[m backend/dono-api/app/Models/Assignment.php
+[32mA[m[31mM[m backend/dono-api/app/Models/AssignmentSubmission.php
+[32mA[m  backend/dono-api/app/Models/CbtAssessment.php
+[32mA[m  backend/dono-api/app/Models/CbtAssessmentQuestion.php
+[32mA[m[31mM[m backend/dono-api/app/Models/CbtAttempt.php
+[32mA[m  backend/dono-api/app/Models/CbtAttemptAnswer.php
+[32mA[m  backend/dono-api/app/Models/CbtQuestion.php
+ [31mM[m backend/dono-api/app/Models/ClinicVisit.php
+[32mA[m[31mM[m backend/dono-api/app/Models/Communication.php
+[32mM[m  backend/dono-api/app/Models/Feature.php
+[32mM[m  backend/dono-api/app/Models/FeePayment.php
+[32mA[m  backend/dono-api/app/Models/FormTeacherAssignment.php
+ [31mM[m backend/dono-api/app/Models/GradingSystem.php
+[32mA[m  backend/dono-api/app/Models/GraduationRecord.php
+[32mA[m  backend/dono-api/app/Models/LocalEmailMessage.php
+ [31mM[m backend/dono-api/app/Models/PaymentTransaction.php
+[32mA[m[31mM[m backend/dono-api/app/Models/PayrollEntry.php
+[32mA[m  backend/dono-api/app/Models/PlatformAnnouncement.php
+[32mA[m  backend/dono-api/app/Models/ReceptionActivity.php
+ [31mM[m backend/dono-api/app/Models/ReportCard.php
+[32mM[m[31mM[m backend/dono-api/app/Models/ResultSubmission.php
+[32mM[m  backend/dono-api/app/Models/RoleInvitation.php
+[32mM[m[31mM[m backend/dono-api/app/Models/School.php
+[32mA[m  backend/dono-api/app/Models/SchoolSetupDelegation.php
+ [31mM[m backend/dono-api/app/Models/SchoolSubscription.php
+ [31mM[m backend/dono-api/app/Models/Student.php
+ [31mM[m backend/dono-api/app/Models/StudentFee.php
+[32mA[m  backend/dono-api/app/Models/StudentLeaveApplication.php
+[32mM[m[31mM[m backend/dono-api/app/Models/SubscriptionPlan.php
+[32mM[m  backend/dono-api/app/Models/SystemSetting.php
+[32mA[m  backend/dono-api/app/Models/TenantPartition.php
+[32mM[m[31mM[m backend/dono-api/app/Models/Timetable.php
+[32mA[m  backend/dono-api/app/Models/TransportLog.php
+[32mM[m[31mM[m backend/dono-api/app/Models/User.php
+[32mM[m[31mM[m backend/dono-api/app/Providers/AppServiceProvider.php
+ [31mM[m backend/dono-api/app/Services/Academic/AssessmentComputationService.php
+ [31mM[m backend/dono-api/app/Services/Academic/PromotionService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/Academic/ReportCardService.php
+ [31mM[m backend/dono-api/app/Services/Academic/ResultEntryService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/Academic/ResultProcessingService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/Academic/ResultSubmissionService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/AdmissionService.php
+ [31mM[m backend/dono-api/app/Services/AttendanceService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/CurrentContextService.php
+[32mA[m  backend/dono-api/app/Services/EmailDeliveryService.php
+[32mA[m[31mM[m backend/dono-api/app/Services/EmailVerificationService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/Finance/FeeService.php
+ [31mM[m backend/dono-api/app/Services/Finance/PaymentService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/PortalAccountService.php
+[32mA[m[31mM[m backend/dono-api/app/Services/TenantPartitionService.php
+[32mM[m[31mM[m backend/dono-api/app/Services/TimetableService.php
+[32mM[m[31mM[m backend/dono-api/bootstrap/app.php
+[32mM[m[31mM[m backend/dono-api/composer.json
+[32mM[m[31mM[m backend/dono-api/composer.lock
+ [31mM[m backend/dono-api/config/app.php
+ [31mM[m backend/dono-api/config/auth.php
+[32mA[m[31mM[m backend/dono-api/config/dono.php
+ [31mM[m backend/dono-api/config/filesystems.php
+[32mM[m[31mM[m backend/dono-api/config/services.php
+[32mM[m  backend/dono-api/database/migrations/2026_08_15_000000_add_user_id_to_students_table.php
+[32mM[m  backend/dono-api/database/migrations/2026_08_16_010000_add_user_id_to_students_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_17_000000_create_school_setup_delegations_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_18_000000_add_current_school_id_to_users_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_18_120000_repair_school_setup_tables.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_140000_align_principal_role_permissions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_150000_seed_architecture_roles.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_160000_add_admin_module_permissions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_170000_create_assignments_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_180000_add_assignment_permissions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_190000_enforce_employment_authority.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_19_200000_allow_pending_school_subscriptions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_000000_create_communications_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_010000_create_cbt_questions_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_020000_add_communication_cbt_permissions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_030000_create_student_leave_applications_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_040000_create_assessment_activities_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_050000_create_payroll_entries_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_060000_create_reception_activities_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_070000_create_transport_logs_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_080000_add_reversal_fields_to_fee_payments_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_090000_create_graduation_records_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_100000_create_cbt_workflow_tables.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_20_110000_harden_role_permission_boundaries.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_070000_create_form_teacher_assignments_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_071000_add_form_assignment_to_role_invitations_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_072000_seed_default_assessment_structures.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_073000_repair_teacher_academic_permissions.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_080000_extend_timetables_for_school_configurable_entries.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_090000_extend_cbt_questions_for_bulk_authoring.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_091000_create_assignment_submissions_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_100000_add_password_change_state_to_users_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_110000_enable_email_verification_for_users.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_120000_create_platform_announcements_table.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_130000_add_local_email_outbox_and_announcement_targets.php
+[32mA[m  backend/dono-api/database/migrations/2026_08_21_140000_create_tenant_partition_directory.php
+ [31mM[m backend/dono-api/database/seeders/ClassSeeder.php
+[32mM[m[31mM[m backend/dono-api/database/seeders/PermissionSeeder.php
+[32mM[m[31mM[m backend/dono-api/database/seeders/RolePermissionSeeder.php
+[32mM[m  backend/dono-api/database/seeders/RoleSeeder.php
+[32mA[m  backend/dono-api/resources/views/emails/password-reset.blade.php
+[32mA[m  backend/dono-api/resources/views/emails/platform-announcement.blade.php
+[32mA[m  backend/dono-api/resources/views/emails/platform-test.blade.php
+[32mA[m  backend/dono-api/resources/views/emails/verify-email.blade.php
+[32mM[m[31mM[m backend/dono-api/routes/api.php
+ [31mM[m backend/dono-api/routes/console.php
+ [31mM[m frontend/package-lock.json
+ [31mM[m frontend/package.json
+[32mA[m  frontend/public/manifest.webmanifest
+[32mA[m  frontend/public/sw.js
+[32mM[m[31mM[m frontend/src/App.jsx
+ [31mM[m frontend/src/components/CreateSchoolModal.jsx
+ [31mM[m frontend/src/components/FeePaymentModal.jsx
+[32mM[m[31mM[m frontend/src/components/Navbar.jsx
+[32mM[m[31mM[m frontend/src/components/Sidebar.jsx
+[32mM[m  frontend/src/components/dashboard/DashboardGrid.css
+[32mM[m[31mM[m frontend/src/components/dashboard/DashboardGrid.jsx
+[32mM[m  frontend/src/components/dashboard/StatCard.css
+[32mM[m  frontend/src/components/dashboard/StatCard.jsx
+[32mA[m  frontend/src/components/dashboard/dashboard.css
+[32mA[m  frontend/src/components/feedback/Alert.css
+[32mA[m  frontend/src/components/feedback/Alert.jsx
+[32mA[m[31mM[m frontend/src/components/feedback/DONOGuide.jsx
+[32mM[m  frontend/src/components/feedback/EmptyState.css
+[32mM[m  frontend/src/components/feedback/EmptyState.jsx
+[32mM[m  frontend/src/components/feedback/LoadingSpinner.css
+[32mA[m[31mM[m frontend/src/components/forms/Button.jsx
+[32mA[m[31mM[m frontend/src/components/forms/FormField.jsx
+[32mA[m[31mM[m frontend/src/components/forms/button.css
+[32mA[m[31mM[m frontend/src/components/forms/forms.css
+[32mM[m  frontend/src/components/layout/PageContainer.css
+[32mM[m[31mM[m frontend/src/components/layout/PageHeader.css
+[32mA[m  frontend/src/components/layout/SectionCard.css
+[32mA[m  frontend/src/components/layout/SectionCard.jsx
+[32mA[m  frontend/src/components/modals/Modal.css
+[32mA[m  frontend/src/components/modals/Modal.jsx
+[32mM[m[31mM[m frontend/src/components/modals/PortalAccountModal.jsx
+[32mM[m[31mM[m frontend/src/components/tables/DataTable.css
+[32mM[m[31mM[m frontend/src/components/tables/DataTable.jsx
+[32mA[m[31mM[m frontend/src/config/architectureModules.js
+[32mM[m[31mM[m frontend/src/context/AuthContext.jsx
+[32mM[m[31mM[m frontend/src/layouts/DashboardLayout.jsx
+[32mM[m[31mM[m frontend/src/main.jsx
+[32mM[m  frontend/src/pages/AcademicSessions.jsx
+[32mM[m  frontend/src/pages/AcceptRoleInvitation.jsx
+[32mM[m  frontend/src/pages/AccountantDashboard.jsx
+ [31mM[m frontend/src/pages/AddParent.jsx
+[32mM[m[31mM[m frontend/src/pages/AddSchool.jsx
+[32mM[m  frontend/src/pages/AddStaff.jsx
+[32mM[m[31mM[m frontend/src/pages/AddStudent.jsx
+[32mM[m  frontend/src/pages/AddSubject.jsx
+[32mM[m  frontend/src/pages/AddTeacher.jsx
+[32mM[m[31mM[m frontend/src/pages/Admissions.jsx
+[32mA[m[31mM[m frontend/src/pages/AssessmentActivities.jsx
+[32mA[m  frontend/src/pages/AssessmentStructures.jsx
+ [31mM[m frontend/src/pages/AssetRegister.jsx
+[32mA[m[31mM[m frontend/src/pages/Assignments.jsx
+[32mM[m[31mM[m frontend/src/pages/Attendance.jsx
+[32mM[m[31mM[m frontend/src/pages/AuditLogs.jsx
+ [31mM[m frontend/src/pages/Books.jsx
+[32mM[m[31mM[m frontend/src/pages/CashierDashboard.jsx
+[32mA[m[31mM[m frontend/src/pages/CbtAssessments.jsx
+[32mA[m  frontend/src/pages/CbtQuestionBank.jsx
+[32mA[m  frontend/src/pages/ChangePassword.jsx
+[32mM[m[31mM[m frontend/src/pages/Classes.jsx
+ [31mM[m frontend/src/pages/Clinic.jsx
+[32mA[m[31mM[m frontend/src/pages/Communication.jsx
+[32mM[m[31mM[m frontend/src/pages/Dashboard.jsx
+[32mA[m  frontend/src/pages/Divisions.jsx
+ [31mM[m frontend/src/pages/EditParent.jsx
+ [31mM[m frontend/src/pages/EditStaff.jsx
+ [31mM[m frontend/src/pages/EditStudent.jsx
+[32mA[m[31mM[m frontend/src/pages/EmailVerification.jsx
+[32mA[m  frontend/src/pages/EmailVerified.jsx
+[32mA[m  frontend/src/pages/Examinations.jsx
+ [31mM[m frontend/src/pages/Expenses.jsx
+[32mA[m[31mM[m frontend/src/pages/FeeAdjustments.jsx
+[32mM[m[31mM[m frontend/src/pages/Fees.jsx
+[32mM[m[31mM[m frontend/src/pages/FeesAndPayments.jsx
+[32mA[m[31mM[m frontend/src/pages/FinancialReports.jsx
+[32mA[m[31mM[m frontend/src/pages/ForgotPassword.jsx
+[32mM[m[31mM[m frontend/src/pages/FormTeacherDashboard.jsx
+[32mA[m[31mM[m frontend/src/pages/Graduation.jsx
+[32mM[m[31mM[m frontend/src/pages/HostelDashboard.jsx
+[32mM[m[31mM[m frontend/src/pages/Hostels.jsx
+[32mA[m  frontend/src/pages/InvitationProfileSetup.jsx
+[32mA[m[31mM[m frontend/src/pages/LeaveApplication.jsx
+[32mM[m  frontend/src/pages/LeaveRequests.jsx
+[32mM[m[31mM[m frontend/src/pages/LibrarianDashboard.jsx
+[32mA[m  frontend/src/pages/LibraryWorkspace.jsx
+[32mM[m[31mM[m frontend/src/pages/Login.jsx
+[32mM[m[31mM[m frontend/src/pages/NurseDashboard.jsx
+[32mM[m[31mM[m frontend/src/pages/NurseryHeadDashboard.jsx
+[32mA[m  frontend/src/pages/OperationalReports.jsx
+[32mM[m  frontend/src/pages/OrganizationOwnerDashboard.jsx
+[32mA[m  frontend/src/pages/OrganizationOwnerWorkspace.jsx
+ [31mM[m frontend/src/pages/Organizations.jsx
+[32mM[m[31mM[m frontend/src/pages/ParentPortal.jsx
+[32mM[m[31mM[m frontend/src/pages/ParentProfile.jsx
+[32mM[m[31mM[m frontend/src/pages/Parents.jsx
+[32mA[m[31mM[m frontend/src/pages/Payroll.jsx
+[32mA[m[31mM[m frontend/src/pages/PlatformEmailCenter.jsx
+[32mA[m[31mM[m frontend/src/pages/PlatformOperations.jsx
+ [31mM[m frontend/src/pages/PlatformOwnerDashboard.jsx
+[32mM[m[31mM[m frontend/src/pages/PrimaryHeadmasterDashboard.jsx
+[32mM[m  frontend/src/pages/PrincipalDashboard.jsx
+[32mM[m[31mM[m frontend/src/pages/Promotions.jsx
+[32mM[m  frontend/src/pages/ProprietorDashboard.jsx
+ [31mM[m frontend/src/pages/PublicHome.jsx
+[32mM[m[31mM[m frontend/src/pages/PublicRegister.jsx
+[32mA[m[31mM[m frontend/src/pages/ReceptionActivities.jsx
+[32mM[m[31mM[m frontend/src/pages/ReceptionDashboard.jsx
+[32mM[m[31mM[m frontend/src/pages/ReportCards.jsx
+[32mA[m[31mM[m frontend/src/pages/ResetPassword.jsx
+[32mM[m[31mM[m frontend/src/pages/ResultEntry.jsx
+[32mM[m[31mM[m frontend/src/pages/Results.jsx
+[32mM[m[31mM[m frontend/src/pages/RoleInvitations.jsx
+[32mA[m[31mM[m frontend/src/pages/SchoolSetup.jsx
+[32mM[m[31mM[m frontend/src/pages/Schools.jsx
+[32mM[m[31mM[m frontend/src/pages/SecondaryPrincipalDashboard.jsx
+[32mM[m[31mM[m frontend/src/pages/Settings.jsx
+[32mM[m[31mM[m frontend/src/pages/Staff.jsx
+[32mM[m[31mM[m frontend/src/pages/Streams.jsx
+[32mA[m[31mM[m frontend/src/pages/StudentCbt.jsx
+[32mM[m[31mM[m frontend/src/pages/StudentEnrollments.jsx
+[32mM[m[31mM[m frontend/src/pages/StudentPortal.jsx
+[32mM[m[31mM[m frontend/src/pages/StudentProfile.jsx
+[32mM[m[31mM[m frontend/src/pages/Students.jsx
+[32mM[m[31mM[m frontend/src/pages/Subjects.jsx
+[32mA[m  frontend/src/pages/SubscriptionPayment.jsx
+[32mM[m[31mM[m frontend/src/pages/Subscriptions.jsx
+[32mM[m[31mM[m frontend/src/pages/TeacherDashboard.jsx
+ [31mM[m frontend/src/pages/TeacherProfile.jsx
+[32mM[m[31mM[m frontend/src/pages/Teachers.jsx
+[32mM[m  frontend/src/pages/Terms.jsx
+[32mM[m[31mM[m frontend/src/pages/Timetable.jsx
+[32mM[m[31mM[m frontend/src/pages/Transport.jsx
+[32mM[m[31mM[m frontend/src/pages/TransportDashboard.jsx
+[32mA[m[31mM[m frontend/src/pages/TransportLogs.jsx
+[32mA[m[31mM[m frontend/src/pages/TransportTracking.jsx
+[32mM[m[31mM[m frontend/src/pages/VicePrincipalAcademicDashboard.jsx
+ [31mM[m frontend/src/pages/VicePrincipalAdminDashboard.jsx
+ [31mM[m frontend/src/pages/Visitors.jsx
+[32mM[m[31mM[m frontend/src/services/api.js
+[32mM[m  frontend/src/styles/components.css
+[32mM[m  frontend/src/styles/dashboard.css
+ [31mM[m frontend/src/styles/globals.css
+ [31mM[m frontend/src/styles/responsive.css
+ [31mM[m frontend/src/styles/variables.css
+[32mA[m[31mM[m frontend/src/utils/response.js
+[32mM[m  frontend/src/utils/role.js
+[32mM[m  frontend/vite.config.js
+ [31mM[m nixpacks.toml
+[32mA[m  scripts/standardize-controller-school-context.py
+[31m??[m .audit_static.py
+[31m??[m .cbt-audit-findings.md
+[31m??[m .controls-forms-audit-findings.md
+[31m??[m .guide-audit-findings.md
+[31m??[m .header-footer-audit-findings.md
+[31m??[m .mobile-shell-audit-findings.md
+[31m??[m .readiness-findings.md
+[31m??[m .readiness-inventory.txt
+[31m??[m .readiness-security-scan.txt
+[31m??[m .results-audit-findings.md
+[31m??[m audit/
+[31m??[m backend/dono-api/app/Console/Commands/BackfillStudentFeeInvoices.php
+[31m??[m backend/dono-api/app/Console/Commands/CaptureSchoolInsightSnapshots.php
+[31m??[m backend/dono-api/app/Console/Commands/CheckDonoReadiness.php
+[31m??[m backend/dono-api/app/Console/Commands/MarkSupportSlaBreaches.php
+[31m??[m backend/dono-api/app/Console/Commands/PruneEncryptedBackups.php
+[31m??[m backend/dono-api/app/Console/Commands/PurgeExpiredLiveRoomRecordings.php
+[31m??[m backend/dono-api/app/Console/Commands/RunEncryptedBackup.php
+[31m??[m backend/dono-api/app/Console/Commands/VerifyEncryptedBackup.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/AiTutorController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/AssignmentAttachmentController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/BackupController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/BenchmarkController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/BookReservationController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/CommunityController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/ExchangeController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/FeatureFlagController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/GlobalSearchController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/LiveRoomController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/MarketplaceController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/MfaController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/NotificationController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/NotificationPreferenceController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/OAuthClientController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/PayslipController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/PublicIntegrationController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/PushTokenController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/ReportCardVerificationController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/SchoolApiKeyController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/SchoolInsightAlertController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/SchoolInsightsController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/SessionController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/StaffContractController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/StaffExportController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/StudentExportController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/StudentOfficialDocumentController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/SupportTicketAttachmentController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/SupportTicketController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/TransportStopController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/TwilioWebhookController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/VehicleInspectionController.php
+[31m??[m backend/dono-api/app/Http/Controllers/Api/WorkInboxController.php
+[31m??[m backend/dono-api/app/Http/Middleware/AttachRequestId.php
+[31m??[m backend/dono-api/app/Http/Middleware/AuthenticateOAuthClient.php
+[31m??[m backend/dono-api/app/Http/Middleware/AuthenticateSchoolApiKey.php
+[31m??[m backend/dono-api/app/Http/Middleware/RequireOAuthScope.php
+[31m??[m backend/dono-api/app/Http/Middleware/SecurityHeaders.php
+[31m??[m backend/dono-api/app/Http/Requests/GenerateFeeInvoicesRequest.php
+[31m??[m backend/dono-api/app/Http/Resources/PaymentTransactionResource.php
+[31m??[m backend/dono-api/app/Http/Resources/ReportCardSummaryResource.php
+[31m??[m backend/dono-api/app/Jobs/
+[31m??[m backend/dono-api/app/Models/AiConversation.php
+[31m??[m backend/dono-api/app/Models/AiMessage.php
+[31m??[m backend/dono-api/app/Models/AppNotification.php
+[31m??[m backend/dono-api/app/Models/AssetLifecycleEvent.php
+[31m??[m backend/dono-api/app/Models/AttendanceCorrection.php
+[31m??[m backend/dono-api/app/Models/BackupRun.php
+[31m??[m backend/dono-api/app/Models/BookReservation.php
+[31m??[m backend/dono-api/app/Models/CommunicationDelivery.php
+[31m??[m backend/dono-api/app/Models/CommunicationRead.php
+[31m??[m backend/dono-api/app/Models/CommunityComment.php
+[31m??[m backend/dono-api/app/Models/CommunityPost.php
+[31m??[m backend/dono-api/app/Models/CommunityReport.php
+[31m??[m backend/dono-api/app/Models/ExchangeParticipant.php
+[31m??[m backend/dono-api/app/Models/ExchangeProject.php
+[31m??[m backend/dono-api/app/Models/ExchangeProjectSchool.php
+[31m??[m backend/dono-api/app/Models/FeatureFlag.php
+[31m??[m backend/dono-api/app/Models/FeePaymentTransaction.php
+[31m??[m backend/dono-api/app/Models/LiveRoom.php
+[31m??[m backend/dono-api/app/Models/LiveRoomParticipant.php
+[31m??[m backend/dono-api/app/Models/LiveRoomProviderEvent.php
+[31m??[m backend/dono-api/app/Models/LiveRoomProviderOperation.php
+[31m??[m backend/dono-api/app/Models/LiveRoomRecording.php
+[31m??[m backend/dono-api/app/Models/LiveRoomReport.php
+[31m??[m backend/dono-api/app/Models/MarketplaceApp.php
+[31m??[m backend/dono-api/app/Models/MfaChallenge.php
+[31m??[m backend/dono-api/app/Models/NotificationPreference.php
+[31m??[m backend/dono-api/app/Models/Passport/
+[31m??[m backend/dono-api/app/Models/SchoolApiKey.php
+[31m??[m backend/dono-api/app/Models/SchoolBenchmarkConsent.php
+[31m??[m backend/dono-api/app/Models/SchoolExchangeSetting.php
+[31m??[m backend/dono-api/app/Models/SchoolInsightAlert.php
+[31m??[m backend/dono-api/app/Models/SchoolInsightSnapshot.php
+[31m??[m backend/dono-api/app/Models/SchoolMarketplaceInstallation.php
+[31m??[m backend/dono-api/app/Models/SchoolSetupChecklistState.php
+[31m??[m backend/dono-api/app/Models/StaffContract.php
+[31m??[m backend/dono-api/app/Models/StudentCommunityConsent.php
+[31m??[m backend/dono-api/app/Models/SupportTicket.php
+[31m??[m backend/dono-api/app/Models/SupportTicketMessage.php
+[31m??[m backend/dono-api/app/Models/TransportStop.php
+[31m??[m backend/dono-api/app/Models/UserPushToken.php
+[31m??[m backend/dono-api/app/Models/VehicleInspection.php
+[31m??[m backend/dono-api/app/Services/AiTutorService.php
+[31m??[m backend/dono-api/app/Services/CommunicationDeliveryService.php
+[31m??[m backend/dono-api/app/Services/FcmPushService.php
+[31m??[m backend/dono-api/app/Services/FeatureFlagService.php
+[31m??[m backend/dono-api/app/Services/GlobalSearchService.php
+[31m??[m backend/dono-api/app/Services/LiveRoomService.php
+[31m??[m backend/dono-api/app/Services/MediaStorageService.php
+[31m??[m backend/dono-api/app/Services/MfaService.php
+[31m??[m backend/dono-api/app/Services/NotificationPreferenceService.php
+[31m??[m backend/dono-api/app/Services/NotificationService.php
+[31m??[m backend/dono-api/app/Services/SchoolInsightAlertService.php
+[31m??[m backend/dono-api/app/Services/SchoolInsightSnapshotService.php
+[31m??[m backend/dono-api/app/Services/StudentAdmissionNumberService.php
+[31m??[m backend/dono-api/app/Services/StudentLifecycleService.php
+[31m??[m backend/dono-api/app/Services/SubscriptionAccessService.php
+[31m??[m backend/dono-api/app/Services/SubscriptionQuotaService.php
+[31m??[m backend/dono-api/app/Services/SupportAttachmentService.php
+[31m??[m backend/dono-api/app/Services/UploadSecurityService.php
+[31m??[m backend/dono-api/app/Services/VideoUploadSecurityService.php
+[31m??[m backend/dono-api/app/Services/WorkInboxService.php
+[31m??[m backend/dono-api/config/cors.php
+[31m??[m backend/dono-api/config/passport.php
+[31m??[m backend/dono-api/database/migrations/2026_08_21_150000_expand_school_communication_visibility.php
+[31m??[m backend/dono-api/database/migrations/2026_08_21_160000_create_fee_payment_transactions_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_21_190000_add_question_order_to_cbt_attempts_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_21_210000_create_communication_reads_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_21_220000_add_avatar_to_users_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_120000_create_support_tickets_tables.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_130000_create_app_notifications_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_140000_add_view_insights_permission.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_150000_add_timetable_workflow_fields.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_160000_add_report_card_verification_tokens.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_170000_create_school_insight_alerts_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_172558_create_oauth_auth_codes_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_172559_create_oauth_access_tokens_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_172600_create_oauth_refresh_tokens_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_172601_create_oauth_clients_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_172602_create_oauth_device_codes_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_172700_add_school_scope_to_oauth_clients.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_172900_create_user_push_tokens_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_173000_create_communication_deliveries_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_173100_create_backup_runs_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_173200_create_marketplace_apps_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_173300_create_school_marketplace_installations_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_173400_create_school_benchmark_consents_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_174000_add_unique_transaction_reference_to_fee_payments.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_174100_add_review_state_to_marketplace_apps.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_180000_add_attachment_to_assignments_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_190000_create_feature_flags_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_200000_create_notification_preferences_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_210000_add_reconciliation_fields_to_payment_transactions.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_220000_create_attendance_corrections_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_230000_add_reopen_metadata_to_result_submissions.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_240000_create_school_insight_snapshots_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_250000_add_health_workflow_fields.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_260000_create_transport_stops_and_inspections_tables.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_270000_create_book_reservations_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_280000_create_staff_contracts_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_290000_add_support_sla_and_attachments.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_300000_add_contract_fields_to_payroll_entries.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_310000_create_asset_lifecycle_events_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_320000_add_reversal_fields_to_fee_payments.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_330000_add_reconciliation_review_fields_to_payment_transactions.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_340000_add_refund_fields_to_payment_transactions.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_350000_create_payment_gateway_events_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_360000_create_school_setup_checklist_states_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_370000_add_tax_and_invoice_settings.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_380000_add_invoice_number_to_student_fees.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_390000_create_mfa_challenges_and_user_mfa_fields.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_400000_create_school_api_keys_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_23_410000_add_delivery_state_to_communications.php
+[31m??[m backend/dono-api/database/migrations/2026_08_24_000000_create_school_admission_sequences_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_24_010000_fix_transport_allocation_history_index.php
+[31m??[m backend/dono-api/database/migrations/2026_08_25_120000_create_ai_student_community_tables.php
+[31m??[m backend/dono-api/database/migrations/2026_08_25_120001_add_ai_community_permissions.php
+[31m??[m backend/dono-api/database/migrations/2026_08_26_120000_create_school_exchange_tables.php
+[31m??[m backend/dono-api/database/migrations/2026_08_26_120001_add_exchange_permissions.php
+[31m??[m backend/dono-api/database/migrations/2026_08_27_120000_create_live_room_tables.php
+[31m??[m backend/dono-api/database/migrations/2026_08_27_120001_add_live_room_permissions.php
+[31m??[m backend/dono-api/database/migrations/2026_08_27_120002_add_provider_identity_to_live_room_participants.php
+[31m??[m backend/dono-api/database/migrations/2026_08_27_120003_create_live_room_provider_events_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_28_120000_create_live_room_provider_operations_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_29_120000_add_recording_consent_to_live_room_participants.php
+[31m??[m backend/dono-api/database/migrations/2026_08_29_120001_create_live_room_recordings_table.php
+[31m??[m backend/dono-api/database/migrations/2026_08_29_120002_add_audit_log_permission_to_proprietor_role.php
+[31m??[m backend/dono-api/resources/views/pdf/
+[31m??[m backend/dono-api/tests/Unit/AcademicComputationTest.php
+[31m??[m backend/dono-api/tests/Unit/EmailVerificationTest.php
+[31m??[m backend/dono-api/tests/Unit/SchoolSubscriptionTest.php
+[31m??[m backend/dono-api/tests/Unit/StudentAdmissionNumberServiceTest.php
+[31m??[m backend/dono-api/tests/Unit/SubscriptionAccessServiceTest.php
+[31m??[m dono-erp-design-system-final.zip
+[31m??[m dono-erp-partition-fix.zip
+[31m??[m dono-erp-ui-pass-clean.zip
+[31m??[m dono-erp-ui-pass-final.zip
+[31m??[m dono-start-local-tunnel.sh
+[31m??[m dono-termux.sh
+[31m??[m doono-api-origin-connectivity-fix.zip
+[31m??[m doono-cbt-audit-release.zip
+[31m??[m doono-communication-lifecycle-fix.zip
+[31m??[m doono-complete-vision-release.zip
+[31m??[m doono-controls-forms-audit-release.zip
+[31m??[m doono-de-creator-erp-designer-masterclass.zip
+[31m??[m doono-de-creator-erp-final-complete.zip
+[31m??[m doono-de-creator-erp-final-design-polish.zip
+[31m??[m doono-de-creator-erp-final.zip
+[31m??[m doono-de-creator-erp-footer.zip
+[31m??[m doono-email-verification-termux-fix.zip
+[31m??[m doono-email-verification-tunnel-fix.zip
+[31m??[m doono-footer-visible-fix.zip
+[31m??[m doono-guide-audit-release.zip
+[31m??[m doono-header-footer-audit-release.zip
+[31m??[m doono-local-email-bypass.zip
+[31m??[m doono-mobile-header-composition-fix.zip
+[31m??[m doono-mobile-shell-audit-release.zip
+[31m??[m doono-mobile-ui-fix.zip
+[31m??[m doono-mobile-ui-release.zip
+[31m??[m doono-pagination-notification-release.zip
+[31m??[m doono-parallel-saas-standardization-overlay.zip
+[31m??[m doono-parallel-saas-standardization-release.zip
+[31m??[m doono-profile-avatar-mobile-fix.zip
+[31m??[m doono-profile-upload-persistence-fix.zip
+[31m??[m doono-readiness-audit-final.zip
+[31m??[m doono-render-deployment-release.zip
+[31m??[m doono-results-computation-audit.zip
+[31m??[m doono-school-wide-communication-fix.zip
+[31m??[m doono-scroll-dashboard-fix.zip
+[31m??[m doono-sticky-footer-fix.zip
+[31m??[m doono-subscription-access-release.zip
+[31m??[m doono-subscription-plan-edit-fix.zip
+[31m??[m doono-support-centre-guide-release.zip
+[31m??[m doono-teacher-module-fix.zip
+[31m??[m frontend/.env.example
+[31m??[m frontend/scripts/
+[31m??[m frontend/src/components/Navbar.css
+[31m??[m frontend/src/components/feedback/DONOGuide.css
+[31m??[m frontend/src/components/feedback/ErrorBoundary.jsx
+[31m??[m frontend/src/components/feedback/SubscriptionRequiredNotice.css
+[31m??[m frontend/src/components/feedback/SubscriptionRequiredNotice.jsx
+[31m??[m frontend/src/components/layout/Footer.css
+[31m??[m frontend/src/components/layout/Footer.jsx
+[31m??[m frontend/src/components/layout/PublicHeader.css
+[31m??[m frontend/src/components/layout/PublicHeader.jsx
+[31m??[m frontend/src/components/layout/PublicShell.css
+[31m??[m frontend/src/components/layout/PublicShell.jsx
+[31m??[m frontend/src/components/layout/SchoolOSContextBar.css
+[31m??[m frontend/src/components/layout/SchoolOSContextBar.jsx
+[31m??[m frontend/src/components/layout/ScrollNavigator.css
+[31m??[m frontend/src/components/layout/ScrollNavigator.jsx
+[31m??[m frontend/src/components/live/
+[31m??[m frontend/src/components/tables/Pagination.css
+[31m??[m frontend/src/components/tables/Pagination.jsx
+[31m??[m frontend/src/config/guideKnowledge.js
+[31m??[m frontend/src/config/schoolOsCapabilities.js
+[31m??[m frontend/src/layouts/DashboardLayout.css
+[31m??[m frontend/src/pages/AiTutor.jsx
+[31m??[m frontend/src/pages/AuditLogs.css
+[31m??[m frontend/src/pages/BackupOperations.jsx
+[31m??[m frontend/src/pages/Benchmarking.jsx
+[31m??[m frontend/src/pages/Communication.css
+[31m??[m frontend/src/pages/CommunityModeration.jsx
+[31m??[m frontend/src/pages/ExchangeWorkspace.jsx
+[31m??[m frontend/src/pages/FeatureFlags.jsx
+[31m??[m frontend/src/pages/GlobalSearch.jsx
+[31m??[m frontend/src/pages/LiveRooms.jsx
+[31m??[m frontend/src/pages/Marketplace.jsx
+[31m??[m frontend/src/pages/MarketplaceAdmin.jsx
+[31m??[m frontend/src/pages/NotificationPreferences.jsx
+[31m??[m frontend/src/pages/Notifications.jsx
+[31m??[m frontend/src/pages/OAuthClients.jsx
+[31m??[m frontend/src/pages/OnboardingForm.css
+[31m??[m frontend/src/pages/PlatformEmailCenter.css
+[31m??[m frontend/src/pages/PortalFees.jsx
+[31m??[m frontend/src/pages/ProfileSettings.css
+[31m??[m frontend/src/pages/ProfileSettings.jsx
+[31m??[m frontend/src/pages/PublicAuth.css
+[31m??[m frontend/src/pages/PublicHome.css
+[31m??[m frontend/src/pages/ReportCardVerification.jsx
+[31m??[m frontend/src/pages/RoleInvitations.css
+[31m??[m frontend/src/pages/SchoolApiKeys.css
+[31m??[m frontend/src/pages/SchoolApiKeys.jsx
+[31m??[m frontend/src/pages/SchoolBranding.css
+[31m??[m frontend/src/pages/SchoolBranding.jsx
+[31m??[m frontend/src/pages/SchoolInsights.jsx
+[31m??[m frontend/src/pages/Schools.css
+[31m??[m frontend/src/pages/StudentCommunity.jsx
+[31m??[m frontend/src/pages/StudentLibrary.jsx
+[31m??[m frontend/src/pages/SupportCentre.jsx
+[31m??[m frontend/src/pages/TeacherDashboard.css
+[31m??[m frontend/src/pages/WorkInbox.jsx
+[31m??[m frontend/src/styles/control-normalization.css
+[31m??[m frontend/src/utils/offlineQueue.js
+[31m??[m performance/
+[31m??[m render.yaml
+[31m??[m scripts/remove-multiline-request-fallbacks.py
+[31m??[m scripts/remove-request-attribute-school-fallbacks.py
+[31m??[m scripts/replace-controller-school-resolvers.py
+[31m??[m scripts/replace-request-school-resolvers.py
+[31m??[m scripts/validate-doono-architecture.py
+[31m??[m scripts/validate-render-config.py

@@ -14,6 +14,8 @@ class StudentFeeResource extends JsonResource
 
         return [
             'id' => $this->id,
+            'school_id' => $this->school_id,
+            'invoice_number' => $this->invoice_number,
             'student_enrollment_id' => $this->student_enrollment_id,
             'fee_category_id' => $this->fee_category_id,
             'academic_session_id' => $this->academic_session_id,
@@ -44,7 +46,8 @@ class StudentFeeResource extends JsonResource
                 'name' => $this->term?->name,
             ]),
             'payments' => $payments,
-            'paid_amount' => $this->whenLoaded('payments', fn () => $this->payments->sum('amount_paid')),
+            'paid_amount' => $this->whenLoaded('payments', fn () => $this->payments->whereNull('reversed_at')->sum('amount_paid')),
+            'balance' => $this->whenLoaded('payments', fn () => max(0, (float) $this->amount_due - (float) $this->payments->whereNull('reversed_at')->sum('amount_paid'))),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

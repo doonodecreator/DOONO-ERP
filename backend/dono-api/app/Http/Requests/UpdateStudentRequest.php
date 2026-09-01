@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Services\CurrentContextService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,19 +14,7 @@ class UpdateStudentRequest extends FormRequest
 
     public function rules(): array
     {
-        $student = $this->route('student');
-        $schoolId = $this->currentSchoolId();
-
         return [
-            'admission_number' => [
-                'sometimes',
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('students', 'admission_number')
-                    ->ignore($student?->id)
-                    ->where('school_id', $schoolId),
-            ],
             'first_name' => 'sometimes|required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'sometimes|required|string|max:255',
@@ -43,32 +30,7 @@ class UpdateStudentRequest extends FormRequest
             'blood_group' => 'nullable|string|max:10',
             'genotype' => 'nullable|string|max:10',
             'medical_notes' => 'nullable|string',
-            'status' => [
-                'sometimes',
-                'required',
-                Rule::in([
-                    'Active',
-                    'Graduated',
-                    'Transferred',
-                    'Suspended',
-                    'Withdrawn',
-                ]),
-            ],
         ];
     }
 
-    private function currentSchoolId(): ?int
-    {
-        $schoolId = $this->attributes->get('current_school_id');
-
-        if ($schoolId) {
-            return (int) $schoolId;
-        }
-
-        $user = $this->user();
-
-        return $user
-            ? app(CurrentContextService::class)->currentSchool($user)?->id
-            : null;
-    }
 }

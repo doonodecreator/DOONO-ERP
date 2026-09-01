@@ -13,6 +13,19 @@ class MediaStorageService
         return config('filesystems.default') === 's3' ? 's3' : 'public';
     }
 
+    public function privateDiskName(): string
+    {
+        return 'assignment_private';
+    }
+
+    public function storePrivate(UploadedFile $file, string $directory, ?string $oldPath = null): string
+    {
+        if ($oldPath) {
+            $this->delete($oldPath);
+        }
+        return $file->store(trim($directory, '/'), $this->privateDiskName());
+    }
+
     public function storeImage(?UploadedFile $file, string $directory, ?string $oldPath = null): ?string
     {
         if (! $file) {
@@ -35,9 +48,11 @@ class MediaStorageService
             return;
         }
 
-        $disk = Storage::disk($this->diskName());
-        if ($disk->exists($path)) {
-            $disk->delete($path);
+        foreach (array_unique([$this->diskName(), $this->privateDiskName()]) as $diskName) {
+            $disk = Storage::disk($diskName);
+            if ($disk->exists($path)) {
+                $disk->delete($path);
+            }
         }
     }
 
@@ -52,6 +67,18 @@ class MediaStorageService
         }
 
         return Storage::disk($this->diskName())->url($path);
+    }
+
+    public function privateExists(?string $path): bool
+    {
+        return (bool) $path && Storage::disk($this->privateDiskName())->exists($path);
+    }
+
+    public function privateDownload(string $path, string $name, string $extension = 'bin')
+    {
+        $disk = Storage::disk($this->privateDiskName());
+        abort_unless($disk->exists($path), 404, 'The attachment is no longer available.');
+        return $disk->download($path, $name.'.'.($extension ?: 'bin'));
     }
 
     public function inlineDataUri(?string $path): ?string

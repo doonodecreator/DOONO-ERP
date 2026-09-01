@@ -1,0 +1,4 @@
+frontend/src/hooks/useApi.js
+=== API DATA ASSIGNMENTS ===
+frontend/src/pages/PlatformOwnerDashboard.jsx:26:            setDashboard(response.data);
+frontend/src/pages/SupportCentre.jsx:138:      if (response?.data?.data) setSelectedTicket(response.data.data);

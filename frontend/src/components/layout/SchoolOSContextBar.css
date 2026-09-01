@@ -1,0 +1,135 @@
+.school-os-context-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background: linear-gradient(105deg, #eff6ff 0%, #ffffff 58%, #f0fdf4 100%);
+  box-shadow: 0 5px 18px rgba(30, 64, 175, 0.06);
+}
+
+.school-os-context-main,
+.school-os-context-meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.school-os-context-main {
+  flex: 1 1 auto;
+}
+
+.school-os-context-mark {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.school-os-context-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.school-os-context-copy strong {
+  overflow: hidden;
+  color: #0f172a;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.school-os-context-copy span {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.school-os-context-meta {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.school-os-role,
+.school-os-state,
+.school-os-context-action {
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.school-os-role {
+  color: #475569;
+}
+
+.school-os-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.school-os-state-ready {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.school-os-state-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.school-os-context-action {
+  border: 0;
+  padding: 8px 10px;
+  background: #1d4ed8;
+  color: #fff;
+  cursor: pointer;
+}
+
+.school-os-context-action:hover {
+  background: #1e40af;
+}
+
+@media (max-width: 680px) {
+  .school-os-context-bar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 10px 11px;
+  }
+
+  .school-os-context-meta {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .school-os-context-copy strong,
+  .school-os-context-copy span {
+    max-width: calc(100vw - 120px);
+  }
+}

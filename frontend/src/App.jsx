@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { getPrimaryRoleSlug } from "./utils/role";
+import { normalizeSchoolOsPage } from "./config/schoolOsCapabilities";
 import DashboardLayout from "./layouts/DashboardLayout";
 import ErrorBoundary from "./components/feedback/ErrorBoundary";
 import Login from "./pages/Login";
@@ -24,6 +25,10 @@ import TransportTracking from "./pages/TransportTracking";
 import LeaveApplication from "./pages/LeaveApplication";
 import AssessmentActivities from "./pages/AssessmentActivities";
 import PlatformOperations from "./pages/PlatformOperations";
+import BackupOperations from "./pages/BackupOperations";
+import Marketplace from "./pages/Marketplace";
+import MarketplaceAdmin from "./pages/MarketplaceAdmin";
+import Benchmarking from "./pages/Benchmarking";
 import Payroll from "./pages/Payroll";
 import FinancialReports from "./pages/FinancialReports";
 import LibraryWorkspace from "./pages/LibraryWorkspace";
@@ -86,6 +91,7 @@ import PortalFees from "./pages/PortalFees";
 import Timetable from "./pages/Timetable";
 
 import ReportCards from "./pages/ReportCards";
+import ReportCardVerification from "./pages/ReportCardVerification";
 
 import Promotions from "./pages/Promotions";
 
@@ -121,6 +127,20 @@ import FormTeacherDashboard from "./pages/FormTeacherDashboard";
 import OrganizationOwnerDashboard from "./pages/OrganizationOwnerDashboard";
 import OrganizationOwnerWorkspace from "./pages/OrganizationOwnerWorkspace";
 import RoleInvitations from "./pages/RoleInvitations";
+import SupportCentre from "./pages/SupportCentre";
+import WorkInbox from "./pages/WorkInbox";
+import Notifications from "./pages/Notifications";
+import GlobalSearch from "./pages/GlobalSearch";
+import AiTutor from "./pages/AiTutor";
+import StudentCommunity from "./pages/StudentCommunity";
+import CommunityModeration from "./pages/CommunityModeration";
+import ExchangeWorkspace from "./pages/ExchangeWorkspace";
+import LiveRooms from "./pages/LiveRooms";
+import SchoolInsights from "./pages/SchoolInsights";
+import FeatureFlags from "./pages/FeatureFlags";
+import NotificationPreferences from "./pages/NotificationPreferences";
+import SchoolApiKeys from "./pages/SchoolApiKeys";
+import OAuthClients from "./pages/OAuthClients";
 import AcceptRoleInvitation from "./pages/AcceptRoleInvitation";
 import InvitationProfileSetup from "./pages/InvitationProfileSetup";
 import ChangePassword from "./pages/ChangePassword";
@@ -128,30 +148,6 @@ import EmailVerification from "./pages/EmailVerification";
 import EmailVerified from "./pages/EmailVerified";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-
-const PAGE_ALIASES = {
-  my_schools: "schools",
-  leadership: "role-invitations",
-  reports: "report-cards",
-  school_setup: "school-setup",
-  approve_results: "results",
-  events: "school-events",
-  leave_mgmt: "leave-requests",
-  assessment: "results",
-  primary_classes: "classes",
-  promotion: "promotions",
-  results_approvals: "results",
-  behaviour: "discipline-cases",
-  my_class: "classes",
-  library: "books",
-  hostels: "hostels",
-  clinic_visits: "clinic",
-  transport: "transport",
-  front_desk: "visitors",
-  fee_payment: "fees-payments",
-  examinations: "examinations",
-  ca_scores: "result-entry",
-};
 
 const ROLE_DASHBOARDS = {
   super_admin: PlatformOwnerDashboard,
@@ -184,13 +180,38 @@ function AuthenticatedApp() {
   const [page, setPage] = useState("dashboard");
 
   const navigatePage = (requestedPage) => {
-    setPage(PAGE_ALIASES[requestedPage] || requestedPage);
+    setPage(normalizeSchoolOsPage(requestedPage));
   };
 
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [selectedParent, setSelectedParent] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [recordFocus, setRecordFocus] = useState(null);
+
+  const openSearchResult = (result) => {
+    const id = Number(result?.id);
+    if (!result?.type || !Number.isInteger(id) || id < 1) return;
+
+    if (result.type === "student") {
+      setSelectedStudent({ id });
+      setPage("student-profile");
+      return;
+    }
+    if (result.type === "parent") {
+      setRecordFocus({ type: "parent", id });
+      setPage("parents");
+      return;
+    }
+    if (result.type === "staff") {
+      setRecordFocus({ type: "staff", id });
+      setPage("staff");
+      return;
+    }
+
+    setRecordFocus({ type: result.type, id });
+    setPage(normalizeSchoolOsPage(result.page || "dashboard"));
+  };
 
   if (mustChangePassword) {
     return <ChangePassword />;
@@ -261,7 +282,7 @@ function AuthenticatedApp() {
       content = <EditStudent student={selectedStudent} setSelectedStudent={setSelectedStudent} setPage={setPage} />;
       break;
     case "staff":
-      content = <Staff setPage={navigatePage} setSelectedStaff={setSelectedStaff} />;
+      content = <Staff setPage={navigatePage} setSelectedStaff={setSelectedStaff} focusId={recordFocus?.type === "staff" ? recordFocus.id : null} />;
       break;
     case "role-invitations":
       content = <RoleInvitations setPage={navigatePage} />;
@@ -273,7 +294,7 @@ function AuthenticatedApp() {
       content = <EditStaff staff={selectedStaff} setPage={navigatePage} />;
       break;
     case "parents":
-      content = <Parents setPage={navigatePage} setSelectedParent={setSelectedParent} />;
+      content = <Parents setPage={navigatePage} setSelectedParent={setSelectedParent} focusId={recordFocus?.type === "parent" ? recordFocus.id : null} />;
       break;
     case "add-parent":
       content = <AddParent setPage={navigatePage} />;
@@ -396,7 +417,10 @@ function AuthenticatedApp() {
       content = <PlatformOperations mode="email" />;
       break;
     case "backups-logs":
-      content = <PlatformOperations mode="logs" />;
+      content = <BackupOperations />;
+      break;
+    case "marketplace-review":
+      content = <MarketplaceAdmin />;
       break;
     case "system-health":
       content = <PlatformOperations mode="health" />;
@@ -498,6 +522,54 @@ function AuthenticatedApp() {
     case "settings":
       content = <Settings setPage={navigatePage} />;
       break;
+    case "school-api-keys":
+      content = <SchoolApiKeys />;
+      break;
+    case "oauth-clients":
+      content = <OAuthClients />;
+      break;
+    case "marketplace":
+      content = <Marketplace />;
+      break;
+    case "benchmarking":
+      content = <Benchmarking />;
+      break;
+    case "support-centre":
+      content = <SupportCentre />;
+      break;
+    case "work-inbox":
+      content = <WorkInbox setPage={navigatePage} />;
+      break;
+    case "notifications":
+      content = <Notifications />;
+      break;
+    case "global-search":
+      content = <GlobalSearch setPage={navigatePage} />;
+      break;
+    case "ai-tutor":
+      content = <AiTutor />;
+      break;
+    case "student-community":
+      content = <StudentCommunity />;
+      break;
+    case "community-moderation":
+      content = <CommunityModeration />;
+      break;
+    case "exchange":
+      content = <ExchangeWorkspace />;
+      break;
+    case "live-rooms":
+      content = <LiveRooms />;
+      break;
+    case "school-insights":
+      content = <SchoolInsights />;
+      break;
+    case "feature-flags":
+      content = <FeatureFlags />;
+      break;
+    case "notification-preferences":
+      content = <NotificationPreferences />;
+      break;
     case "profile":
       content = <ProfileSettings />;
       break;
@@ -554,6 +626,8 @@ export default function App() {
         path="/subscription-payment"
         element={isAuthenticated ? <SubscriptionPayment /> : <Navigate to="/login" replace />}
       />
+
+      <Route path="/verify/report-card/:token" element={<ReportCardVerification />} />
 
       <Route path="/verify-email" element={<EmailVerification />} />
       <Route path="/email-verified" element={<EmailVerified />} />

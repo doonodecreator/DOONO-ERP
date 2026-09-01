@@ -15,17 +15,17 @@ class ClassSeeder extends Seeder
 
         if ($primary) {
             foreach ([
-    'Nursery 0',
-    'Nursery 1',
-    'Nursery 2',
-    'Nursery 3',
-    'Primary 1',
-    'Primary 2',
-    'Primary 3',
-    'Primary 4',
-    'Primary 5',
-    'Primary 6',
-] as $index => $name) {
+                'Nursery 0',
+                'Nursery 1',
+                'Nursery 2',
+                'Nursery 3',
+                'Primary 1',
+                'Primary 2',
+                'Primary 3',
+                'Primary 4',
+                'Primary 5',
+                'Primary 6',
+            ] as $index => $name) {
                 ClassModel::firstOrCreate(
                     [
                         'division_id' => $primary->id,
@@ -41,7 +41,6 @@ class ClassSeeder extends Seeder
         }
 
         if ($secondary) {
-
             $classes = [
                 'JSS 1',
                 'JSS 2',
@@ -52,7 +51,6 @@ class ClassSeeder extends Seeder
             ];
 
             foreach ($classes as $index => $name) {
-
                 ClassModel::firstOrCreate(
                     [
                         'division_id' => $secondary->id,

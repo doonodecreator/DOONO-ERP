@@ -24,6 +24,7 @@ use App\Models\StudentEnrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
 
 class CbtAssessmentController extends Controller
 {
@@ -246,12 +247,27 @@ class CbtAssessmentController extends Controller
         $this->assertStudentAttempt($request, $cbtAttempt);
         abort_unless($cbtAttempt->status === 'in_progress', 422, 'This attempt is no longer open.');
         if ($cbtAttempt->expires_at && now()->greaterThanOrEqualTo($cbtAttempt->expires_at)) return $this->submitForStudent($request, $cbtAttempt, true);
-        $data = $request->validate(['assessment_question_id' => ['required', 'integer'], 'selected_answer' => ['nullable', 'string', 'max:500']]);
+        $data = $request->validate(['assessment_question_id' => ['required', 'integer'], 'selected_answer' => ['nullable', 'string', 'max:500'], 'client_changed_at' => ['nullable', 'date']]);
         $question = $cbtAttempt->assessment->questions()->whereKey($data['assessment_question_id'])->firstOrFail();
         $options = is_array($question->options_snapshot) ? $question->options_snapshot : [];
         abort_unless($data['selected_answer'] === null || in_array($data['selected_answer'], $options, true), 422, 'The selected answer is not valid for this question.');
-        $cbtAttempt->answers()->updateOrCreate(['cbt_assessment_question_id' => $question->id], ['selected_answer' => $data['selected_answer'], 'answered_at' => now()]);
-        return response()->json(['message' => 'Answer saved.', 'data' => ['assessment_question_id' => $question->id]]);
+        $clientChangedAt = ! empty($data['client_changed_at']) ? Carbon::parse($data['client_changed_at']) : null;
+        $result = DB::transaction(function () use ($cbtAttempt, $question, $data, $clientChangedAt): array {
+            $existing = $cbtAttempt->answers()->where('cbt_assessment_question_id', $question->id)->lockForUpdate()->first();
+            if ($existing && $clientChangedAt && $existing->answered_at && $clientChangedAt->lt($existing->answered_at)) {
+                return ['conflict' => true, 'server_answer' => $existing->selected_answer, 'server_changed_at' => $existing->answered_at->toIso8601String()];
+            }
+            $answer = $cbtAttempt->answers()->updateOrCreate(['cbt_assessment_question_id' => $question->id], ['selected_answer' => $data['selected_answer'], 'answered_at' => now()]);
+            return ['conflict' => false, 'server_changed_at' => $answer->answered_at?->toIso8601String()];
+        });
+        if ($result['conflict']) {
+            return response()->json([
+                'message' => 'This answer is older than the answer already saved on the server. Review the server answer before retrying.',
+                'conflict' => true,
+                'data' => ['assessment_question_id' => $question->id, 'server_answer' => $result['server_answer'], 'server_changed_at' => $result['server_changed_at']],
+            ], 409);
+        }
+        return response()->json(['message' => 'Answer saved.', 'data' => ['assessment_question_id' => $question->id, 'server_changed_at' => $result['server_changed_at']]]);
     }
 
     public function submit(Request $request, CbtAttempt $cbtAttempt)

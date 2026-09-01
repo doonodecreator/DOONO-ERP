@@ -3,6 +3,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getPrimaryRoleSlug } from '../utils/role';
 import { arrayFromResponse } from '../utils/response';
+import { flushAttendanceQueue, queueAttendanceRegister } from '../utils/offlineQueue';
 
 export default function Attendance() {
   const { permissions = [], roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
@@ -12,6 +13,7 @@ export default function Attendance() {
   const [sessions, setSessions] = useState([]);
   const [terms, setTerms] = useState([]);
   const [selectedClassId, setSelectedClassId] = useState('');
+  const [selectedStreamId, setSelectedStreamId] = useState('');
   const [selectedSessionId, setSelectedSessionId] = useState('');
   const [selectedTermId, setSelectedTermId] = useState('');
   const [attendanceDate, setAttendanceDate] = useState(
@@ -21,15 +23,26 @@ export default function Attendance() {
   const [students, setStudents] = useState([]);
   const [attendanceMap, setAttendanceMap] = useState({});
   const [remarksMap, setRemarksMap] = useState({});
+  const [attendanceVersionMap, setAttendanceVersionMap] = useState({});
   
   const [loadingClasses, setLoadingClasses] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
+  const [correctionReason, setCorrectionReason] = useState('');
+  const [correctionHistory, setCorrectionHistory] = useState({});
 
   useEffect(() => {
     loadAcademicFilters();
+    const synchronize = async () => {
+      const result = await flushAttendanceQueue(api);
+      if (result.conflicts > 0) setError(`${result.conflicts} offline attendance register${result.conflicts === 1 ? '' : 's'} conflicted with a newer server version. Reload the register and review it before saving again.`);
+      else if (result.sent > 0) setSuccessMsg(`${result.sent} offline attendance register${result.sent === 1 ? '' : 's'} synchronized.`);
+    };
+    synchronize();
+    window.addEventListener('online', synchronize);
+    return () => window.removeEventListener('online', synchronize);
   }, []);
 
   useEffect(() => {
@@ -38,7 +51,7 @@ export default function Attendance() {
     } else {
       setStudents([]);
     }
-  }, [selectedClassId, selectedSessionId, selectedTermId, attendanceDate]);
+  }, [selectedClassId, selectedStreamId, selectedSessionId, selectedTermId, attendanceDate]);
 
   const loadAcademicFilters = async () => {
     try {
@@ -57,7 +70,11 @@ export default function Attendance() {
       setClasses(classList);
       setSessions(sessionList);
       setTerms(termList);
-      if (classList.length > 0) setSelectedClassId(classList[0].id);
+      if (classList.length > 0) {
+        const firstClass = classList[0];
+        setSelectedClassId(firstClass.class_id || firstClass.id);
+        setSelectedStreamId(firstClass.stream_id || '');
+      }
       const currentSession = sessionList.find((item) => item.is_current) || sessionList[0];
       const currentTerm = termList.find((item) => item.is_current) || termList[0];
       if (currentSession) setSelectedSessionId(currentSession.id);
@@ -83,6 +100,8 @@ export default function Attendance() {
           academic_session_id: selectedSessionId,
           term_id: selectedTermId,
           class_id: selectedClassId,
+          stream_id: selectedStreamId || null,
+          attendance_date: attendanceDate,
         },
       });
 
@@ -92,15 +111,18 @@ export default function Attendance() {
       // Initialize status and remarks map
       const initialStatus = {};
       const initialRemarks = {};
+      const initialVersions = {};
 
       (Array.isArray(list) ? list : []).forEach((item) => {
         const studentId = item.id || item.student_id || item.student_enrollment_id;
         initialStatus[studentId] = String(item.attendance_status || item.attendance?.status || 'Present').toLowerCase();
-        initialRemarks[studentId] = item.remarks || '';
+        initialRemarks[studentId] = item.attendance_remarks || item.remarks || '';
+        initialVersions[studentId] = item.attendance_updated_at || null;
       });
 
       setAttendanceMap(initialStatus);
       setRemarksMap(initialRemarks);
+      setAttendanceVersionMap(initialVersions);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load class register.');
     } finally {
@@ -122,6 +144,22 @@ export default function Attendance() {
     }));
   };
 
+  const loadCorrections = async (attendanceId) => {
+    if (!attendanceId) return;
+    const current = correctionHistory[attendanceId];
+    if (current?.loaded) {
+      setCorrectionHistory((previous) => ({ ...previous, [attendanceId]: { ...current, open: !current.open } }));
+      return;
+    }
+    setCorrectionHistory((previous) => ({ ...previous, [attendanceId]: { loading: true, open: true, items: [] } }));
+    try {
+      const response = await api.get(`/attendance/${attendanceId}/corrections`, { params: { per_page: 25 } });
+      setCorrectionHistory((previous) => ({ ...previous, [attendanceId]: { loading: false, loaded: true, open: true, items: arrayFromResponse(response) } }));
+    } catch (err) {
+      setCorrectionHistory((previous) => ({ ...previous, [attendanceId]: { loading: false, loaded: true, open: true, items: [], error: err.response?.data?.message || 'Unable to load correction history.' } }));
+    }
+  };
+
   const handleMarkAll = (status) => {
     const updated = {};
     students.forEach((s) => {
@@ -141,9 +179,11 @@ export default function Attendance() {
 
     const payload = {
       class_id: selectedClassId,
+      stream_id: selectedStreamId || null,
       attendance_date: attendanceDate,
       academic_session_id: selectedSessionId,
       term_id: selectedTermId,
+      correction_reason: correctionReason.trim() || null,
       records: students.map((s) => {
         const id = s.id || s.student_id || s.student_enrollment_id;
         const status = attendanceMap[id] || 'present';
@@ -151,15 +191,25 @@ export default function Attendance() {
           student_enrollment_id: s.student_enrollment_id || id,
           status: status.charAt(0).toUpperCase() + status.slice(1),
           remarks: remarksMap[id] || '',
+          client_changed_at: attendanceVersionMap[id] || new Date().toISOString(),
         };
       }),
     };
 
+    const idempotencyKey = `attendance:${selectedSessionId}:${selectedTermId}:${selectedClassId}:${selectedStreamId || 'all'}:${attendanceDate}:${Date.now()}`;
     try {
-      await api.post('/attendance/bulk', payload);
+      await api.post('/attendance/bulk', payload, { headers: { 'Idempotency-Key': idempotencyKey } });
       setSuccessMsg('Attendance records updated successfully!');
+      await loadClassAttendance();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save attendance records.');
+      if (err?.isNetworkError || !err?.response) {
+        queueAttendanceRegister(payload, idempotencyKey);
+        setSuccessMsg('The register was saved on this device and will synchronize when the connection returns.');
+      } else if (err?.response?.status === 409) {
+        setError('A newer attendance version exists on the server. Reload the register, review the changed rows, and save again.');
+      } else {
+        setError(err.response?.data?.message || 'Failed to save attendance records.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -213,15 +263,19 @@ export default function Attendance() {
             <div className="text-sm text-gray-400 py-2">Loading classes...</div>
           ) : (
             <select
-              value={selectedClassId}
-              onChange={(e) => setSelectedClassId(e.target.value)}
+              value={`${selectedClassId}|${selectedStreamId || ''}`}
+              onChange={(e) => {
+                const [classId, streamId = ''] = e.target.value.split('|');
+                setSelectedClassId(classId);
+                setSelectedStreamId(streamId);
+              }}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
             >
               <option value="">Select class</option>
               {classes.map((cls) => (
-                <option key={cls.id} value={cls.id}>
-                  {cls.name} {cls.division?.name ? `(${cls.division.name})` : ''}
-                </option>
+                  <option key={`${cls.class_id || cls.id}|${cls.stream_id || ''}`} value={`${cls.class_id || cls.id}|${cls.stream_id || ''}`}>
+                    {cls.name} {cls.division?.name ? `(${cls.division.name})` : ''}
+                  </option>
               ))}
             </select>
           )}
@@ -250,6 +304,10 @@ export default function Attendance() {
             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
+        {canManageAttendance && <div className="md:col-span-2">
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Correction reason (only needed when changing a saved register)</label>
+          <input type="text" maxLength={1000} value={correctionReason} onChange={(e) => setCorrectionReason(e.target.value)} placeholder="For example: corrected after signed class register review" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+        </div>}
 
           <div className="flex flex-col justify-end">
           <label className="block text-xs font-semibold text-gray-600 mb-1">Quick Bulk Actions</label>
@@ -317,6 +375,7 @@ export default function Attendance() {
                   <th className="px-6 py-3">Admission No</th>
                   <th className="px-6 py-3">Attendance Status</th>
                   <th className="px-6 py-3">Remarks / Note</th>
+                  <th className="px-6 py-3">History</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -364,6 +423,16 @@ export default function Attendance() {
                           readOnly={!canManageAttendance}
                           className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none"
                         />
+                      </td>
+                      <td className="px-6 py-4 align-top">
+                        {st.attendance_id ? <>
+                          <button type="button" onClick={() => loadCorrections(st.attendance_id)} className="whitespace-nowrap rounded-lg border border-indigo-200 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-50">
+                            {correctionHistory[st.attendance_id]?.open ? 'Hide history' : 'View history'}
+                          </button>
+                          {correctionHistory[st.attendance_id]?.open && <div className="mt-2 min-w-56 max-w-xs rounded-lg bg-slate-50 p-2 text-xs">
+                            {correctionHistory[st.attendance_id]?.loading ? <span className="text-slate-500">Loading history...</span> : correctionHistory[st.attendance_id]?.error ? <span className="text-red-600">{correctionHistory[st.attendance_id].error}</span> : correctionHistory[st.attendance_id]?.items?.length ? <div className="space-y-2">{correctionHistory[st.attendance_id].items.map((item) => <div key={item.id} className="border-b border-slate-200 pb-2 last:border-0 last:pb-0"><p className="font-semibold text-slate-700">{item.before_status} → {item.after_status}</p><p className="text-slate-500">{item.reason}</p><p className="text-slate-400">{item.editor?.name || 'Authorized user'} · {item.created_at ? new Date(item.created_at).toLocaleString() : 'Date unavailable'}</p></div>)}</div> : <span className="text-slate-500">No corrections recorded.</span>}
+                          </div>}
+                        </> : <span className="text-slate-400">Not saved</span>}
                       </td>
                     </tr>
                   );

@@ -16,8 +16,7 @@ class UpdateStreamRequest extends FormRequest
     public function rules(): array
     {
         $stream = $this->route('stream');
-        $schoolId = $this->attributes->get('current_school_id')
-            ?? app(CurrentContextService::class)->currentSchool($this->user())?->id;
+        $schoolId = app(CurrentContextService::class)->currentSchool($this->user())?->id;
         $classId = $this->input('class_id', $stream?->class_id);
 
         return [

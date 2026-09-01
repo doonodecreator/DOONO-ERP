@@ -73,6 +73,7 @@ class StaffController extends Controller
         $user = $staff->user;
         if (!$user) return;
         $user->roles()->wherePivot('school_id', $schoolId)->detach();
+        $user->tokens()->delete();
         if ((int) $user->current_school_id === $schoolId) $user->update(['current_school_id' => null]);
     }
 

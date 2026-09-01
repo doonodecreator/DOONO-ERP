@@ -9,6 +9,9 @@ class StudentResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $viewer = $request->user();
+        $canViewMedical = $viewer && ($viewer->isSuperAdmin() || $viewer->hasPermission('manage_clinic', (int) $this->school_id));
+
         return [
             'id' => $this->id,
             'school_id' => $this->school_id,
@@ -31,9 +34,9 @@ class StudentResource extends JsonResource
             'state_of_origin' => $this->state_of_origin,
             'local_government' => $this->local_government,
             'address' => $this->address,
-            'blood_group' => $this->blood_group,
-            'genotype' => $this->genotype,
-            'medical_notes' => $this->medical_notes,
+            'blood_group' => $this->when($canViewMedical, $this->blood_group),
+            'genotype' => $this->when($canViewMedical, $this->genotype),
+            'medical_notes' => $this->when($canViewMedical, $this->medical_notes),
             'status' => $this->status,
             'portal_account' => [
                 'linked' => (bool) $this->user_id,

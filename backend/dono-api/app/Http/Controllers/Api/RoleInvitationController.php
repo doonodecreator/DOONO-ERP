@@ -22,11 +22,44 @@ use Illuminate\Validation\ValidationException;
 
 class RoleInvitationController extends Controller
 {
+    private const ROLE_RANKS = [
+        'super_admin' => 100,
+        'organization_owner' => 90,
+        'proprietor' => 80,
+        'principal' => 70,
+        'vice_principal_academic' => 60,
+        'vice_principal_admin' => 60,
+        'nursery_head' => 55,
+        'primary_headmaster' => 55,
+        'secondary_principal' => 55,
+        'registrar' => 35,
+        'form_teacher' => 30,
+        'teacher' => 25,
+        'bursar' => 25,
+        'accountant' => 25,
+        'librarian' => 20,
+        'nurse' => 20,
+        'hostel_master' => 20,
+        'hostel_mistress' => 20,
+        'transport_manager' => 20,
+        'receptionist' => 20,
+        'store_keeper' => 20,
+        'guidance_counselor' => 20,
+        'security_officer' => 20,
+        'ict_administrator' => 20,
+    ];
+
     public function __construct(
         private readonly CurrentContextService $context,
         private readonly EmailVerificationService $verification,
         private readonly \App\Services\SubscriptionQuotaService $quotas
     ) {
+    }
+
+    private function requiresEmailVerification(): bool
+    {
+        return (bool) config('app.email_verification_required', true)
+            || ! app()->environment(['local', 'testing']);
     }
 
     public function index(Request $request)
@@ -63,6 +96,7 @@ class RoleInvitationController extends Controller
         $data = $request->validated();
         $data['email'] = strtolower(trim($data['email']));
         $role = Role::where('slug', $data['role_slug'])->firstOrFail();
+        $this->assertCanInviteRole($request, $role->slug, $schoolId);
         $this->validateFormTeacherAssignment($data, $role, $schoolId);
 
         if (strcasecmp($data['email'], $request->user()->email) === 0) {
@@ -154,12 +188,14 @@ class RoleInvitationController extends Controller
             ], 409);
         }
 
-        [$user, $staff] = DB::transaction(function () use ($data, $invitation) {
+        $requiresVerification = $this->requiresEmailVerification();
+
+        [$user, $staff] = DB::transaction(function () use ($data, $invitation, $requiresVerification) {
             $user = User::create([
                 'name' => trim("{$invitation->first_name} {$invitation->last_name}"),
                 'email' => $data['email'],
                 'password' => $data['password'],
-                'email_verified_at' => null,
+                'email_verified_at' => $requiresVerification ? null : now(),
             ]);
 
             $staff = $this->activateInvitation($invitation, $user);
@@ -168,7 +204,22 @@ class RoleInvitationController extends Controller
         });
 
         Auth::setUser($user);
-        $verificationSent = $this->verification->send($user);
+        $verificationSent = $requiresVerification ? $this->verification->send($user) : false;
+        $payload = [
+            'message' => $requiresVerification
+                ? 'Invitation accepted. Verify your email before signing in.'
+                : 'Invitation accepted. Local testing verification is disabled; you can sign in now.',
+            'verification_required' => $requiresVerification,
+            'verification_email_sent' => $verificationSent,
+            'email' => $user->email,
+            'staff_id' => $staff->id,
+        ];
+
+        if (! $requiresVerification) {
+            $user->tokens()->delete();
+            $payload['token'] = $user->createToken('api-token')->plainTextToken;
+            $payload += $this->context->resolve($user);
+        }
 
         ActivityLogService::log(
             module: 'role_invitations',
@@ -178,13 +229,7 @@ class RoleInvitationController extends Controller
             schoolId: $invitation->school_id,
         );
 
-        return response()->json([
-            'message' => 'Invitation accepted. Verify your email before signing in.',
-            'verification_required' => true,
-            'verification_email_sent' => $verificationSent,
-            'email' => $user->email,
-            'staff_id' => $staff->id,
-        ], 202);
+        return response()->json($payload, 202);
     }
 
     public function acceptAuthenticated(Request $request)
@@ -319,6 +364,19 @@ class RoleInvitationController extends Controller
         ]);
 
         return $staff;
+    }
+
+    private function assertCanInviteRole(Request $request, string $targetRoleSlug, int $schoolId): void
+    {
+        $roles = collect($this->context->resolve($request->user())['roles'] ?? [])
+            ->filter(fn (array $role) => (int) ($role['school_id'] ?? 0) === $schoolId)
+            ->pluck('slug')
+            ->all();
+        $actorRank = collect($roles)->map(fn (string $slug) => self::ROLE_RANKS[$slug] ?? 0)->max();
+        abort_unless(array_key_exists($targetRoleSlug, self::ROLE_RANKS), 403, 'This role is not available in the invitation authority matrix.');
+        $targetRank = self::ROLE_RANKS[$targetRoleSlug];
+
+        abort_unless($actorRank > $targetRank, 403, 'You cannot invite a role at or above your own authority.');
     }
 
     private function validateFormTeacherAssignment(array $data, Role $role, int $schoolId): void

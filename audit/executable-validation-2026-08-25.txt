@@ -1,0 +1,15 @@
+=== PHPUNIT ===
+PHPUnit 12.5.30 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.6
+Configuration: /home/ubuntu/DOONO-ERP/backend/dono-api/phpunit.xml
+
+..............                                                    14 / 14 (100%)
+
+Time: 00:00.475, Memory: 50.50 MB
+
+[30;42mOK (14 tests, 19 assertions)[0m
+=== ROUTE LIST ===
+route:list passed
+=== GUIDE VALIDATION ===
+Guide source coverage verified: 73 registered modules and 60 role guide entries.

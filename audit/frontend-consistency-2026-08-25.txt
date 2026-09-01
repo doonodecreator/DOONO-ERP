@@ -1,0 +1,398 @@
+=== SHARED COMPONENT FILES ===
+frontend/src/components/CreateSchoolModal.jsx
+frontend/src/components/ErrorBoundary.jsx
+frontend/src/components/FeePaymentModal.jsx
+frontend/src/components/Navbar.css
+frontend/src/components/Navbar.jsx
+frontend/src/components/Sidebar.jsx
+frontend/src/components/dashboard/DashboardGrid.css
+frontend/src/components/dashboard/DashboardGrid.jsx
+frontend/src/components/dashboard/StatCard.css
+frontend/src/components/dashboard/StatCard.jsx
+frontend/src/components/dashboard/dashboard.css
+frontend/src/components/feedback/Alert.css
+frontend/src/components/feedback/Alert.jsx
+frontend/src/components/feedback/DONOGuide.css
+frontend/src/components/feedback/DONOGuide.jsx
+frontend/src/components/feedback/EmptyState.css
+frontend/src/components/feedback/EmptyState.jsx
+frontend/src/components/feedback/ErrorBoundary.jsx
+frontend/src/components/feedback/LoadingSpinner.css
+frontend/src/components/feedback/LoadingSpinner.jsx
+frontend/src/components/feedback/SubscriptionRequiredNotice.css
+frontend/src/components/feedback/SubscriptionRequiredNotice.jsx
+frontend/src/components/forms/Button.jsx
+frontend/src/components/forms/FormField.jsx
+frontend/src/components/forms/StudentPlacementFields.jsx
+frontend/src/components/forms/button.css
+frontend/src/components/forms/forms.css
+frontend/src/components/layout/Footer.css
+frontend/src/components/layout/Footer.jsx
+frontend/src/components/layout/PageContainer.css
+frontend/src/components/layout/PageContainer.jsx
+frontend/src/components/layout/PageHeader.css
+frontend/src/components/layout/PageHeader.jsx
+frontend/src/components/layout/PublicHeader.css
+frontend/src/components/layout/PublicHeader.jsx
+frontend/src/components/layout/PublicShell.css
+frontend/src/components/layout/PublicShell.jsx
+frontend/src/components/layout/SchoolOSContextBar.css
+frontend/src/components/layout/SchoolOSContextBar.jsx
+frontend/src/components/layout/ScrollNavigator.css
+frontend/src/components/layout/ScrollNavigator.jsx
+frontend/src/components/layout/SectionCard.css
+frontend/src/components/layout/SectionCard.jsx
+frontend/src/components/live/LiveRoomSession.jsx
+frontend/src/components/modals/Modal.css
+frontend/src/components/modals/Modal.jsx
+frontend/src/components/modals/PortalAccountModal.jsx
+frontend/src/components/tables/DataTable.css
+frontend/src/components/tables/DataTable.jsx
+frontend/src/components/tables/Pagination.css
+frontend/src/components/tables/Pagination.jsx
+=== PAGE USAGE COUNTS ===
+PageHeader        89
+DataTable         34
+LoadingSpinner    82
+EmptyState        73
+StatCard          9
+PageContainer     67
+=== PAGES WITHOUT PAGECONTAINER ===
+AcceptRoleInvitation.jsx
+AddSchool.jsx
+AddSubject.jsx
+AddTeacher.jsx
+AssetRegister.jsx
+Attendance.jsx
+CashierDashboard.jsx
+ChangePassword.jsx
+Clinic.jsx
+DisciplineCases.jsx
+EditParent.jsx
+EditStaff.jsx
+EditStudent.jsx
+EditTeacher.jsx
+EmailVerification.jsx
+EmailVerified.jsx
+Expenses.jsx
+FeeAdjustments.jsx
+FeePayments.jsx
+Fees.jsx
+FinancialReports.jsx
+ForgotPassword.jsx
+FormTeacherDashboard.jsx
+Graduation.jsx
+HostelDashboard.jsx
+Hostels.jsx
+InvitationProfileSetup.jsx
+LeaveRequests.jsx
+LibrarianDashboard.jsx
+LibraryWorkspace.jsx
+LinkStudentToParent.jsx
+Login.jsx
+NurseryHeadDashboard.jsx
+OperationalReports.jsx
+OrganizationOwnerDashboard.jsx
+OrganizationOwnerWorkspace.jsx
+ParentProfile.jsx
+PlatformEmailCenter.jsx
+PrimaryHeadmasterDashboard.jsx
+PrincipalDashboard.jsx
+Promotions.jsx
+PublicHome.jsx
+PublicRegister.jsx
+ReceptionActivities.jsx
+ReceptionDashboard.jsx
+ReportCardVerification.jsx
+ReportCards.jsx
+ResetPassword.jsx
+RoleInvitations.jsx
+SafetyIncidents.jsx
+SchoolEvents.jsx
+SchoolFacilities.jsx
+SecondaryPrincipalDashboard.jsx
+StaffAttendance.jsx
+StudentPortal.jsx
+SubscriptionPayment.jsx
+SupportCentre.jsx
+TeacherProfile.jsx
+Teachers.jsx
+Transport.jsx
+TransportLogs.jsx
+VicePrincipalAcademicDashboard.jsx
+VicePrincipalAdminDashboard.jsx
+Visitors.jsx
+=== PAGES WITHOUT PAGEHEADER ===
+AcceptRoleInvitation.jsx
+AddSchool.jsx
+AddSubject.jsx
+AddTeacher.jsx
+Attendance.jsx
+CashierDashboard.jsx
+ChangePassword.jsx
+Clinic.jsx
+EditParent.jsx
+EditStaff.jsx
+EditStudent.jsx
+EditTeacher.jsx
+EmailVerification.jsx
+EmailVerified.jsx
+Expenses.jsx
+FeePayments.jsx
+Fees.jsx
+ForgotPassword.jsx
+HostelDashboard.jsx
+Hostels.jsx
+InvitationProfileSetup.jsx
+LibrarianDashboard.jsx
+LinkStudentToParent.jsx
+Login.jsx
+OrganizationOwnerDashboard.jsx
+ParentProfile.jsx
+PlatformEmailCenter.jsx
+PrincipalDashboard.jsx
+Promotions.jsx
+PublicHome.jsx
+PublicRegister.jsx
+ReceptionDashboard.jsx
+ReportCardVerification.jsx
+ReportCards.jsx
+ResetPassword.jsx
+RoleInvitations.jsx
+SubscriptionPayment.jsx
+TeacherProfile.jsx
+Teachers.jsx
+Transport.jsx
+VicePrincipalAdminDashboard.jsx
+Visitors.jsx
+=== PAGES WITH RAW TABLE/MAP UI ===
+AccountantDashboard.jsx
+AddSchool.jsx
+AddStudent.jsx
+AddSubject.jsx
+AiTutor.jsx
+AssessmentActivities.jsx
+AssessmentStructures.jsx
+AssetRegister.jsx
+Assignments.jsx
+Attendance.jsx
+Books.jsx
+CashierDashboard.jsx
+CbtAssessments.jsx
+CbtQuestionBank.jsx
+Classes.jsx
+Clinic.jsx
+Communication.jsx
+CommunityModeration.jsx
+Dashboard.jsx
+DisciplineCases.jsx
+Examinations.jsx
+ExchangeWorkspace.jsx
+Expenses.jsx
+FeatureFlags.jsx
+FeeAdjustments.jsx
+Fees.jsx
+FeesAndPayments.jsx
+FinancialReports.jsx
+FormTeacherDashboard.jsx
+GlobalSearch.jsx
+Graduation.jsx
+HostelDashboard.jsx
+Hostels.jsx
+LeaveApplication.jsx
+LeaveRequests.jsx
+LibrarianDashboard.jsx
+LibraryWorkspace.jsx
+LinkStudentToParent.jsx
+LiveRooms.jsx
+Marketplace.jsx
+MarketplaceAdmin.jsx
+NotificationPreferences.jsx
+Notifications.jsx
+NurseDashboard.jsx
+NurseryHeadDashboard.jsx
+OAuthClients.jsx
+OperationalReports.jsx
+OrganizationOwnerDashboard.jsx
+OrganizationOwnerWorkspace.jsx
+ParentPortal.jsx
+ParentProfile.jsx
+Payroll.jsx
+PlatformEmailCenter.jsx
+PlatformOperations.jsx
+PortalFees.jsx
+PrimaryHeadmasterDashboard.jsx
+PrincipalDashboard.jsx
+ProfileSettings.jsx
+Promotions.jsx
+ProprietorDashboard.jsx
+ReceptionActivities.jsx
+ReceptionDashboard.jsx
+ReportCardVerification.jsx
+ReportCards.jsx
+ResultEntry.jsx
+Results.jsx
+RoleInvitations.jsx
+SafetyIncidents.jsx
+SchoolApiKeys.jsx
+SchoolBranding.jsx
+SchoolEvents.jsx
+SchoolFacilities.jsx
+SchoolInsights.jsx
+SchoolSetup.jsx
+Schools.jsx
+SecondaryPrincipalDashboard.jsx
+Settings.jsx
+StaffAttendance.jsx
+Streams.jsx
+StudentCbt.jsx
+StudentCommunity.jsx
+StudentEnrollments.jsx
+StudentLibrary.jsx
+StudentPortal.jsx
+StudentProfile.jsx
+Subjects.jsx
+Subscriptions.jsx
+SupportCentre.jsx
+TeacherDashboard.jsx
+Teachers.jsx
+Terms.jsx
+Timetable.jsx
+Transport.jsx
+TransportDashboard.jsx
+TransportLogs.jsx
+TransportTracking.jsx
+VicePrincipalAcademicDashboard.jsx
+VicePrincipalAdminDashboard.jsx
+Visitors.jsx
+WorkInbox.jsx
+=== PAGE ROUTE CASES ===
+237:    case "dashboard":
+240:    case "add-school":
+250:    case "organizations":
+253:    case "organization-users":
+256:    case "organization-profile":
+259:    case "organization-reports":
+262:    case "schools":
+265:    case "audit-logs":
+268:    case "students":
+271:    case "admissions":
+272:    case "add-student":
+275:    case "student-enrollments":
+278:    case "student-profile":
+281:    case "edit-student":
+284:    case "staff":
+287:    case "role-invitations":
+290:    case "add-staff":
+293:    case "edit-staff":
+296:    case "parents":
+299:    case "add-parent":
+302:    case "parent-profile":
+305:    case "edit-parent":
+308:    case "link-student-parent":
+311:    case "teachers":
+314:    case "add-teacher":
+317:    case "teacher-profile":
+320:    case "edit-teacher":
+323:    case "subjects":
+326:    case "add-subject":
+329:    case "school-setup":
+332:    case "divisions":
+335:    case "classes":
+338:    case "streams":
+341:    case "academic-sessions":
+344:    case "terms":
+347:    case "attendance":
+350:    case "staff-attendance":
+353:    case "leave-requests":
+356:    case "discipline-cases":
+359:    case "safety-incidents":
+362:    case "asset-register":
+365:    case "school-events":
+368:    case "school-facilities":
+371:    case "results":
+374:    case "examinations":
+377:    case "assignments":
+380:    case "library":
+383:    case "communication":
+386:    case "notices":
+389:    case "messages":
+392:    case "cbt":
+395:    case "cbt-assessments":
+398:    case "transport-tracking":
+401:    case "leave-application":
+404:    case "external-exams":
+407:    case "practicals":
+410:    case "platform-payments":
+413:    case "countries-currency":
+416:    case "email-sms-settings":
+419:    case "backups-logs":
+422:    case "marketplace-review":
+425:    case "system-health":
+428:    case "payroll":
+431:    case "payment-reports":
+434:    case "fee-discounts":
+437:    case "reverse-payment":
+440:    case "financial-reports":
+443:    case "profit-loss":
+446:    case "tax-reports":
+449:    case "result-entry":
+452:    case "assessment-structures":
+455:    case "fees":
+458:    case "fees-payments":
+461:    case "books":
+464:    case "library-members":
+467:    case "library-reports":
+470:    case "hostels":
+473:    case "hostel-reports":
+476:    case "transport-reports":
+479:    case "transport-fuel":
+482:    case "transport-maintenance":
+485:    case "reception-reports":
+488:    case "staff-check-in":
+491:    case "reception-calls":
+494:    case "clinic":
+497:    case "transport":
+500:    case "visitors":
+503:    case "expenses":
+506:    case "timetable":
+509:    case "report-cards":
+512:    case "promotion":
+513:    case "promotions":
+516:    case "graduation":
+519:    case "subscriptions":
+522:    case "settings":
+525:    case "school-api-keys":
+528:    case "oauth-clients":
+531:    case "marketplace":
+534:    case "benchmarking":
+537:    case "support-centre":
+540:    case "work-inbox":
+543:    case "notifications":
+546:    case "global-search":
+549:    case "ai-tutor":
+552:    case "student-community":
+555:    case "community-moderation":
+558:    case "exchange":
+561:    case "live-rooms":
+564:    case "school-insights":
+567:    case "feature-flags":
+570:    case "notification-preferences":
+573:    case "profile":
+576:    case "school-branding":
+604:    <Routes>
+605:      <Route
+610:      <Route
+615:      <Route
+620:      <Route
+625:      <Route
+630:      <Route path="/verify/report-card/:token" element={<ReportCardVerification />} />
+632:      <Route path="/verify-email" element={<EmailVerification />} />
+633:      <Route path="/email-verified" element={<EmailVerified />} />
+634:      <Route path="/forgot-password" element={<ForgotPassword />} />
+635:      <Route path="/forgot-password/reset" element={<ResetPassword />} />
+637:      <Route
+642:      <Route
+647:      <Route
+652:      <Route
+657:      <Route path="*" element={<Navigate to="/" replace />} />

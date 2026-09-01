@@ -18,6 +18,7 @@ class PaymentTransaction extends Model
         'reference',
 
         'gateway_transaction_id',
+        'gateway_event_id',
 
         'amount',
 
@@ -26,14 +27,27 @@ class PaymentTransaction extends Model
         'billing_cycle',
 
         'status',
+        'reconciliation_status',
 
         'gateway_response',
 
         'paid_at',
+        'verified_at',
+        'reviewed_by',
+        'reviewed_at',
+        'reconciliation_notes',
 
         'failure_reason',
 
         'is_refunded',
+        'refund_id',
+        'refund_status',
+        'refund_amount',
+        'refund_response',
+        'refund_reason',
+        'refund_requested_by',
+        'refund_requested_at',
+        'refunded_at',
     ];
 
     protected $casts = [
@@ -43,8 +57,14 @@ class PaymentTransaction extends Model
         'gateway_response' => 'array',
 
         'paid_at' => 'datetime',
+        'verified_at' => 'datetime',
+        'reviewed_at' => 'datetime',
 
         'is_refunded' => 'boolean',
+        'refund_amount' => 'decimal:2',
+        'refund_response' => 'array',
+        'refund_requested_at' => 'datetime',
+        'refunded_at' => 'datetime',
     ];
 
     public function school(): BelongsTo
@@ -57,12 +77,24 @@ class PaymentTransaction extends Model
         return $this->belongsTo(SchoolSubscription::class);
     }
 
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function refundRequester(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'refund_requested_by');
+    }
+
     public function markSuccessful(array $response = []): void
     {
         $this->update([
             'status' => 'successful',
+            'reconciliation_status' => 'reconciled',
             'gateway_response' => $response,
             'paid_at' => now(),
+            'verified_at' => now(),
         ]);
     }
 
@@ -70,6 +102,7 @@ class PaymentTransaction extends Model
     {
         $this->update([
             'status' => 'failed',
+            'reconciliation_status' => 'failed',
             'failure_reason' => $reason,
         ]);
     }

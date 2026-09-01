@@ -1,0 +1,27 @@
+=== DOC METRICS ===
+  991 10105 72441 docs/DOONO-ERP-COMPLETE-DOCUMENTATION.md
+   16   192  1770 docs/README.md
+ 1007 10297 74211 total
+=== REQUIRED SECTIONS ===
+OK System architecture
+OK Tenancy and school isolation
+OK Authentication and account lifecycle
+OK Role and permission model
+OK Complete module catalogue
+OK Core school workflows
+OK API conventions
+OK Deployment architecture
+OK Environment configuration
+OK Backup, retention, and disaster recovery
+OK Testing and quality assurance
+OK Troubleshooting guide
+OK Security checklist
+OK Known limitations and non-claims
+OK Source map
+=== RELATIVE LINKS ===
+OK ./DOONO-ERP-COMPLETE-DOCUMENTATION.md
+OK ../audit/production-readiness-audit-2026-08-25.md
+OK ../audit/school-os-capability-audit.md
+OK ../audit/guide-role-expansion-2026-08-25.md
+=== DOCUMENTATION STATUS ===
+[31m??[m docs/

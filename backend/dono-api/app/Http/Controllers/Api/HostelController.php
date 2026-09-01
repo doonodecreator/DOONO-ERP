@@ -13,7 +13,7 @@ class HostelController extends Controller
 
     public function index(Request $request)
     {
-        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+        $schoolId = $this->context->currentSchool($request->user())?->id;
 
         return response()->json(
             Hostel::when($schoolId, function ($query) use ($schoolId) {
@@ -34,7 +34,7 @@ class HostelController extends Controller
             'capacity' => 'required|integer|min:1',
         ]);
 
-        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+        $schoolId = $this->context->currentSchool($request->user())?->id;
         if ($schoolId) {
             $validated['school_id'] = $schoolId;
         }

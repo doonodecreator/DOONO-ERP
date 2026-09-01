@@ -24,8 +24,12 @@ class EnsureIdempotency
             return response()->json(['message' => 'Idempotency-Key must not exceed 200 characters.'], 422);
         }
 
+        $identity = $request->attributes->get('oauth_client')?->getKey()
+            ?? $request->user()?->getAuthIdentifier()
+            ?? $request->ip();
+
         $fingerprint = hash('sha256', implode('|', [
-            $request->user()?->getAuthIdentifier() ?? $request->ip(),
+            $identity,
             strtoupper($request->method()),
             $request->path(),
             $key,

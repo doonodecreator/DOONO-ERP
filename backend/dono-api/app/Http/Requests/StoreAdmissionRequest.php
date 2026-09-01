@@ -15,16 +15,9 @@ class StoreAdmissionRequest extends FormRequest
 
     public function rules(): array
     {
-        $schoolId = $this->currentSchoolId();
+        $schoolId = app(CurrentContextService::class)->currentSchool($this->user())?->id;
 
         return [
-            'admission_number' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('students', 'admission_number')
-                    ->where('school_id', $schoolId),
-            ],
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -64,7 +57,7 @@ class StoreAdmissionRequest extends FormRequest
                 ),
             ],
             'enrollment_date' => 'required|date',
-            'photo' => 'nullable|string|max:255',
+            'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
             'religion' => 'nullable|string|max:255',
             'nationality' => 'nullable|string|max:255',
             'state_of_origin' => 'nullable|string|max:255',
@@ -76,18 +69,4 @@ class StoreAdmissionRequest extends FormRequest
         ];
     }
 
-    private function currentSchoolId(): ?int
-    {
-        $schoolId = $this->attributes->get('current_school_id');
-
-        if ($schoolId) {
-            return (int) $schoolId;
-        }
-
-        $user = $this->user();
-
-        return $user
-            ? app(CurrentContextService::class)->currentSchool($user)?->id
-            : null;
-    }
 }

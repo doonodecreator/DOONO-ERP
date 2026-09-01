@@ -3,18 +3,27 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessCommunicationDelivery;
 use App\Http\Requests\StoreCommunicationRequest;
 use App\Http\Requests\UpdateCommunicationRequest;
 use App\Models\Communication;
+use App\Models\CommunicationDelivery;
 use App\Models\CommunicationRead;
 use App\Services\ActivityLogService;
 use App\Services\CurrentContextService;
+use App\Services\NotificationService;
+use App\Services\CommunicationDeliveryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class CommunicationController extends Controller
 {
-    public function __construct(private CurrentContextService $context) {}
+    public function __construct(
+        private CurrentContextService $context,
+        private NotificationService $notifications,
+        private CommunicationDeliveryService $externalDeliveries,
+    ) {}
 
     private const MANAGEMENT_ROLES = [
         'proprietor',
@@ -22,6 +31,38 @@ class CommunicationController extends Controller
         'vice_principal_academic',
         'vice_principal_admin',
     ];
+    public function channels(Request $request)
+    {
+        $schoolId = $this->requireSchool($request);
+        $twilio = config('services.twilio', []);
+        $firebase = config('services.firebase', []);
+        $twilioHasSender = trim((string) ($twilio['messaging_service_sid'] ?? '')) !== '' || trim((string) ($twilio['from'] ?? '')) !== '';
+        $twilioReady = trim((string) ($twilio['account_sid'] ?? '')) !== ''
+            && trim((string) ($twilio['auth_token'] ?? '')) !== ''
+            && $twilioHasSender
+            && trim((string) ($twilio['status_callback_url'] ?? '')) !== '';
+        $firebaseCredentials = trim((string) ($firebase['service_account_json'] ?? '')) !== ''
+            || (trim((string) ($firebase['service_account_path'] ?? '')) !== '' && is_file((string) $firebase['service_account_path']));
+        $firebaseReady = trim((string) ($firebase['project_id'] ?? '')) !== '' && $firebaseCredentials;
+
+        return response()->json(['data' => [
+            'school_id' => (int) $schoolId,
+            'channels' => [
+                'in_app' => ['available' => true, 'label' => 'In-app notification'],
+                'sms' => [
+                    'available' => $twilioReady,
+                    'label' => 'SMS via Twilio',
+                    'message' => $twilioReady ? null : 'SMS is unavailable until Twilio credentials, a sender, and a public status-callback URL are configured.',
+                ],
+                'push' => [
+                    'available' => $firebaseReady,
+                    'label' => 'Push via Firebase',
+                    'message' => $firebaseReady ? null : 'Push is unavailable until a Firebase project and server-side service account are configured.',
+                ],
+            ],
+        ]]);
+    }
+
     public function index(Request $request)
     {
         $schoolId = $this->requireSchool($request);
@@ -80,7 +121,10 @@ class CommunicationController extends Controller
             'type' => $data['type'] ?? 'notice',
             'published_at' => ($data['is_published'] ?? true) ? now() : null,
             'is_published' => $data['is_published'] ?? true,
+            'delivery_channel' => $data['delivery_channel'] ?? 'in_app',
         ]);
+
+        $this->deliverIfPublished($communication);
 
         ActivityLogService::log(
             module: 'communication',
@@ -114,11 +158,34 @@ class CommunicationController extends Controller
             );
         }
 
+        $nextAudience = $data['audience'] ?? $communication->audience;
+        if ($nextAudience !== 'individual' && ! array_key_exists('recipient_id', $data)) {
+            $data['recipient_id'] = null;
+        }
+        if ($nextAudience === 'individual' && blank($data['recipient_id'] ?? $communication->recipient_id)) {
+            return response()->json(['message' => 'An individual communication must have a recipient.'], 422);
+        }
+
+        $wasPublished = (bool) $communication->is_published;
+        $deliveryDefinitionChanged = (bool) array_intersect(
+            array_keys($data),
+            ['type', 'audience', 'recipient_id', 'subject', 'body', 'delivery_channel'],
+        );
         $communication->update($data);
         if (array_key_exists('is_published', $data)) {
             $communication->published_at = $data['is_published'] ? ($communication->published_at ?: now()) : null;
             $communication->save();
         }
+
+        $isRepublished = ! $wasPublished && (bool) $communication->is_published;
+        if ($communication->is_published && ($isRepublished || ($wasPublished && $deliveryDefinitionChanged))) {
+            $this->clearPreviousDeliveries($communication);
+        }
+        if (! $communication->is_published && $wasPublished) {
+            $this->clearPreviousDeliveries($communication);
+        }
+
+        $this->deliverIfPublished($communication);
 
         ActivityLogService::log(
             module: 'communication',
@@ -149,6 +216,45 @@ class CommunicationController extends Controller
         return response()->json(['message' => 'Communication deleted successfully.']);
     }
 
+    public function retryDelivery(Request $request, Communication $communication)
+    {
+        $schoolId = $this->ensureCanManage($request, $communication);
+        abort_unless($communication->is_published, 422, 'Only published communications can be retried.');
+        abort_unless(in_array($communication->delivery_channel, ['sms', 'push'], true), 422, 'Only SMS and push deliveries can be retried.');
+
+        $deliveries = CommunicationDelivery::query()
+            ->where('school_id', $schoolId)
+            ->where('communication_id', $communication->id)
+            ->where('status', 'failed')
+            ->get();
+
+        foreach ($deliveries as $delivery) {
+            $delivery->forceFill([
+                'status' => 'pending',
+                'failed_at' => null,
+                'failure_code' => null,
+                'failure_message' => null,
+            ])->save();
+            ProcessCommunicationDelivery::dispatch($delivery->id)->onQueue('communications');
+        }
+
+        ActivityLogService::log(
+            module: 'communication',
+            action: 'delivery_retry_queued',
+            description: 'Failed external communication deliveries were queued for retry.',
+            subject: $communication,
+            schoolId: $schoolId,
+            properties: ['delivery_count' => $deliveries->count(), 'channel' => $communication->delivery_channel],
+        );
+
+        ProcessCommunicationDelivery::refreshCommunicationStatus((int) $communication->id);
+
+        return response()->json([
+            'message' => $deliveries->count() > 0 ? 'Failed deliveries queued for retry.' : 'There are no failed deliveries to retry.',
+            'data' => ['queued_count' => $deliveries->count()],
+        ]);
+    }
+
     public function markRead(Request $request, Communication $communication)
     {
         $this->ensureSchool($request, $communication);
@@ -165,6 +271,71 @@ class CommunicationController extends Controller
         );
 
         return response()->json(['data' => $communication->fresh()]);
+    }
+
+    private function clearPreviousDeliveries(Communication $communication): void
+    {
+        DB::table('app_notifications')
+            ->where('source_type', Communication::class)
+            ->where('source_id', $communication->id)
+            ->delete();
+        DB::table('communication_reads')
+            ->where('communication_id', $communication->id)
+            ->delete();
+        CommunicationDelivery::query()
+            ->where('communication_id', $communication->id)
+            ->delete();
+    }
+
+    private function deliverIfPublished(Communication $communication): void
+    {
+        if (! $communication->is_published) {
+            $communication->forceFill([
+                'delivery_status' => 'not_sent',
+                'delivery_recipient_count' => 0,
+                'delivery_attempted_at' => null,
+                'delivered_at' => null,
+                'delivery_error' => null,
+            ])->save();
+            return;
+        }
+
+        $channel = in_array($communication->delivery_channel, ['sms', 'push'], true)
+            ? $communication->delivery_channel
+            : 'in_app';
+
+        $communication->forceFill([
+            'delivery_channel' => $channel,
+            'delivery_status' => 'sending',
+            'delivery_attempted_at' => now(),
+            'delivery_error' => null,
+            'delivered_at' => null,
+        ])->save();
+
+        try {
+            if ($channel === 'in_app') {
+                $count = $this->notifications->notifyCommunication($communication->loadMissing('school'));
+                $communication->forceFill([
+                    'delivery_status' => $count > 0 ? 'delivered' : 'no_recipients',
+                    'delivery_recipient_count' => $count,
+                    'delivered_at' => now(),
+                ])->save();
+                return;
+            }
+
+            $count = $this->externalDeliveries->queueForCommunication($communication->loadMissing('school'), $channel);
+            $communication->forceFill([
+                'delivery_status' => $count > 0 ? 'queued' : 'no_recipients',
+                'delivery_recipient_count' => $count,
+            ])->save();
+        } catch (Throwable $exception) {
+            report($exception);
+            $communication->forceFill([
+                'delivery_status' => 'failed',
+                'delivery_recipient_count' => 0,
+                'delivery_error' => substr($exception->getMessage(), 0, 2000),
+            ])->save();
+        }
     }
 
     private function ensureCanManage(Request $request, Communication $communication): int

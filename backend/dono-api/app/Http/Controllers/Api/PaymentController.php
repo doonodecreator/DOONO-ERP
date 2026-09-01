@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\FeePaymentTransaction;
+use App\Models\PaymentTransaction;
 use App\Models\School;
 use App\Models\SchoolSubscription;
 use App\Models\StudentFee;
 use App\Models\SubscriptionPlan;
 use App\Models\SystemSetting;
+use App\Services\ActivityLogService;
 use App\Services\CurrentContextService;
 use App\Services\Finance\PaymentService;
 use Illuminate\Http\Request;
@@ -198,6 +200,7 @@ class PaymentController extends Controller
 
             DB::table('payment_transactions')->where('id', $pending->id)->update([
                 'status' => 'failed',
+                'reconciliation_status' => 'failed',
                 'failure_reason' => 'Previous checkout did not receive a valid Paystack authorization URL.',
                 'updated_at' => now(),
             ]);
@@ -270,6 +273,7 @@ class PaymentController extends Controller
             'currency' => $currency,
             'billing_cycle' => $data['billing_cycle'],
             'status' => 'pending',
+            'reconciliation_status' => 'pending',
             'gateway_response' => json_encode([
                 'authorization_url' => $authorizationUrl,
                 'subscription_plan_id' => $plan->id,
@@ -324,8 +328,28 @@ class PaymentController extends Controller
             return response()->json(['success' => false], 401);
         }
 
-        $event = $request->input('event');
+        $event = (string) $request->input('event');
         $data = $request->input('data', []);
+        $eventId = (string) ($data['id'] ?? ($data['reference'] ?? hash('sha256', $request->getContent())));
+        $eventReference = is_array($data['transaction'] ?? null)
+            ? ($data['transaction']['reference'] ?? null)
+            : ($data['transaction'] ?? ($data['reference'] ?? null));
+
+        if (DB::table('payment_transactions')->where('gateway_event_id', $eventId)->exists()
+            || DB::table('payment_gateway_events')->where('gateway', 'paystack')->where('event_id', $eventId)->exists()) {
+            return response()->json(['status' => 'success', 'duplicate' => true]);
+        }
+
+        DB::table('payment_gateway_events')->insertOrIgnore([
+            'gateway' => 'paystack',
+            'event_id' => $eventId,
+            'event_type' => $event,
+            'transaction_reference' => $eventReference,
+            'payload' => json_encode($data),
+            'processed_at' => null,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         if ($event === 'charge.success') {
             $reference = $data['reference'] ?? null;
@@ -335,7 +359,7 @@ class PaymentController extends Controller
                 $transaction = DB::table('payment_transactions')->where('reference', $reference)->first();
                 $subscription = $transaction ? SchoolSubscription::find($transaction->school_subscription_id) : SchoolSubscription::where('payment_reference', $reference)->first();
                 if ($subscription && $transaction && $transaction->status !== 'successful' && (int) round((float) $transaction->amount * 100) === (int) ($data['amount'] ?? 0)) {
-                    $this->activatePaidSubscription($subscription, $amountPaid, $reference, $data);
+                    $this->activatePaidSubscription($subscription, $amountPaid, $reference, $data, $eventId);
                 }
 
                 $feeTransaction = FeePaymentTransaction::where('reference', $reference)->first();
@@ -343,7 +367,34 @@ class PaymentController extends Controller
                     $this->settleFeePaymentTransaction($feeTransaction, $data);
                 }
             }
+        } elseif (Str::startsWith($event, 'refund.')) {
+            $transaction = $eventReference ? PaymentTransaction::where('reference', $eventReference)->first() : null;
+            if ($transaction) {
+                $refundStatus = strtolower((string) ($data['status'] ?? Str::after($event, 'refund.')));
+                $processed = in_array($refundStatus, ['success', 'successful', 'processed', 'complete', 'completed'], true);
+                $failed = in_array($refundStatus, ['failed', 'reversed', 'cancelled'], true);
+                $transaction->update([
+                    'refund_id' => isset($data['id']) ? (string) $data['id'] : $transaction->refund_id,
+                    'refund_status' => $processed ? 'processed' : ($failed ? 'failed' : $refundStatus),
+                    'refund_response' => $data,
+                    'refunded_at' => $processed ? now() : $transaction->refunded_at,
+                    'is_refunded' => $processed ? true : $transaction->is_refunded,
+                    'status' => $processed ? 'refunded' : $transaction->status,
+                ]);
+                ActivityLogService::log('payments', $processed ? 'refund_processed' : 'refund_status_updated', "Paystack reported refund event {$event} for {$transaction->reference}.", $transaction, ['event' => $event, 'status' => $refundStatus], $transaction->school_id);
+            }
+        } elseif (Str::startsWith($event, 'dispute.')) {
+            $transaction = $eventReference ? PaymentTransaction::where('reference', $eventReference)->first() : null;
+            if ($transaction) {
+                $transaction->update([
+                    'reconciliation_status' => 'needs_review',
+                    'reconciliation_notes' => 'Paystack dispute event received: ' . $event,
+                ]);
+                ActivityLogService::log('payments', 'chargeback_dispute_received', "Paystack reported {$event} for {$transaction->reference}.", $transaction, ['event' => $event, 'payload' => $data], $transaction->school_id);
+            }
         }
+
+        DB::table('payment_gateway_events')->where('gateway', 'paystack')->where('event_id', $eventId)->update(['processed_at' => now(), 'updated_at' => now()]);
 
         return response()->json(['status' => 'success']);
     }
@@ -357,7 +408,7 @@ class PaymentController extends Controller
             $amountPaid = ((float) ($gatewayData['amount'] ?? 0)) / 100;
             abort_unless((int) round($amountPaid * 100) === (int) round((float) $locked->amount * 100), 422, 'Verified fee payment amount does not match the pending transaction.');
 
-            $this->paymentService->recordPayment([
+            $payment = $this->paymentService->recordPayment([
                 'student_fee_id' => $locked->student_fee_id,
                 'staff_id' => null,
                 'amount_paid' => $amountPaid,
@@ -373,12 +424,20 @@ class PaymentController extends Controller
                 'paid_at' => now(),
                 'gateway_response' => $gatewayData,
             ]);
+            ActivityLogService::log(
+                module: 'fee_payments',
+                action: 'online_verified',
+                description: 'An online fee payment was verified and settled into the student ledger.',
+                subject: $payment,
+                schoolId: (int) $locked->school_id,
+                properties: ['student_fee_id' => $locked->student_fee_id, 'amount_paid' => $payment->amount_paid, 'transaction_reference' => $locked->reference],
+            );
         });
     }
 
-    private function activatePaidSubscription(SchoolSubscription $subscription, float $amountPaid, string $reference, array $gatewayData = []): void
+    private function activatePaidSubscription(SchoolSubscription $subscription, float $amountPaid, string $reference, array $gatewayData = [], ?string $eventId = null): void
     {
-        DB::transaction(function () use ($subscription, $amountPaid, $reference, $gatewayData) {
+        DB::transaction(function () use ($subscription, $amountPaid, $reference, $gatewayData, $eventId) {
             $transaction = DB::table('payment_transactions')->where('reference', $reference)->lockForUpdate()->first();
             if ($transaction?->status === 'successful') return;
 
@@ -424,7 +483,10 @@ class PaymentController extends Controller
             if ($transaction) {
                 DB::table('payment_transactions')->where('reference', $reference)->update([
                     'status' => 'successful',
+                    'reconciliation_status' => 'reconciled',
                     'paid_at' => now(),
+                    'verified_at' => now(),
+                    'gateway_event_id' => $eventId,
                     'gateway_transaction_id' => $gatewayData['id'] ?? null,
                     'gateway_response' => json_encode($gatewayData ?: $stored),
                     'updated_at' => now(),

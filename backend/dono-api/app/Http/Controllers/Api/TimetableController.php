@@ -12,6 +12,7 @@ use App\Models\Staff;
 use App\Models\Student;
 use App\Models\Stream;
 use App\Models\Timetable;
+use App\Services\ActivityLogService;
 use App\Services\CurrentContextService;
 use App\Services\TimetableService;
 use Illuminate\Http\Request;
@@ -30,6 +31,7 @@ class TimetableController extends Controller
             ->with(['school', 'academicSession', 'term', 'division', 'class', 'stream', 'subject', 'staff'])
             ->where('school_id', $schoolId);
 
+        $this->applyPublicationScope($query, $request, $schoolId);
         $this->applyViewerScope($query, $request, $schoolId);
         $this->applyFilters($query, $request, $schoolId);
 
@@ -66,6 +68,19 @@ class TimetableController extends Controller
 
         try {
             $timetable = $this->timetableService->createSchedule($data);
+            $timetable->forceFill([
+                'workflow_status' => 'draft',
+                'is_active' => false,
+            ])->save();
+
+            ActivityLogService::log(
+                module: 'timetable',
+                action: 'created',
+                description: 'A timetable entry was created as a draft.',
+                subject: $timetable,
+                schoolId: $schoolId,
+                properties: ['entry_type' => $timetable->entry_type, 'target_type' => $timetable->target_type],
+            );
 
             return (new TimetableResource($timetable->load([
                 'school', 'academicSession', 'term', 'division', 'class', 'stream', 'subject', 'staff',
@@ -84,7 +99,7 @@ class TimetableController extends Controller
         $merged['school_id'] = $schoolId;
         $this->validateRelationships($merged, $schoolId);
 
-        if (($merged['entry_type'] ?? 'lesson') === 'lesson') {
+        if (($merged['entry_type'] ?? 'lesson') === 'lesson' && !empty($merged['day_of_week']) && !empty($merged['start_time']) && !empty($merged['end_time'])) {
             $collision = $this->timetableService->detectCollisions(
                 $schoolId,
                 (int) $merged['academic_session_id'],
@@ -95,6 +110,7 @@ class TimetableController extends Controller
                 ! empty($merged['staff_id']) ? (int) $merged['staff_id'] : null,
                 (int) $merged['class_id'],
                 $timetable->id,
+                $merged['room'] ?? null,
             );
             if ($collision['has_collision']) {
                 return response()->json(['success' => false, 'message' => implode(' ', $collision['errors'])], 422);
@@ -103,6 +119,25 @@ class TimetableController extends Controller
 
         unset($data['school_id']);
         $timetable->update($data);
+        $timetable->forceFill([
+            'workflow_status' => 'draft',
+            'is_active' => false,
+            'submitted_at' => null,
+            'approved_at' => null,
+            'published_at' => null,
+            'submitted_by' => null,
+            'approved_by' => null,
+            'published_by' => null,
+        ])->save();
+
+        ActivityLogService::log(
+            module: 'timetable',
+            action: 'updated',
+            description: 'A timetable entry was edited and returned to draft for review.',
+            subject: $timetable,
+            schoolId: $schoolId,
+            properties: ['changed_fields' => array_keys($data)],
+        );
 
         return new TimetableResource($timetable->fresh()->load([
             'school', 'academicSession', 'term', 'division', 'class', 'stream', 'subject', 'staff',
@@ -114,8 +149,103 @@ class TimetableController extends Controller
         $schoolId = $this->requireSchool($request);
         abort_unless((int) $timetable->school_id === $schoolId, 404);
         $timetable->delete();
+        ActivityLogService::log(
+            module: 'timetable',
+            action: 'deleted',
+            description: 'A timetable entry was deleted.',
+            schoolId: $schoolId,
+            properties: ['timetable_id' => $timetable->id],
+        );
 
         return response()->json(['message' => 'Timetable entry deleted successfully.']);
+    }
+
+    public function submit(Request $request, Timetable $timetable)
+    {
+        $schoolId = $this->requireSchool($request);
+        abort_unless((int) $timetable->school_id === $schoolId, 404);
+        abort_unless($request->user()->hasPermission('manage_timetable', $schoolId), 403);
+        abort_unless($timetable->workflow_status === 'draft', 422, 'Only draft timetable entries can be submitted for approval.');
+
+        $timetable->forceFill([
+            'workflow_status' => 'submitted',
+            'is_active' => false,
+            'submitted_at' => now(),
+            'submitted_by' => $request->user()->id,
+            'approved_at' => null,
+            'approved_by' => null,
+            'published_at' => null,
+            'published_by' => null,
+        ])->save();
+        ActivityLogService::log(
+            module: 'timetable',
+            action: 'submitted',
+            description: 'A timetable entry was submitted for approval.',
+            subject: $timetable,
+            schoolId: $schoolId,
+        );
+
+        return new TimetableResource($timetable->fresh()->load(['school', 'academicSession', 'term', 'division', 'class', 'stream', 'subject', 'staff']));
+    }
+
+    public function approve(Request $request, Timetable $timetable)
+    {
+        $schoolId = $this->requireSchool($request);
+        abort_unless((int) $timetable->school_id === $schoolId, 404);
+        abort_unless($request->user()->hasPermission('approve_timetable', $schoolId), 403);
+        abort_unless($timetable->workflow_status === 'submitted', 422, 'Submit the draft timetable entry before approval.');
+
+        $timetable->forceFill([
+            'workflow_status' => 'approved',
+            'is_active' => false,
+            'approved_at' => now(),
+            'approved_by' => $request->user()->id,
+        ])->save();
+        ActivityLogService::log(
+            module: 'timetable',
+            action: 'approved',
+            description: 'A submitted timetable entry was approved.',
+            subject: $timetable,
+            schoolId: $schoolId,
+        );
+
+        return new TimetableResource($timetable->fresh()->load(['school', 'academicSession', 'term', 'division', 'class', 'stream', 'subject', 'staff']));
+    }
+
+    public function publish(Request $request, Timetable $timetable)
+    {
+        $schoolId = $this->requireSchool($request);
+        abort_unless((int) $timetable->school_id === $schoolId, 404);
+        abort_unless($request->user()->hasPermission('approve_timetable', $schoolId), 403);
+        abort_unless($timetable->workflow_status === 'approved', 422, 'Approve the timetable entry before publishing it.');
+
+        $timetable->forceFill([
+            'workflow_status' => 'published',
+            'is_active' => true,
+            'published_at' => now(),
+            'published_by' => $request->user()->id,
+        ])->save();
+        ActivityLogService::log(
+            module: 'timetable',
+            action: 'published',
+            description: 'An approved timetable entry was published to its authorized audience.',
+            subject: $timetable,
+            schoolId: $schoolId,
+        );
+
+        return new TimetableResource($timetable->fresh()->load(['school', 'academicSession', 'term', 'division', 'class', 'stream', 'subject', 'staff']));
+    }
+
+    private function applyPublicationScope($query, Request $request, int $schoolId): void
+    {
+        $user = $request->user();
+        if ($user->isSuperAdmin() || $user->hasPermission('manage_timetable', $schoolId) || $user->hasPermission('approve_timetable', $schoolId)) {
+            return;
+        }
+
+        $query->where('is_active', true)->where(function ($statusQuery) {
+            $statusQuery->where('workflow_status', 'published')->orWhereNull('workflow_status');
+        });
     }
 
     private function applyFilters($query, Request $request, int $schoolId): void
@@ -189,6 +319,11 @@ class TimetableController extends Controller
             ->where('user_id', $user->id)
             ->first();
         if ($student) {
+            if ($student->status !== 'Active') {
+                $query->whereRaw('1 = 0');
+                return;
+            }
+
             $query->where(function ($studentQuery) use ($student) {
                 $studentQuery->where('target_type', 'school')
                     ->orWhere(function ($divisionQuery) use ($student) {

@@ -1,0 +1,31 @@
+=== DOC FILES ===
+-rw-r--r-- 1 ubuntu ubuntu  71K Aug 25 18:39 docs/DOONO-ERP-COMPLETE-DOCUMENTATION.md
+-rw-r--r-- 1 ubuntu ubuntu 1.8K Aug 25 18:40 docs/README.md
+=== DOC METRICS ===
+  991 10105 72441 docs/DOONO-ERP-COMPLETE-DOCUMENTATION.md
+   16   192  1770 docs/README.md
+ 1007 10297 74211 total
+=== REQUIRED SECTIONS ===
+MISSING System architecture
+MISSING Tenancy and school isolation
+MISSING Authentication and account lifecycle
+MISSING Role and permission model
+MISSING Complete module catalogue
+MISSING Core school workflows
+MISSING API conventions
+MISSING Deployment architecture
+MISSING Environment configuration
+MISSING Backup, retention, and disaster recovery
+MISSING Testing and quality assurance
+MISSING Troubleshooting guide
+MISSING Security checklist
+MISSING Known limitations and non-claims
+MISSING Source map
+=== RELATIVE LINKS ===
+OK ./DOONO-ERP-COMPLETE-DOCUMENTATION.md
+OK ../audit/production-readiness-audit-2026-08-25.md
+OK ../audit/school-os-capability-audit.md
+OK ../audit/guide-role-expansion-2026-08-25.md
+=== SOURCE DIFF ===
+[31m??[m audit/guide-role-expansion-2026-08-25.md
+[31m??[m docs/

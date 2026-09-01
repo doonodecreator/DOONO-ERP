@@ -1,0 +1,246 @@
+
+=== tests/Feature/ExampleTest.php ===
+<?php
+
+namespace Tests\Feature;
+
+// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    /**
+     * A basic test example.
+     */
+    public function test_the_application_returns_a_successful_response(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertStatus(200);
+    }
+}
+
+=== tests/Unit/AcademicComputationTest.php ===
+<?php
+
+namespace Tests\Unit;
+
+use App\Services\Academic\AssessmentComputationService;
+use App\Services\Academic\RankingService;
+use Illuminate\Validation\ValidationException;
+use Tests\TestCase;
+
+class AcademicComputationTest extends TestCase
+{
+    public function test_weighted_component_is_normalized_to_configured_percentage(): void
+    {
+        $service = new AssessmentComputationService();
+
+        $this->assertSame(25.0, $service->calculateWeightedScore(20, 40, 50));
+    }
+
+    public function test_component_above_maximum_marks_is_rejected(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        (new AssessmentComputationService())->calculateWeightedScore(41, 40, 50);
+    }
+
+    public function test_ranking_uses_standard_competition_ties(): void
+    {
+        $ranked = (new RankingService())->rankStudents([
+            ['id' => 1, 'average' => 95],
+            ['id' => 2, 'average' => 90],
+            ['id' => 3, 'average' => 90],
+            ['id' => 4, 'average' => 85],
+        ]);
+
+        $positions = collect($ranked)->pluck('position', 'id')->all();
+
+        $this->assertSame([1 => 1, 2 => 2, 3 => 2, 4 => 4], $positions);
+    }
+}
+
+=== tests/Unit/EmailVerificationTest.php ===
+<?php
+
+namespace Tests\Unit;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
+use Tests\TestCase;
+
+class EmailVerificationTest extends TestCase
+{
+    public function test_relative_verification_signature_is_valid_across_hosts(): void
+    {
+        $url = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addHour(),
+            ['id' => 10, 'hash' => sha1('person@example.com')],
+            false,
+        );
+
+        $request = Request::create('https://phone-tunnel.example' . $url, 'GET');
+
+        $this->assertTrue($request->hasValidSignature(false));
+    }
+}
+
+=== tests/Unit/ExampleTest.php ===
+<?php
+
+namespace Tests\Unit;
+
+use PHPUnit\Framework\TestCase;
+
+class ExampleTest extends TestCase
+{
+    /**
+     * A basic test example.
+     */
+    public function test_that_true_is_true(): void
+    {
+        $this->assertTrue(true);
+    }
+}
+
+=== tests/Unit/SchoolSubscriptionTest.php ===
+<?php
+
+namespace Tests\Unit;
+
+use App\Models\SchoolSubscription;
+use Carbon\Carbon;
+use Tests\TestCase;
+
+class SchoolSubscriptionTest extends TestCase
+{
+    public function test_active_subscription_expires_after_the_end_of_the_expiry_day(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-22 12:00:00'));
+
+        $subscription = new SchoolSubscription([
+            'status' => 'active',
+            'expiry_date' => '2026-08-21',
+        ]);
+
+        $this->assertTrue($subscription->isExpired());
+        $this->assertFalse($subscription->isActive());
+    }
+
+    public function test_active_subscription_remains_valid_through_the_expiry_day(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-22 23:59:59'));
+
+        $subscription = new SchoolSubscription([
+            'status' => 'active',
+            'expiry_date' => '2026-08-22',
+        ]);
+
+        $this->assertFalse($subscription->isExpired());
+        $this->assertTrue($subscription->isActive());
+    }
+
+    public function test_trial_is_active_until_the_end_of_its_trial_day(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-22 18:30:00'));
+
+        $subscription = new SchoolSubscription([
+            'status' => 'trial',
+            'trial_ends_at' => '2026-08-22',
+            'expiry_date' => '2026-08-22',
+        ]);
+
+        $this->assertTrue($subscription->isTrial());
+        $this->assertTrue($subscription->isActive());
+    }
+}
+
+=== tests/Unit/StudentAdmissionNumberServiceTest.php ===
+<?php
+
+namespace Tests\Unit;
+
+use App\Services\StudentAdmissionNumberService;
+use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
+
+class StudentAdmissionNumberServiceTest extends TestCase
+{
+    public function test_prefixes_are_normalized_for_human_readable_numbers(): void
+    {
+        $service = new StudentAdmissionNumberService();
+        $method = new ReflectionMethod($service, 'prefixForValue');
+        $method->setAccessible(true);
+
+        $this->assertSame('DOONO-CAMPUS-1', $method->invoke($service, ' Doono Campus 1 ', 9));
+        $this->assertSame('ABCSCHOOL', $method->invoke($service, 'abc_school', 9));
+    }
+
+    public function test_empty_prefixes_use_the_school_id_fallback(): void
+    {
+        $service = new StudentAdmissionNumberService();
+        $method = new ReflectionMethod($service, 'prefixForValue');
+        $method->setAccessible(true);
+
+        $this->assertSame('SCH-42', $method->invoke($service, '---', 42));
+    }
+}
+
+=== tests/Unit/SubscriptionAccessServiceTest.php ===
+<?php
+
+namespace Tests\Unit;
+
+use App\Models\SchoolSubscription;
+use App\Models\SubscriptionPlan;
+use App\Services\SubscriptionAccessService;
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Tests\TestCase;
+
+class SubscriptionAccessServiceTest extends TestCase
+{
+    public function test_free_core_feature_is_available_without_a_subscription(): void
+    {
+        $service = new SubscriptionAccessService();
+
+        $this->assertTrue($service->allows(null, 'students', true));
+    }
+
+    public function test_paid_feature_is_available_when_the_plan_contains_it(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-22 12:00:00'));
+
+        $plan = new SubscriptionPlan(['features' => ['fees']]);
+        $plan->setRelation('featureModels', new Collection());
+
+        $subscription = new SchoolSubscription([
+            'status' => 'active',
+            'expiry_date' => '2026-08-31',
+        ]);
+        $subscription->setRelation('subscriptionPlan', $plan);
+
+        $service = new SubscriptionAccessService();
+
+        $this->assertTrue($service->allows($subscription, 'fees', true));
+        $this->assertFalse($service->allows($subscription, 'accounting', true));
+    }
+
+    public function test_expired_subscription_cannot_unlock_paid_features(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-08-22 12:00:00'));
+
+        $plan = new SubscriptionPlan(['features' => ['fees']]);
+        $plan->setRelation('featureModels', new Collection());
+
+        $subscription = new SchoolSubscription([
+            'status' => 'active',
+            'expiry_date' => '2026-08-21',
+        ]);
+        $subscription->setRelation('subscriptionPlan', $plan);
+
+        $this->assertFalse((new SubscriptionAccessService())->allows($subscription, 'fees', true));
+    }
+}

@@ -29,6 +29,13 @@ class Timetable extends Model
         'effective_until',
         'room',
         'is_active',
+        'workflow_status',
+        'submitted_at',
+        'approved_at',
+        'published_at',
+        'submitted_by',
+        'approved_by',
+        'published_by',
     ];
 
     protected $casts = [
@@ -36,6 +43,12 @@ class Timetable extends Model
         'event_date' => 'date',
         'effective_from' => 'date',
         'effective_until' => 'date',
+        'submitted_at' => 'datetime',
+        'approved_at' => 'datetime',
+        'published_at' => 'datetime',
+        'submitted_by' => 'integer',
+        'approved_by' => 'integer',
+        'published_by' => 'integer',
     ];
 
     public function school(): BelongsTo
@@ -76,5 +89,20 @@ class Timetable extends Model
     public function staff(): BelongsTo
     {
         return $this->belongsTo(Staff::class);
+    }
+
+    public function submittedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'submitted_by');
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function publishedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'published_by');
     }
 }

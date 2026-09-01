@@ -12,6 +12,7 @@ class PermissionSeeder extends Seeder
         $permissions = [
             // Dashboard
             ['name' => 'View Dashboard', 'slug' => 'view_dashboard'],
+            ['name' => 'View School Insights', 'slug' => 'view_insights'],
 
             // Organization
             ['name' => 'Manage Organizations', 'slug' => 'manage_organizations'],
@@ -30,6 +31,7 @@ class PermissionSeeder extends Seeder
             // Students
             ['name' => 'Manage Students', 'slug' => 'manage_students'],
             ['name' => 'View Students', 'slug' => 'view_students'],
+            ['name' => 'Issue Student ID Cards', 'slug' => 'issue_student_id_cards'],
 
             // Staff
             ['name' => 'Manage Staff', 'slug' => 'manage_staff'],
@@ -59,6 +61,10 @@ class PermissionSeeder extends Seeder
 
             // Platform / system
             ['name' => 'Manage System Settings', 'slug' => 'manage_system_settings'],
+            ['name' => 'Manage School API Keys', 'slug' => 'manage_api_keys'],
+            ['name' => 'Manage OAuth Clients', 'slug' => 'manage_oauth_clients'],
+            ['name' => 'Manage Marketplace', 'slug' => 'manage_marketplace'],
+            ['name' => 'Manage Benchmarking Consent', 'slug' => 'manage_benchmarking'],
             ['name' => 'Manage Subscriptions', 'slug' => 'manage_subscriptions'],
             ['name' => 'View Audit Logs', 'slug' => 'view_audit_logs'],
 
@@ -91,6 +97,8 @@ class PermissionSeeder extends Seeder
             ['name' => 'Manage Hostel', 'slug' => 'manage_hostel'],
             ['name' => 'Manage Transport', 'slug' => 'manage_transport'],
             ['name' => 'Manage Clinic', 'slug' => 'manage_clinic'],
+            ['name' => 'View Health Records', 'slug' => 'view_health_records'],
+            ['name' => 'View Sensitive Health Records', 'slug' => 'view_sensitive_health'],
             ['name' => 'Manage Inventory', 'slug' => 'manage_inventory'],
             ['name' => 'Manage Discipline', 'slug' => 'manage_discipline'],
             ['name' => 'Manage Front Desk', 'slug' => 'manage_front_desk'],

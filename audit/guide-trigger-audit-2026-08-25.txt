@@ -1,0 +1,550 @@
+=== GUIDE REFERENCES ===
+frontend/src/components/feedback/DONOGuide.jsx:7:import "./DONOGuide.css";
+frontend/src/components/feedback/DONOGuide.jsx:20:export default function DONOGuide({ page = "dashboard", setPage }) {
+frontend/src/components/feedback/DONOGuide.jsx:34:  const storageKey = `doono-guide:${user?.id || "guest"}:${role}:${school?.id || "organization"}`;
+frontend/src/components/feedback/DONOGuide.jsx:82:  function openGuide(nextView = "page") {
+frontend/src/components/feedback/DONOGuide.jsx:127:        <button type="button" className="dono-guide-trigger" onClick={() => openGuide("page")} aria-label="Open DOONO Guide">
+frontend/src/components/feedback/DONOGuide.jsx:133:        <button type="button" className="dono-guide-tour-trigger" onClick={() => openGuide("role")} aria-label="Start my role tour">
+frontend/src/components/feedback/DONOGuide.jsx:195:              {currentStep?.action && <button type="button" className="dono-guide-inline-action" onClick={() => openAction(currentStep.action)}>Open this workspace</button>}
+frontend/src/layouts/DashboardLayout.jsx:4:import DONOGuide from "../components/feedback/DONOGuide";
+frontend/src/layouts/DashboardLayout.jsx:86:            <DONOGuide page={page} setPage={setPage} />
+frontend/src/config/guideKnowledge.js:527:  "support-centre": { purpose: "A tracked place to learn DOONO, report a problem, and follow the answer until it is resolved.", steps: ["Search the help cards using simple words such as login, fees, results, timetable, or invitation.", "Read the role and module explanation before changing a record; it tells you what must already exist and what should happen next.", "If the guide does not solve the problem, select Ask for support.", "Write the exact screen, steps taken, expected result, actual result, error message, school, and approximate time; never include a password or full payment-card details.", "Keep the ticket reference so the same issue is not submitted repeatedly, and reply to questions inside the ticket."], next: "Check My support requests until the status is resolved or closed. For urgent safety or payment matters, contact the responsible institution immediately as well as opening a ticket." },
+frontend/src/config/schoolOsCapabilities.js:38:  results: { label: "Results Management", guideKey: "results", audience: "school-academic", purpose: "Review, approve, reopen, and publish official results." },
+frontend/src/config/schoolOsCapabilities.js:66:  "support-centre": { label: "Support Centre", guideKey: "support-centre", audience: "all", purpose: "Learn the system and open a support request with useful evidence." },
+=== EFFECTS/CLICK TRIGGERS ===
+frontend/src/components/feedback/DONOGuide.jsx:1:import { useEffect, useMemo, useRef, useState } from "react";
+frontend/src/components/feedback/DONOGuide.jsx:36:  useEffect(() => {
+frontend/src/components/feedback/DONOGuide.jsx:41:  useEffect(() => {
+frontend/src/components/feedback/DONOGuide.jsx:45:    const onKeyDown = (event) => {
+frontend/src/components/feedback/DONOGuide.jsx:48:    window.addEventListener("keydown", onKeyDown);
+frontend/src/components/feedback/DONOGuide.jsx:49:    return () => window.removeEventListener("keydown", onKeyDown);
+frontend/src/components/feedback/DONOGuide.jsx:52:  useEffect(() => {
+frontend/src/components/feedback/DONOGuide.jsx:127:        <button type="button" className="dono-guide-trigger" onClick={() => openGuide("page")} aria-label="Open DOONO Guide">
+frontend/src/components/feedback/DONOGuide.jsx:130:        {typeof setPage === "function" && <button type="button" className="dono-guide-support-trigger" onClick={() => setPage("support-centre")} aria-label="Open Support Centre">
+frontend/src/components/feedback/DONOGuide.jsx:133:        <button type="button" className="dono-guide-tour-trigger" onClick={() => openGuide("role")} aria-label="Start my role tour">
+frontend/src/components/feedback/DONOGuide.jsx:140:          <button type="button" className="dono-guide-backdrop" onClick={() => setOpen(false)} aria-label="Close guide" />
+frontend/src/components/feedback/DONOGuide.jsx:147:              <button ref={closeButtonRef} type="button" className="dono-guide-close" onClick={() => setOpen(false)} aria-label="Close guide">×</button>
+frontend/src/components/feedback/DONOGuide.jsx:151:              <button type="button" role="tab" aria-selected={view === "page"} className={view === "page" ? "is-active" : ""} onClick={() => { setView("page"); setStepIndex(0); }}>This page</button>
+frontend/src/components/feedback/DONOGuide.jsx:152:              <button type="button" role="tab" aria-selected={view === "role"} className={view === "role" ? "is-active" : ""} onClick={() => { setView("role"); setRoleStepIndex(0); }}>My role</button>
+frontend/src/components/feedback/DONOGuide.jsx:158:                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search modules" aria-label="Search modules" />
+frontend/src/components/feedback/DONOGuide.jsx:159:                <select value={selectedModule} onChange={chooseModule} aria-label="Choose a module">
+frontend/src/components/feedback/DONOGuide.jsx:189:            {selectedControl && <section className="dono-guide-control-card" aria-live="polite"><div className="dono-guide-control-heading"><div><span className="dono-guide-kicker">You selected a control</span><h3>{selectedControl.title}</h3></div><button type="button" className="dono-guide-control-close" onClick={() => setSelectedControl(null)} aria-label="Close control explanation">×</button></div><div className="dono-guide-control-grid"><div><strong>What it means</strong><p>{selectedControl.what}</p></div><div><strong>How to use it</strong><p>{selectedControl.how}</p></div><div><strong>Why it helps you</strong><p>{selectedControl.benefit}</p></div><div><strong>What happens next</strong><p>{selectedControl.after}</p></div><div><strong>Who can use it</strong><p>{selectedControl.access}</p></div></div></section>}
+frontend/src/components/feedback/DONOGuide.jsx:195:              {currentStep?.action && <button type="button" className="dono-guide-inline-action" onClick={() => openAction(currentStep.action)}>Open this workspace</button>}
+frontend/src/components/feedback/DONOGuide.jsx:206:              <button type="button" className="dono-guide-skip" onClick={() => view === "role" ? finishTour() : setOpen(false)}>{view === "role" ? "Finish later" : "Close guide"}</button>
+frontend/src/components/feedback/DONOGuide.jsx:207:              <button type="button" className="dono-guide-next" onClick={nextStep}>{activeIndex + 1 === activeSteps.length ? (view === "role" ? "Complete tour" : "Done") : "Next step"}</button>
+frontend/src/components/CreateSchoolModal.jsx:55:                        onClick={onClose}
+frontend/src/components/CreateSchoolModal.jsx:161:                            onClick={onClose}
+frontend/src/components/FeePaymentModal.jsx:41:      footer={<div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><Button variant="secondary" onClick={onClose} disabled={loading}>Cancel</Button><Button onClick={handlePayment} loading={loading}>Proceed to Paystack</Button></div>}
+frontend/src/components/Navbar.jsx:1:import { useEffect, useState } from "react";
+frontend/src/components/Navbar.jsx:24:  useEffect(() => {
+frontend/src/components/Navbar.jsx:53:  useEffect(() => {
+frontend/src/components/Navbar.jsx:82:        <button type="button" onClick={onMenuClick} className="dono-menu-button" aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-expanded={menuOpen} aria-controls="dono-sidebar">
+frontend/src/components/Navbar.jsx:85:        <button type="button" className="dono-navbar-brand" onClick={() => onNavigate?.("dashboard")} aria-label={`Open DOONO De Creator ERP dashboard. Current context: ${contextLabel}`}>
+frontend/src/components/Navbar.jsx:94:          <button type="button" className="dono-navbar-icon" aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ""}`} aria-expanded={noticeOpen} onClick={toggleNoticePanel}>
+frontend/src/components/Navbar.jsx:101:              {notices.length === 0 ? <p className="dono-notice-empty">No notifications yet.</p> : <div className="dono-notice-list">{notices.map((notice) => <button type="button" className={`dono-notice-item${notice.read_at ? "" : " dono-notice-item-unread"}`} key={notice.id} onClick={() => openNotice(notice)}><strong>{notice.subject || "School notice"}</strong><span>{notice.body || ""}</span></button>)}</div>}
+frontend/src/components/Navbar.jsx:102:              <button type="button" className="dono-notice-view-all" onClick={() => { setNoticeOpen(false); onNavigate?.("notifications"); }}>View all notices</button>
+frontend/src/components/Navbar.jsx:107:        <button type="button" onClick={logout} className="dono-logout-button"><span className="dono-logout-full">Log out</span><span className="dono-logout-short" aria-hidden="true">Exit</span></button>
+frontend/src/components/Navbar.jsx:108:        <button type="button" className="dono-avatar" aria-label="Open My Profile" title="My Profile" onClick={() => onNavigate?.("profile")}>
+frontend/src/components/Sidebar.jsx:237:          onClick={closeSidebar}
+frontend/src/components/Sidebar.jsx:277:            onClick={closeSidebar}
+frontend/src/components/Sidebar.jsx:293:              onClick={backToOrganization}
+frontend/src/components/Sidebar.jsx:314:              onClick={() => {
+frontend/src/components/feedback/DONOGuide.jsx:1:import { useEffect, useMemo, useRef, useState } from "react";
+frontend/src/components/feedback/DONOGuide.jsx:36:  useEffect(() => {
+frontend/src/components/feedback/DONOGuide.jsx:41:  useEffect(() => {
+frontend/src/components/feedback/DONOGuide.jsx:45:    const onKeyDown = (event) => {
+frontend/src/components/feedback/DONOGuide.jsx:48:    window.addEventListener("keydown", onKeyDown);
+frontend/src/components/feedback/DONOGuide.jsx:49:    return () => window.removeEventListener("keydown", onKeyDown);
+frontend/src/components/feedback/DONOGuide.jsx:52:  useEffect(() => {
+frontend/src/components/feedback/DONOGuide.jsx:127:        <button type="button" className="dono-guide-trigger" onClick={() => openGuide("page")} aria-label="Open DOONO Guide">
+frontend/src/components/feedback/DONOGuide.jsx:130:        {typeof setPage === "function" && <button type="button" className="dono-guide-support-trigger" onClick={() => setPage("support-centre")} aria-label="Open Support Centre">
+frontend/src/components/feedback/DONOGuide.jsx:133:        <button type="button" className="dono-guide-tour-trigger" onClick={() => openGuide("role")} aria-label="Start my role tour">
+frontend/src/components/feedback/DONOGuide.jsx:140:          <button type="button" className="dono-guide-backdrop" onClick={() => setOpen(false)} aria-label="Close guide" />
+frontend/src/components/feedback/DONOGuide.jsx:147:              <button ref={closeButtonRef} type="button" className="dono-guide-close" onClick={() => setOpen(false)} aria-label="Close guide">×</button>
+frontend/src/components/feedback/DONOGuide.jsx:151:              <button type="button" role="tab" aria-selected={view === "page"} className={view === "page" ? "is-active" : ""} onClick={() => { setView("page"); setStepIndex(0); }}>This page</button>
+frontend/src/components/feedback/DONOGuide.jsx:152:              <button type="button" role="tab" aria-selected={view === "role"} className={view === "role" ? "is-active" : ""} onClick={() => { setView("role"); setRoleStepIndex(0); }}>My role</button>
+frontend/src/components/feedback/DONOGuide.jsx:158:                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search modules" aria-label="Search modules" />
+frontend/src/components/feedback/DONOGuide.jsx:159:                <select value={selectedModule} onChange={chooseModule} aria-label="Choose a module">
+frontend/src/components/feedback/DONOGuide.jsx:189:            {selectedControl && <section className="dono-guide-control-card" aria-live="polite"><div className="dono-guide-control-heading"><div><span className="dono-guide-kicker">You selected a control</span><h3>{selectedControl.title}</h3></div><button type="button" className="dono-guide-control-close" onClick={() => setSelectedControl(null)} aria-label="Close control explanation">×</button></div><div className="dono-guide-control-grid"><div><strong>What it means</strong><p>{selectedControl.what}</p></div><div><strong>How to use it</strong><p>{selectedControl.how}</p></div><div><strong>Why it helps you</strong><p>{selectedControl.benefit}</p></div><div><strong>What happens next</strong><p>{selectedControl.after}</p></div><div><strong>Who can use it</strong><p>{selectedControl.access}</p></div></div></section>}
+frontend/src/components/feedback/DONOGuide.jsx:195:              {currentStep?.action && <button type="button" className="dono-guide-inline-action" onClick={() => openAction(currentStep.action)}>Open this workspace</button>}
+frontend/src/components/feedback/DONOGuide.jsx:206:              <button type="button" className="dono-guide-skip" onClick={() => view === "role" ? finishTour() : setOpen(false)}>{view === "role" ? "Finish later" : "Close guide"}</button>
+frontend/src/components/feedback/DONOGuide.jsx:207:              <button type="button" className="dono-guide-next" onClick={nextStep}>{activeIndex + 1 === activeSteps.length ? (view === "role" ? "Complete tour" : "Done") : "Next step"}</button>
+frontend/src/components/feedback/SubscriptionRequiredNotice.jsx:13:        <Button type="button" variant="primary" onClick={onUpgrade}>View plans</Button>
+frontend/src/components/feedback/SubscriptionRequiredNotice.jsx:14:        <Button type="button" variant="ghost" onClick={onDismiss}>Dismiss</Button>
+frontend/src/components/feedback/ErrorBoundary.jsx:36:                <button type="button" onClick={this.handleRetry} className="mt-5 min-h-11 rounded-lg bg-rose-700 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-800">Retry page</button>
+frontend/src/components/layout/ScrollNavigator.jsx:1:import { useEffect, useState } from "react";
+frontend/src/components/layout/ScrollNavigator.jsx:21:  useEffect(() => {
+frontend/src/components/layout/ScrollNavigator.jsx:54:      {!state.atTop && <button type="button" className="dono-scroll-action dono-scroll-top" onClick={scrollToTop} aria-label="Back to top">↑ <span>Top</span></button>}
+frontend/src/components/layout/ScrollNavigator.jsx:55:      {!state.atBottom && <button type="button" className="dono-scroll-action dono-scroll-continue" onClick={continueDown} aria-label="Continue down the page">↓ <span>Continue</span></button>}
+frontend/src/components/layout/SchoolOSContextBar.jsx:57:          <button type="button" className="school-os-context-action" onClick={() => onNavigate?.(nextAction.page)}>
+frontend/src/components/modals/PortalAccountModal.jsx:1:import React, { useEffect, useState } from 'react';
+frontend/src/components/modals/PortalAccountModal.jsx:25:  useEffect(() => {
+frontend/src/components/modals/PortalAccountModal.jsx:82:          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-700" aria-label="Close">×</button>
+frontend/src/components/modals/PortalAccountModal.jsx:87:        {createdAccount ? <div role="status" className="space-y-4"><div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"><p className="font-bold">Portal account created successfully.</p><p className="mt-2">Login email: <strong>{createdAccount.email}</strong></p><p className="mt-2">Give the temporary password to the user securely. On first login, the portal will force them to create a new private password before showing any dashboard.</p>{createdAccount.verificationEmailSent && <p className="mt-2">An email-verification message was requested. The recipient must verify this same email before signing in when verification is enabled.</p>}</div><button type="button" onClick={onClose} className="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white">Done</button></div> : <form onSubmit={submit} className="space-y-4">
+frontend/src/components/modals/PortalAccountModal.jsx:134:            <button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700">Cancel</button>
+frontend/src/components/modals/Modal.jsx:1:import { useEffect } from "react";
+frontend/src/components/modals/Modal.jsx:13:  useEffect(() => {
+frontend/src/components/modals/Modal.jsx:16:    const onKeyDown = (event) => {
+frontend/src/components/modals/Modal.jsx:20:    window.addEventListener("keydown", onKeyDown);
+frontend/src/components/modals/Modal.jsx:23:      window.removeEventListener("keydown", onKeyDown);
+frontend/src/components/modals/Modal.jsx:37:          <button type="button" className="ui-icon-button" onClick={onClose} aria-label="Close dialog">×</button>
+frontend/src/components/tables/DataTable.jsx:27:              <tr key={key} onClick={row.onClick} className={row.onClick ? "clickable-row" : ""}>
+frontend/src/components/tables/Pagination.jsx:19:        <Button size="sm" variant="secondary" type="button" disabled={loading || currentPage <= 1} onClick={() => onPageChange(currentPage - 1)} aria-label="Previous page">Previous</Button>
+frontend/src/components/tables/Pagination.jsx:21:        <Button size="sm" variant="secondary" type="button" disabled={loading || currentPage >= lastPage} onClick={() => onPageChange(currentPage + 1)} aria-label="Next page">Next</Button>
+frontend/src/components/live/LiveRoomSession.jsx:1:import { useEffect, useRef, useState } from "react";
+frontend/src/components/live/LiveRoomSession.jsx:10:  useEffect(() => {
+frontend/src/components/live/LiveRoomSession.jsx:32:  useEffect(() => {
+frontend/src/components/live/LiveRoomSession.jsx:95:  return <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-bold text-slate-900">{title || "Live learning room"}</h2><p className="text-sm text-slate-500">Status: {status}</p></div><Button variant="secondary" onClick={leave}>Leave room</Button></div>{error && <Alert variant="error">{error}</Alert>}{message && <Alert variant="info">{message}</Alert>}{status === "reconnecting" && <Alert variant="warning">Your connection is interrupted. DOONO is trying to reconnect; do not refresh unless the connection does not return.</Alert>}{host && status === "connected" && <div className="flex flex-wrap gap-2 rounded-xl bg-slate-50 p-3"><Button size="sm" variant={cameraEnabled ? "primary" : "secondary"} onClick={() => toggleMedia("camera")}>{cameraEnabled ? "Turn camera off" : "Turn camera on"}</Button><Button size="sm" variant={microphoneEnabled ? "primary" : "secondary"} onClick={() => toggleMedia("microphone")}>{microphoneEnabled ? "Mute microphone" : "Unmute microphone"}</Button><Button size="sm" variant={screenShareEnabled ? "primary" : "secondary"} onClick={() => toggleMedia("screen")}>{screenShareEnabled ? "Stop screen share" : "Share screen"}</Button></div>}{status === "connected" && tracks.length === 0 && localTracks.length === 0 && <Alert variant="info">You are connected. No participant has published a track yet.</Alert>}<div className="grid gap-3 sm:grid-cols-2">{localTracks.map((item) => <TrackTile key={`local-${item.sid}`} track={item.track} identity={item.identity} />)}{tracks.map((item) => <TrackTile key={item.sid} track={item.track} identity={item.identity} />)}</div></section>;
+frontend/src/pages/AcademicSessions.jsx:1:import { useEffect, useState } from "react";
+frontend/src/pages/AcademicSessions.jsx:17:  useEffect(() => { loadSessions(); }, []);
+frontend/src/pages/AcademicSessions.jsx:20:  return <PageContainer><PageHeader title="Academic Sessions" subtitle="Create the school year or academic cycle before adding terms." action={<Button onClick={() => setShowModal(true)}>Add session</Button>} />{error && <Alert variant="error" action={<button type="button" onClick={loadSessions}>Retry</button>}>{error}</Alert>}<DataTable columns={columns} data={sessions} loading={loading} emptyTitle="No academic sessions yet" emptyMessage="Create the first session for this school." /><Modal open={showModal} title="Add academic session" description="A session contains the terms used for the school year." onClose={() => setShowModal(false)} footer={<FormActions sticky={false}><Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button><Button type="submit" form="session-form" loading={submitting}>Save session</Button></FormActions>}><form id="session-form" onSubmit={saveSession} className="ui-form-grid"><FormField label="Session name" htmlFor="session-name" required><input id="session-name" name="name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. 2026/2027" required className="ui-form-control" /></FormField><div /><FormField label="Start date" htmlFor="session-start" required><input id="session-start" type="date" name="start_date" value={form.start_date} onChange={(event) => setForm({ ...form, start_date: event.target.value })} required className="ui-form-control" /></FormField><FormField label="End date" htmlFor="session-end" required><input id="session-end" type="date" name="end_date" value={form.end_date} onChange={(event) => setForm({ ...form, end_date: event.target.value })} required className="ui-form-control" /></FormField><label className="ui-form-field flex items-center gap-2"><input type="checkbox" name="is_current" checked={form.is_current} onChange={(event) => setForm({ ...form, is_current: event.target.checked })} /><span className="ui-form-label mb-0">Current academic session</span></label></form></Modal></PageContainer>;
+frontend/src/pages/AcceptRoleInvitation.jsx:1:import React, { useEffect, useState } from "react";
+frontend/src/pages/AcceptRoleInvitation.jsx:18:    useEffect(() => {
+frontend/src/pages/AcceptRoleInvitation.jsx:123:                                <button type="button" onClick={goToExistingAccountLogin} className="text-left text-sm font-semibold text-indigo-600 underline">Already have a DONO account? Sign in first</button>
+frontend/src/pages/AcceptRoleInvitation.jsx:127:                            <button type="button" onClick={logout} className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Sign out and use the invited email</button>
+frontend/src/pages/AccountantDashboard.jsx:1:import { useEffect, useMemo, useState } from "react";
+frontend/src/pages/AccountantDashboard.jsx:46:  useEffect(() => { loadFinancialData(); }, []);
+frontend/src/pages/AccountantDashboard.jsx:89:    { key: "actions", label: "Action", align: "right", render: (row) => <Button variant="danger" size="sm" onClick={(event) => { event.stopPropagation(); handleDeleteExpense(row.id); }}>Delete</Button> },
+frontend/src/pages/AccountantDashboard.jsx:94:    <PageHeader title="Accountant portal" subtitle="Monitor school income, expenses, and the current profit-and-loss position." action={<Button onClick={() => setShowExpenseModal(true)}>Record expense</Button>} />
+frontend/src/pages/AccountantDashboard.jsx:95:    {error && <Alert variant="error" action={<Button variant="secondary" size="sm" onClick={loadFinancialData}>Retry</Button>}>{error}</Alert>}
+frontend/src/pages/AccountantDashboard.jsx:96:    <div className="ui-tabs ui-tabs-scroll" role="tablist" aria-label="Accountant workspaces">{tabs.map((tab) => <button key={tab} type="button" role="tab" aria-selected={activeTab === tab} className={activeTab === tab ? "ui-tab ui-tab-active" : "ui-tab"} onClick={() => setActiveTab(tab)}>{tab.replace("-", " ")}</button>)}</div>
+frontend/src/pages/AccountantDashboard.jsx:98:      {activeTab === "overview" && <><DashboardGrid><StatCard title="Recorded income" value={money(totalIncome)} color="success" /><StatCard title="Operating expenses" value={money(totalExpenses)} color="danger" /><StatCard title="Net balance" value={money(netProfitLoss)} color={netProfitLoss >= 0 ? "info" : "warning"} /></DashboardGrid><div className="dashboard-section-grid"><SectionCard title="Finance summary" subtitle="Income and overhead records currently loaded for this school."><div className="dashboard-list"><div className="dashboard-list-row"><span className="dashboard-list-title">Fee remittances</span><strong>{payments.length}</strong></div><div className="dashboard-list-row"><span className="dashboard-list-title">Expense records</span><strong>{expenses.length}</strong></div></div></SectionCard><SectionCard title="Next action" subtitle="Keep the ledger current so school leadership can make informed decisions."><Button onClick={() => setActiveTab("income")}>Review income ledger</Button><Button variant="secondary" onClick={() => setActiveTab("expenses")}>Review expenses</Button></SectionCard></div></>}
+frontend/src/pages/AccountantDashboard.jsx:100:      {activeTab === "expenses" && <SectionCard title="Overhead expenditure items" subtitle="Record and review school operating expenses." actions={<Button size="sm" onClick={() => setShowExpenseModal(true)}>Add expense</Button>}><DataTable columns={expenseColumns} data={expenses} emptyTitle="No expense records" emptyMessage="Record the first school expense to start the ledger." /></SectionCard>}
+frontend/src/pages/AccountantDashboard.jsx:104:    <Modal open={showExpenseModal} title="Record operational expense" description="Save a school-scoped expense in the finance ledger." onClose={() => setShowExpenseModal(false)} footer={<FormActions sticky={false}><Button variant="secondary" onClick={() => setShowExpenseModal(false)}>Cancel</Button><Button type="submit" form="expense-form" loading={saving}>Save expense</Button></FormActions>}>
+frontend/src/pages/AccountantDashboard.jsx:105:      <form id="expense-form" onSubmit={handleSaveExpense} className="ui-form-grid"><FormField label="Expense title" htmlFor="expense-title" required><input id="expense-title" className="ui-form-control" value={expenseForm.title} onChange={(event) => setExpenseForm({ ...expenseForm, title: event.target.value })} placeholder="e.g. Generator diesel refill" required /></FormField><FormField label="Amount (₦)" htmlFor="expense-amount" required><input id="expense-amount" type="number" min="0" step="0.01" className="ui-form-control" value={expenseForm.amount} onChange={(event) => setExpenseForm({ ...expenseForm, amount: event.target.value })} required /></FormField><FormField label="Category" htmlFor="expense-category" required><select id="expense-category" className="ui-form-control" value={expenseForm.category} onChange={(event) => setExpenseForm({ ...expenseForm, category: event.target.value })}><option>Utilities</option><option>Salaries</option><option>Maintenance</option><option>Supplies</option><option>Miscellaneous</option></select></FormField><FormField label="Date" htmlFor="expense-date" required><input id="expense-date" type="date" className="ui-form-control" value={expenseForm.expense_date} onChange={(event) => setExpenseForm({ ...expenseForm, expense_date: event.target.value })} required /></FormField><div className="ui-form-full"><FormField label="Description" htmlFor="expense-description"><textarea id="expense-description" className="ui-form-control" value={expenseForm.description} onChange={(event) => setExpenseForm({ ...expenseForm, description: event.target.value })} rows="3" /></FormField></div></form>
+frontend/src/pages/AddParent.jsx:32:          <input id={`${prefix}-name`} name={`${prefix}_name`} className="ui-form-control" value={form[`${prefix}_name`]} onChange={onChange} />
+frontend/src/pages/AddParent.jsx:35:          <input id={`${prefix}-phone`} type="tel" name={`${prefix}_phone`} className="ui-form-control" value={form[`${prefix}_phone`]} onChange={onChange} />
+frontend/src/pages/AddParent.jsx:38:          <input id={`${prefix}-email`} type="email" name={`${prefix}_email`} className="ui-form-control" value={form[`${prefix}_email`]} onChange={onChange} />
+frontend/src/pages/AddParent.jsx:41:          <input id={`${prefix}-occupation`} name={`${prefix}_occupation`} className="ui-form-control" value={form[`${prefix}_occupation`]} onChange={onChange} />
+frontend/src/pages/AddParent.jsx:45:            <input id="guardian-relationship" name="guardian_relationship" className="ui-form-control" value={form.guardian_relationship} onChange={onChange} />
+frontend/src/pages/AddParent.jsx:78:      <PageHeader title="Add parent" subtitle="Create a parent or guardian profile before linking learners." action={<Button variant="secondary" onClick={() => setPage("parents")}>Back to parents</Button>} />
+frontend/src/pages/AddParent.jsx:86:            <textarea id="parent-address" name="address" className="ui-form-control" value={form.address} onChange={handleChange} />
+frontend/src/pages/AddParent.jsx:90:          <Button variant="secondary" onClick={() => setPage("parents")}>Cancel</Button>
+frontend/src/pages/AddSchool.jsx:1:import { useEffect, useState } from "react";
+frontend/src/pages/AddSchool.jsx:30:  useEffect(() => {
+frontend/src/pages/AddSchool.jsx:77:            <input id="school-name" name="name" className="ui-form-control" value={formData.name} onChange={handleChange} required />
+frontend/src/pages/AddSchool.jsx:80:            <input id="school-short-name" name="short_name" className="ui-form-control" value={formData.short_name} onChange={handleChange} />
+frontend/src/pages/AddSchool.jsx:83:            <input id="school-code" name="school_code" className="ui-form-control" value={formData.school_code} onChange={handleChange} required />
+frontend/src/pages/AddSchool.jsx:86:            <select id="school-type" name="school_type" className="ui-form-control" value={formData.school_type} onChange={handleChange} required>
+frontend/src/pages/AddSchool.jsx:93:            <select id="school-country" name="country_id" className="ui-form-control" value={formData.country_id} onChange={handleChange} required disabled={loadingCountries || countries.length === 0}>
+frontend/src/pages/AddSchool.jsx:99:            <input id="school-email" type="email" name="email" className="ui-form-control" value={formData.email} onChange={handleChange} />
+frontend/src/pages/AddSchool.jsx:102:            <input id="school-phone" type="tel" name="phone" className="ui-form-control" value={formData.phone} onChange={handleChange} />
+frontend/src/pages/AddSchool.jsx:105:            <textarea id="school-address" name="address" className="ui-form-control" value={formData.address} onChange={handleChange} />
+frontend/src/pages/AddStaff.jsx:7:  return <PageContainer><PageHeader title="Add staff securely" subtitle="Staff accounts are created through email-bound role invitations." action={<Button variant="secondary" onClick={() => setPage?.("staff")}>Back to staff</Button>} /><SectionCard title="Use secure role invitations" subtitle="Direct staff creation with a proprietor-supplied password is disabled."><p className="text-secondary-readable">Invite the person by email so they create their own password, verify ownership of the email address, and activate the school-scoped role themselves.</p><div className="section-card-actions section-card-actions-spaced"><Button onClick={() => setPage?.("role-invitations")}>Open role invitations</Button><Button variant="secondary" onClick={() => setPage?.("staff")}>Back to staff</Button></div></SectionCard></PageContainer>;
+frontend/src/pages/AddStudent.jsx:1:import { useEffect, useState } from "react";
+frontend/src/pages/AddStudent.jsx:45:  useEffect(() => {
+frontend/src/pages/AddStudent.jsx:75:  useEffect(() => () => {
+frontend/src/pages/AddStudent.jsx:113:  if (loadingOptions) return <PageContainer><PageHeader title="Add Student" subtitle="Register a student and assign them to an academic class." action={<Button variant="secondary" onClick={() => setPage?.("students")}>Back to students</Button>} /><LoadingSpinner text="Loading academic options..." /></PageContainer>;
+frontend/src/pages/AddStudent.jsx:117:      <PageHeader title="Student registered" subtitle="The student profile was created in the active school." action={<Button variant="secondary" onClick={() => setPage?.("students")}>Open students</Button>} />
+frontend/src/pages/AddStudent.jsx:122:          <Button onClick={() => setPage?.("students")}>Open student directory</Button>
+frontend/src/pages/AddStudent.jsx:123:          <Button variant="secondary" onClick={() => { setIssuedAdmissionNumber(""); setForm(initialForm); setErrors({}); setFormError(""); setPhoto(null); setPhotoPreview(""); }}>Register another student</Button>
+frontend/src/pages/AddStudent.jsx:131:      <PageHeader title="Add Student" subtitle="Register a student and assign them to an academic class." action={<Button variant="secondary" onClick={() => setPage?.("students")}>Back to students</Button>} />
+frontend/src/pages/AddStudent.jsx:136:            <FormField label="First name" htmlFor="student-first" required error={errorFor("first_name")}><input id="student-first" name="first_name" value={form.first_name} onChange={handleChange} required className="ui-form-control" aria-invalid={!!errorFor("first_name")} /></FormField>
+frontend/src/pages/AddStudent.jsx:137:            <FormField label="Middle name" htmlFor="student-middle"><input id="student-middle" name="middle_name" value={form.middle_name} onChange={handleChange} className="ui-form-control" /></FormField>
+frontend/src/pages/AddStudent.jsx:138:            <FormField label="Last name" htmlFor="student-last" required error={errorFor("last_name")}><input id="student-last" name="last_name" value={form.last_name} onChange={handleChange} required className="ui-form-control" aria-invalid={!!errorFor("last_name")} /></FormField>
+frontend/src/pages/AddStudent.jsx:139:            <FormField label="Gender" htmlFor="student-gender" required><select id="student-gender" name="gender" value={form.gender} onChange={handleChange} className="ui-form-control"><option>Male</option><option>Female</option></select></FormField>
+frontend/src/pages/AddStudent.jsx:140:            <FormField label="Date of birth" htmlFor="student-dob"><input id="student-dob" type="date" name="date_of_birth" value={form.date_of_birth} onChange={handleChange} className="ui-form-control" /></FormField>
+frontend/src/pages/AddStudent.jsx:141:            <FormField label="Admission date" htmlFor="student-admission-date" required><input id="student-admission-date" type="date" name="admission_date" value={form.admission_date} onChange={handleChange} required className="ui-form-control" /></FormField>
+frontend/src/pages/AddStudent.jsx:142:            <FormField label="Student photo" htmlFor="student-photo" hint="Optional JPG, PNG, or WebP image up to 5 MB."><input id="student-photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePhoto} className="ui-form-control" />{photoPreview && <img src={photoPreview} alt="Student preview" style={{ width: 76, height: 76, marginTop: 8, borderRadius: "50%", objectFit: "cover" }} />}</FormField>
+frontend/src/pages/AddStudent.jsx:149:            <FormField label="Academic session" htmlFor="student-session"><select id="student-session" name="academic_session_id" value={form.academic_session_id} onChange={handleChange} className="ui-form-control"><option value="">Select session</option>{sessions.map((session) => <option key={session.id} value={session.id}>{session.name || session.session_year}</option>)}</select></FormField>
+frontend/src/pages/AddStudent.jsx:150:            <FormField label="Assigned class" htmlFor="student-class" required error={errorFor("class_id")}><select id="student-class" name="class_id" value={form.class_id} onChange={handleChange} required className="ui-form-control"><option value="">Select class</option>{classes.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></FormField>
+frontend/src/pages/AddStudent.jsx:151:            <FormField label="Assigned stream" htmlFor="student-stream"><select id="student-stream" name="stream_id" value={form.stream_id} onChange={handleChange} className="ui-form-control"><option value="">Select stream</option>{streams.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></FormField>
+frontend/src/pages/AddStudent.jsx:157:            <FormField label="Religion" htmlFor="student-religion"><input id="student-religion" name="religion" value={form.religion} onChange={handleChange} className="ui-form-control" /></FormField>
+frontend/src/pages/AddStudent.jsx:158:            <FormField label="Nationality" htmlFor="student-nationality"><input id="student-nationality" name="nationality" value={form.nationality} onChange={handleChange} className="ui-form-control" /></FormField>
+frontend/src/pages/AddStudent.jsx:159:            <FormField label="State of origin" htmlFor="student-state"><input id="student-state" name="state_of_origin" value={form.state_of_origin} onChange={handleChange} className="ui-form-control" /></FormField>
+frontend/src/pages/AddStudent.jsx:160:            <FormField label="Local government" htmlFor="student-lga"><input id="student-lga" name="local_government" value={form.local_government} onChange={handleChange} className="ui-form-control" /></FormField>
+frontend/src/pages/AddStudent.jsx:161:            <div className="ui-form-full"><FormField label="Address" htmlFor="student-address"><textarea id="student-address" name="address" value={form.address} onChange={handleChange} className="ui-form-control" /></FormField></div>
+frontend/src/pages/AddStudent.jsx:167:            <FormField label="Blood group" htmlFor="student-blood"><input id="student-blood" name="blood_group" value={form.blood_group} onChange={handleChange} placeholder="e.g. O+" className="ui-form-control" /></FormField>
+frontend/src/pages/AddStudent.jsx:168:            <FormField label="Genotype" htmlFor="student-genotype"><input id="student-genotype" name="genotype" value={form.genotype} onChange={handleChange} placeholder="e.g. AA" className="ui-form-control" /></FormField>
+frontend/src/pages/AddStudent.jsx:169:            <FormField label="Status" htmlFor="student-status"><select id="student-status" name="status" value={form.status} onChange={handleChange} className="ui-form-control"><option>Active</option><option>Graduated</option><option>Transferred</option><option>Suspended</option></select></FormField>
+frontend/src/pages/AddStudent.jsx:170:            <div className="ui-form-full"><FormField label="Medical notes" htmlFor="student-medical"><textarea id="student-medical" name="medical_notes" value={form.medical_notes} onChange={handleChange} className="ui-form-control" /></FormField></div>
+frontend/src/pages/AddStudent.jsx:173:        <FormActions><Button type="button" variant="secondary" onClick={() => setPage?.("students")}>Cancel</Button><Button type="submit" loading={submitting}>Create student</Button></FormActions>
+frontend/src/pages/AddSubject.jsx:1:import { useEffect, useState } from "react";
+frontend/src/pages/AddSubject.jsx:19:  useEffect(() => {
+frontend/src/pages/AddTeacher.jsx:25:          onClick={() => setPage?.(canInviteStaff ? "role-invitations" : "teachers")}
+frontend/src/pages/AddTeacher.jsx:32:          onClick={() => setPage?.("teachers")}
+frontend/src/pages/Admissions.jsx:1:import { useEffect, useState } from 'react';
+frontend/src/pages/Admissions.jsx:72:  useEffect(() => {
+frontend/src/pages/Admissions.jsx:116:  useEffect(() => () => {
+frontend/src/pages/Admissions.jsx:204:              onClick={() => setPage('students')}
+frontend/src/pages/Admissions.jsx:219:              onClick={() => {
+frontend/src/pages/Admissions.jsx:245:            onClick={() => setPage('students')}
+frontend/src/pages/Admissions.jsx:345:          <button type="button" onClick={() => setPage('students')} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>
+frontend/src/pages/AssetRegister.jsx:1:import { useEffect, useMemo, useState } from "react";
+frontend/src/pages/AssetRegister.jsx:90:  useEffect(() => {
+frontend/src/pages/AssetRegister.jsx:220:      render: (row) => <div className="flex flex-wrap gap-2"><button type="button" onClick={() => editAsset(row)}>Edit</button><button type="button" onClick={() => openHistory(row)}>History</button><button type="button" onClick={() => openTransition(row)}>Lifecycle</button></div>,
+frontend/src/pages/AssetRegister.jsx:258:          <button type="button" onClick={searchCustodians}>Search custodians</button>
+frontend/src/pages/AssetRegister.jsx:294:          {editingAsset && <button type="button" onClick={resetForm}>Cancel edit</button>}
+frontend/src/pages/AssetRegister.jsx:298:      <Modal open={Boolean(transitionAsset)} title={transitionAsset ? `Lifecycle: ${transitionAsset.asset_number}` : "Asset lifecycle"} description="Every transition requires a reason and is stored in the school audit history." onClose={() => setTransitionAsset(null)}><form onSubmit={submitTransition} className="space-y-4"><label>Lifecycle action<select value={transitionForm.event_type} onChange={(event) => setTransitionForm({ ...transitionForm, event_type: event.target.value })}>{Object.entries(LIFECYCLE_EVENTS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>{transitionForm.event_type === "handover" && <><label>New location<input value={transitionForm.location} onChange={(event) => setTransitionForm({ ...transitionForm, location: event.target.value })} maxLength={255} /></label><label>New custodian<select value={transitionForm.custodian_staff_id} onChange={(event) => setTransitionForm({ ...transitionForm, custodian_staff_id: event.target.value })}><option value="">Unassigned</option>{staffOptions.map((staff) => <option key={staff.id} value={staff.id}>{staff.label}</option>)}</select></label><label>Condition<select value={transitionForm.condition} onChange={(event) => setTransitionForm({ ...transitionForm, condition: event.target.value })}><option value="">Keep current</option>{CONDITIONS.map((condition) => <option key={condition}>{condition}</option>)}</select></label></>}<label>Reason and notes<textarea required minLength={2} maxLength={2000} value={transitionForm.notes} onChange={(event) => setTransitionForm({ ...transitionForm, notes: event.target.value })} placeholder="Explain what happened, who approved it, or what work was completed." /></label><div className="flex flex-wrap justify-end gap-2"><button type="button" onClick={() => setTransitionAsset(null)}>Cancel</button><button type="submit" disabled={submitting}>{submitting ? "Saving..." : "Record lifecycle event"}</button></div></form></Modal><Modal open={Boolean(historyAsset)} title={historyAsset ? `History: ${historyAsset.asset_number}` : "Asset history"} description="This immutable event history shows lifecycle changes and their recorded reasons." onClose={() => setHistoryAsset(null)}>{historyLoading ? <LoadingSpinner text="Loading asset history..." /> : historyItems.length === 0 ? <EmptyState title="No lifecycle events" message="No lifecycle history has been recorded for this asset yet." /> : <DataTable columns={[{ key: "event_type", label: "Event", render: (event) => LIFECYCLE_EVENTS[event.event_type] || event.event_type }, { key: "notes", label: "Reason", render: (event) => event.notes || "—" }, { key: "actor", label: "Recorded by", render: (event) => event.actor?.name || "System" }, { key: "occurred_at", label: "When", render: (event) => event.occurred_at ? new Date(event.occurred_at).toLocaleString() : "—" }]} data={Array.isArray(historyItems) ? historyItems : []} pagination={historyPagination} onPageChange={(page) => openHistory(historyAsset, page)} rowKey={(event) => event.id} />}</Modal>
+frontend/src/pages/Attendance.jsx:1:import React, { useState, useEffect } from 'react';
+frontend/src/pages/Attendance.jsx:36:  useEffect(() => {
+frontend/src/pages/Attendance.jsx:48:  useEffect(() => {
+frontend/src/pages/Attendance.jsx:235:            onClick={handleSaveAttendance}
+frontend/src/pages/Attendance.jsx:248:          <button type="button" onClick={() => setSuccessMsg('')} className="font-bold text-gray-500">✕</button>
+frontend/src/pages/Attendance.jsx:254:          <button type="button" onClick={loadClassAttendance} className="underline font-semibold">Retry</button>
+frontend/src/pages/Attendance.jsx:317:              onClick={() => handleMarkAll('present')}
+frontend/src/pages/Attendance.jsx:324:              onClick={() => handleMarkAll('absent')}
+frontend/src/pages/Attendance.jsx:404:                              onClick={() => handleStatusChange(studentId, opt.key)}
+frontend/src/pages/Attendance.jsx:429:                          <button type="button" onClick={() => loadCorrections(st.attendance_id)} className="whitespace-nowrap rounded-lg border border-indigo-200 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-50">
+frontend/src/pages/AuditLogs.jsx:1:import { useEffect, useMemo, useState } from "react";
+frontend/src/pages/AuditLogs.jsx:60:  useEffect(() => {
+frontend/src/pages/AuditLogs.jsx:64:  useEffect(() => {
+frontend/src/pages/AuditLogs.jsx:85:      {error && <Alert variant="error" action={<Button size="sm" variant="secondary" onClick={() => load(activePage.meta?.current_page || 1)}>Retry</Button>}>{error}</Alert>}
+frontend/src/pages/AuditLogs.jsx:90:            <input id="audit-date" type="date" className="ui-form-control" value={filters.date} onChange={(event) => updateFilter("date", event.target.value)} />
+frontend/src/pages/AuditLogs.jsx:93:            <input id="audit-search" type="search" className="ui-form-control" value={filters.search} onChange={(event) => updateFilter("search", event.target.value)} placeholder="e.g. subscription" />
+frontend/src/pages/AuditLogs.jsx:96:            <input id="audit-from" type="date" className="ui-form-control" value={filters.from} onChange={(event) => updateFilter("from", event.target.value)} />
+frontend/src/pages/AuditLogs.jsx:99:            <input id="audit-to" type="date" className="ui-form-control" value={filters.to} onChange={(event) => updateFilter("to", event.target.value)} />
+frontend/src/pages/AuditLogs.jsx:102:            <input id="audit-module" className="ui-form-control" value={filters.module} onChange={(event) => updateFilter("module", event.target.value)} placeholder="e.g. students" />
+frontend/src/pages/AuditLogs.jsx:105:            <Button variant="secondary" onClick={clearFilters}>Clear filters</Button>
+frontend/src/pages/AuditLogs.jsx:106:            <Button onClick={() => load(1)}>Apply filters</Button>
+frontend/src/pages/AuditLogs.jsx:113:          <Button variant={tab === "schools" ? "primary" : "secondary"} onClick={() => setTab("schools")} role="tab" aria-selected={tab === "schools"}>School activity</Button>
+frontend/src/pages/AuditLogs.jsx:114:          <Button variant={tab === "platform" ? "primary" : "secondary"} onClick={() => setTab("platform")} role="tab" aria-selected={tab === "platform"}>Platform actions</Button>
+frontend/src/pages/Books.jsx:1:import { useCallback, useEffect, useState } from "react";
+frontend/src/pages/Books.jsx:48:  useEffect(() => { loadLibrary(); }, [loadLibrary]);
+frontend/src/pages/Books.jsx:113:    { key: "status", label: "Action", render: (reservation) => reservation.status === "pending" ? <div className="flex flex-wrap gap-2"><Button size="sm" variant="secondary" disabled={saving} onClick={() => updateReservation(reservation.id, "fulfilled")}>Fulfill</Button><Button size="sm" variant="danger" disabled={saving} onClick={() => updateReservation(reservation.id, "cancelled")}>Cancel</Button></div> : <span>{reservation.status}</span> },
+frontend/src/pages/Books.jsx:120:    { key: "status", label: "Action", render: (loan) => loan.status === "Borrowed" ? <div className="flex flex-wrap gap-2"><Button size="sm" variant="secondary" disabled={saving} onClick={() => updateLoan(loan.id, "Returned")}>Return</Button><Button size="sm" variant="danger" disabled={saving} onClick={() => updateLoan(loan.id, "Lost")}>Lost</Button></div> : <span>{loan.status}</span> },
+frontend/src/pages/Books.jsx:124:    <PageHeader title="Library & Book Inventory" subtitle="Maintain the school catalog, issue books to active learners, and keep copy availability accurate." action={<div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={loadLibrary} loading={loading}>Refresh</Button>{activeTab === "catalog" ? <Button onClick={() => setModal("book")}>Add book</Button> : activeTab === "loans" ? <Button onClick={() => setModal("loan")}>Issue book</Button> : <Button onClick={() => setModal("reservation")}>Reserve book</Button>}</div>} />
+frontend/src/pages/Books.jsx:125:    {error && <Alert variant="error" action={<Button variant="secondary" size="sm" onClick={loadLibrary}>Retry</Button>}>{error}</Alert>}
+frontend/src/pages/Books.jsx:126:    {message && <Alert variant="success" action={<Button variant="secondary" size="sm" onClick={() => setMessage("")}>Dismiss</Button>}>{message}</Alert>}
+frontend/src/pages/Books.jsx:127:    <div className="mb-5 flex gap-2 overflow-x-auto rounded-xl border border-slate-200 bg-white p-2 shadow-sm"><Button variant={activeTab === "catalog" ? "primary" : "secondary"} onClick={() => setActiveTab("catalog")}>Book catalog ({books.length})</Button><Button variant={activeTab === "loans" ? "primary" : "secondary"} onClick={() => setActiveTab("loans")}>Loans ({loans.length})</Button><Button variant={activeTab === "reservations" ? "primary" : "secondary"} onClick={() => setActiveTab("reservations")}>Reservations ({reservations.length})</Button></div>
+frontend/src/pages/Books.jsx:130:    {modal && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"><div role="dialog" aria-modal="true" className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-2xl"><div className="mb-4 flex items-start justify-between gap-3"><div><h2 className="text-lg font-bold text-slate-900">{modal === "book" ? "Add book to catalog" : modal === "loan" ? "Issue a book" : "Reserve a book"}</h2><p className="mt-1 text-sm text-slate-600">{modal === "book" ? "Inventory is initialized from the number of physical copies." : modal === "loan" ? "Only books and active learners in the current school are shown." : "Reserve a title for an active learner while all copies are unavailable."}</p></div><button type="button" className="text-slate-500" onClick={() => setModal(null)} aria-label="Close">×</button></div>{modal === "book" ? <form onSubmit={createBook} className="space-y-4"><label className="block text-sm font-semibold">Title<input required value={bookForm.title} onChange={(event) => setBookForm({ ...bookForm, title: event.target.value })} className="ui-input mt-1 w-full" /></label><label className="block text-sm font-semibold">Author<input required value={bookForm.author} onChange={(event) => setBookForm({ ...bookForm, author: event.target.value })} className="ui-input mt-1 w-full" /></label><div className="grid gap-4 sm:grid-cols-2"><label className="block text-sm font-semibold">ISBN<input value={bookForm.isbn} onChange={(event) => setBookForm({ ...bookForm, isbn: event.target.value })} className="ui-input mt-1 w-full" /></label><label className="block text-sm font-semibold">Copies<input required min="1" type="number" value={bookForm.total_copies} onChange={(event) => setBookForm({ ...bookForm, total_copies: event.target.value })} className="ui-input mt-1 w-full" /></label></div><label className="block text-sm font-semibold">Category<input required value={bookForm.category} onChange={(event) => setBookForm({ ...bookForm, category: event.target.value })} className="ui-input mt-1 w-full" /></label><div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button><Button type="submit" loading={saving}>Save book</Button></div></form> : modal === "loan" ? <form onSubmit={issueBook} className="space-y-4"><label className="block text-sm font-semibold">Book<select required value={loanForm.book_id} onChange={(event) => setLoanForm({ ...loanForm, book_id: event.target.value })} className="ui-input mt-1 w-full"><option value="">Select available book</option>{books.filter((book) => Number(book.available_copies) > 0).map((book) => <option key={book.id} value={book.id}>{book.title} ({book.available_copies} available)</option>)}</select></label><label className="block text-sm font-semibold">Active learner<select required value={loanForm.student_id} onChange={(event) => setLoanForm({ ...loanForm, student_id: event.target.value })} className="ui-input mt-1 w-full"><option value="">Select learner</option>{members.map((member) => <option key={member.id} value={member.id}>{member.name} — {member.admission_number || "No admission number"}</option>)}</select></label><label className="block text-sm font-semibold">Due date<input required type="date" value={loanForm.due_date} onChange={(event) => setLoanForm({ ...loanForm, due_date: event.target.value })} className="ui-input mt-1 w-full" /></label><div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button><Button type="submit" loading={saving}>Issue book</Button></div></form> : <form onSubmit={createReservation} className="space-y-4"><label className="block text-sm font-semibold">Book<select required value={reservationForm.book_id} onChange={(event) => setReservationForm({ ...reservationForm, book_id: event.target.value })} className="ui-input mt-1 w-full"><option value="">Select book</option>{books.map((book) => <option key={book.id} value={book.id}>{book.title} ({book.available_copies ?? 0} available)</option>)}</select></label><label className="block text-sm font-semibold">Active learner<select required value={reservationForm.student_id} onChange={(event) => setReservationForm({ ...reservationForm, student_id: event.target.value })} className="ui-input mt-1 w-full"><option value="">Select learner</option>{members.map((member) => <option key={member.id} value={member.id}>{member.name} — {member.admission_number || "No admission number"}</option>)}</select></label><label className="block text-sm font-semibold">Notes<textarea value={reservationForm.notes} onChange={(event) => setReservationForm({ ...reservationForm, notes: event.target.value })} className="ui-input mt-1 min-h-20 w-full" /></label><div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button><Button type="submit" loading={saving}>Reserve book</Button></div></form>}</div></div>}
+frontend/src/pages/CashierDashboard.jsx:1:import React, { useState, useEffect } from "react";
+frontend/src/pages/CashierDashboard.jsx:27:    useEffect(() => {
+frontend/src/pages/CashierDashboard.jsx:87:                        <button type="button" key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-blue-600 text-blue-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
+frontend/src/pages/Classes.jsx:1:import { useEffect, useState } from "react";
+frontend/src/pages/Classes.jsx:48:  useEffect(() => { loadClassesAndDivisions(); }, []);
+frontend/src/pages/Classes.jsx:96:    ...(canManageClasses ? [{ key: "actions", label: "Actions", align: "right", render: (item) => <div className="table-actions"><Button size="sm" variant="ghost" onClick={() => handleOpenModal(item)}>Edit</Button><Button size="sm" variant="danger" onClick={() => handleDelete(item.id, item.name)}>Delete</Button></div> }] : []),
+frontend/src/pages/Classes.jsx:100:    <PageHeader title="Classes & Academic Streams" subtitle={canManageClasses ? "Define academic levels, grade sections, and stream allocations." : "View the school classes configured by authorized school administrators."} action={canManageClasses ? <Button onClick={() => handleOpenModal()}>Add class</Button> : null} />
+frontend/src/pages/Classes.jsx:101:    {error && <Alert variant="error" action={<button type="button" onClick={loadClassesAndDivisions}>Retry</button>}>{error}</Alert>}
+frontend/src/pages/Classes.jsx:103:    {canManageClasses && <Modal open={showModal} title={editingId ? "Edit academic class" : "Add academic class"} description="Classes belong to a division and can later receive streams." onClose={() => setShowModal(false)} footer={<FormActions sticky={false}><Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button><Button type="submit" form="class-form" loading={submitting}>{editingId ? "Update class" : "Create class"}</Button></FormActions>}>
+frontend/src/pages/Classes.jsx:105:        <FormField label="Division / level" htmlFor="class-division" required error={fieldError("division_id")}><select id="class-division" name="division_id" value={form.division_id} onChange={(event) => setForm({ ...form, division_id: event.target.value })} required className="ui-form-control" aria-invalid={!!fieldError("division_id")}><option value="">Select division</option>{divisions.map((division) => <option key={division.id} value={division.id}>{division.name}</option>)}</select></FormField>
+frontend/src/pages/Classes.jsx:106:        <FormField label="Class name" htmlFor="class-name" required error={fieldError("name")}><input id="class-name" name="name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. Primary 1 or JSS 2" required className="ui-form-control" aria-invalid={!!fieldError("name")} /></FormField>
+frontend/src/pages/Classes.jsx:107:        <FormField label="Class code" htmlFor="class-code"><input id="class-code" name="code" value={form.code} onChange={(event) => setForm({ ...form, code: event.target.value })} placeholder="e.g. PR1" className="ui-form-control" /></FormField>
+frontend/src/pages/Classes.jsx:108:        <FormField label="Display order" htmlFor="class-order"><input id="class-order" name="display_order" type="number" min="1" value={form.display_order} onChange={(event) => setForm({ ...form, display_order: event.target.value })} className="ui-form-control" /></FormField>
+frontend/src/pages/Clinic.jsx:1:import React, { useState, useEffect } from 'react';
+frontend/src/pages/Clinic.jsx:9:  useEffect(() => {
+frontend/src/pages/Clinic.jsx:38:          <button type="button" onClick={loadClinicVisits} className="underline font-semibold">Retry</button>
+frontend/src/pages/Dashboard.jsx:1:import { useEffect, useState } from "react";
+frontend/src/pages/Dashboard.jsx:40:  useEffect(() => { loadDashboard(); }, []);
+frontend/src/pages/Dashboard.jsx:65:    {error && <Alert variant="error" action={<Button variant="secondary" size="sm" onClick={loadDashboard}>Retry connection</Button>}>{error}</Alert>}
+frontend/src/pages/DisciplineCases.jsx:1:import { useEffect, useMemo, useState } from "react";
+frontend/src/pages/DisciplineCases.jsx:84:  useEffect(() => {
+frontend/src/pages/DisciplineCases.jsx:186:            <button type="button" onClick={() => reviewCase(row, "Under Review")}>Review</button>
+frontend/src/pages/DisciplineCases.jsx:187:            <button type="button" onClick={() => reviewCase(row, "Resolved")}>Resolve</button>
+frontend/src/pages/DisciplineCases.jsx:188:            <button type="button" onClick={() => reviewCase(row, "Dismissed")}>Dismiss</button>
+frontend/src/pages/DisciplineCases.jsx:212:            <button type="button" onClick={searchStudents}>Search</button>
+frontend/src/pages/EditStaff.jsx:1:import React, { useState, useEffect } from 'react';
+frontend/src/pages/EditStaff.jsx:29:    useEffect(() => {
+frontend/src/pages/EditStaff.jsx:65:    useEffect(() => () => {
+frontend/src/pages/EditStaff.jsx:123:                    onClick={() => setPage('staff')}
+frontend/src/pages/EditStaff.jsx:287:                        onClick={() => setPage('staff')}
+frontend/src/pages/EditStudent.jsx:1:import React, { useState, useEffect } from 'react';
+frontend/src/pages/EditStudent.jsx:28:  useEffect(() => {
+frontend/src/pages/EditStudent.jsx:62:  useEffect(() => () => {
+frontend/src/pages/EditStudent.jsx:113:          onClick={() => setPage && setPage('students')}
+frontend/src/pages/EditStudent.jsx:205:            onClick={() => setPage && setPage('students')}
+frontend/src/pages/Expenses.jsx:1:import { useCallback, useEffect, useMemo, useState } from "react";
+frontend/src/pages/Expenses.jsx:50:  useEffect(() => {
+frontend/src/pages/Expenses.jsx:90:        action={<Button onClick={() => { setError(""); setMessage(""); setShowModal(true); }}>Record expense</Button>}
+frontend/src/pages/Expenses.jsx:93:      {error && <Alert variant="error" action={<Button variant="secondary" size="sm" onClick={loadExpenses}>Retry</Button>}>{error}</Alert>}
+frontend/src/pages/Expenses.jsx:106:          <EmptyState title="No expenses recorded" message="Select Record expense to add the school’s first expenditure." action={<Button onClick={() => setShowModal(true)}>Record expense</Button>} />
+frontend/src/pages/Expenses.jsx:118:        footer={<FormActions sticky={false}><Button variant="secondary" onClick={() => setShowModal(false)} disabled={saving}>Cancel</Button><Button type="submit" form="expense-form" loading={saving}>Save expense</Button></FormActions>}
+frontend/src/pages/Expenses.jsx:122:            <input id="expense-title" required maxLength={255} value={form.title} onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))} className="ui-form-control" placeholder="e.g. Generator diesel refill" />
+frontend/src/pages/Expenses.jsx:125:            <input id="expense-amount" required min="0.01" step="0.01" type="number" value={form.amount} onChange={(event) => setForm((current) => ({ ...current, amount: event.target.value }))} className="ui-form-control" />
+frontend/src/pages/Expenses.jsx:128:            <select id="expense-category" required value={form.category} onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))} className="ui-form-control">
+frontend/src/pages/Expenses.jsx:137:            <input id="expense-date" required type="date" value={form.expense_date} onChange={(event) => setForm((current) => ({ ...current, expense_date: event.target.value }))} className="ui-form-control" />
+frontend/src/pages/Expenses.jsx:141:              <textarea id="expense-description" maxLength={2000} rows="4" value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} className="ui-form-control" placeholder="Add the reason, supplier, approval, or supporting details." />
+frontend/src/pages/FeePayments.jsx:1:import { useEffect, useState } from "react";
+frontend/src/pages/FeePayments.jsx:13:  useEffect(() => {
+frontend/src/pages/Fees.jsx:1:import React, { useEffect, useState } from "react";
+frontend/src/pages/Fees.jsx:38:    useEffect(() => {
+frontend/src/pages/Fees.jsx:118:                            onClick={() => setPage && setPage("fees-payments")}
+frontend/src/pages/Fees.jsx:130:                    <button type="button" onClick={() => setSuccessMsg("")} className="font-bold">✕</button>
+frontend/src/pages/Fees.jsx:136:                    <button type="button" onClick={loadFinancialData} className="underline font-semibold">Retry</button>
+frontend/src/pages/Fees.jsx:205:                                                    onClick={() => {
+frontend/src/pages/Fees.jsx:268:                                    onClick={() => setShowPayModal(false)}
+frontend/src/pages/FeesAndPayments.jsx:1:import { useEffect, useMemo, useState } from "react";
+frontend/src/pages/FeesAndPayments.jsx:28:  useEffect(() => { loadData(); }, []);
+frontend/src/pages/FeesAndPayments.jsx:55:  const structureColumns = [{ key: "name", label: "Fee name", render: (item) => <span className="font-semibold">{item.name}</span> }, { key: "category", label: "Category", render: (item) => item.category || "Tuition" }, { key: "period", label: "Session / Term", render: (item) => `${item.academic_session?.name || "—"} / ${item.term?.name || "—"}` }, { key: "class", label: "Class", render: (item) => item.class?.name || "All classes" }, { key: "amount", label: "Amount", render: (item) => <span className="font-mono font-semibold">₦{Number(item.amount || 0).toLocaleString()}</span> }, { key: "actions", label: "Actions", align: "right", render: (item) => <div className="flex flex-wrap justify-end gap-2">{canGenerateInvoices && <Button size="sm" variant="secondary" loading={generatingId === item.id} onClick={() => handleGenerateInvoices(item)}>Generate invoices</Button>}{canManageFees ? <Button size="sm" variant="danger" onClick={() => handleDeleteStructure(item.id, item.name)}>Delete</Button> : <span className="table-muted-text">View only</span>}</div> }];
+frontend/src/pages/FeesAndPayments.jsx:66:        return <PageContainer><PageHeader title="Fees & Payments" subtitle="Define academic fee rates, generate class invoices, and inspect payment receipt records." action={canManageFees && activeTab === "structures" ? <Button onClick={() => { setFormError(""); setActionMessage(""); setShowStructureModal(true); }}>Create fee structure</Button> : null} />{actionMessage && activeTab === "structures" && <Alert variant="success">{actionMessage}</Alert>}{configError && activeTab === "structures" && <Alert variant="error" action={<button type="button" onClick={loadData}>Retry</button>}>{configError}</Alert>}{paymentsError && activeTab === "payments" && <Alert variant="error" action={<button type="button" onClick={loadData}>Retry</button>}>{paymentsError}</Alert>}<div className="ui-tabs" role="tablist"><button type="button" role="tab" aria-selected={activeTab === "structures"} onClick={() => setActiveTab("structures")} className={activeTab === "structures" ? "ui-tab ui-tab-active" : "ui-tab"}>Fee structures ({structures.length})</button><button type="button" role="tab" aria-selected={activeTab === "payments"} onClick={() => setActiveTab("payments")} className={activeTab === "payments" ? "ui-tab ui-tab-active" : "ui-tab"}>Payment logs ({payments.length})</button></div><SectionCard title={activeTab === "structures" ? "Configured fee structures" : "Payment history"}>{activeTab === "structures" ? <DataTable columns={structureColumns} data={structures} emptyTitle="No fee structures configured" emptyMessage="Create a fee structure for a session, term, division, or class." /> : <DataTable columns={paymentColumns} data={payments} emptyTitle="No payment receipts" emptyMessage="Payment receipts will appear here after payments are recorded." />}</SectionCard><Modal open={showStructureModal && canManageFees} title="Create fee structure" description="Set the amount and academic scope for this charge." onClose={() => setShowStructureModal(false)} size="lg" footer={<FormActions sticky={false}><Button variant="secondary" onClick={() => setShowStructureModal(false)}>Cancel</Button><Button type="submit" form="fee-structure-form" loading={saving}>Save fee structure</Button></FormActions>}><form id="fee-structure-form" onSubmit={handleCreateStructure} className="ui-form-grid">{formError && <div className="ui-form-full"><Alert variant="error">{formError}</Alert></div>}<FormField label="Fee name" htmlFor="fee-name" required><input id="fee-name" value={structureForm.name} onChange={(event) => updateForm("name", event.target.value)} placeholder="e.g. First Term Tuition" required className="ui-form-control" /></FormField><FormField label="Amount (₦)" htmlFor="fee-amount" required><input id="fee-amount" type="number" min="0" step="0.01" value={structureForm.amount} onChange={(event) => updateForm("amount", event.target.value)} required className="ui-form-control" /></FormField><FormField label="Category" htmlFor="fee-category" required><select id="fee-category" value={structureForm.category} onChange={(event) => updateForm("category", event.target.value)} className="ui-form-control"><option>Tuition</option><option>Admission</option><option>Uniform</option><option>Books</option><option>Exam</option><option>Transport</option></select></FormField><FormField label="Academic session" htmlFor="fee-session" required><select id="fee-session" value={structureForm.academic_session_id} onChange={(event) => updateForm("academic_session_id", event.target.value)} required className="ui-form-control"><option value="">Select session</option>{sessions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></FormField><FormField label="Term" htmlFor="fee-term" required><select id="fee-term" value={structureForm.term_id} onChange={(event) => updateForm("term_id", event.target.value)} required className="ui-form-control"><option value="">Select term</option>{visibleTerms.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></FormField><FormField label="Division" htmlFor="fee-division" required><select id="fee-division" value={structureForm.division_id} onChange={(event) => updateForm("division_id", event.target.value)} required className="ui-form-control"><option value="">Select division</option>{divisions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></FormField><FormField label="Class" htmlFor="fee-class" required><select id="fee-class" value={structureForm.class_id} onChange={(event) => updateForm("class_id", event.target.value)} required className="ui-form-control"><option value="">Select class</option>{visibleClasses.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></FormField><div className="ui-form-full"><FormField label="Description" htmlFor="fee-description"><textarea id="fee-description" value={structureForm.description} onChange={(event) => updateForm("description", event.target.value)} rows="3" className="ui-form-control" /></FormField></div><label className="ui-form-field flex items-center gap-2"><input type="checkbox" checked={structureForm.is_active} onChange={(event) => updateForm("is_active", event.target.checked)} /><span className="ui-form-label mb-0">Active fee structure</span></label></form></Modal></PageContainer>;
+frontend/src/pages/FormTeacherDashboard.jsx:1:import React, { useEffect, useState } from "react";
+frontend/src/pages/FormTeacherDashboard.jsx:25:    useEffect(() => {
+frontend/src/pages/FormTeacherDashboard.jsx:67:                action={<button type="button" onClick={() => openTab("attendance")} className="btn-primary">Mark Form Attendance</button>}
+frontend/src/pages/FormTeacherDashboard.jsx:80:                    <button key={tab.id} type="button" onClick={() => openTab(tab.id)} className={`px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all ${activeTab === tab.id ? "bg-violet-600 text-white shadow-md shadow-violet-200" : "bg-white text-slate-600 hover:bg-violet-50 border border-slate-200"}`}>
+frontend/src/pages/FormTeacherDashboard.jsx:92:                                <button type="button" onClick={() => openTab("behaviour")} className="bg-rose-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Review</button>
+frontend/src/pages/FormTeacherDashboard.jsx:98:                                <button type="button" onClick={() => openTab("messages")} className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Inbox</button>
+frontend/src/pages/FormTeacherDashboard.jsx:104:                        <div className="p-5 border-b border-slate-100 flex justify-between items-center"><h3 className="font-bold text-slate-900">Form Class Roster ({profile.form_class || "Unassigned"})</h3><button type="button" onClick={() => openTab("my_class")} className="text-xs font-semibold text-violet-600 hover:underline">View All</button></div>
+frontend/src/pages/HostelDashboard.jsx:1:import React, { useState, useEffect } from "react";
+frontend/src/pages/HostelDashboard.jsx:20:    useEffect(() => {
+frontend/src/pages/HostelDashboard.jsx:90:                        <button type="button" onClick={() => setShowHostelModal(true)} className="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+frontend/src/pages/HostelDashboard.jsx:93:                        <button type="button" onClick={() => setShowRoomModal(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+frontend/src/pages/HostelDashboard.jsx:96:                        <button type="button" onClick={() => setShowAllocationModal(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+frontend/src/pages/HostelDashboard.jsx:104:                        <button type="button" key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-sky-600 text-sky-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
+frontend/src/pages/HostelDashboard.jsx:192:                            <button type="button" onClick={() => setShowHostelModal(false)} className="text-gray-400">×</button>
+frontend/src/pages/HostelDashboard.jsx:212:                                <button type="button" onClick={() => setShowHostelModal(false)} className="px-4 py-2 text-sm text-gray-500">Cancel</button>
+frontend/src/pages/HostelDashboard.jsx:226:                            <button type="button" onClick={() => setShowRoomModal(false)} className="text-gray-400">×</button>
+frontend/src/pages/HostelDashboard.jsx:247:                                <button type="button" onClick={() => setShowRoomModal(false)} className="px-4 py-2 text-sm text-gray-500">Cancel</button>
+frontend/src/pages/HostelDashboard.jsx:261:                            <button type="button" onClick={() => setShowAllocationModal(false)} className="text-gray-400">×</button>
+frontend/src/pages/HostelDashboard.jsx:287:                                <button type="button" onClick={() => setShowAllocationModal(false)} className="px-4 py-2 text-sm text-gray-500">Cancel</button>
+frontend/src/pages/Hostels.jsx:1:import React, { useState, useEffect } from 'react';
+frontend/src/pages/Hostels.jsx:20:  useEffect(() => {
+frontend/src/pages/Hostels.jsx:69:              onClick={() => setShowHostelModal(true)}
+frontend/src/pages/Hostels.jsx:81:          <button type="button" onClick={() => setMessage('')} className="font-bold">✕</button>
+frontend/src/pages/Hostels.jsx:88:          <button type="button" onClick={loadHostelData} className="underline font-semibold">Retry</button>
+frontend/src/pages/Hostels.jsx:95:          onClick={() => setActiveTab('hostels')}
+frontend/src/pages/Hostels.jsx:103:          onClick={() => setActiveTab('rooms')}
+frontend/src/pages/Hostels.jsx:111:          onClick={() => setActiveTab('allocations')}
+frontend/src/pages/Hostels.jsx:258:                  onClick={() => setShowHostelModal(false)}
+frontend/src/pages/LeaveRequests.jsx:1:import { useEffect, useMemo, useState } from "react";
+frontend/src/pages/LeaveRequests.jsx:90:  useEffect(() => {
+frontend/src/pages/LeaveRequests.jsx:196:                <button type="button" onClick={() => reviewRequest(row, "Approved")}>Approve</button>
+frontend/src/pages/LeaveRequests.jsx:197:                <button type="button" onClick={() => reviewRequest(row, "Rejected")}>Reject</button>
+frontend/src/pages/LeaveRequests.jsx:201:              <button type="button" onClick={() => cancelRequest(row)}>Cancel</button>
+frontend/src/pages/LibrarianDashboard.jsx:1:import React, { useState, useEffect } from "react";
+frontend/src/pages/LibrarianDashboard.jsx:29:    useEffect(() => {
+frontend/src/pages/LibrarianDashboard.jsx:95:                        <button type="button" onClick={() => setShowBookModal(true)} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+frontend/src/pages/LibrarianDashboard.jsx:98:                        <button type="button" onClick={() => setShowLoanModal(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+frontend/src/pages/LibrarianDashboard.jsx:106:                        <button type="button" key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-sm font-medium border-b-2 capitalize whitespace-nowrap transition-all -mb-px ${activeTab === tab ? "border-amber-600 text-amber-600 font-semibold" : "border-transparent text-gray-500 hover:text-gray-900"}`}>
+frontend/src/pages/LibrarianDashboard.jsx:185:                                                            <button type="button" onClick={() => handleUpdateLoanStatus(l.id, 'Returned')} className="text-emerald-600 hover:underline text-xs font-semibold">Mark Returned</button>
+frontend/src/pages/LibrarianDashboard.jsx:186:                                                            <button type="button" onClick={() => handleUpdateLoanStatus(l.id, 'Lost')} className="text-red-500 hover:underline text-xs font-semibold">Mark Lost</button>
+frontend/src/pages/LibrarianDashboard.jsx:207:                            <button type="button" onClick={() => setShowBookModal(false)} className="text-gray-400">×</button>
+frontend/src/pages/LibrarianDashboard.jsx:235:                                <button type="button" onClick={() => setShowBookModal(false)} className="px-4 py-2 text-sm text-gray-500">Cancel</button>
+frontend/src/pages/LibrarianDashboard.jsx:249:                            <button type="button" onClick={() => setShowLoanModal(false)} className="text-gray-400">×</button>
+frontend/src/pages/LibrarianDashboard.jsx:275:                                <button type="button" onClick={() => setShowLoanModal(false)} className="px-4 py-2 text-sm text-gray-500">Cancel</button>
+frontend/src/pages/LinkStudentToParent.jsx:103:          onClick={() => setPage('parents')}
+frontend/src/pages/LinkStudentToParent.jsx:122:              onClick={searchStudents}
+frontend/src/pages/LinkStudentToParent.jsx:141:                  onClick={() => selectStudent(student)}
+frontend/src/pages/LinkStudentToParent.jsx:186:            onClick={() => setPage('parents')}
+frontend/src/pages/Login.jsx:83:            <button type="button" className="dono-auth-link" onClick={() => { setMfaChallenge(""); setMfaCode(""); setError(""); }}>Start sign-in again</button>
+frontend/src/pages/Login.jsx:91:          {mfaChallenge ? <button type="button" onClick={verifyMfa} className="dono-auth-submit" disabled={loading || !mfaCode.trim()}>{loading ? "Verifying…" : "Verify and continue"}</button> : <button type="submit" className="dono-auth-submit" disabled={loading}>{loading ? "Signing in…" : "Sign in"}</button>}
+frontend/src/pages/Login.jsx:92:          <button type="button" className="dono-auth-link" onClick={() => navigate(`/forgot-password?email=${encodeURIComponent(email)}`)}>Forgot password?</button>
+frontend/src/pages/NurseDashboard.jsx:1:import { useCallback, useEffect, useState } from "react";
+frontend/src/pages/NurseDashboard.jsx:49:  useEffect(() => { loadClinicData(); }, [loadClinicData]);
+frontend/src/pages/NurseDashboard.jsx:87:    <PageHeader title="School Clinic & Health" subtitle="Protect student health information, record visits, and track emergency or referral follow-up." action={<div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={loadClinicData} loading={loading}>Refresh</Button>{canViewSensitiveHealth && <><Button variant="secondary" onClick={() => setModal("record")}>Add medical profile</Button><Button onClick={() => setModal("visit")}>Log clinic visit</Button></>}</div>} />
+frontend/src/pages/NurseDashboard.jsx:88:    {error && <Alert variant="error" action={<Button variant="secondary" size="sm" onClick={loadClinicData}>Retry</Button>}>{error}</Alert>}
+frontend/src/pages/NurseDashboard.jsx:89:    {message && <Alert variant="success" action={<Button variant="secondary" size="sm" onClick={() => setMessage("")}>Dismiss</Button>}>{message}</Alert>}
+frontend/src/pages/NurseDashboard.jsx:91:    <div className="my-5 flex gap-2 overflow-x-auto rounded-xl border border-slate-200 bg-white p-2 shadow-sm"><Button variant={activeTab === "visits" ? "primary" : "secondary"} onClick={() => setActiveTab("visits")}>Clinic visits ({visits.length})</Button><Button variant={activeTab === "records" ? "primary" : "secondary"} onClick={() => setActiveTab("records")}>Medical profiles ({records.length})</Button></div>
+frontend/src/pages/NurseDashboard.jsx:94:    {modal && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"><div role="dialog" aria-modal="true" className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl"><div className="mb-4 flex items-start justify-between"><div><h2 className="text-lg font-bold text-slate-900">{modal === "visit" ? "Log clinic visit" : "Add medical profile"}</h2><p className="mt-1 text-sm text-slate-600">Use only the minimum necessary information and confirm the learner belongs to this school.</p></div><button type="button" onClick={() => setModal(null)} className="text-2xl text-slate-500" aria-label="Close">×</button></div>{modal === "visit" ? <form onSubmit={saveVisit} className="space-y-4"><label className="block text-sm font-semibold">Student<select required value={visitForm.student_id} onChange={(event) => setVisitForm({ ...visitForm, student_id: event.target.value })} className="ui-input mt-1 w-full"><option value="">Select active student</option>{students.map((student) => <option key={student.id} value={student.id}>{studentName(student)} — {student.admission_number || "No admission number"}</option>)}</select></label><div className="grid gap-4 sm:grid-cols-2"><label className="block text-sm font-semibold">Visit date and time<input required type="datetime-local" value={visitForm.visit_date} onChange={(event) => setVisitForm({ ...visitForm, visit_date: event.target.value })} className="ui-input mt-1 w-full" /></label><label className="block text-sm font-semibold">Complaint<input required value={visitForm.complaint} onChange={(event) => setVisitForm({ ...visitForm, complaint: event.target.value })} className="ui-input mt-1 w-full" placeholder="Symptoms or reason for visit" /></label></div><label className="block text-sm font-semibold">Treatment given<textarea required value={visitForm.treatment_given} onChange={(event) => setVisitForm({ ...visitForm, treatment_given: event.target.value })} className="ui-input mt-1 min-h-24 w-full" /></label><label className="block text-sm font-semibold">Nurse notes<textarea value={visitForm.nurse_notes} onChange={(event) => setVisitForm({ ...visitForm, nurse_notes: event.target.value })} className="ui-input mt-1 min-h-20 w-full" /></label><div className="grid gap-4 sm:grid-cols-2"><label className="block text-sm font-semibold">Referral status<select value={visitForm.referral_status} onChange={(event) => setVisitForm({ ...visitForm, referral_status: event.target.value })} className="ui-input mt-1 w-full"><option value="none">No referral</option><option value="pending">Pending</option><option value="completed">Completed</option><option value="declined">Declined</option></select></label><label className="block text-sm font-semibold">Referral destination<input value={visitForm.referral_destination} onChange={(event) => setVisitForm({ ...visitForm, referral_destination: event.target.value })} className="ui-input mt-1 w-full" placeholder="Hospital, specialist, or service" /></label></div><div className="grid gap-4 sm:grid-cols-2"><label className="block text-sm font-semibold">Follow-up date<input type="date" value={visitForm.follow_up_date} onChange={(event) => setVisitForm({ ...visitForm, follow_up_date: event.target.value })} className="ui-input mt-1 w-full" /></label><label className="flex items-center gap-3 pt-7 text-sm font-semibold"><input type="checkbox" checked={visitForm.emergency_flag} onChange={(event) => setVisitForm({ ...visitForm, emergency_flag: event.target.checked })} /> Emergency escalation required</label></div><div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button><Button type="submit" loading={saving}>Save visit</Button></div></form> : <form onSubmit={saveRecord} className="space-y-4"><label className="block text-sm font-semibold">Student<select required value={recordForm.student_id} onChange={(event) => setRecordForm({ ...recordForm, student_id: event.target.value })} className="ui-input mt-1 w-full"><option value="">Select active student</option>{students.map((student) => <option key={student.id} value={student.id}>{studentName(student)} — {student.admission_number || "No admission number"}</option>)}</select></label><div className="grid gap-4 sm:grid-cols-2"><label className="block text-sm font-semibold">Blood group<select value={recordForm.blood_group} onChange={(event) => setRecordForm({ ...recordForm, blood_group: event.target.value })} className="ui-input mt-1 w-full"><option value="">Not recorded</option>{["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"].map((value) => <option key={value}>{value}</option>)}</select></label><label className="block text-sm font-semibold">Genotype<select value={recordForm.genotype} onChange={(event) => setRecordForm({ ...recordForm, genotype: event.target.value })} className="ui-input mt-1 w-full"><option value="">Not recorded</option>{["AA", "AS", "SS", "AC"].map((value) => <option key={value}>{value}</option>)}</select></label></div><label className="block text-sm font-semibold">Allergies<textarea value={recordForm.allergies} onChange={(event) => setRecordForm({ ...recordForm, allergies: event.target.value })} className="ui-input mt-1 min-h-20 w-full" /></label><label className="block text-sm font-semibold">Chronic conditions<textarea value={recordForm.chronic_conditions} onChange={(event) => setRecordForm({ ...recordForm, chronic_conditions: event.target.value })} className="ui-input mt-1 min-h-20 w-full" /></label><div className="grid gap-4 sm:grid-cols-2"><label className="block text-sm font-semibold">Emergency contact<input value={recordForm.emergency_contact_name} onChange={(event) => setRecordForm({ ...recordForm, emergency_contact_name: event.target.value })} className="ui-input mt-1 w-full" /></label><label className="block text-sm font-semibold">Emergency phone<input value={recordForm.emergency_contact_phone} onChange={(event) => setRecordForm({ ...recordForm, emergency_contact_phone: event.target.value })} className="ui-input mt-1 w-full" /></label></div><div className="flex justify-end gap-2"><Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button><Button type="submit" loading={saving}>Save profile</Button></div></form>}</div></div>}
+frontend/src/pages/NurseryHeadDashboard.jsx:1:import React, { useEffect, useState } from "react";
+frontend/src/pages/NurseryHeadDashboard.jsx:29:    useEffect(() => {
+frontend/src/pages/NurseryHeadDashboard.jsx:70:                action={<button type="button" onClick={() => setPage?.("add-student")} className="btn-primary">Register New Pupil</button>}
+frontend/src/pages/NurseryHeadDashboard.jsx:81:                {TABS.map((tab) => <button key={tab.id} type="button" onClick={() => openTab(tab.id)} className={`whitespace-nowrap rounded-lg border px-3 py-2 text-xs font-semibold ${activeTab === tab.id ? "bg-pink-600 text-white border-pink-600" : "bg-white text-slate-600 border-slate-200"}`}>{tab.label}</button>)}
+frontend/src/pages/NurseryHeadDashboard.jsx:86:                        <div className="flex items-center justify-between border-b border-slate-100 p-5"><div><h2 className="font-bold text-slate-900">Nursery Classes</h2><p className="text-xs text-slate-500 mt-1">Live classes and active pupil counts. Teacher allocation is not present in the current class model.</p></div><button type="button" onClick={() => openTab("classes")} className="text-xs font-semibold text-pink-600 hover:underline">View All</button></div>
+frontend/src/pages/NurseryHeadDashboard.jsx:90:                        <div className="flex items-center justify-between border-b border-slate-100 p-5"><div><h2 className="font-bold text-slate-900">Recent Assessments</h2><p className="text-xs text-slate-500 mt-1">Live result submissions for nursery classes.</p></div><button type="button" onClick={() => openTab("assessment")} className="text-xs font-semibold text-pink-600 hover:underline">Manage</button></div>
+frontend/src/pages/OrganizationOwnerDashboard.jsx:1:import React, { useEffect, useState } from "react";
+=== GUIDE COMPONENT ===
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { getPrimaryRoleSlug } from "../../utils/role";
+import { ARCHITECTURE_MODULES } from "../../config/architectureModules";
+import { GUIDE_MODULE_KEYS_WITH_DOCUMENTS, controlGuide, moduleGuide, pageGuideKey, roleGuide } from "../../config/guideKnowledge";
+import { normalizeSchoolOsPage, schoolOsCapability } from "../../config/schoolOsCapabilities";
+import "./DONOGuide.css";
+
+const GUIDE_LABELS = { "id-card": "Student ID Card" };
+const uniqueModules = GUIDE_MODULE_KEYS_WITH_DOCUMENTS.map((key) => {
+  const page = normalizeSchoolOsPage(ARCHITECTURE_MODULES[key]?.page || key);
+  const capability = schoolOsCapability(page);
+  return {
+    key,
+    label: capability?.label || ARCHITECTURE_MODULES[key]?.label || GUIDE_LABELS[key] || key,
+    page,
+  };
+}).filter((module, index, list) => list.findIndex((item) => item.key === module.key) === index);
+
+export default function DONOGuide({ page = "dashboard", setPage }) {
+  const { user, roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
+  const role = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
+  const roleHelp = useMemo(() => roleGuide(role), [role]);
+  const currentPageKey = pageGuideKey(normalizeSchoolOsPage(page));
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState("page");
+  const [selectedModule, setSelectedModule] = useState(currentPageKey);
+  const [stepIndex, setStepIndex] = useState(0);
+  const [roleStepIndex, setRoleStepIndex] = useState(0);
+  const [query, setQuery] = useState("");
+  const [tourComplete, setTourComplete] = useState(false);
+  const [selectedControl, setSelectedControl] = useState(null);
+  const closeButtonRef = useRef(null);
+  const storageKey = `doono-guide:${user?.id || "guest"}:${role}:${school?.id || "organization"}`;
+
+  useEffect(() => {
+    setSelectedModule(currentPageKey);
+    setStepIndex(0);
+  }, [currentPageKey]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    setTourComplete(window.localStorage.getItem(storageKey) === "complete");
+    closeButtonRef.current?.focus();
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, storageKey]);
+
+  useEffect(() => {
+    const onControlClick = (event) => {
+      const target = event.target instanceof Element ? event.target.closest("button, a, [role=button], select, input[type=file]") : null;
+      if (!target || target.closest(".dono-guide-layer, .dono-guide-launcher")) return;
+      const label = target.getAttribute("aria-label") || target.getAttribute("title") || target.closest("label")?.textContent?.trim() || target.textContent?.trim();
+      if (!label) return;
+      window.setTimeout(() => {
+        setSelectedModule(currentPageKey);
+        setStepIndex(0);
+        setView("page");
+        setSelectedControl(controlGuide(label, currentPageKey, role));
+        setOpen(true);
+      }, 0);
+    };
+    document.addEventListener("click", onControlClick, true);
+    return () => document.removeEventListener("click", onControlClick, true);
+  }, [currentPageKey, role]);
+
+  const pageHelp = useMemo(() => moduleGuide(selectedModule), [selectedModule]);
+  const activeSteps = view === "role" ? roleHelp.steps : pageHelp.steps;
+  const activeIndex = view === "role" ? roleStepIndex : stepIndex;
+  const currentStep = activeSteps[activeIndex] || activeSteps[0];
+  const filteredModules = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return uniqueModules;
+    return uniqueModules.filter((module) => `${module.label} ${module.key}`.toLowerCase().includes(normalized));
+  }, [query]);
+
+  if (!user?.id) return null;
+
+  function openGuide(nextView = "page") {
+    setSelectedControl(null);
+    setView(nextView);
+    setOpen(true);
+    if (nextView === "role") setRoleStepIndex(0);
+    else setStepIndex(0);
+  }
+
+  function finishTour() {
+    window.localStorage.setItem(storageKey, "complete");
+    setTourComplete(true);
+    setOpen(false);
+  }
+
+  function openAction(action) {
+    if (!action || typeof setPage !== "function") return;
+    const canonicalPage = normalizeSchoolOsPage(action);
+    setSelectedModule(pageGuideKey(canonicalPage));
+    setStepIndex(0);
+    setPage(canonicalPage);
+  }
+
+  function nextStep() {
+    if (activeIndex + 1 >= activeSteps.length) {
+      if (view === "role") finishTour();
+      else setOpen(false);
+      return;
+    }
+    const next = activeSteps[activeIndex + 1];
+    if (next?.action) openAction(next.action);
+    if (view === "role") setRoleStepIndex((index) => index + 1);
+    else setStepIndex((index) => index + 1);
+  }
+
+  function chooseModule(event) {
+    const nextModule = event.target.value;
+    setSelectedModule(nextModule);
+    setStepIndex(0);
+    const selected = uniqueModules.find((module) => module.key === nextModule);
+    if (selected?.page && typeof setPage === "function") setPage(selected.page);
+  }
+
+  return (
+    <>
+      <div className="dono-guide-launcher" aria-label="DOONO Guide controls">
+        <button type="button" className="dono-guide-trigger" onClick={() => openGuide("page")} aria-label="Open DOONO Guide">
+          Guide
+        </button>
+        {typeof setPage === "function" && <button type="button" className="dono-guide-support-trigger" onClick={() => setPage("support-centre")} aria-label="Open Support Centre">
+          Support
+        </button>}
+        <button type="button" className="dono-guide-tour-trigger" onClick={() => openGuide("role")} aria-label="Start my role tour">
+          {tourComplete ? "Replay tour" : "Role tour"}
+        </button>
+      </div>
+
+      {open && (
+        <div className="dono-guide-layer" role="presentation">
+          <button type="button" className="dono-guide-backdrop" onClick={() => setOpen(false)} aria-label="Close guide" />
+          <section className="dono-guide-card" role="dialog" aria-modal="true" aria-labelledby="dono-guide-title">
+            <div className="dono-guide-card-header">
+              <div>
+                <span className="dono-guide-kicker">DOONO Guide · {roleHelp.label}</span>
+                <h2 id="dono-guide-title">{view === "role" ? `${roleHelp.label} tour` : pageHelp.title}</h2>
+              </div>
+              <button ref={closeButtonRef} type="button" className="dono-guide-close" onClick={() => setOpen(false)} aria-label="Close guide">×</button>
+            </div>
+
+            <div className="dono-guide-tabs" role="tablist" aria-label="Guide view">
+              <button type="button" role="tab" aria-selected={view === "page"} className={view === "page" ? "is-active" : ""} onClick={() => { setView("page"); setStepIndex(0); }}>This page</button>
+              <button type="button" role="tab" aria-selected={view === "role"} className={view === "role" ? "is-active" : ""} onClick={() => { setView("role"); setRoleStepIndex(0); }}>My role</button>
+            </div>
+
+            {view === "page" && (
+              <label className="dono-guide-module-picker">
+                <span>Explore a module</span>
+                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search modules" aria-label="Search modules" />
+                <select value={selectedModule} onChange={chooseModule} aria-label="Choose a module">
+                  {filteredModules.map((module) => <option key={module.key} value={module.key}>{module.label}</option>)}
+                </select>
+              </label>
+            )}
+
+            <p className="dono-guide-purpose">{view === "role" ? roleHelp.intro : pageHelp.purpose}</p>
+            {view === "role" && <section className="dono-guide-role-profile">
+              <div className="dono-guide-role-definition"><strong>What this role means</strong><p>{roleHelp.definition}</p></div>
+              <div className="dono-guide-role-grid">
+                <div><strong>Main purpose</strong><p>{roleHelp.primaryPurpose}</p></div>
+                <div><strong>Works with</strong><p>{roleHelp.worksWith}</p></div>
+                <div><strong>Before you start</strong><p>{roleHelp.firstChecks}</p></div>
+              </div>
+              <div className="dono-guide-role-grid">
+                <div><strong>What this role can do</strong><ul>{(Array.isArray(roleHelp.canDo) ? roleHelp.canDo : []).map((item) => <li key={item}>{item}</li>)}</ul></div>
+                <div><strong>What this role must not do</strong><ul>{(Array.isArray(roleHelp.cannotDo) ? roleHelp.cannotDo : []).map((item) => <li key={item}>{item}</li>)}</ul></div>
+              </div>
+              <div className="dono-guide-role-workflow"><strong>Normal working cycle</strong><ol>{(Array.isArray(roleHelp.dailyWorkflow) ? roleHelp.dailyWorkflow : []).map((item) => <li key={item}>{item}</li>)}</ol></div>
+            </section>}
+            {view === "page" && <div className="dono-guide-explanation-grid">
+              <section><strong>Why this feature matters</strong><p>{pageHelp.whyItMatters}</p></section>
+              <section><strong>What to prepare first</strong><p>{pageHelp.beforeYouStart}</p></section>
+            </div>}
+            {view === "page" && <section className="dono-guide-detail-section"><h3>Important fields and what they mean</h3><div className="dono-guide-field-list">{(Array.isArray(pageHelp.fields) ? pageHelp.fields : []).map((field) => <div key={field.name}><strong>{field.name}</strong><span>{field.explanation}</span></div>)}</div></section>}
+            <div className="dono-guide-context-cards">
+              <div><strong>Before you start</strong><span>{view === "page" ? pageHelp.beforeYouStart : "Confirm the selected organization, school, session, term, and role are correct for this task."}</span></div>
+              <div><strong>When you finish</strong><span>{view === "page" ? pageHelp.successSignals?.join(" ") : "Look for a success message, a changed list, or an updated dashboard number before leaving the workspace."}</span></div>
+              <div><strong>If you are blocked</strong><span>Read the page error, check the prerequisites and permissions, then open Support Centre with the exact message if the problem continues.</span></div>
+            </div>
+            {selectedControl && <section className="dono-guide-control-card" aria-live="polite"><div className="dono-guide-control-heading"><div><span className="dono-guide-kicker">You selected a control</span><h3>{selectedControl.title}</h3></div><button type="button" className="dono-guide-control-close" onClick={() => setSelectedControl(null)} aria-label="Close control explanation">×</button></div><div className="dono-guide-control-grid"><div><strong>What it means</strong><p>{selectedControl.what}</p></div><div><strong>How to use it</strong><p>{selectedControl.how}</p></div><div><strong>Why it helps you</strong><p>{selectedControl.benefit}</p></div><div><strong>What happens next</strong><p>{selectedControl.after}</p></div><div><strong>Who can use it</strong><p>{selectedControl.access}</p></div></div></section>}
+            {view === "page" && <section className="dono-guide-detail-section"><h3>Available controls on this workflow</h3><div className="dono-guide-control-list">{(Array.isArray(pageHelp.controls) ? pageHelp.controls : []).map((control, index) => <div key={`${pageHelp.key}-control-${index}`}><span>{index + 1}</span><p>{control}</p></div>)}</div><h3 className="dono-guide-success-heading">How to know you completed it</h3><ul className="dono-guide-success-list">{(Array.isArray(pageHelp.successSignals) ? pageHelp.successSignals : []).map((signal) => <li key={signal}>{signal}</li>)}</ul></section>}
+            <div className="dono-guide-step-card" aria-live="polite">
+              <span className="dono-guide-step-number">Step {activeIndex + 1}</span>
+              <h3>{currentStep?.title}</h3>
+              <p>{currentStep?.detail}</p>
+              {currentStep?.action && <button type="button" className="dono-guide-inline-action" onClick={() => openAction(currentStep.action)}>Open this workspace</button>}
+            </div>
+            <p className="dono-guide-next-info"><strong>Next:</strong> {view === "role" ? (activeIndex === activeSteps.length - 1 ? "Return to your dashboard and confirm the task is complete." : "Continue to the next role step.") : pageHelp.next}</p>
+
+            <div className="dono-guide-progress">
+              <span>Step {activeIndex + 1} of {activeSteps.length}</span>
+              <div className="dono-guide-dots" aria-hidden="true">
+                {activeSteps.map((_, index) => <span key={index} className={index <= activeIndex ? "is-active" : ""} />)}
+              </div>
+            </div>
+            <div className="dono-guide-actions">
+              <button type="button" className="dono-guide-skip" onClick={() => view === "role" ? finishTour() : setOpen(false)}>{view === "role" ? "Finish later" : "Close guide"}</button>
+              <button type="button" className="dono-guide-next" onClick={nextStep}>{activeIndex + 1 === activeSteps.length ? (view === "role" ? "Complete tour" : "Done") : "Next step"}</button>
+            </div>
+          </section>
+        </div>
+      )}
+    </>
+  );
+}
+=== APP GUIDE WIRING ===

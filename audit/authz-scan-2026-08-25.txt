@@ -1,0 +1,817 @@
+=== FORM REQUEST AUTHORIZE METHODS ===
+backend/dono-api/app/Http/Requests/LinkParentPortalAccountRequest.php-10-{
+backend/dono-api/app/Http/Requests/LinkParentPortalAccountRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/LinkParentPortalAccountRequest.php-12-    {
+backend/dono-api/app/Http/Requests/LinkParentPortalAccountRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/LinkParentPortalAccountRequest.php-14-    }
+backend/dono-api/app/Http/Requests/LinkParentPortalAccountRequest.php-15-
+backend/dono-api/app/Http/Requests/LinkParentPortalAccountRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/LinkStudentPortalAccountRequest.php-10-{
+backend/dono-api/app/Http/Requests/LinkStudentPortalAccountRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/LinkStudentPortalAccountRequest.php-12-    {
+backend/dono-api/app/Http/Requests/LinkStudentPortalAccountRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/LinkStudentPortalAccountRequest.php-14-    }
+backend/dono-api/app/Http/Requests/LinkStudentPortalAccountRequest.php-15-
+backend/dono-api/app/Http/Requests/LinkStudentPortalAccountRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/ReviewDisciplineCaseRequest.php-9-{
+backend/dono-api/app/Http/Requests/ReviewDisciplineCaseRequest.php:10:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/ReviewDisciplineCaseRequest.php-11-    {
+backend/dono-api/app/Http/Requests/ReviewDisciplineCaseRequest.php-12-        return true;
+backend/dono-api/app/Http/Requests/ReviewDisciplineCaseRequest.php-13-    }
+backend/dono-api/app/Http/Requests/ReviewDisciplineCaseRequest.php-14-
+backend/dono-api/app/Http/Requests/ReviewDisciplineCaseRequest.php-15-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/ReviewLeaveRequest.php-9-{
+backend/dono-api/app/Http/Requests/ReviewLeaveRequest.php:10:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/ReviewLeaveRequest.php-11-    {
+backend/dono-api/app/Http/Requests/ReviewLeaveRequest.php-12-        return true;
+backend/dono-api/app/Http/Requests/ReviewLeaveRequest.php-13-    }
+backend/dono-api/app/Http/Requests/ReviewLeaveRequest.php-14-
+backend/dono-api/app/Http/Requests/ReviewLeaveRequest.php-15-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/ReviewSafetyIncidentRequest.php-9-{
+backend/dono-api/app/Http/Requests/ReviewSafetyIncidentRequest.php:10:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/ReviewSafetyIncidentRequest.php-11-    {
+backend/dono-api/app/Http/Requests/ReviewSafetyIncidentRequest.php-12-        return true;
+backend/dono-api/app/Http/Requests/ReviewSafetyIncidentRequest.php-13-    }
+backend/dono-api/app/Http/Requests/ReviewSafetyIncidentRequest.php-14-
+backend/dono-api/app/Http/Requests/ReviewSafetyIncidentRequest.php-15-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreAcademicSessionRequest.php-11-     */
+backend/dono-api/app/Http/Requests/StoreAcademicSessionRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreAcademicSessionRequest.php-13-    {
+backend/dono-api/app/Http/Requests/StoreAcademicSessionRequest.php-14-        return true;
+backend/dono-api/app/Http/Requests/StoreAcademicSessionRequest.php-15-    }
+backend/dono-api/app/Http/Requests/StoreAcademicSessionRequest.php-16-
+backend/dono-api/app/Http/Requests/StoreAcademicSessionRequest.php-17-    /**
+--
+backend/dono-api/app/Http/Requests/StoreAdmissionRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreAdmissionRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreAdmissionRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreAdmissionRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/StoreAdmissionRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreAdmissionRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreAdmissionRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreAssessmentStructureRequest.php-11-     */
+backend/dono-api/app/Http/Requests/StoreAssessmentStructureRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreAssessmentStructureRequest.php-13-    {
+backend/dono-api/app/Http/Requests/StoreAssessmentStructureRequest.php-14-        return true;
+backend/dono-api/app/Http/Requests/StoreAssessmentStructureRequest.php-15-    }
+backend/dono-api/app/Http/Requests/StoreAssessmentStructureRequest.php-16-
+backend/dono-api/app/Http/Requests/StoreAssessmentStructureRequest.php-17-    /**
+--
+backend/dono-api/app/Http/Requests/StoreAssetRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreAssetRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreAssetRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreAssetRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/StoreAssetRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreAssetRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreAssetRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreAttendanceRequest.php-8-{
+backend/dono-api/app/Http/Requests/StoreAttendanceRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreAttendanceRequest.php-10-    {
+backend/dono-api/app/Http/Requests/StoreAttendanceRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/StoreAttendanceRequest.php-12-    }
+backend/dono-api/app/Http/Requests/StoreAttendanceRequest.php-13-
+backend/dono-api/app/Http/Requests/StoreAttendanceRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreClassRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreClassRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreClassRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreClassRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/StoreClassRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreClassRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreClassRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreCountryRequest.php-12-     */
+backend/dono-api/app/Http/Requests/StoreCountryRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreCountryRequest.php-14-    {
+backend/dono-api/app/Http/Requests/StoreCountryRequest.php-15-        return false;
+backend/dono-api/app/Http/Requests/StoreCountryRequest.php-16-    }
+backend/dono-api/app/Http/Requests/StoreCountryRequest.php-17-
+backend/dono-api/app/Http/Requests/StoreCountryRequest.php-18-    /**
+--
+backend/dono-api/app/Http/Requests/StoreCouponRequest.php-11-     */
+backend/dono-api/app/Http/Requests/StoreCouponRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreCouponRequest.php-13-    {
+backend/dono-api/app/Http/Requests/StoreCouponRequest.php-14-        return true;
+backend/dono-api/app/Http/Requests/StoreCouponRequest.php-15-    }
+backend/dono-api/app/Http/Requests/StoreCouponRequest.php-16-
+backend/dono-api/app/Http/Requests/StoreCouponRequest.php-17-    /**
+--
+backend/dono-api/app/Http/Requests/StoreCurrencyRequest.php-12-     */
+backend/dono-api/app/Http/Requests/StoreCurrencyRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreCurrencyRequest.php-14-    {
+backend/dono-api/app/Http/Requests/StoreCurrencyRequest.php-15-        return false;
+backend/dono-api/app/Http/Requests/StoreCurrencyRequest.php-16-    }
+backend/dono-api/app/Http/Requests/StoreCurrencyRequest.php-17-
+backend/dono-api/app/Http/Requests/StoreCurrencyRequest.php-18-    /**
+--
+backend/dono-api/app/Http/Requests/StoreDisciplineCaseRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreDisciplineCaseRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreDisciplineCaseRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreDisciplineCaseRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/StoreDisciplineCaseRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreDisciplineCaseRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreDisciplineCaseRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreDivisionRequest.php-11-     */
+backend/dono-api/app/Http/Requests/StoreDivisionRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreDivisionRequest.php-13-    {
+backend/dono-api/app/Http/Requests/StoreDivisionRequest.php-14-        return true;
+backend/dono-api/app/Http/Requests/StoreDivisionRequest.php-15-    }
+backend/dono-api/app/Http/Requests/StoreDivisionRequest.php-16-
+backend/dono-api/app/Http/Requests/StoreDivisionRequest.php-17-    /**
+--
+backend/dono-api/app/Http/Requests/StoreExamScoreRequest.php-8-{
+backend/dono-api/app/Http/Requests/StoreExamScoreRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreExamScoreRequest.php-10-    {
+backend/dono-api/app/Http/Requests/StoreExamScoreRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/StoreExamScoreRequest.php-12-    }
+backend/dono-api/app/Http/Requests/StoreExamScoreRequest.php-13-
+backend/dono-api/app/Http/Requests/StoreExamScoreRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreExaminationRequest.php-8-{
+backend/dono-api/app/Http/Requests/StoreExaminationRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreExaminationRequest.php-10-    {
+backend/dono-api/app/Http/Requests/StoreExaminationRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/StoreExaminationRequest.php-12-    }
+backend/dono-api/app/Http/Requests/StoreExaminationRequest.php-13-
+backend/dono-api/app/Http/Requests/StoreExaminationRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreFeatureRequest.php-9-{
+backend/dono-api/app/Http/Requests/StoreFeatureRequest.php:10:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreFeatureRequest.php-11-    {
+backend/dono-api/app/Http/Requests/StoreFeatureRequest.php-12-        return $this->user()?->isSuperAdmin() === true;
+backend/dono-api/app/Http/Requests/StoreFeatureRequest.php-13-    }
+backend/dono-api/app/Http/Requests/StoreFeatureRequest.php-14-
+backend/dono-api/app/Http/Requests/StoreFeatureRequest.php-15-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreFeeCategoryRequest.php-8-{
+backend/dono-api/app/Http/Requests/StoreFeeCategoryRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreFeeCategoryRequest.php-10-    {
+backend/dono-api/app/Http/Requests/StoreFeeCategoryRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/StoreFeeCategoryRequest.php-12-    }
+backend/dono-api/app/Http/Requests/StoreFeeCategoryRequest.php-13-
+backend/dono-api/app/Http/Requests/StoreFeeCategoryRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreFeePaymentRequest.php-8-{
+backend/dono-api/app/Http/Requests/StoreFeePaymentRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreFeePaymentRequest.php-10-    {
+backend/dono-api/app/Http/Requests/StoreFeePaymentRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/StoreFeePaymentRequest.php-12-    }
+backend/dono-api/app/Http/Requests/StoreFeePaymentRequest.php-13-
+backend/dono-api/app/Http/Requests/StoreFeePaymentRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreFeeRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreFeeRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreFeeRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreFeeRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/StoreFeeRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreFeeRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreFeeRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreLeaveRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreLeaveRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreLeaveRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreLeaveRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/StoreLeaveRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreLeaveRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreLeaveRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreOrganizationRequest.php-11-     */
+backend/dono-api/app/Http/Requests/StoreOrganizationRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreOrganizationRequest.php-13-    {
+backend/dono-api/app/Http/Requests/StoreOrganizationRequest.php-14-        return true;
+backend/dono-api/app/Http/Requests/StoreOrganizationRequest.php-15-    }
+backend/dono-api/app/Http/Requests/StoreOrganizationRequest.php-16-
+backend/dono-api/app/Http/Requests/StoreOrganizationRequest.php-17-    /**
+--
+backend/dono-api/app/Http/Requests/StoreParentRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreParentRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreParentRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreParentRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/StoreParentRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreParentRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreParentRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreParentStudentRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreParentStudentRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreParentStudentRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreParentStudentRequest.php-13-        return $this->user() !== null && app(CurrentContextService::class)->currentSchool($this->user())?->id !== null;
+backend/dono-api/app/Http/Requests/StoreParentStudentRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreParentStudentRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreParentStudentRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StorePaymentReceiptRequest.php-8-{
+backend/dono-api/app/Http/Requests/StorePaymentReceiptRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StorePaymentReceiptRequest.php-10-    {
+backend/dono-api/app/Http/Requests/StorePaymentReceiptRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/StorePaymentReceiptRequest.php-12-    }
+backend/dono-api/app/Http/Requests/StorePaymentReceiptRequest.php-13-
+backend/dono-api/app/Http/Requests/StorePaymentReceiptRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StorePromoCampaignRequest.php-12-     */
+backend/dono-api/app/Http/Requests/StorePromoCampaignRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StorePromoCampaignRequest.php-14-    {
+backend/dono-api/app/Http/Requests/StorePromoCampaignRequest.php-15-        return true;
+backend/dono-api/app/Http/Requests/StorePromoCampaignRequest.php-16-    }
+backend/dono-api/app/Http/Requests/StorePromoCampaignRequest.php-17-
+backend/dono-api/app/Http/Requests/StorePromoCampaignRequest.php-18-    /**
+--
+backend/dono-api/app/Http/Requests/StoreReportCardRequest.php-11-     */
+backend/dono-api/app/Http/Requests/StoreReportCardRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreReportCardRequest.php-13-    {
+backend/dono-api/app/Http/Requests/StoreReportCardRequest.php-14-        return true;
+backend/dono-api/app/Http/Requests/StoreReportCardRequest.php-15-    }
+backend/dono-api/app/Http/Requests/StoreReportCardRequest.php-16-
+backend/dono-api/app/Http/Requests/StoreReportCardRequest.php-17-    /**
+--
+backend/dono-api/app/Http/Requests/StoreResultRequest.php-8-{
+backend/dono-api/app/Http/Requests/StoreResultRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreResultRequest.php-10-    {
+backend/dono-api/app/Http/Requests/StoreResultRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/StoreResultRequest.php-12-    }
+backend/dono-api/app/Http/Requests/StoreResultRequest.php-13-
+backend/dono-api/app/Http/Requests/StoreResultRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreRoleInvitationRequest.php-9-{
+backend/dono-api/app/Http/Requests/StoreRoleInvitationRequest.php:10:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreRoleInvitationRequest.php-11-    {
+backend/dono-api/app/Http/Requests/StoreRoleInvitationRequest.php-12-        return true;
+backend/dono-api/app/Http/Requests/StoreRoleInvitationRequest.php-13-    }
+backend/dono-api/app/Http/Requests/StoreRoleInvitationRequest.php-14-
+backend/dono-api/app/Http/Requests/StoreRoleInvitationRequest.php-15-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreSafetyIncidentRequest.php-11-{
+backend/dono-api/app/Http/Requests/StoreSafetyIncidentRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSafetyIncidentRequest.php-13-    {
+backend/dono-api/app/Http/Requests/StoreSafetyIncidentRequest.php-14-        return true;
+backend/dono-api/app/Http/Requests/StoreSafetyIncidentRequest.php-15-    }
+backend/dono-api/app/Http/Requests/StoreSafetyIncidentRequest.php-16-
+backend/dono-api/app/Http/Requests/StoreSafetyIncidentRequest.php-17-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreSchoolEventRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreSchoolEventRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSchoolEventRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreSchoolEventRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/StoreSchoolEventRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreSchoolEventRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreSchoolEventRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreSchoolFacilityRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreSchoolFacilityRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSchoolFacilityRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreSchoolFacilityRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/StoreSchoolFacilityRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreSchoolFacilityRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreSchoolFacilityRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreSchoolRequest.php-11-     */
+backend/dono-api/app/Http/Requests/StoreSchoolRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSchoolRequest.php-13-    {
+backend/dono-api/app/Http/Requests/StoreSchoolRequest.php-14-        return true;
+backend/dono-api/app/Http/Requests/StoreSchoolRequest.php-15-    }
+backend/dono-api/app/Http/Requests/StoreSchoolRequest.php-16-
+backend/dono-api/app/Http/Requests/StoreSchoolRequest.php-17-    /**
+--
+backend/dono-api/app/Http/Requests/StoreSchoolSubscriptionRequest.php-11-     */
+backend/dono-api/app/Http/Requests/StoreSchoolSubscriptionRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSchoolSubscriptionRequest.php-13-    {
+backend/dono-api/app/Http/Requests/StoreSchoolSubscriptionRequest.php-14-        return true;
+backend/dono-api/app/Http/Requests/StoreSchoolSubscriptionRequest.php-15-    }
+backend/dono-api/app/Http/Requests/StoreSchoolSubscriptionRequest.php-16-
+backend/dono-api/app/Http/Requests/StoreSchoolSubscriptionRequest.php-17-    /**
+--
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceBulkRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceBulkRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceBulkRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceBulkRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceBulkRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceBulkRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceBulkRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreStaffRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreStaffRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStaffRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreStaffRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/StoreStaffRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreStaffRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreStaffRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreStreamRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreStreamRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStreamRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreStreamRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/StoreStreamRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreStreamRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreStreamRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreStudentEnrollmentRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreStudentEnrollmentRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStudentEnrollmentRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreStudentEnrollmentRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/StoreStudentEnrollmentRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreStudentEnrollmentRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreStudentEnrollmentRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreStudentFeeRequest.php-8-{
+backend/dono-api/app/Http/Requests/StoreStudentFeeRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStudentFeeRequest.php-10-    {
+backend/dono-api/app/Http/Requests/StoreStudentFeeRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/StoreStudentFeeRequest.php-12-    }
+backend/dono-api/app/Http/Requests/StoreStudentFeeRequest.php-13-
+backend/dono-api/app/Http/Requests/StoreStudentFeeRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreStudentPromotionRequest.php-8-{
+backend/dono-api/app/Http/Requests/StoreStudentPromotionRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStudentPromotionRequest.php-10-    {
+backend/dono-api/app/Http/Requests/StoreStudentPromotionRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/StoreStudentPromotionRequest.php-12-    }
+backend/dono-api/app/Http/Requests/StoreStudentPromotionRequest.php-13-
+backend/dono-api/app/Http/Requests/StoreStudentPromotionRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreStudentRequest.php-10-{
+backend/dono-api/app/Http/Requests/StoreStudentRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStudentRequest.php-12-    {
+backend/dono-api/app/Http/Requests/StoreStudentRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/StoreStudentRequest.php-14-    }
+backend/dono-api/app/Http/Requests/StoreStudentRequest.php-15-
+backend/dono-api/app/Http/Requests/StoreStudentRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreSubjectRequest.php-8-{
+backend/dono-api/app/Http/Requests/StoreSubjectRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSubjectRequest.php-10-    {
+backend/dono-api/app/Http/Requests/StoreSubjectRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/StoreSubjectRequest.php-12-    }
+backend/dono-api/app/Http/Requests/StoreSubjectRequest.php-13-
+backend/dono-api/app/Http/Requests/StoreSubjectRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreSubscriptionPlanRequest.php-11-     */
+backend/dono-api/app/Http/Requests/StoreSubscriptionPlanRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSubscriptionPlanRequest.php-13-    {
+backend/dono-api/app/Http/Requests/StoreSubscriptionPlanRequest.php-14-        return true;
+backend/dono-api/app/Http/Requests/StoreSubscriptionPlanRequest.php-15-    }
+backend/dono-api/app/Http/Requests/StoreSubscriptionPlanRequest.php-16-
+backend/dono-api/app/Http/Requests/StoreSubscriptionPlanRequest.php-17-    /**
+--
+backend/dono-api/app/Http/Requests/StoreSystemSettingRequest.php-12-     */
+backend/dono-api/app/Http/Requests/StoreSystemSettingRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSystemSettingRequest.php-14-    {
+backend/dono-api/app/Http/Requests/StoreSystemSettingRequest.php-15-        return false;
+backend/dono-api/app/Http/Requests/StoreSystemSettingRequest.php-16-    }
+backend/dono-api/app/Http/Requests/StoreSystemSettingRequest.php-17-
+backend/dono-api/app/Http/Requests/StoreSystemSettingRequest.php-18-    /**
+--
+backend/dono-api/app/Http/Requests/StoreTermRequest.php-8-{
+backend/dono-api/app/Http/Requests/StoreTermRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreTermRequest.php-10-    {
+backend/dono-api/app/Http/Requests/StoreTermRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/StoreTermRequest.php-12-    }
+backend/dono-api/app/Http/Requests/StoreTermRequest.php-13-
+backend/dono-api/app/Http/Requests/StoreTermRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/StoreTimetableRequest.php-12-{
+backend/dono-api/app/Http/Requests/StoreTimetableRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreTimetableRequest.php-14-    {
+backend/dono-api/app/Http/Requests/StoreTimetableRequest.php-15-        return true;
+backend/dono-api/app/Http/Requests/StoreTimetableRequest.php-16-    }
+backend/dono-api/app/Http/Requests/StoreTimetableRequest.php-17-
+backend/dono-api/app/Http/Requests/StoreTimetableRequest.php-18-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/UpdateAcademicSessionRequest.php-11-     */
+backend/dono-api/app/Http/Requests/UpdateAcademicSessionRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateAcademicSessionRequest.php-13-    {
+backend/dono-api/app/Http/Requests/UpdateAcademicSessionRequest.php-14-        return true;
+backend/dono-api/app/Http/Requests/UpdateAcademicSessionRequest.php-15-    }
+backend/dono-api/app/Http/Requests/UpdateAcademicSessionRequest.php-16-
+backend/dono-api/app/Http/Requests/UpdateAcademicSessionRequest.php-17-    /**
+--
+backend/dono-api/app/Http/Requests/UpdateAssetRequest.php-10-{
+backend/dono-api/app/Http/Requests/UpdateAssetRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateAssetRequest.php-12-    {
+backend/dono-api/app/Http/Requests/UpdateAssetRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/UpdateAssetRequest.php-14-    }
+backend/dono-api/app/Http/Requests/UpdateAssetRequest.php-15-
+backend/dono-api/app/Http/Requests/UpdateAssetRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/UpdateAttendanceRequest.php-8-{
+backend/dono-api/app/Http/Requests/UpdateAttendanceRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateAttendanceRequest.php-10-    {
+backend/dono-api/app/Http/Requests/UpdateAttendanceRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/UpdateAttendanceRequest.php-12-    }
+backend/dono-api/app/Http/Requests/UpdateAttendanceRequest.php-13-
+backend/dono-api/app/Http/Requests/UpdateAttendanceRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/UpdateClassRequest.php-11-     */
+backend/dono-api/app/Http/Requests/UpdateClassRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateClassRequest.php-13-    {
+backend/dono-api/app/Http/Requests/UpdateClassRequest.php-14-        return true;
+backend/dono-api/app/Http/Requests/UpdateClassRequest.php-15-    }
+backend/dono-api/app/Http/Requests/UpdateClassRequest.php-16-
+backend/dono-api/app/Http/Requests/UpdateClassRequest.php-17-    /**
+--
+backend/dono-api/app/Http/Requests/UpdateCountryRequest.php-12-     */
+backend/dono-api/app/Http/Requests/UpdateCountryRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateCountryRequest.php-14-    {
+backend/dono-api/app/Http/Requests/UpdateCountryRequest.php-15-        return false;
+backend/dono-api/app/Http/Requests/UpdateCountryRequest.php-16-    }
+backend/dono-api/app/Http/Requests/UpdateCountryRequest.php-17-
+backend/dono-api/app/Http/Requests/UpdateCountryRequest.php-18-    /**
+--
+backend/dono-api/app/Http/Requests/UpdateCouponRequest.php-12-     */
+backend/dono-api/app/Http/Requests/UpdateCouponRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateCouponRequest.php-14-    {
+backend/dono-api/app/Http/Requests/UpdateCouponRequest.php-15-        return true;
+backend/dono-api/app/Http/Requests/UpdateCouponRequest.php-16-    }
+backend/dono-api/app/Http/Requests/UpdateCouponRequest.php-17-
+backend/dono-api/app/Http/Requests/UpdateCouponRequest.php-18-    /**
+--
+backend/dono-api/app/Http/Requests/UpdateCurrencyRequest.php-12-     */
+backend/dono-api/app/Http/Requests/UpdateCurrencyRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateCurrencyRequest.php-14-    {
+backend/dono-api/app/Http/Requests/UpdateCurrencyRequest.php-15-        return false;
+backend/dono-api/app/Http/Requests/UpdateCurrencyRequest.php-16-    }
+backend/dono-api/app/Http/Requests/UpdateCurrencyRequest.php-17-
+backend/dono-api/app/Http/Requests/UpdateCurrencyRequest.php-18-    /**
+--
+backend/dono-api/app/Http/Requests/UpdateDivisionRequest.php-11-     */
+backend/dono-api/app/Http/Requests/UpdateDivisionRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateDivisionRequest.php-13-    {
+backend/dono-api/app/Http/Requests/UpdateDivisionRequest.php-14-        return true;
+backend/dono-api/app/Http/Requests/UpdateDivisionRequest.php-15-    }
+backend/dono-api/app/Http/Requests/UpdateDivisionRequest.php-16-
+backend/dono-api/app/Http/Requests/UpdateDivisionRequest.php-17-    /**
+--
+backend/dono-api/app/Http/Requests/UpdateExamScoreRequest.php-8-{
+backend/dono-api/app/Http/Requests/UpdateExamScoreRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateExamScoreRequest.php-10-    {
+backend/dono-api/app/Http/Requests/UpdateExamScoreRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/UpdateExamScoreRequest.php-12-    }
+backend/dono-api/app/Http/Requests/UpdateExamScoreRequest.php-13-
+backend/dono-api/app/Http/Requests/UpdateExamScoreRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/UpdateExaminationRequest.php-8-{
+backend/dono-api/app/Http/Requests/UpdateExaminationRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateExaminationRequest.php-10-    {
+backend/dono-api/app/Http/Requests/UpdateExaminationRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/UpdateExaminationRequest.php-12-    }
+backend/dono-api/app/Http/Requests/UpdateExaminationRequest.php-13-
+backend/dono-api/app/Http/Requests/UpdateExaminationRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/UpdateFeatureRequest.php-9-{
+backend/dono-api/app/Http/Requests/UpdateFeatureRequest.php:10:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateFeatureRequest.php-11-    {
+backend/dono-api/app/Http/Requests/UpdateFeatureRequest.php-12-        return $this->user()?->isSuperAdmin() === true;
+backend/dono-api/app/Http/Requests/UpdateFeatureRequest.php-13-    }
+backend/dono-api/app/Http/Requests/UpdateFeatureRequest.php-14-
+backend/dono-api/app/Http/Requests/UpdateFeatureRequest.php-15-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/UpdateFeeCategoryRequest.php-8-{
+backend/dono-api/app/Http/Requests/UpdateFeeCategoryRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateFeeCategoryRequest.php-10-    {
+backend/dono-api/app/Http/Requests/UpdateFeeCategoryRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/UpdateFeeCategoryRequest.php-12-    }
+backend/dono-api/app/Http/Requests/UpdateFeeCategoryRequest.php-13-
+backend/dono-api/app/Http/Requests/UpdateFeeCategoryRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/UpdateFeePaymentRequest.php-8-{
+backend/dono-api/app/Http/Requests/UpdateFeePaymentRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateFeePaymentRequest.php-10-    {
+backend/dono-api/app/Http/Requests/UpdateFeePaymentRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/UpdateFeePaymentRequest.php-12-    }
+backend/dono-api/app/Http/Requests/UpdateFeePaymentRequest.php-13-
+backend/dono-api/app/Http/Requests/UpdateFeePaymentRequest.php-14-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/UpdateFeeRequest.php-10-{
+backend/dono-api/app/Http/Requests/UpdateFeeRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateFeeRequest.php-12-    {
+backend/dono-api/app/Http/Requests/UpdateFeeRequest.php-13-        return true;
+backend/dono-api/app/Http/Requests/UpdateFeeRequest.php-14-    }
+backend/dono-api/app/Http/Requests/UpdateFeeRequest.php-15-
+backend/dono-api/app/Http/Requests/UpdateFeeRequest.php-16-    public function rules(): array
+--
+backend/dono-api/app/Http/Requests/UpdateOrganizationRequest.php-12-     */
+backend/dono-api/app/Http/Requests/UpdateOrganizationRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateOrganizationRequest.php-14-    {
+backend/dono-api/app/Http/Requests/UpdateOrganizationRequest.php-15-        return true;
+backend/dono-api/app/Http/Requests/UpdateOrganizationRequest.php-16-    }
+backend/dono-api/app/Http/Requests/UpdateOrganizationRequest.php-17-
+backend/dono-api/app/Http/Requests/UpdateOrganizationRequest.php-18-    /**
+--
+backend/dono-api/app/Http/Requests/UpdateParentRequest.php-8-{
+backend/dono-api/app/Http/Requests/UpdateParentRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateParentRequest.php-10-    {
+backend/dono-api/app/Http/Requests/UpdateParentRequest.php-11-        return true;
+backend/dono-api/app/Http/Requests/UpdateParentRequest.php-12-    }
+backend/dono-api/app/Http/Requests/UpdateParentRequest.php-13-
+backend/dono-api/app/Http/Requests/UpdateParentRequest.php-14-    public function rules(): array
+--
+=== EXPLICIT TRUE AUTHORIZE ===
+backend/dono-api/app/Http/Requests/LinkParentPortalAccountRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/LinkStudentPortalAccountRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/ReviewDisciplineCaseRequest.php:12:        return true;
+backend/dono-api/app/Http/Requests/ReviewLeaveRequest.php:12:        return true;
+backend/dono-api/app/Http/Requests/ReviewSafetyIncidentRequest.php:12:        return true;
+backend/dono-api/app/Http/Requests/StoreAcademicSessionRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/StoreAdmissionRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/StoreAssessmentStructureRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/StoreAssetRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/StoreAttendanceRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/StoreClassRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/StoreCouponRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/StoreDisciplineCaseRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/StoreDivisionRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/StoreExamScoreRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/StoreExaminationRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/StoreFeeCategoryRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/StoreFeePaymentRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/StoreFeeRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/StoreLeaveRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/StoreOrganizationRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/StoreParentRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/StorePaymentReceiptRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/StorePromoCampaignRequest.php:15:        return true;
+backend/dono-api/app/Http/Requests/StoreReportCardRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/StoreResultRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/StoreRoleInvitationRequest.php:12:        return true;
+backend/dono-api/app/Http/Requests/StoreSafetyIncidentRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/StoreSchoolEventRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/StoreSchoolFacilityRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/StoreSchoolRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/StoreSchoolSubscriptionRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceBulkRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/StoreStaffRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/StoreStreamRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/StoreStudentEnrollmentRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/StoreStudentFeeRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/StoreStudentPromotionRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/StoreStudentRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/StoreSubjectRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/StoreSubscriptionPlanRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/StoreTermRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/StoreTimetableRequest.php:15:        return true;
+backend/dono-api/app/Http/Requests/UpdateAcademicSessionRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/UpdateAssetRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/UpdateAttendanceRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/UpdateClassRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/UpdateCouponRequest.php:15:        return true;
+backend/dono-api/app/Http/Requests/UpdateDivisionRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/UpdateExamScoreRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/UpdateExaminationRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/UpdateFeeCategoryRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/UpdateFeePaymentRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/UpdateFeeRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/UpdateOrganizationRequest.php:15:        return true;
+backend/dono-api/app/Http/Requests/UpdateParentRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/UpdatePaymentReceiptRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/UpdatePromoCampaignRequest.php:15:        return true;
+backend/dono-api/app/Http/Requests/UpdateReportCardRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/UpdateResultRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/UpdateSchoolEventRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/UpdateSchoolFacilityRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/UpdateSchoolRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/UpdateSchoolSubscriptionRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/UpdateStaffAttendanceRequest.php:12:        return true;
+backend/dono-api/app/Http/Requests/UpdateStaffRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/UpdateStreamRequest.php:13:        return true;
+backend/dono-api/app/Http/Requests/UpdateStudentEnrollmentRequest.php:34:        return true;
+backend/dono-api/app/Http/Requests/UpdateStudentFeeRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/UpdateStudentPromotionRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/UpdateStudentRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/UpdateSubjectRequest.php:14:        return true;
+backend/dono-api/app/Http/Requests/UpdateSubscriptionPlanRequest.php:15:        return true;
+backend/dono-api/app/Http/Requests/UpdateSystemSettingRequest.php:9:    public function authorize(): bool { return true; }
+backend/dono-api/app/Http/Requests/UpdateTermRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/UpdateTimetableRequest.php:15:        return true;
+backend/dono-api/app/Http/Requests/StoreCommunicationRequest.php:14:            return true;
+backend/dono-api/app/Http/Requests/UpdateCommunicationRequest.php:14:            return true;
+backend/dono-api/app/Http/Requests/UpdateAssessmentStructureRequest.php:11:        return true;
+backend/dono-api/app/Http/Requests/GenerateFeeInvoicesRequest.php:13:        return true;
+=== ROUTE BINDING/POLICY REGISTRATION ===
+backend/dono-api/app/Http/Middleware/SecurityHeaders.php:16:        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+backend/dono-api/app/Http/Middleware/SecurityHeaders.php:17:        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+backend/dono-api/app/Http/Middleware/RequireOAuthScope.php:54:            if ($token->can($scope)) {
+backend/dono-api/app/Http/Requests/LinkParentPortalAccountRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/LinkStudentPortalAccountRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/ReviewDisciplineCaseRequest.php:10:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/ReviewLeaveRequest.php:10:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/ReviewSafetyIncidentRequest.php:10:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreAcademicSessionRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreAdmissionRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreAssessmentStructureRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreAssetRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreAttendanceRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreClassRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreCountryRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreCouponRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreCurrencyRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreDisciplineCaseRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreDivisionRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreExamScoreRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreExaminationRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreFeatureRequest.php:10:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreFeeCategoryRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreFeePaymentRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreFeeRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreLeaveRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreOrganizationRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreParentRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreParentStudentRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StorePaymentReceiptRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StorePromoCampaignRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreReportCardRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreResultRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreRoleInvitationRequest.php:10:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSafetyIncidentRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSchoolEventRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSchoolFacilityRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSchoolRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSchoolSubscriptionRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceBulkRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStaffRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStreamRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStudentEnrollmentRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStudentFeeRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStudentPromotionRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreStudentRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSubjectRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSubscriptionPlanRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreSystemSettingRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreTermRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreTimetableRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateAcademicSessionRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateAssetRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateAttendanceRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateClassRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateCountryRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateCouponRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateCurrencyRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateDivisionRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateExamScoreRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateExaminationRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateFeatureRequest.php:10:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateFeeCategoryRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateFeePaymentRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateFeeRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateOrganizationRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateParentRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateParentStudentRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdatePaymentReceiptRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdatePromoCampaignRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateReportCardRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateResultRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateSchoolEventRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateSchoolFacilityRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateSchoolRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateSchoolSubscriptionRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateStaffAttendanceRequest.php:10:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateStaffRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateStreamRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateStudentEnrollmentRequest.php:32:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateStudentFeeRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateStudentPromotionRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateStudentRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateSubjectRequest.php:12:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateSubscriptionPlanRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateSystemSettingRequest.php:9:    public function authorize(): bool { return true; }
+backend/dono-api/app/Http/Requests/UpdateTermRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateTimetableRequest.php:13:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/StoreCommunicationRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateCommunicationRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/UpdateAssessmentStructureRequest.php:9:    public function authorize(): bool
+backend/dono-api/app/Http/Requests/GenerateFeeInvoicesRequest.php:11:    public function authorize(): bool
+backend/dono-api/app/Policies/SystemSettingPolicy.php:9:class SystemSettingPolicy
+=== DELETE/DESTROY CONTROLLERS ===
+backend/dono-api/app/Http/Controllers/Api/AcademicSessionController.php:110:    public function destroy(AcademicSession $academicSession)
+backend/dono-api/app/Http/Controllers/Api/AssessmentStructureController.php:91:    public function destroy(Request $request, AssessmentStructure $assessmentStructure)
+backend/dono-api/app/Http/Controllers/Api/BookController.php:94:    public function destroy(Request $request, Book $book)
+backend/dono-api/app/Http/Controllers/Api/BookLoanController.php:116:    public function destroy(Request $request, BookLoan $bookLoan)
+backend/dono-api/app/Http/Controllers/Api/ClassController.php:142:    public function destroy(
+backend/dono-api/app/Http/Controllers/Api/ClinicVisitController.php:114:    public function destroy(Request $request, ClinicVisit $clinicVisit)
+backend/dono-api/app/Http/Controllers/Api/CouponController.php:160:    public function destroy(Coupon $coupon)
+backend/dono-api/app/Http/Controllers/Api/CurrencyController.php:95:    public function destroy(Currency $currency)
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php:118:    public function destroy(
+backend/dono-api/app/Http/Controllers/Api/ExamScoreController.php:67:    public function destroy(ExamScore $examScore)
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php:114:    public function destroy(
+backend/dono-api/app/Http/Controllers/Api/ExpenseController.php:53:    public function destroy(Expense $expense)
+backend/dono-api/app/Http/Controllers/Api/FeatureController.php:67:    public function destroy(Feature $feature)
+backend/dono-api/app/Http/Controllers/Api/FeeCategoryController.php:54:    public function destroy(Request $request, FeeCategory $feeCategory)
+backend/dono-api/app/Http/Controllers/Api/FeeController.php:100:    public function destroy(Fee $fee)
+backend/dono-api/app/Http/Controllers/Api/GradingSystemController.php:84:    public function destroy(GradingSystem $gradingSystem): JsonResponse
+backend/dono-api/app/Http/Controllers/Api/HostelController.php:72:    public function destroy(Hostel $hostel)
+backend/dono-api/app/Http/Controllers/Api/MedicalRecordController.php:107:    public function destroy(Request $request, MedicalRecord $medicalRecord)
+backend/dono-api/app/Http/Controllers/Api/OrganizationController.php:193:    public function destroy(Request $request, Organization $organization): JsonResponse
+backend/dono-api/app/Http/Controllers/Api/ParentController.php:111:    public function destroy(Request $request, ParentModel $parent)
+backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php:114:    public function destroy(Request $request, ParentStudent $parentStudent)
+backend/dono-api/app/Http/Controllers/Api/PromoCampaignController.php:119:    public function destroy(PromoCampaign $promoCampaign)
+backend/dono-api/app/Http/Controllers/Api/ResultController.php:70:    public function destroy(Request $request, Result $result)
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php:200:    public function destroy(Request $request, School $school)
+backend/dono-api/app/Http/Controllers/Api/SchoolSubscriptionController.php:344:    public function destroy(
+backend/dono-api/app/Http/Controllers/Api/StaffController.php:61:    public function destroy(Request $request, Staff $staff)
+backend/dono-api/app/Http/Controllers/Api/StreamController.php:108:    public function destroy(
+backend/dono-api/app/Http/Controllers/Api/StudentController.php:308:    public function destroy(
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php:206:    public function destroy(
+backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php:147:    public function destroy(Request $request, StudentFee $studentFee)
+backend/dono-api/app/Http/Controllers/Api/StudentPromotionController.php:139:    public function destroy(Request $request, StudentPromotion $studentPromotion)
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php:113:    public function destroy(
+backend/dono-api/app/Http/Controllers/Api/SubscriptionPlanController.php:88:    public function destroy(SubscriptionPlan $subscriptionPlan)
+backend/dono-api/app/Http/Controllers/Api/SystemSettingController.php:65:    public function destroy()
+backend/dono-api/app/Http/Controllers/Api/TermController.php:146:    public function destroy(Term $term)
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php:147:    public function destroy(Request $request, Timetable $timetable)
+backend/dono-api/app/Http/Controllers/Api/TransportRouteController.php:93:    public function destroy(Request $request, TransportRoute $transportRoute)
+backend/dono-api/app/Http/Controllers/Api/VehicleController.php:70:    public function destroy(Request $request, Vehicle $vehicle)
+backend/dono-api/app/Http/Controllers/Api/VisitorController.php:69:    public function destroy(Visitor $visitor)
+backend/dono-api/app/Http/Controllers/Api/SchoolSetupDelegationController.php:95:    public function destroy(Request $request, User $user)
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php:93:    public function destroy(Request $request, Assignment $assignment)
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php:202:    public function destroy(Request $request, Communication $communication)
+backend/dono-api/app/Http/Controllers/Api/CbtQuestionController.php:171:    public function destroy(Request $request, CbtQuestion $cbtQuestion)
+backend/dono-api/app/Http/Controllers/Api/AssessmentActivityController.php:51:    public function destroy(Request $request, AssessmentActivity $assessmentActivity)
+backend/dono-api/app/Http/Controllers/Api/PayrollEntryController.php:88:    public function destroy(Request $request, PayrollEntry $payrollEntry)
+backend/dono-api/app/Http/Controllers/Api/ReceptionActivityController.php:73:    public function destroy(Request $request, ReceptionActivity $receptionActivity)
+backend/dono-api/app/Http/Controllers/Api/TransportLogController.php:45:    public function destroy(Request $request, TransportLog $transportLog)
+backend/dono-api/app/Http/Controllers/Api/GraduationRecordController.php:96:    public function destroy(Request $request, GraduationRecord $graduationRecord)
+backend/dono-api/app/Http/Controllers/Api/PlatformAnnouncementController.php:64:    public function destroy(PlatformAnnouncement $platformAnnouncement)
+backend/dono-api/app/Http/Controllers/Api/FeatureFlagController.php:50:    public function destroy(FeatureFlag $featureFlag)
+backend/dono-api/app/Http/Controllers/Api/TransportStopController.php:70:    public function destroy(Request $request, TransportStop $transportStop)
+backend/dono-api/app/Http/Controllers/Api/VehicleInspectionController.php:68:    public function destroy(Request $request, VehicleInspection $vehicleInspection)
+backend/dono-api/app/Http/Controllers/Api/BookReservationController.php:88:    public function destroy(Request $request, BookReservation $bookReservation)
+backend/dono-api/app/Http/Controllers/Api/StaffContractController.php:75:    public function destroy(Request $request, StaffContract $staffContract)
+backend/dono-api/app/Http/Controllers/Api/SessionController.php:23:    public function destroy(Request $request, PersonalAccessToken $token)
+backend/dono-api/app/Http/Controllers/Api/SessionController.php:30:    public function destroyOthers(Request $request)
+backend/dono-api/app/Http/Controllers/PromoCampaignController.php:61:    public function destroy(PromoCampaign $promoCampaign)
+backend/dono-api/routes/api.php:172:        Route::delete('/me/push-tokens/{pushToken}', [PushTokenController::class, 'revoke']);
+backend/dono-api/routes/api.php:175:        Route::delete('/me/mfa', [MfaController::class, 'disable']);
+backend/dono-api/routes/api.php:205:        Route::delete('/me/sessions/{token}', [SessionController::class, 'destroy']);
+backend/dono-api/routes/api.php:206:        Route::delete('/me/sessions', [SessionController::class, 'destroyOthers']);
+backend/dono-api/routes/api.php:231:        Route::middleware(['has.school', 'role:proprietor'])->apiResource('role-invitations', RoleInvitationController::class)->except(['show', 'update']);
+backend/dono-api/routes/api.php:237:            Route::apiResource('subscription-plans', SubscriptionPlanController::class)->except(['index', 'show']);
+backend/dono-api/routes/api.php:238:            Route::apiResource('school-subscriptions', SchoolSubscriptionController::class);
+backend/dono-api/routes/api.php:244:            Route::apiResource('coupons', CouponController::class);
+backend/dono-api/routes/api.php:245:            Route::apiResource('promo-campaigns', PromoCampaignController::class);
+backend/dono-api/routes/api.php:246:            Route::apiResource('currencies', CurrencyController::class);
+backend/dono-api/routes/api.php:247:            Route::apiResource('features', FeatureController::class);
+backend/dono-api/routes/api.php:248:            Route::apiResource('feature-flags', FeatureFlagController::class)->except(['show']);
+backend/dono-api/routes/api.php:253:            Route::delete('platform-announcements/{platformAnnouncement}', [PlatformAnnouncementController::class, 'destroy']);
+backend/dono-api/routes/api.php:260:            Route::delete('local-email-messages', [LocalEmailController::class, 'clear']);
+backend/dono-api/routes/api.php:271:            Route::delete('platform/marketplace/apps/{marketplaceApp}', [MarketplaceController::class, 'adminDestroy']);
+backend/dono-api/routes/api.php:276:        Route::apiResource('organizations', OrganizationController::class)->except(['store']);
+backend/dono-api/routes/api.php:278:        Route::apiResource('schools', SchoolController::class);
+backend/dono-api/routes/api.php:288:            Route::delete('delegations/{user}', [SchoolSetupDelegationController::class, 'destroy']);
+backend/dono-api/routes/api.php:353:            Route::middleware('permission:manage_academic_sessions')->apiResource('academic-sessions', AcademicSessionController::class)->except(['index']);
+backend/dono-api/routes/api.php:355:            Route::middleware('permission:manage_terms')->apiResource('terms', TermController::class)->except(['index']);
+backend/dono-api/routes/api.php:357:            Route::middleware('permission:manage_divisions')->apiResource('divisions', DivisionController::class)->except(['index']);
+backend/dono-api/routes/api.php:359:            Route::middleware('permission:manage_classes')->apiResource('classes', ClassController::class)->except(['index']);
+backend/dono-api/routes/api.php:361:            Route::middleware('permission:manage_streams')->apiResource('streams', StreamController::class)->except(['index']);
+backend/dono-api/routes/api.php:363:            Route::middleware('permission:manage_subjects')->apiResource('subjects', SubjectController::class)->except(['index']);
+backend/dono-api/routes/api.php:389:            Route::middleware(['role:proprietor', 'permission:manage_fee_categories'])->apiResource('fees', FeeController::class)->except(['index']);
+backend/dono-api/routes/api.php:391:            Route::middleware('permission:manage_student_fees')->apiResource('student-fees', StudentFeeController::class)->except(['index']);
+backend/dono-api/routes/api.php:392:            Route::middleware('permission:manage_students')->apiResource('enrollments', StudentEnrollmentController::class);
+backend/dono-api/routes/api.php:394:            Route::middleware('permission:view_finance_reports')->apiResource('fee-payments', FeePaymentController::class)->only(['index', 'show']);
+backend/dono-api/routes/api.php:395:            Route::middleware('permission:receive_payments')->apiResource('fee-payments', FeePaymentController::class)->only(['store']);
+backend/dono-api/routes/api.php:399:            Route::middleware('permission:view_finance_reports')->apiResource('payment-receipts', PaymentReceiptController::class)->only(['index', 'show']);
+backend/dono-api/routes/api.php:400:            Route::middleware('permission:manage_promotions')->apiResource('promotions', StudentPromotionController::class);
+backend/dono-api/routes/api.php:401:            Route::middleware('permission:manage_promotions')->apiResource('graduation-records', GraduationRecordController::class);
+backend/dono-api/routes/api.php:410:            Route::middleware(['role:proprietor', 'permission:manage_assessments'])->apiResource('assessment-structures', AssessmentStructureController::class);
+backend/dono-api/routes/api.php:427:            Route::middleware('permission:manage_examinations')->apiResource('examinations', ExaminationController::class)->except(['index']);
+backend/dono-api/routes/api.php:428:            Route::middleware('permission:manage_exam_scores')->apiResource('exam-scores', ExamScoreController::class);
+backend/dono-api/routes/api.php:429:            Route::middleware('permission:view_timetable')->apiResource('timetables', TimetableController::class)->only(['index', 'show']);
+backend/dono-api/routes/api.php:445:            Route::middleware('permission:manage_timetable')->apiResource('timetables', TimetableController::class)->except(['index', 'show']);
+backend/dono-api/routes/api.php:447:            Route::middleware('permission:manage_library')->apiResource('books', BookController::class);
+backend/dono-api/routes/api.php:448:            Route::middleware('permission:manage_library')->apiResource('book-loans', BookLoanController::class);
+backend/dono-api/routes/api.php:449:            Route::middleware('permission:manage_library')->apiResource('book-reservations', BookReservationController::class);
+backend/dono-api/routes/api.php:450:            Route::middleware('permission:manage_hostel')->apiResource('hostels', HostelController::class);
+backend/dono-api/routes/api.php:451:            Route::middleware('permission:manage_hostel')->apiResource('hostel-rooms', HostelRoomController::class);
+backend/dono-api/routes/api.php:452:            Route::middleware('permission:manage_hostel')->apiResource('hostel-allocations', HostelAllocationController::class);
+backend/dono-api/routes/api.php:454:            Route::middleware('permission:manage_budget')->apiResource('expenses', ExpenseController::class)->except(['index', 'show']);
+backend/dono-api/routes/api.php:456:            Route::middleware('permission:view_health_records')->apiResource('medical-records', MedicalRecordController::class)->only(['index', 'show']);
+backend/dono-api/routes/api.php:457:            Route::middleware('permission:manage_clinic')->apiResource('medical-records', MedicalRecordController::class)->except(['index', 'show']);
+backend/dono-api/routes/api.php:458:            Route::middleware('permission:view_health_records')->apiResource('clinic-visits', ClinicVisitController::class)->only(['index', 'show']);
+backend/dono-api/routes/api.php:459:            Route::middleware('permission:manage_clinic')->apiResource('clinic-visits', ClinicVisitController::class)->except(['index', 'show']);
+backend/dono-api/routes/api.php:460:            Route::middleware('permission:manage_transport')->apiResource('vehicles', VehicleController::class);
+backend/dono-api/routes/api.php:461:            Route::middleware('permission:manage_transport')->apiResource('transport-routes', TransportRouteController::class);
+backend/dono-api/routes/api.php:462:            Route::middleware('permission:manage_transport')->apiResource('transport-allocations', TransportAllocationController::class);
+backend/dono-api/routes/api.php:463:            Route::middleware('permission:manage_transport')->apiResource('transport-stops', TransportStopController::class);
+backend/dono-api/routes/api.php:464:            Route::middleware('permission:manage_transport')->apiResource('vehicle-inspections', VehicleInspectionController::class);
+backend/dono-api/routes/api.php:465:            Route::middleware('permission:manage_transport')->apiResource('transport-logs', TransportLogController::class);
+backend/dono-api/routes/api.php:469:            Route::middleware('permission:manage_inventory')->apiResource('assets', AssetController::class)->except(['destroy']);
+backend/dono-api/routes/api.php:470:            Route::middleware('permission:manage_front_desk')->apiResource('visitors', VisitorController::class);
+backend/dono-api/routes/api.php:471:            Route::middleware('permission:manage_front_desk')->apiResource('gate-passes', StudentGatePassController::class);
+backend/dono-api/routes/api.php:472:            Route::middleware('permission:manage_front_desk')->apiResource('appointments', ReceptionAppointmentController::class);
+backend/dono-api/routes/api.php:478:            Route::middleware('permission:manage_events')->apiResource('school-events', SchoolEventController::class);
+backend/dono-api/routes/api.php:480:            Route::middleware('permission:manage_facilities')->apiResource('school-facilities', SchoolFacilityController::class);
+backend/dono-api/routes/api.php:534:            Route::middleware('permission:manage_payroll')->apiResource('staff-contracts', StaffContractController::class);

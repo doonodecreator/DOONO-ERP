@@ -1,0 +1,109 @@
+=== ROLE DASHBOARD FILES ===
+AccountantDashboard.jsx
+CashierDashboard.jsx
+Dashboard.jsx
+FormTeacherDashboard.jsx
+HostelDashboard.jsx
+LibrarianDashboard.jsx
+NurseDashboard.jsx
+NurseryHeadDashboard.jsx
+OrganizationOwnerDashboard.jsx
+PlatformOwnerDashboard.jsx
+PrimaryHeadmasterDashboard.jsx
+PrincipalDashboard.jsx
+ProprietorDashboard.jsx
+ReceptionDashboard.jsx
+SecondaryPrincipalDashboard.jsx
+TeacherDashboard.jsx
+TransportDashboard.jsx
+VicePrincipalAcademicDashboard.jsx
+VicePrincipalAdminDashboard.jsx
+=== PORTAL FILES ===
+ParentPortal.jsx
+StudentPortal.jsx
+=== ALL FRONTEND PAGE COUNT ===
+108
+=== API ROUTE COUNT ===
+229
+=== API RESOURCE/MANUAL ROUTES ===
+101:    Route::post('payments/paystack/webhook', [PaymentController::class, 'webhook']);
+102:    Route::get('payments/paystack/verify/{reference}', [PaymentController::class, 'verify']);
+103:    Route::get('/countries', [SchoolController::class, 'countries']);
+104:    Route::get('/roles', [\App\Http\Controllers\Api\RoleController::class, 'index'])->middleware('auth:sanctum');
+105:    Route::get('role-invitations/preview/{token}', [RoleInvitationController::class, 'preview']);
+106:    Route::post('role-invitations/accept', [RoleInvitationController::class, 'accept']);
+107:    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth');
+108:    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth');
+109:    Route::get('email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed')->name('verification.verify');
+110:    Route::post('email/resend-verification', [EmailVerificationController::class, 'resend'])->middleware('throttle:auth');
+111:    Route::post('forgot-password', [PasswordResetController::class, 'sendLink'])->middleware('throttle:auth');
+112:    Route::post('reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:auth');
+115:        Route::get('/me/context', [AuthController::class, 'context']);
+116:        Route::put('/me/change-password', [AuthController::class, 'changePassword']);
+117:        Route::get('/me/staff-profile', [AuthController::class, 'staffProfile']);
+118:        Route::put('/me/staff-profile', [AuthController::class, 'updateStaffProfile']);
+119:        Route::post('/me/switch-school', [AuthController::class, 'switchSchool']);
+120:        Route::post('/logout', [AuthController::class, 'logout']);
+121:        Route::get('/dashboard', [DashboardController::class, 'index']);
+122:        Route::get('/org-owner/dashboard', [OrganizationOwnerController::class, 'dashboard']);
+123:        Route::get('/org-owner/workspace', [OrganizationOwnerController::class, 'workspace']);
+124:        Route::get('/activity-logs', [ActivityLogController::class, 'index']);
+125:        Route::post('role-invitations/accept-authenticated', [RoleInvitationController::class, 'acceptAuthenticated']);
+130:            Route::get('system-settings', [SystemSettingController::class, 'index']);
+131:            Route::put('system-settings', [SystemSettingController::class, 'update']);
+132:            Route::apiResource('subscription-plans', SubscriptionPlanController::class)->except(['index', 'show']);
+133:            Route::apiResource('school-subscriptions', SchoolSubscriptionController::class);
+134:            Route::post('schools/{school}/toggle-exemption', [SchoolController::class, 'toggleExemption']);
+135:            Route::post('schools/{school}/grant-custom-timeframe', [SchoolController::class, 'grantCustomTimeframe']);
+136:            Route::post('schools/{school}/set-discount', [SchoolController::class, 'setDiscount']);
+137:            Route::apiResource('coupons', CouponController::class);
+138:            Route::apiResource('promo-campaigns', PromoCampaignController::class);
+139:            Route::apiResource('currencies', CurrencyController::class);
+140:            Route::apiResource('features', FeatureController::class);
+141:            Route::get('platform-announcements', [PlatformAnnouncementController::class, 'index']);
+142:            Route::post('platform-announcements/preview-recipients', [PlatformAnnouncementController::class, 'previewRecipients']);
+143:            Route::post('platform-announcements', [PlatformAnnouncementController::class, 'store']);
+144:            Route::put('platform-announcements/{platformAnnouncement}', [PlatformAnnouncementController::class, 'update']);
+145:            Route::delete('platform-announcements/{platformAnnouncement}', [PlatformAnnouncementController::class, 'destroy']);
+146:            Route::post('platform-announcements/{platformAnnouncement}/send', [PlatformAnnouncementController::class, 'send']);
+147:            Route::get('platform-email/status', [PlatformAnnouncementController::class, 'emailStatus']);
+148:            Route::post('platform-email/test', [PlatformAnnouncementController::class, 'testEmail']);
+149:            Route::get('local-email-messages', [LocalEmailController::class, 'index']);
+150:            Route::get('local-email-messages/{localEmailMessage}', [LocalEmailController::class, 'show']);
+151:            Route::post('local-email-messages/{localEmailMessage}/read', [LocalEmailController::class, 'markRead']);
+152:            Route::delete('local-email-messages', [LocalEmailController::class, 'clear']);
+153:            Route::get('admin/revenue-dashboard', [AdminRevenueController::class, 'index']);
+154:            Route::get('platform-owner/dashboard', [PlatformOwnerController::class, 'dashboard']);
+155:            Route::get('platform/system-health', [PlatformOperationsController::class, 'health']);
+158:        Route::get('subscription-plans', [SubscriptionPlanController::class, 'index']);
+159:        Route::get('subscription-plans/{subscriptionPlan}', [SubscriptionPlanController::class, 'show']);
+160:        Route::apiResource('organizations', OrganizationController::class)->except(['store']);
+162:        Route::apiResource('schools', SchoolController::class);
+163:        Route::get('my-subscription', [SchoolSubscriptionController::class, 'mySubscription']);
+168:            Route::get('progress', [SchoolSetupController::class, 'progress']);
+169:            Route::get('delegations', [SchoolSetupDelegationController::class, 'index']);
+170:            Route::put('delegations/{user}', [SchoolSetupDelegationController::class, 'update']);
+171:            Route::delete('delegations/{user}', [SchoolSetupDelegationController::class, 'destroy']);
+175:            Route::get('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'show']);
+176:            Route::put('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'update']);
+177:            Route::get('proprietor/dashboard', [ProprietorController::class, 'dashboard']);
+179:            Route::get('vp-academic/dashboard', [VicePrincipalAcademicController::class, 'dashboard']);
+180:            Route::get('vp-admin/dashboard', [VicePrincipalAdminController::class, 'dashboard']);
+181:            Route::get('teacher/dashboard', [TeacherPortalController::class, 'dashboard']);
+182:            Route::get('form-teacher/dashboard', [FormTeacherPortalController::class, 'dashboard']);
+183:            Route::get('nursery-head/dashboard', [NurseryHeadController::class, 'dashboard']);
+184:            Route::get('primary-head/dashboard', [PrimaryHeadmasterController::class, 'dashboard']);
+185:            Route::get('secondary-head/dashboard', [SecondaryPrincipalController::class, 'dashboard']);
+186:            Route::get('student/dashboard', [StudentPortalController::class, 'dashboard']);
+187:            Route::get('student/report-card/download', [StudentPortalController::class, 'downloadLatestReportCard']);
+188:            Route::get('parent/dashboard', [ParentPortalController::class, 'dashboard']);
+189:            Route::get('parent/report-cards/{student}/download', [ParentPortalController::class, 'downloadReportCard']);
+245:                Route::get('/students', [ResultEntryController::class, 'students']);
+246:                Route::post('/save', [ResultEntryController::class, 'save']);
+=== BACKEND CONTROLLER COUNT ===
+106
+=== FRONTEND BUILD CONFIG ===
+frontend/src/services/api.js:14:    import.meta.env.VITE_API_URL ||
+frontend/src/services/api.js:18:    baseURL: API_URL,
+frontend/vite.config.js:9:    allowedHosts: true,
+frontend/vite.config.js:10:    proxy: {

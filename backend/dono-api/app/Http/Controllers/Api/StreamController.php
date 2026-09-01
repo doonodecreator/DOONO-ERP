@@ -16,10 +16,7 @@ class StreamController extends Controller
         private readonly CurrentContextService $context
     ) {}
 
-    private function currentContextSchoolId(Request $request): ?int
-    {
-        return $this->context->currentSchool($request->user())?->id;
-    }
+
     /**
      * Display a listing of the resource.
      */
@@ -35,7 +32,7 @@ class StreamController extends Controller
             $query->whereHas('class.division', function ($q) use ($request) {
                 $q->where(
                     'school_id',
-                    $this->currentContextSchoolId($request)
+                    $this->context->currentSchool($request->user())?->id
                 );
             });
         }
@@ -71,7 +68,7 @@ class StreamController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $stream->class->division->school_id !== $this->currentContextSchoolId($request)
+            $stream->class->division->school_id !== $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -91,7 +88,7 @@ class StreamController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $stream->class->division->school_id !== $this->currentContextSchoolId($request)
+            $stream->class->division->school_id !== $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized.');
         }
@@ -115,7 +112,7 @@ class StreamController extends Controller
         if (
             method_exists($request->user(), 'isSuperAdmin') &&
             ! $request->user()->isSuperAdmin() &&
-            $stream->class->division->school_id !== $this->currentContextSchoolId($request)
+            $stream->class->division->school_id !== $this->context->currentSchool($request->user())?->id
         ) {
             abort(403, 'Unauthorized.');
         }

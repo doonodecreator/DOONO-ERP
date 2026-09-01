@@ -5,6 +5,8 @@ namespace App\Services\Academic;
 use App\Models\AcademicConfiguration;
 use App\Models\StudentEnrollment;
 use App\Models\StudentPromotion;
+use App\Models\ClassModel;
+use App\Services\StudentLifecycleService;
 use Illuminate\Support\Facades\DB;
 
 class PromotionService
@@ -51,7 +53,7 @@ class PromotionService
         }
 
         return [
-            'status' => 'Repeat',
+            'status' => 'Repeated',
             'promoted' => false,
         ];
     }
@@ -63,45 +65,34 @@ class PromotionService
         StudentEnrollment $currentEnrollment,
         int $targetSessionId,
         int $targetClassId,
-        string $status, // 'Promoted', 'Repeat', 'Graduated'
+        string $status, // 'Promoted', 'Repeated', 'Graduated'
         ?string $remarks = null,
         ?int $promotedByUserId = null
     ): StudentPromotion {
-        return DB::transaction(function () use (
-            $currentEnrollment,
-            $targetSessionId,
-            $targetClassId,
-            $status,
-            $remarks,
-            $promotedByUserId
-        ) {
-            // 1. Record the promotion transaction log
-            $promotion = StudentPromotion::create([
-                'school_id' => $currentEnrollment->school_id,
-                'student_id' => $currentEnrollment->student_id,
-                'from_session_id' => $currentEnrollment->academic_session_id,
-                'to_session_id' => $targetSessionId,
-                'from_class_id' => $currentEnrollment->class_id,
-                'to_class_id' => $targetClassId,
-                'status' => $status,
-                'remarks' => $remarks,
-                'promoted_by' => $promotedByUserId,
-            ]);
+        $targetClass = ClassModel::query()
+            ->whereKey($targetClassId)
+            ->whereHas('division', fn ($query) => $query->where('school_id', $currentEnrollment->school_id))
+            ->firstOrFail();
 
-            // 2. Create the new Enrollment record if not graduating
-            if ($status !== 'Graduated') {
-                StudentEnrollment::firstOrCreate([
-                    'school_id' => $currentEnrollment->school_id,
-                    'student_id' => $currentEnrollment->student_id,
-                    'academic_session_id' => $targetSessionId,
-                ], [
-                    'class_id' => $targetClassId,
-                    'status' => 'Active',
-                ]);
-            }
+        $normalizedStatus = $status === 'Repeat' ? 'Repeated' : $status;
+        if (! in_array($normalizedStatus, ['Promoted', 'Repeated', 'Transferred', 'Graduated'], true)) {
+            throw new \InvalidArgumentException('Unsupported student lifecycle status.');
+        }
 
-            return $promotion;
-        });
+        return app(StudentLifecycleService::class)->applyPromotion([
+            'student_id' => $currentEnrollment->student_id,
+            'from_academic_session_id' => $currentEnrollment->academic_session_id,
+            'to_academic_session_id' => $targetSessionId,
+            'from_division_id' => $currentEnrollment->division_id,
+            'to_division_id' => $targetClass->division_id,
+            'from_class_id' => $currentEnrollment->class_id,
+            'to_class_id' => $targetClass->id,
+            'from_stream_id' => $currentEnrollment->stream_id,
+            'to_stream_id' => null,
+            'promotion_date' => now()->toDateString(),
+            'promotion_status' => $normalizedStatus,
+            'remarks' => $remarks,
+        ], (int) $currentEnrollment->school_id, (int) ($promotedByUserId ?? 0))['promotion'];
     }
 
     /**

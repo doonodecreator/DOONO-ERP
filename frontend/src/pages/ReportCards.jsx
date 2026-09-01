@@ -29,6 +29,7 @@ export default function ReportCards() {
   const [selectedReport, setSelectedReport] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [downloadingId, setDownloadingId] = useState(null);
+  const [copiedVerificationId, setCopiedVerificationId] = useState(null);
 
   useEffect(() => {
     loadFiltersAndReports();
@@ -64,6 +65,10 @@ export default function ReportCards() {
 
   const handleDownloadPdf = async (e, report) => {
     e.stopPropagation();
+    if (!report?.is_published) {
+      setError('This report card is not published yet. Complete and publish all required subject results before downloading it.');
+      return;
+    }
     try {
       setDownloadingId(report.id);
       const response = await api.get(`/report-cards/${report.id}/download`, {
@@ -82,6 +87,19 @@ export default function ReportCards() {
       alert(err.response?.data?.message || 'Failed to download report card PDF.');
     } finally {
       setDownloadingId(null);
+    }
+  };
+
+  const handleCopyVerification = async (event, report) => {
+    event.stopPropagation();
+    if (!report.verification_token) return;
+    const url = `${window.location.origin}/verify/report-card/${report.verification_token}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedVerificationId(report.id);
+      window.setTimeout(() => setCopiedVerificationId(null), 2200);
+    } catch (err) {
+      alert('The verification link could not be copied. Please use the browser share or copy action.');
     }
   };
 
@@ -190,6 +208,7 @@ export default function ReportCards() {
                   <th className="px-6 py-3">Position</th>
                   <th className="px-6 py-3">Grade</th>
                   <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3">Verification</th>
                   <th className="px-6 py-3 text-right">Actions</th>
                 </tr>
               </thead>
@@ -220,13 +239,14 @@ export default function ReportCards() {
                           {rc.is_published ? 'Published' : 'Draft'}
                         </span>
                       </td>
+                      <td className="px-6 py-4">{rc.is_published && rc.verification_token ? <button type="button" onClick={(event) => handleCopyVerification(event, rc)} className="rounded border border-indigo-200 px-2 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-50">{copiedVerificationId === rc.id ? 'Copied' : 'Copy link'}</button> : <span className="text-xs text-gray-400">Available after publish</span>}</td>
                       <td className="px-6 py-4 text-right space-x-2">
                         <button type="button"
                           onClick={(e) => handleDownloadPdf(e, rc)}
-                          disabled={downloadingId === rc.id}
-                          className="px-3 py-1 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 disabled:opacity-50"
+                          disabled={downloadingId === rc.id || !rc.is_published}
+                          className={`px-3 py-1 rounded text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50 ${rc.is_published ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-slate-100 text-slate-400'}`}
                         >
-                          {downloadingId === rc.id ? 'Downloading...' : 'PDF Report'}
+                          {downloadingId === rc.id ? 'Downloading...' : rc.is_published ? 'PDF Report' : 'Available after publish'}
                         </button>
                       </td>
                     </tr>
@@ -283,6 +303,7 @@ export default function ReportCards() {
               >
                 Close
               </button>
+              {selectedReport.verification_token && <button type="button" onClick={(event) => handleCopyVerification(event, selectedReport)} className="px-4 py-2 border border-indigo-200 text-indigo-700 rounded-lg text-sm hover:bg-indigo-50 font-medium">{copiedVerificationId === selectedReport.id ? 'Link Copied' : 'Copy Verification Link'}</button>}
               <button type="button"
                 onClick={(e) => handleDownloadPdf(e, selectedReport)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 font-medium"

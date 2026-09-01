@@ -84,22 +84,38 @@ class PortalAccountService
             ]);
             $guardian->save();
 
-            $studentIds = $parent->students()
-                ->where('students.school_id', $schoolId)
-                ->pluck('students.id');
-
-            if ($studentIds->isNotEmpty()) {
-                $guardian->students()->syncWithoutDetaching(
-                    $studentIds->mapWithKeys(fn ($studentId) => [
-                        $studentId => [
-                            'relationship' => $data['relationship'] ?? 'Parent',
-                        ],
-                    ])->all()
-                );
-            }
+            $this->syncParentChildren($parent, $schoolId);
 
             return $guardian->fresh(['user', 'students.class', 'students.division']);
         });
+    }
+
+    public function syncParentChildren(ParentModel $parent, int $schoolId): void
+    {
+        if ((int) $parent->school_id !== $schoolId) {
+            abort(403, 'Parent does not belong to the active school.');
+        }
+
+        $guardian = Guardian::query()
+            ->where('school_id', $schoolId)
+            ->where('parent_id', $parent->id)
+            ->whereNotNull('user_id')
+            ->first();
+        if (! $guardian) {
+            return;
+        }
+
+        $links = $parent->students()
+            ->where('students.school_id', $schoolId)
+            ->get()
+            ->mapWithKeys(fn (Student $student) => [
+                $student->id => [
+                    'relationship' => $student->pivot?->relationship_type ?: 'Parent',
+                ],
+            ])
+            ->all();
+
+        $guardian->students()->sync($links);
     }
 
     private function createUserWithRole(

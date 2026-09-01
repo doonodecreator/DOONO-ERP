@@ -1,0 +1,635 @@
+=== TOP LEVEL ===
+./.audit_static.py
+./.cbt-audit-findings.md
+./.controls-forms-audit-findings.md
+./.editorconfig
+./.env.example
+./.gitattributes
+./.gitignore
+./.guide-audit-findings.md
+./.header-footer-audit-findings.md
+./.mobile-shell-audit-findings.md
+./.npmrc
+./.readiness-findings.md
+./.readiness-inventory.txt
+./.readiness-security-scan.txt
+./.results-audit-findings.md
+./.screenshot-findings.md
+./.ui-pass-notes.md
+./DASHBOARD_RELEASE_NOTES.md
+./Dockerfile
+./README.md
+./architecture-acceptance-matrix.md
+./architecture-gap-report.md
+./architecture-implementation-notes.md
+./architecture-progress.md
+./artisan
+./audit/DOONO-comprehensive-audit-report.md
+./audit/branding-profile-implementation-plan.md
+./audit/mobile-ui-audit.md
+./audit/profile-avatar-mobile-fix.md
+./audit/saas-audit-inventory.txt
+./audit/subscription-access-audit.md
+./audit/subscription-plan-edit-fix.md
+./audit/vision-coverage-matrix.md
+./audit/vision-gap-inventory.md
+./bootstrap/app.php
+./bootstrap/providers.php
+./cat
+./composer.json
+./composer.lock
+./config/app.php
+./config/auth.php
+./config/cache.php
+./config/database.php
+./config/filesystems.php
+./config/logging.php
+./config/mail.php
+./config/queue.php
+./config/sanctum.php
+./config/services.php
+./config/session.php
+./database/.gitignore
+./dono-erp-design-system-final.zip
+./dono-erp-partition-fix.zip
+./dono-erp-ui-pass-clean.zip
+./dono-erp-ui-pass-final.zip
+./doono-api-origin-connectivity-fix.zip
+./doono-cbt-audit-release.zip
+./doono-communication-lifecycle-fix.zip
+./doono-complete-vision-release.zip
+./doono-controls-forms-audit-release.zip
+./doono-de-creator-erp-designer-masterclass.zip
+./doono-de-creator-erp-final-complete.zip
+./doono-de-creator-erp-final-design-polish.zip
+./doono-de-creator-erp-final.zip
+./doono-de-creator-erp-footer.zip
+./doono-footer-visible-fix.zip
+./doono-guide-audit-release.zip
+./doono-header-footer-audit-release.zip
+./doono-mobile-header-composition-fix.zip
+./doono-mobile-shell-audit-release.zip
+./doono-mobile-ui-fix.zip
+./doono-mobile-ui-release.zip
+./doono-pagination-notification-release.zip
+./doono-profile-avatar-mobile-fix.zip
+./doono-profile-upload-persistence-fix.zip
+./doono-readiness-audit-final.zip
+./doono-results-computation-audit.zip
+./doono-school-wide-communication-fix.zip
+./doono-scroll-dashboard-fix.zip
+./doono-sticky-footer-fix.zip
+./doono-subscription-access-release.zip
+./doono-subscription-plan-edit-fix.zip
+./doono-teacher-module-fix.zip
+./frontend/.env.example
+./frontend/.gitignore
+./frontend/.oxlintrc.json
+./frontend/README.md
+./frontend/frontend.zip
+./frontend/index.html
+./frontend/package-lock.json
+./frontend/package.json
+./frontend/register_
+./frontend/vite.config.js
+./n't touched by us tonight) ====="
+./nixpacks.toml
+./package.json
+./phpunit.xml
+./public/.htaccess
+./public/favicon.ico
+./public/index.php
+./public/robots.txt
+./routes/api.php
+./routes/console.php
+./routes/web.php
+./scripts/standardize-controller-school-context.py
+./tests/TestCase.php
+./vite.config.js
+=== BACKEND COUNTS ===
+controllers=111
+models=90
+migrations=153
+requests=89
+middleware=11
+tests=4
+=== FRONTEND COUNTS ===
+pages=112
+components=26
+services=1
+=== ROUTE RESOURCE SUMMARY ===
+Route::prefix('v1')->group(function () {
+Route::post('payments/paystack/webhook', [PaymentController::class, 'webhook'])
+Route::get('/countries', [SchoolController::class, 'countries'])
+Route::get('/roles', [\App\Http\Controllers\Api\RoleController::class, 'index'])->middleware('auth:sanctum')
+Route::get('role-invitations/preview/{token}', [RoleInvitationController::class, 'preview'])
+Route::post('role-invitations/accept', [RoleInvitationController::class, 'accept'])
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth')
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth')
+Route::get('email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed')->name('verification.verify')
+Route::post('email/resend-verification', [EmailVerificationController::class, 'resend'])->middleware('throttle:auth')
+Route::post('forgot-password', [PasswordResetController::class, 'sendLink'])->middleware('throttle:auth')
+Route::post('reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:auth')
+Route::middleware(['auth:sanctum', 'throttle:api', 'idempotency'])->group(function () {
+Route::get('/me/context', [AuthController::class, 'context'])
+Route::post('/me/profile', [AuthController::class, 'profile'])
+Route::put('/me/change-password', [AuthController::class, 'changePassword'])
+Route::get('/me/staff-profile', [AuthController::class, 'staffProfile'])
+Route::put('/me/staff-profile', [AuthController::class, 'updateStaffProfile'])
+Route::post('/me/switch-school', [AuthController::class, 'switchSchool'])
+Route::post('/logout', [AuthController::class, 'logout'])
+Route::get('/dashboard', [DashboardController::class, 'index'])
+Route::get('/org-owner/dashboard', [OrganizationOwnerController::class, 'dashboard'])
+Route::get('/org-owner/workspace', [OrganizationOwnerController::class, 'workspace'])
+Route::get('/activity-logs', [ActivityLogController::class, 'index'])
+Route::post('role-invitations/accept-authenticated', [RoleInvitationController::class, 'acceptAuthenticated'])
+Route::middleware(['has.school', 'role:proprietor'])->apiResource('role-invitations', RoleInvitationController::class)->except(['show', 'update'])
+Route::middleware(['has.school', 'role:proprietor'])->post('role-invitations/{roleInvitation}/revoke', [RoleInvitationController::class, 'revoke'])
+Route::middleware('role:super_admin')->group(function () {
+Route::get('system-settings', [SystemSettingController::class, 'index'])
+Route::put('system-settings', [SystemSettingController::class, 'update'])
+Route::apiResource('subscription-plans', SubscriptionPlanController::class)->except(['index', 'show'])
+Route::apiResource('school-subscriptions', SchoolSubscriptionController::class)
+Route::post('schools/{school}/toggle-exemption', [SchoolController::class, 'toggleExemption'])
+Route::post('schools/{school}/extend-trial', [SchoolController::class, 'extendTrial'])
+Route::post('schools/{school}/subscription-status', [SchoolController::class, 'updateSubscriptionStatus'])
+Route::post('schools/{school}/grant-custom-timeframe', [SchoolController::class, 'grantCustomTimeframe'])
+Route::post('schools/{school}/set-discount', [SchoolController::class, 'setDiscount'])
+Route::apiResource('coupons', CouponController::class)
+Route::apiResource('promo-campaigns', PromoCampaignController::class)
+Route::apiResource('currencies', CurrencyController::class)
+Route::apiResource('features', FeatureController::class)
+Route::get('platform-announcements', [PlatformAnnouncementController::class, 'index'])
+Route::post('platform-announcements/preview-recipients', [PlatformAnnouncementController::class, 'previewRecipients'])
+Route::post('platform-announcements', [PlatformAnnouncementController::class, 'store'])
+Route::put('platform-announcements/{platformAnnouncement}', [PlatformAnnouncementController::class, 'update'])
+Route::delete('platform-announcements/{platformAnnouncement}', [PlatformAnnouncementController::class, 'destroy'])
+Route::post('platform-announcements/{platformAnnouncement}/send', [PlatformAnnouncementController::class, 'send'])
+Route::get('platform-email/status', [PlatformAnnouncementController::class, 'emailStatus'])
+Route::post('platform-email/test', [PlatformAnnouncementController::class, 'testEmail'])
+Route::get('local-email-messages', [LocalEmailController::class, 'index'])
+Route::get('local-email-messages/{localEmailMessage}', [LocalEmailController::class, 'show'])
+Route::post('local-email-messages/{localEmailMessage}/read', [LocalEmailController::class, 'markRead'])
+Route::delete('local-email-messages', [LocalEmailController::class, 'clear'])
+Route::get('admin/revenue-dashboard', [AdminRevenueController::class, 'index'])
+Route::get('platform-owner/dashboard', [PlatformOwnerController::class, 'dashboard'])
+Route::get('platform/system-health', [PlatformOperationsController::class, 'health'])
+Route::get('subscription-plans', [SubscriptionPlanController::class, 'index'])
+Route::get('subscription-plans/{subscriptionPlan}', [SubscriptionPlanController::class, 'show'])
+Route::apiResource('organizations', OrganizationController::class)->except(['store'])
+Route::middleware('role:super_admin')->post('organizations', [OrganizationController::class, 'store'])
+Route::apiResource('schools', SchoolController::class)
+Route::get('my-subscription', [SchoolSubscriptionController::class, 'mySubscription'])
+Route::middleware('role:proprietor')->post('payments/initialize-subscription', [PaymentController::class, 'initializeSubscription'])
+Route::middleware('role:proprietor')->get('payments/verify-subscription/{reference}', [PaymentController::class, 'verifySubscription'])
+Route::middleware(['has.school', 'role:proprietor'])->prefix('school-setup')->group(function () {
+Route::get('progress', [SchoolSetupController::class, 'progress'])
+Route::get('delegations', [SchoolSetupDelegationController::class, 'index'])
+Route::put('delegations/{user}', [SchoolSetupDelegationController::class, 'update'])
+Route::delete('delegations/{user}', [SchoolSetupDelegationController::class, 'destroy'])
+Route::middleware(['has.school', 'password.changed', 'subscription'])->group(function () {
+Route::post('payments/paystack/initialize', [PaymentController::class, 'initialize'])
+Route::get('payments/paystack/verify/{reference}', [PaymentController::class, 'verify'])
+Route::get('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'show'])
+Route::put('school-settings', [\App\Http\Controllers\Api\SchoolSettingController::class, 'update'])
+Route::get('school-branding', [SchoolBrandingController::class, 'show'])
+Route::post('school-branding', [SchoolBrandingController::class, 'update'])
+Route::get('proprietor/dashboard', [ProprietorController::class, 'dashboard'])
+Route::middleware('role:principal')->get('principal/dashboard', [PrincipalController::class, 'dashboard'])
+Route::get('vp-academic/dashboard', [VicePrincipalAcademicController::class, 'dashboard'])
+Route::get('vp-admin/dashboard', [VicePrincipalAdminController::class, 'dashboard'])
+Route::get('teacher/dashboard', [TeacherPortalController::class, 'dashboard'])
+Route::get('form-teacher/dashboard', [FormTeacherPortalController::class, 'dashboard'])
+Route::get('nursery-head/dashboard', [NurseryHeadController::class, 'dashboard'])
+Route::get('primary-head/dashboard', [PrimaryHeadmasterController::class, 'dashboard'])
+Route::get('secondary-head/dashboard', [SecondaryPrincipalController::class, 'dashboard'])
+Route::get('student/dashboard', [StudentPortalController::class, 'dashboard'])
+Route::middleware('permission:portal_student_access')->get('student/library', [LibraryController::class, 'studentLibrary'])
+Route::get('student/report-card/download', [StudentPortalController::class, 'downloadLatestReportCard'])
+Route::get('parent/dashboard', [ParentPortalController::class, 'dashboard'])
+Route::get('parent/report-cards/{student}/download', [ParentPortalController::class, 'downloadReportCard'])
+Route::middleware('permission:view_students')->get('academic-sessions', [AcademicSessionController::class, 'index'])
+Route::middleware('permission:manage_academic_sessions')->apiResource('academic-sessions', AcademicSessionController::class)->except(['index'])
+Route::middleware('permission:view_students')->get('terms', [TermController::class, 'index'])
+Route::middleware('permission:manage_terms')->apiResource('terms', TermController::class)->except(['index'])
+Route::middleware('permission:view_students')->get('divisions', [DivisionController::class, 'index'])
+Route::middleware('permission:manage_divisions')->apiResource('divisions', DivisionController::class)->except(['index'])
+Route::middleware('permission:view_students')->get('classes', [ClassController::class, 'index'])
+Route::middleware('permission:manage_classes')->apiResource('classes', ClassController::class)->except(['index'])
+Route::middleware('permission:view_students')->get('streams', [StreamController::class, 'index'])
+Route::middleware('permission:manage_streams')->apiResource('streams', StreamController::class)->except(['index'])
+Route::middleware('permission:view_students')->get('subjects', [SubjectController::class, 'index'])
+Route::middleware('permission:manage_subjects')->apiResource('subjects', SubjectController::class)->except(['index'])
+Route::middleware('permission:view_staff')->get('staff', [StaffController::class, 'index'])
+Route::middleware('permission:view_staff')->get('staff/{staff}', [StaffController::class, 'show'])
+Route::middleware(['role:proprietor', 'permission:manage_staff'])->post('staff', [StaffController::class, 'store'])
+Route::middleware(['role:proprietor', 'permission:manage_staff'])->put('staff/{staff}', [StaffController::class, 'update'])
+Route::middleware(['role:proprietor', 'permission:manage_staff'])->patch('staff/{staff}', [StaffController::class, 'update'])
+Route::middleware(['role:proprietor', 'permission:manage_staff'])->delete('staff/{staff}', [StaffController::class, 'destroy'])
+Route::middleware('permission:view_students')->get('students', [StudentController::class, 'index'])
+Route::middleware('permission:view_students')->get('students/{student}', [StudentController::class, 'show'])
+Route::middleware('permission:manage_students')->post('students', [StudentController::class, 'store'])
+Route::middleware('permission:manage_students')->put('students/{student}', [StudentController::class, 'update'])
+Route::middleware('permission:manage_students')->patch('students/{student}', [StudentController::class, 'update'])
+Route::middleware('permission:manage_students')->delete('students/{student}', [StudentController::class, 'destroy'])
+Route::middleware('permission:manage_students')->post('students/{student}/portal-account', [PortalAccountController::class, 'linkStudent'])
+Route::middleware('permission:view_students')->get('parents', [ParentController::class, 'index'])
+Route::middleware('permission:view_students')->get('parents/{parent}', [ParentController::class, 'show'])
+Route::middleware('permission:manage_students')->post('parents', [ParentController::class, 'store'])
+Route::middleware('permission:manage_students')->put('parents/{parent}', [ParentController::class, 'update'])
+Route::middleware('permission:manage_students')->patch('parents/{parent}', [ParentController::class, 'update'])
+Route::middleware('permission:manage_students')->delete('parents/{parent}', [ParentController::class, 'destroy'])
+Route::middleware('permission:manage_students')->post('parents/{parent}/portal-account', [PortalAccountController::class, 'linkParent'])
+Route::middleware('permission:view_finance_reports')->get('fees', [FeeController::class, 'index'])
+Route::middleware(['role:proprietor', 'permission:manage_fee_categories'])->apiResource('fees', FeeController::class)->except(['index'])
+Route::middleware('permission:view_finance_reports')->get('student-fees', [StudentFeeController::class, 'index'])
+Route::middleware('permission:manage_student_fees')->apiResource('student-fees', StudentFeeController::class)->except(['index'])
+Route::middleware('permission:manage_students')->apiResource('enrollments', StudentEnrollmentController::class)
+Route::middleware('permission:approve_admissions')->post('admissions', [AdmissionController::class, 'store'])
+Route::middleware('permission:view_finance_reports')->apiResource('fee-payments', FeePaymentController::class)->only(['index', 'show'])
+Route::middleware('permission:receive_payments')->apiResource('fee-payments', FeePaymentController::class)->only(['store', 'destroy'])
+Route::middleware('permission:view_finance_reports')->get('fee-adjustments/discounts', [FeeAdjustmentController::class, 'discounts'])
+Route::middleware('permission:manage_student_fees')->put('student-fees/{studentFee}/discount', [FeeAdjustmentController::class, 'applyDiscount'])
+Route::middleware('permission:receive_payments')->post('fee-payments/{feePayment}/reverse', [FeeAdjustmentController::class, 'reversePayment'])
+Route::middleware('permission:view_finance_reports')->apiResource('payment-receipts', PaymentReceiptController::class)->only(['index', 'show'])
+Route::middleware('permission:manage_promotions')->apiResource('promotions', StudentPromotionController::class)
+Route::middleware('permission:manage_promotions')->apiResource('graduation-records', GraduationRecordController::class)
+Route::middleware('permission:view_students')->get('attendance', [AttendanceController::class, 'index'])
+Route::middleware('permission:view_students')->get('attendance/class-list', [AttendanceController::class, 'classList'])
+Route::middleware('permission:manage_attendance')->post('attendance/bulk', [AttendanceController::class, 'bulkStore'])
+Route::middleware('permission:view_results')->get('results', [ResultController::class, 'index'])
+Route::middleware(['role:proprietor', 'permission:manage_assessments'])->apiResource('assessment-structures', AssessmentStructureController::class)
+Route::middleware('permission:approve_results')->post('results/{result}/publish', [ResultController::class, 'publish'])
+Route::middleware('permission:view_results')->get('report-cards', [ReportCardController::class, 'index'])
+Route::middleware('permission:view_results')->get('report-cards/{reportCard}/download', [ReportCardController::class, 'downloadPdf'])
+Route::middleware('permission:manage_exam_scores')->prefix('result-entry')->group(function () {
+Route::get('/students', [ResultEntryController::class, 'students'])
+Route::post('/save', [ResultEntryController::class, 'save'])
+Route::middleware('permission:view_results')->get('result-submissions', [ResultSubmissionController::class, 'index'])
+Route::middleware('permission:manage_exam_scores')->post('result-submissions', [ResultSubmissionController::class, 'createSubmission'])
+Route::middleware('permission:manage_exam_scores')->post('result-submissions/{submission}/autosave', [ResultSubmissionController::class, 'autoSave'])
+Route::middleware('permission:manage_exam_scores')->post('result-submissions/{submission}/submit', [ResultSubmissionController::class, 'submit'])
+Route::middleware('permission:approve_results')->post('result-submissions/{submission}/approve', [ResultSubmissionController::class, 'approve'])
+Route::middleware('permission:approve_results')->post('result-submissions/{submission}/publish', [ResultSubmissionController::class, 'publish'])
+Route::middleware('permission:manage_exam_scores')->post('result-submissions/{submission}/reopen', [ResultSubmissionController::class, 'reopen'])
+Route::middleware('permission:view_results')->get('examinations', [ExaminationController::class, 'index'])
+Route::middleware('permission:manage_examinations')->apiResource('examinations', ExaminationController::class)->except(['index'])
+Route::middleware('permission:manage_exam_scores')->apiResource('exam-scores', ExamScoreController::class)
+Route::middleware('permission:view_timetable')->apiResource('timetables', TimetableController::class)->only(['index', 'show'])
+Route::middleware('permission:view_assignments')->get('assignments', [AssignmentController::class, 'index'])
+Route::middleware('permission:manage_assignments')->post('assignments', [AssignmentController::class, 'store'])
+Route::middleware('permission:manage_assignments')->put('assignments/{assignment}', [AssignmentController::class, 'update'])
+Route::middleware('permission:manage_assignments')->delete('assignments/{assignment}', [AssignmentController::class, 'destroy'])
+Route::middleware('permission:portal_student_access')->get('student/assignments', [AssignmentController::class, 'studentAssignments'])
+Route::middleware('permission:portal_student_access')->post('assignments/{assignment}/submit', [AssignmentController::class, 'studentSubmit'])
+Route::middleware('permission:portal_student_access')->get('assignments/{assignment}/my-submission', [AssignmentController::class, 'mySubmission'])
+Route::middleware('permission:manage_assignments')->get('assignments/{assignment}/submissions', [AssignmentController::class, 'submissions'])
+Route::middleware('permission:manage_assignments')->post('assignments/{assignment}/submissions/{submission}/review', [AssignmentController::class, 'teacherReview'])
+Route::middleware('permission:manage_timetable')->apiResource('timetables', TimetableController::class)->except(['index', 'show'])
+Route::middleware('permission:manage_library')->get('library/workspace', [LibraryController::class, 'workspace'])
+Route::middleware('permission:manage_library')->apiResource('books', BookController::class)
+Route::middleware('permission:manage_library')->apiResource('book-loans', BookLoanController::class)
+Route::middleware('permission:manage_hostel')->apiResource('hostels', HostelController::class)
+Route::middleware('permission:manage_hostel')->apiResource('hostel-rooms', HostelRoomController::class)
+Route::middleware('permission:manage_hostel')->apiResource('hostel-allocations', HostelAllocationController::class)
+Route::middleware('permission:view_finance_reports')->get('expenses', [ExpenseController::class, 'index'])
+Route::middleware('permission:manage_budget')->apiResource('expenses', ExpenseController::class)->except(['index', 'show'])
+Route::middleware('permission:view_finance_reports')->get('expenses/{expense}', [ExpenseController::class, 'show'])
+Route::middleware('permission:manage_clinic')->apiResource('medical-records', MedicalRecordController::class)
+Route::middleware('permission:manage_clinic')->apiResource('clinic-visits', ClinicVisitController::class)
+Route::middleware('permission:manage_transport')->apiResource('vehicles', VehicleController::class)
+Route::middleware('permission:manage_transport')->apiResource('transport-routes', TransportRouteController::class)
+Route::middleware('permission:manage_transport')->apiResource('transport-allocations', TransportAllocationController::class)
+Route::middleware('permission:manage_transport')->apiResource('transport-logs', TransportLogController::class)
+Route::middleware('permission:manage_front_desk')->apiResource('visitors', VisitorController::class)
+Route::middleware('permission:manage_front_desk')->apiResource('gate-passes', StudentGatePassController::class)
+Route::middleware('permission:manage_front_desk')->apiResource('appointments', ReceptionAppointmentController::class)
+Route::middleware('permission:manage_front_desk')->get('reception-activities', [ReceptionActivityController::class, 'index'])
+Route::middleware('permission:manage_front_desk')->post('reception-activities', [ReceptionActivityController::class, 'store'])
+Route::middleware('permission:manage_front_desk')->put('reception-activities/{receptionActivity}', [ReceptionActivityController::class, 'update'])
+Route::middleware('permission:manage_front_desk')->delete('reception-activities/{receptionActivity}', [ReceptionActivityController::class, 'destroy'])
+Route::middleware('permission:manage_events')->get('school-events/options', [SchoolEventController::class, 'options'])
+Route::middleware('permission:manage_events')->apiResource('school-events', SchoolEventController::class)
+Route::middleware('permission:manage_facilities')->get('school-facilities/options', [SchoolFacilityController::class, 'options'])
+Route::middleware('permission:manage_facilities')->apiResource('school-facilities', SchoolFacilityController::class)
+Route::middleware('permission:view_communication')->get('communications', [CommunicationController::class, 'index'])
+Route::middleware('permission:view_communication')->get('communications/{communication}', [CommunicationController::class, 'show'])
+Route::middleware('permission:send_communication')->post('communications', [CommunicationController::class, 'store'])
+Route::middleware('permission:send_communication')->put('communications/{communication}', [CommunicationController::class, 'update'])
+Route::middleware('permission:send_communication')->delete('communications/{communication}', [CommunicationController::class, 'destroy'])
+Route::middleware('permission:view_communication')->post('communications/{communication}/read', [CommunicationController::class, 'markRead'])
+Route::middleware('permission:portal_parent_access')->get('portal/transport-tracking', [TransportAllocationController::class, 'tracking'])
+Route::middleware('permission:portal_student_access')->get('student/transport-tracking', [TransportAllocationController::class, 'tracking'])
+Route::middleware('permission:portal_parent_access')->get('portal/leave-applications', [StudentLeaveApplicationController::class, 'index'])
+Route::middleware('permission:portal_parent_access')->post('portal/leave-applications', [StudentLeaveApplicationController::class, 'store'])
+Route::middleware('permission:portal_student_access')->get('student/leave-applications', [StudentLeaveApplicationController::class, 'index'])
+Route::middleware('permission:portal_student_access')->post('student/leave-applications', [StudentLeaveApplicationController::class, 'store'])
+Route::middleware('permission:manage_students')->post('student-leave-applications/{studentLeaveApplication}/review', [StudentLeaveApplicationController::class, 'review'])
+Route::middleware('permission:view_cbt_questions')->get('assessment-activities', [AssessmentActivityController::class, 'index'])
+Route::middleware('permission:manage_examinations')->post('assessment-activities', [AssessmentActivityController::class, 'store'])
+Route::middleware('permission:manage_examinations')->put('assessment-activities/{assessmentActivity}', [AssessmentActivityController::class, 'update'])
+Route::middleware('permission:manage_examinations')->delete('assessment-activities/{assessmentActivity}', [AssessmentActivityController::class, 'destroy'])
+Route::middleware('permission:view_finance_reports')->get('payroll', [PayrollEntryController::class, 'index'])
+Route::middleware('permission:view_finance_reports')->get('financial-reports', [FinancialReportController::class, 'index'])
+Route::middleware('permission:manage_payroll')->post('payroll', [PayrollEntryController::class, 'store'])
+Route::middleware('permission:manage_payroll')->put('payroll/{payrollEntry}', [PayrollEntryController::class, 'update'])
+Route::middleware('permission:manage_payroll')->delete('payroll/{payrollEntry}', [PayrollEntryController::class, 'destroy'])
+Route::middleware('permission:view_cbt_questions')->get('cbt-questions', [CbtQuestionController::class, 'index'])
+Route::middleware('permission:manage_cbt_questions')->post('cbt-questions', [CbtQuestionController::class, 'store'])
+Route::middleware('permission:manage_cbt_questions')->post('cbt-questions/bulk', [CbtQuestionController::class, 'bulkStore'])
+Route::middleware('permission:manage_cbt_questions')->put('cbt-questions/{cbtQuestion}', [CbtQuestionController::class, 'update'])
+Route::middleware('permission:manage_cbt_questions')->post('cbt-questions/{cbtQuestion}/review', [CbtQuestionController::class, 'review'])
+Route::middleware('permission:manage_cbt_questions')->delete('cbt-questions/{cbtQuestion}', [CbtQuestionController::class, 'destroy'])
+Route::middleware('permission:view_cbt_questions')->get('cbt-assessments', [CbtAssessmentController::class, 'index'])
+Route::middleware('permission:manage_cbt_questions')->post('cbt-assessments', [CbtAssessmentController::class, 'store'])
+Route::middleware('permission:view_cbt_questions')->get('cbt-assessments/{cbtAssessment}', [CbtAssessmentController::class, 'show'])
+Route::middleware('permission:manage_cbt_questions')->post('cbt-assessments/{cbtAssessment}/publish', [CbtAssessmentController::class, 'publish'])
+Route::middleware('permission:manage_cbt_questions')->post('cbt-assessments/{cbtAssessment}/close', [CbtAssessmentController::class, 'close'])
+Route::middleware('permission:view_cbt_questions')->get('cbt-assessments/{cbtAssessment}/attempts', [CbtAssessmentController::class, 'attempts'])
+Route::middleware('permission:approve_results')->post('cbt-assessments/{cbtAssessment}/review-results', [CbtAssessmentController::class, 'reviewResults'])
+Route::middleware('permission:approve_results')->post('cbt-assessments/{cbtAssessment}/publish-results', [CbtAssessmentController::class, 'publishResults'])
+Route::middleware('permission:portal_student_access')->get('student/cbt-assessments', [CbtAssessmentController::class, 'availableForStudent'])
+Route::middleware('permission:portal_student_access')->post('student/cbt-assessments/{cbtAssessment}/start', [CbtAssessmentController::class, 'startForStudent'])
+Route::middleware('permission:portal_student_access')->post('student/cbt-attempts/{cbtAttempt}/answers', [CbtAssessmentController::class, 'answer'])
+Route::middleware('permission:portal_student_access')->post('student/cbt-attempts/{cbtAttempt}/submit', [CbtAssessmentController::class, 'submit'])
+Route::middleware('permission:portal_student_access')->get('student/cbt-attempts/{cbtAttempt}/result', [CbtAssessmentController::class, 'studentResult'])
+Route::middleware('permission:portal_student_access')->get('student/cbt-questions', [CbtQuestionController::class, 'studentQuestions'])
+Route::get('/', function () {
+=== AUTH/TENANCY REFERENCES ===
+backend/dono-api/app/Console/Commands/ExpireSubscriptions.php
+backend/dono-api/app/Console/Commands/SendSubscriptionReminders.php
+backend/dono-api/app/Http/Controllers/AcademicSessionController.php
+backend/dono-api/app/Http/Controllers/Api/AcademicSessionController.php
+backend/dono-api/app/Http/Controllers/Api/AcademicSettingController.php
+backend/dono-api/app/Http/Controllers/Api/ActivityLogController.php
+backend/dono-api/app/Http/Controllers/Api/AdminRevenueController.php
+backend/dono-api/app/Http/Controllers/Api/AssessmentActivityController.php
+backend/dono-api/app/Http/Controllers/Api/AssessmentStructureController.php
+backend/dono-api/app/Http/Controllers/Api/AssetController.php
+backend/dono-api/app/Http/Controllers/Api/AssignmentController.php
+backend/dono-api/app/Http/Controllers/Api/AttendanceController.php
+backend/dono-api/app/Http/Controllers/Api/AuthController.php
+backend/dono-api/app/Http/Controllers/Api/BookController.php
+backend/dono-api/app/Http/Controllers/Api/BookLoanController.php
+backend/dono-api/app/Http/Controllers/Api/CbtAssessmentController.php
+backend/dono-api/app/Http/Controllers/Api/CbtQuestionController.php
+backend/dono-api/app/Http/Controllers/Api/ClassController.php
+backend/dono-api/app/Http/Controllers/Api/ClinicVisitController.php
+backend/dono-api/app/Http/Controllers/Api/CommunicationController.php
+backend/dono-api/app/Http/Controllers/Api/CouponController.php
+backend/dono-api/app/Http/Controllers/Api/DashboardController.php
+backend/dono-api/app/Http/Controllers/Api/DisciplineCaseController.php
+backend/dono-api/app/Http/Controllers/Api/DivisionController.php
+backend/dono-api/app/Http/Controllers/Api/ExaminationController.php
+backend/dono-api/app/Http/Controllers/Api/ExpenseController.php
+backend/dono-api/app/Http/Controllers/Api/FeatureController.php
+backend/dono-api/app/Http/Controllers/Api/FeeAdjustmentController.php
+backend/dono-api/app/Http/Controllers/Api/FeeCategoryController.php
+backend/dono-api/app/Http/Controllers/Api/FeeController.php
+backend/dono-api/app/Http/Controllers/Api/FeePaymentController.php
+backend/dono-api/app/Http/Controllers/Api/FinancialReportController.php
+backend/dono-api/app/Http/Controllers/Api/FormTeacherPortalController.php
+backend/dono-api/app/Http/Controllers/Api/GradingSystemController.php
+backend/dono-api/app/Http/Controllers/Api/GraduationRecordController.php
+backend/dono-api/app/Http/Controllers/Api/HostelAllocationController.php
+backend/dono-api/app/Http/Controllers/Api/HostelController.php
+backend/dono-api/app/Http/Controllers/Api/HostelRoomController.php
+backend/dono-api/app/Http/Controllers/Api/LeaveRequestController.php
+backend/dono-api/app/Http/Controllers/Api/LibraryController.php
+backend/dono-api/app/Http/Controllers/Api/MedicalRecordController.php
+backend/dono-api/app/Http/Controllers/Api/NurseryHeadController.php
+backend/dono-api/app/Http/Controllers/Api/OrganizationController.php
+backend/dono-api/app/Http/Controllers/Api/OrganizationOwnerController.php
+backend/dono-api/app/Http/Controllers/Api/ParentController.php
+backend/dono-api/app/Http/Controllers/Api/ParentDashboardController.php
+backend/dono-api/app/Http/Controllers/Api/ParentPortalController.php
+backend/dono-api/app/Http/Controllers/Api/ParentStudentController.php
+backend/dono-api/app/Http/Controllers/Api/PasswordResetController.php
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php
+backend/dono-api/app/Http/Controllers/Api/PaymentReceiptController.php
+backend/dono-api/app/Http/Controllers/Api/PayrollEntryController.php
+backend/dono-api/app/Http/Controllers/Api/PlatformAnnouncementController.php
+backend/dono-api/app/Http/Controllers/Api/PlatformOwnerController.php
+backend/dono-api/app/Http/Controllers/Api/PortalAccountController.php
+backend/dono-api/app/Http/Controllers/Api/PrimaryHeadmasterController.php
+backend/dono-api/app/Http/Controllers/Api/PrincipalController.php
+backend/dono-api/app/Http/Controllers/Api/PromoCampaignController.php
+backend/dono-api/app/Http/Controllers/Api/ProprietorController.php
+backend/dono-api/app/Http/Controllers/Api/ReceiptController.php
+backend/dono-api/app/Http/Controllers/Api/ReceptionActivityController.php
+backend/dono-api/app/Http/Controllers/Api/ReceptionAppointmentController.php
+backend/dono-api/app/Http/Controllers/Api/ReportCardController.php
+backend/dono-api/app/Http/Controllers/Api/ResultController.php
+backend/dono-api/app/Http/Controllers/Api/ResultEntryController.php
+backend/dono-api/app/Http/Controllers/Api/ResultSubmissionController.php
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php
+backend/dono-api/app/Http/Controllers/Api/SafetyIncidentController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolBrandingController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolEventController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolFacilityController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolSettingController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolSetupController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolSetupDelegationController.php
+backend/dono-api/app/Http/Controllers/Api/SchoolSubscriptionController.php
+backend/dono-api/app/Http/Controllers/Api/SecondaryPrincipalController.php
+backend/dono-api/app/Http/Controllers/Api/StaffAttendanceController.php
+backend/dono-api/app/Http/Controllers/Api/StaffController.php
+backend/dono-api/app/Http/Controllers/Api/StreamController.php
+backend/dono-api/app/Http/Controllers/Api/StudentController.php
+backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php
+backend/dono-api/app/Http/Controllers/Api/StudentFeeController.php
+backend/dono-api/app/Http/Controllers/Api/StudentGatePassController.php
+backend/dono-api/app/Http/Controllers/Api/StudentLeaveApplicationController.php
+backend/dono-api/app/Http/Controllers/Api/StudentPortalController.php
+backend/dono-api/app/Http/Controllers/Api/StudentPromotionController.php
+backend/dono-api/app/Http/Controllers/Api/SubjectController.php
+backend/dono-api/app/Http/Controllers/Api/SubscriptionPlanController.php
+backend/dono-api/app/Http/Controllers/Api/TeacherPortalController.php
+backend/dono-api/app/Http/Controllers/Api/TermController.php
+backend/dono-api/app/Http/Controllers/Api/TimetableController.php
+backend/dono-api/app/Http/Controllers/Api/TransportAllocationController.php
+backend/dono-api/app/Http/Controllers/Api/TransportLogController.php
+backend/dono-api/app/Http/Controllers/Api/TransportRouteController.php
+backend/dono-api/app/Http/Controllers/Api/VehicleController.php
+backend/dono-api/app/Http/Controllers/Api/VicePrincipalAcademicController.php
+backend/dono-api/app/Http/Controllers/Api/VicePrincipalAdminController.php
+backend/dono-api/app/Http/Controllers/Api/VisitorController.php
+backend/dono-api/app/Http/Controllers/Controller.php
+backend/dono-api/app/Http/Controllers/TermController.php
+backend/dono-api/app/Http/Middleware/CheckActiveSubscription.php
+backend/dono-api/app/Http/Middleware/CheckStaffActive.php
+backend/dono-api/app/Http/Middleware/CheckSubscriptionFeature.php
+backend/dono-api/app/Http/Middleware/HasSchool.php
+backend/dono-api/app/Http/Middleware/OrganizationOwnerMiddleware.php
+backend/dono-api/app/Http/Middleware/PermissionMiddleware.php
+backend/dono-api/app/Http/Middleware/RoleMiddleware.php
+backend/dono-api/app/Http/Requests/LinkParentPortalAccountRequest.php
+backend/dono-api/app/Http/Requests/LinkStudentPortalAccountRequest.php
+backend/dono-api/app/Http/Requests/StoreAcademicSessionRequest.php
+backend/dono-api/app/Http/Requests/StoreAdmissionRequest.php
+backend/dono-api/app/Http/Requests/StoreAssessmentStructureRequest.php
+backend/dono-api/app/Http/Requests/StoreAssetRequest.php
+backend/dono-api/app/Http/Requests/StoreAttendanceRequest.php
+backend/dono-api/app/Http/Requests/StoreClassRequest.php
+backend/dono-api/app/Http/Requests/StoreCommunicationRequest.php
+backend/dono-api/app/Http/Requests/StoreCouponRequest.php
+backend/dono-api/app/Http/Requests/StoreDisciplineCaseRequest.php
+backend/dono-api/app/Http/Requests/StoreDivisionRequest.php
+backend/dono-api/app/Http/Requests/StoreExaminationRequest.php
+backend/dono-api/app/Http/Requests/StoreFeatureRequest.php
+backend/dono-api/app/Http/Requests/StoreFeeCategoryRequest.php
+backend/dono-api/app/Http/Requests/StoreFeeRequest.php
+backend/dono-api/app/Http/Requests/StoreLeaveRequest.php
+backend/dono-api/app/Http/Requests/StoreParentRequest.php
+backend/dono-api/app/Http/Requests/StoreParentStudentRequest.php
+backend/dono-api/app/Http/Requests/StorePromoCampaignRequest.php
+backend/dono-api/app/Http/Requests/StoreReportCardRequest.php
+backend/dono-api/app/Http/Requests/StoreResultRequest.php
+backend/dono-api/app/Http/Requests/StoreSafetyIncidentRequest.php
+backend/dono-api/app/Http/Requests/StoreSchoolEventRequest.php
+backend/dono-api/app/Http/Requests/StoreSchoolFacilityRequest.php
+backend/dono-api/app/Http/Requests/StoreSchoolSubscriptionRequest.php
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceBulkRequest.php
+backend/dono-api/app/Http/Requests/StoreStaffAttendanceRequest.php
+backend/dono-api/app/Http/Requests/StoreStaffRequest.php
+backend/dono-api/app/Http/Requests/StoreStreamRequest.php
+backend/dono-api/app/Http/Requests/StoreStudentEnrollmentRequest.php
+backend/dono-api/app/Http/Requests/StoreStudentPromotionRequest.php
+backend/dono-api/app/Http/Requests/StoreStudentRequest.php
+backend/dono-api/app/Http/Requests/StoreSubjectRequest.php
+backend/dono-api/app/Http/Requests/StoreSubscriptionPlanRequest.php
+backend/dono-api/app/Http/Requests/StoreTimetableRequest.php
+backend/dono-api/app/Http/Requests/UpdateAcademicSessionRequest.php
+backend/dono-api/app/Http/Requests/UpdateAssessmentStructureRequest.php
+backend/dono-api/app/Http/Requests/UpdateAssetRequest.php
+backend/dono-api/app/Http/Requests/UpdateAttendanceRequest.php
+backend/dono-api/app/Http/Requests/UpdateCommunicationRequest.php
+backend/dono-api/app/Http/Requests/UpdateCouponRequest.php
+backend/dono-api/app/Http/Requests/UpdateDivisionRequest.php
+backend/dono-api/app/Http/Requests/UpdateExaminationRequest.php
+backend/dono-api/app/Http/Requests/UpdateFeatureRequest.php
+backend/dono-api/app/Http/Requests/UpdateFeeCategoryRequest.php
+backend/dono-api/app/Http/Requests/UpdateFeeRequest.php
+backend/dono-api/app/Http/Requests/UpdateParentRequest.php
+backend/dono-api/app/Http/Requests/UpdateParentStudentRequest.php
+backend/dono-api/app/Http/Requests/UpdatePromoCampaignRequest.php
+backend/dono-api/app/Http/Requests/UpdateReportCardRequest.php
+backend/dono-api/app/Http/Requests/UpdateResultRequest.php
+backend/dono-api/app/Http/Requests/UpdateSchoolEventRequest.php
+backend/dono-api/app/Http/Requests/UpdateSchoolFacilityRequest.php
+backend/dono-api/app/Http/Requests/UpdateSchoolSubscriptionRequest.php
+backend/dono-api/app/Http/Requests/UpdateStaffRequest.php
+backend/dono-api/app/Http/Requests/UpdateStreamRequest.php
+backend/dono-api/app/Http/Requests/UpdateStudentEnrollmentRequest.php
+backend/dono-api/app/Http/Requests/UpdateStudentPromotionRequest.php
+backend/dono-api/app/Http/Requests/UpdateStudentRequest.php
+backend/dono-api/app/Http/Requests/UpdateSubjectRequest.php
+backend/dono-api/app/Http/Requests/UpdateSubscriptionPlanRequest.php
+backend/dono-api/app/Http/Requests/UpdateSystemSettingRequest.php
+backend/dono-api/app/Http/Requests/UpdateTimetableRequest.php
+backend/dono-api/app/Http/Resources/AcademicSessionResource.php
+backend/dono-api/app/Http/Resources/AssessmentStructureResource.php
+backend/dono-api/app/Http/Resources/AssetResource.php
+backend/dono-api/app/Http/Resources/AttendanceResource.php
+backend/dono-api/app/Http/Resources/CouponResource.php
+backend/dono-api/app/Http/Resources/DisciplineCaseResource.php
+backend/dono-api/app/Http/Resources/DivisionResource.php
+backend/dono-api/app/Http/Resources/ExaminationResource.php
+backend/dono-api/app/Http/Resources/FeeCategoryResource.php
+backend/dono-api/app/Http/Resources/FeeResource.php
+backend/dono-api/app/Http/Resources/LeaveRequestResource.php
+backend/dono-api/app/Http/Resources/NotificationResource.php
+backend/dono-api/app/Http/Resources/ParentResource.php
+backend/dono-api/app/Http/Resources/PromoCampaignResource.php
+backend/dono-api/app/Http/Resources/ReportCardResource.php
+backend/dono-api/app/Http/Resources/ResultResource.php
+backend/dono-api/app/Http/Resources/SafetyIncidentResource.php
+backend/dono-api/app/Http/Resources/SchoolEventResource.php
+backend/dono-api/app/Http/Resources/SchoolFacilityResource.php
+backend/dono-api/app/Http/Resources/SchoolResource.php
+backend/dono-api/app/Http/Resources/SchoolSubscriptionResource.php
+backend/dono-api/app/Http/Resources/StaffAttendanceResource.php
+backend/dono-api/app/Http/Resources/StaffResource.php
+backend/dono-api/app/Http/Resources/StudentEnrollmentResource.php
+backend/dono-api/app/Http/Resources/StudentFeeResource.php
+backend/dono-api/app/Http/Resources/StudentPromotionResource.php
+backend/dono-api/app/Http/Resources/StudentResource.php
+backend/dono-api/app/Http/Resources/SubjectResource.php
+backend/dono-api/app/Http/Resources/SystemSettingResource.php
+backend/dono-api/app/Http/Resources/TimetableResource.php
+backend/dono-api/app/Mail/SubscriptionReminderMail.php
+backend/dono-api/app/Models/AcademicSession.php
+backend/dono-api/app/Models/ActivityLog.php
+backend/dono-api/app/Models/AssessmentActivity.php
+backend/dono-api/app/Models/AssessmentStructure.php
+backend/dono-api/app/Models/Asset.php
+backend/dono-api/app/Models/Assignment.php
+backend/dono-api/app/Models/AssignmentSubmission.php
+backend/dono-api/app/Models/Attendance.php
+backend/dono-api/app/Models/Book.php
+backend/dono-api/app/Models/BookLoan.php
+backend/dono-api/app/Models/CbtAssessment.php
+backend/dono-api/app/Models/CbtAttempt.php
+backend/dono-api/app/Models/CbtQuestion.php
+backend/dono-api/app/Models/ClinicVisit.php
+backend/dono-api/app/Models/Communication.php
+backend/dono-api/app/Models/CommunicationRead.php
+backend/dono-api/app/Models/Coupon.php
+backend/dono-api/app/Models/Department.php
+backend/dono-api/app/Models/DisciplineCase.php
+backend/dono-api/app/Models/Division.php
+backend/dono-api/app/Models/Examination.php
+backend/dono-api/app/Models/Expense.php
+backend/dono-api/app/Models/Feature.php
+backend/dono-api/app/Models/Fee.php
+backend/dono-api/app/Models/FeeCategory.php
+backend/dono-api/app/Models/FeePaymentTransaction.php
+backend/dono-api/app/Models/FormTeacherAssignment.php
+backend/dono-api/app/Models/GradingSystem.php
+backend/dono-api/app/Models/GraduationRecord.php
+backend/dono-api/app/Models/Guardian.php
+backend/dono-api/app/Models/Hostel.php
+backend/dono-api/app/Models/HostelAllocation.php
+backend/dono-api/app/Models/HostelRoom.php
+backend/dono-api/app/Models/LeaveRequest.php
+backend/dono-api/app/Models/MedicalRecord.php
+backend/dono-api/app/Models/ParentModel.php
+backend/dono-api/app/Models/PaymentTransaction.php
+backend/dono-api/app/Models/PayrollEntry.php
+backend/dono-api/app/Models/PlatformAnnouncement.php
+backend/dono-api/app/Models/PromoCampaign.php
+backend/dono-api/app/Models/ReceptionActivity.php
+backend/dono-api/app/Models/ReceptionAppointment.php
+backend/dono-api/app/Models/ReportCard.php
+backend/dono-api/app/Models/Result.php
+backend/dono-api/app/Models/ResultSubmission.php
+backend/dono-api/app/Models/Role.php
+backend/dono-api/app/Models/RoleInvitation.php
+backend/dono-api/app/Models/SafetyIncident.php
+backend/dono-api/app/Models/School.php
+backend/dono-api/app/Models/SchoolEvent.php
+backend/dono-api/app/Models/SchoolFacility.php
+backend/dono-api/app/Models/SchoolSetupDelegation.php
+backend/dono-api/app/Models/SchoolSubscription.php
+backend/dono-api/app/Models/Staff.php
+backend/dono-api/app/Models/StaffAttendance.php
+backend/dono-api/app/Models/Student.php
+backend/dono-api/app/Models/StudentEnrollment.php
+=== CONFIG/DEPLOYMENT ===
+./.env.example
+./Dockerfile
+./README.md
+./backend/dono-api/.env.example
+./backend/dono-api/Dockerfile
+./backend/dono-api/README.md
+./backend/dono-api/composer.json
+./backend/dono-api/package.json
+./backend/dono-api/vite.config.js
+./composer.json
+./frontend/.env.example
+./frontend/README.md
+./frontend/package.json
+./frontend/vite.config.js
+./package.json
+./vite.config.js

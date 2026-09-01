@@ -19,12 +19,21 @@ class Communication extends Model
         'published_at',
         'read_at',
         'is_published',
+        'delivery_channel',
+        'delivery_status',
+        'delivery_recipient_count',
+        'delivery_attempted_at',
+        'delivered_at',
+        'delivery_error',
     ];
 
     protected $casts = [
         'published_at' => 'datetime',
         'read_at' => 'datetime',
         'is_published' => 'boolean',
+        'delivery_recipient_count' => 'integer',
+        'delivery_attempted_at' => 'datetime',
+        'delivered_at' => 'datetime',
     ];
 
     public function school(): BelongsTo
@@ -45,5 +54,10 @@ class Communication extends Model
     public function reads(): HasMany
     {
         return $this->hasMany(CommunicationRead::class);
+    }
+
+    public function deliveries(): HasMany
+    {
+        return $this->hasMany(CommunicationDelivery::class);
     }
 }

@@ -8,8 +8,8 @@ const TABS = [
     { id: "dashboard", label: "Overview" },
     { id: "timetable", label: "Timetable" },
     { id: "assignments", label: "Assignments" },
-    { id: "results", label: "Results", page: "results" },
-    { id: "library", label: "Library", page: "library" },
+    { id: "results", label: "Results" },
+    { id: "library", label: "Library" },
 ];
 
 export default function StudentPortal({ setPage }) {
@@ -17,17 +17,25 @@ export default function StudentPortal({ setPage }) {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
     const [error, setError] = useState("");
+    const [inactiveStatus, setInactiveStatus] = useState("");
     const [downloading, setDownloading] = useState(false);
+    const [libraryLoading, setLibraryLoading] = useState(false);
+    const [libraryError, setLibraryError] = useState("");
+    const [libraryData, setLibraryData] = useState({ books: [], my_loans: [] });
+    const [libraryReservations, setLibraryReservations] = useState([]);
+    const [reservationBook, setReservationBook] = useState("");
 
     useEffect(() => {
         const loadStudentData = async () => {
             setLoading(true);
             setError("");
             try {
+                setInactiveStatus("");
                 const res = await api.get("/student/dashboard");
                 setData(res?.data && typeof res.data === "object" ? res.data : null);
             } catch (err) {
                 setData(null);
+                setInactiveStatus(err?.response?.data?.code === "STUDENT_PORTAL_INACTIVE" ? (err?.response?.data?.student_status || "Inactive") : "");
                 setError(err?.response?.data?.message || "Unable to load student portal data.");
             } finally {
                 setLoading(false);
@@ -43,6 +51,7 @@ export default function StudentPortal({ setPage }) {
     const timetable = Array.isArray(data?.timetable) ? data.timetable : [];
     const timetableContext = data?.timetable_context || {};
     const notices = Array.isArray(data?.recent_notices) ? data.recent_notices : [];
+    const isUnlinked = data?.student_profile?.admission_number === "UNLINKED";
 
     const downloadReportCard = async () => {
         setDownloading(true);
@@ -64,6 +73,37 @@ export default function StudentPortal({ setPage }) {
         }
     };
 
+    useEffect(() => {
+        if (activeTab !== "library") return;
+        const loadLibrary = async () => {
+            try {
+                setLibraryLoading(true); setLibraryError("");
+                const [libraryResponse, reservationResponse] = await Promise.all([api.get("/student/library"), api.get("/student/library/reservations")]);
+                const payload = libraryResponse?.data?.data || {};
+                setLibraryData({ books: Array.isArray(payload.books) ? payload.books : [], my_loans: Array.isArray(payload.my_loans) ? payload.my_loans : [] });
+                const reservations = reservationResponse?.data?.data;
+                setLibraryReservations(Array.isArray(reservations) ? reservations : []);
+            } catch (reason) {
+                setLibraryError(reason?.response?.data?.message || "Unable to load your school library.");
+                setLibraryData({ books: [], my_loans: [] }); setLibraryReservations([]);
+            } finally { setLibraryLoading(false); }
+        };
+        loadLibrary();
+    }, [activeTab]);
+
+    const reserveBook = async () => {
+        if (!reservationBook) return;
+        try {
+            setLibraryLoading(true); setLibraryError("");
+            await api.post("/student/library/reservations", { book_id: Number(reservationBook) });
+            setReservationBook("");
+            const response = await api.get("/student/library/reservations");
+            const reservations = response?.data?.data;
+            setLibraryReservations(Array.isArray(reservations) ? reservations : []);
+        } catch (reason) { setLibraryError(reason?.response?.data?.message || "Unable to reserve this book."); }
+        finally { setLibraryLoading(false); }
+    };
+
     const openTab = (tabId) => {
         const tab = TABS.find((item) => item.id === tabId);
         if (tab?.page && typeof setPage === "function") {
@@ -75,6 +115,25 @@ export default function StudentPortal({ setPage }) {
 
     if (loading) {
         return <LoadingSpinner text="Loading student portal..." />;
+    }
+
+    if (inactiveStatus) {
+        return (
+            <div className="page-container">
+                <PageHeader title="Student Portal Inactive" subtitle={`This account is marked ${inactiveStatus.toLowerCase()} by the school.`} />
+                <EmptyState title="Active learning access has ended" message="Graduation, transfer, or withdrawal closes active student learning access so old classwork, timetable, CBT, and new submissions cannot continue. Your official historical records remain with the school, and a linked parent or authorized staff member can still access the records they are allowed to view." />
+            </div>
+        );
+    }
+
+    if (isUnlinked) {
+        return (
+            <div className="page-container">
+                <PageHeader title="Student Portal Setup" subtitle="Your login is valid, but it is not linked to a student record yet." />
+                {error && <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{error}</div>}
+                <EmptyState title="Student profile not linked" message="Ask your school administrator to open your student record, choose Create Student Portal Account, and use this exact email address. After the school links the account, sign out and sign in again; your class, timetable, assignments, published results, fees, library, notices, and CBT access will then appear here." />
+            </div>
+        );
     }
 
     return (
@@ -170,10 +229,13 @@ export default function StudentPortal({ setPage }) {
                     <h2 className="text-xl font-bold text-slate-900">Assignments</h2>
                     {assignments.length === 0 ? <EmptyState title="No upcoming assignments" message="Published assignments will appear here." /> : <div className="mt-4 divide-y divide-slate-100">{assignments.map((assignment) => <div key={assignment.id} className="py-4"><p className="font-semibold text-slate-800">{assignment.title}</p><p className="text-sm text-slate-500">{assignment.subject} · Due {assignment.due_date}</p></div>)}</div>}
                 </div>
+            ) : activeTab === "library" ? (
+                <div className="space-y-6"><section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><h2 className="text-xl font-bold text-slate-900">My Library</h2><p className="mt-1 text-sm text-slate-500">View your loans and reserve a title from your current school.</p>{libraryError && <p className="mt-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{libraryError}</p>}{libraryLoading ? <LoadingSpinner text="Loading library..." /> : <div className="mt-4 space-y-3">{libraryData.my_loans.length === 0 ? <EmptyState title="No loans yet" message="Books issued to you will appear here." /> : libraryData.my_loans.map((loan) => <div key={loan.id} className="rounded-xl border border-slate-100 bg-slate-50 p-4"><p className="font-semibold text-slate-900">{loan.book || "Library book"}</p><p className="text-sm text-slate-600">{loan.status} · Due {loan.due_date || "not set"}</p></div>)}</div>}</section><section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><h2 className="text-xl font-bold text-slate-900">Reserve a book</h2><div className="mt-4 flex flex-col gap-3 sm:flex-row"><select value={reservationBook} onChange={(event) => setReservationBook(event.target.value)} className="ui-input flex-1"><option value="">Select a book</option>{libraryData.books.map((book) => <option key={book.id} value={book.id}>{book.title} — {book.available_copies > 0 ? `${book.available_copies} available` : "currently unavailable"}</option>)}</select><button type="button" onClick={reserveBook} disabled={!reservationBook || libraryLoading} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Reserve</button></div><div className="mt-5 space-y-2">{libraryReservations.length === 0 ? <p className="text-sm text-slate-500">You have no reservations.</p> : libraryReservations.map((reservation) => <div key={reservation.id} className="flex justify-between rounded-lg border border-slate-100 p-3 text-sm"><span>{reservation.book?.title || "Book"}</span><span className="font-semibold capitalize">{reservation.status}</span></div>)}</div></section></div>
             ) : (
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
-                    <h3 className="text-xl font-bold text-slate-900 mb-2 capitalize">{activeTab} Portal</h3>
-                    <p className="text-slate-500 max-w-sm mx-auto">Opening the registered student workspace.</p>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2 capitalize">Published results</h3>
+                    {results.length === 0 ? <EmptyState title="No published results yet" message="Results appear here only after the school completes assessment entry, review, approval, and final publication." /> : <div className="mx-auto mt-5 max-w-xl divide-y divide-slate-100 text-left">{results.map((result, index) => <div key={`${result.subject || "subject"}-${index}`} className="flex items-center justify-between gap-4 py-3"><span className="font-semibold text-slate-800">{result.subject || "Subject"}</span><span className="font-semibold text-slate-600">{result.score ?? "—"} · {result.grade || "—"}</span></div>)}</div>}
+
                 </div>
             )}
         </div>

@@ -15,7 +15,7 @@ class UpdateAssetRequest extends FormRequest
 
     public function rules(): array
     {
-        $schoolId = $this->currentSchoolId();
+        $schoolId = app(CurrentContextService::class)->currentSchool($this->user())?->id;
 
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
@@ -46,23 +46,8 @@ class UpdateAssetRequest extends FormRequest
             'acquisition_cost' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
             'warranty_expires_at' => ['sometimes', 'nullable', 'date', 'after_or_equal:acquisition_date'],
             'condition' => ['sometimes', 'required', Rule::in(['New', 'Good', 'Fair', 'Poor'])],
-            'status' => ['sometimes', 'required', Rule::in(['Active', 'In Repair', 'Lost', 'Disposed'])],
             'notes' => ['sometimes', 'nullable', 'string', 'max:4000'],
         ];
     }
 
-    private function currentSchoolId(): ?int
-    {
-        $schoolId = $this->attributes->get('current_school_id');
-
-        if ($schoolId) {
-            return (int) $schoolId;
-        }
-
-        $user = $this->user();
-
-        return $user
-            ? app(CurrentContextService::class)->currentSchool($user)?->id
-            : null;
-    }
 }

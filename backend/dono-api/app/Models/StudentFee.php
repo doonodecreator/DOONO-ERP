@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class StudentFee extends Model
 {
     protected $fillable = [
+        'school_id',
+        'invoice_number',
         'student_enrollment_id',
         'fee_category_id',
         'academic_session_id',
@@ -52,11 +54,13 @@ class StudentFee extends Model
 
     public function getTotalPaidAttribute()
     {
-        return $this->payments()->sum('amount_paid');
+        return $this->relationLoaded('payments')
+            ? $this->payments->whereNull('reversed_at')->sum('amount_paid')
+            : $this->payments()->whereNull('reversed_at')->sum('amount_paid');
     }
 
     public function getBalanceAttribute()
     {
-        return $this->amount_due - $this->total_paid;
+        return max(0, (float) $this->amount_due - (float) $this->total_paid);
     }
 }

@@ -7,6 +7,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [organization, setOrganization] = useState(null);
   const [school, setSchool] = useState(null);
+  const [academicContext, setAcademicContext] = useState({ session: null, term: null, state: "organization_context" });
   const [roles, setRoles] = useState([]);
   const [permissions, setPermissions] = useState([]);
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
@@ -19,6 +20,7 @@ export function AuthProvider({ children }) {
     setUser(ctx.user ?? null);
     setOrganization(ctx.organization ?? null);
     setSchool(ctx.school ?? null);
+    setAcademicContext(ctx.academic_context ?? { session: null, term: null, state: "organization_context" });
     setRoles(ctx.roles ?? []);
     setPermissions(ctx.permissions ?? []);
     setIsPlatformAdmin(!!ctx.is_platform_admin);
@@ -31,6 +33,7 @@ export function AuthProvider({ children }) {
     setUser(null);
     setOrganization(null);
     setSchool(null);
+    setAcademicContext({ session: null, term: null, state: "organization_context" });
     setRoles([]);
     setPermissions([]);
     setIsPlatformAdmin(false);
@@ -96,6 +99,7 @@ export function AuthProvider({ children }) {
         user,
         organization,
         school,
+        academicContext,
         roles,
         permissions,
         isPlatformAdmin,

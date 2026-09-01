@@ -69,6 +69,42 @@ services:
         value: https://api.paystack.co
       - key: PAYSTACK_CURRENCY
         value: NGN
+      - key: OAUTH_ENABLED
+        value: "false"
+      - key: PASSPORT_PRIVATE_KEY
+        sync: false
+      - key: PASSPORT_PUBLIC_KEY
+        sync: false
+      - key: OAUTH_CLIENT_TOKEN_MINUTES
+        value: "60"
+      - key: BACKUP_SCHEDULE_ENABLED
+        value: "false"
+      - key: BACKUP_RETENTION_ENABLED
+        value: "false"
+      - key: BACKUP_RETENTION_DAYS
+        value: "30"
+      - key: BACKUP_DISK
+        value: s3
+      - key: BACKUP_ENCRYPTION_PASSPHRASE
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM
+        sync: false
+      - key: TWILIO_MESSAGING_SERVICE_SID
+        sync: false
+      - key: TWILIO_STATUS_CALLBACK_URL
+        sync: false
+      - key: TWILIO_WEBHOOK_URL
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        sync: false
       - key: AWS_ACCESS_KEY_ID
         sync: false
       - key: AWS_SECRET_ACCESS_KEY
@@ -135,6 +171,110 @@ services:
         sync: false
       - key: MAIL_FROM_NAME
         value: DOONO De Creator ERP
+      - key: OAUTH_ENABLED
+        value: "false"
+      - key: PASSPORT_PRIVATE_KEY
+        sync: false
+      - key: PASSPORT_PUBLIC_KEY
+        sync: false
+      - key: OAUTH_CLIENT_TOKEN_MINUTES
+        value: "60"
+      - key: BACKUP_SCHEDULE_ENABLED
+        value: "false"
+      - key: BACKUP_RETENTION_ENABLED
+        value: "false"
+      - key: BACKUP_RETENTION_DAYS
+        value: "30"
+      - key: BACKUP_DISK
+        value: s3
+      - key: BACKUP_ENCRYPTION_PASSPHRASE
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM
+        sync: false
+      - key: TWILIO_MESSAGING_SERVICE_SID
+        sync: false
+      - key: TWILIO_STATUS_CALLBACK_URL
+        sync: false
+      - key: TWILIO_WEBHOOK_URL
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        sync: false
+
+  - type: worker
+    name: dono-scheduler
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    maxShutdownDelaySeconds: 120
+    dockerCommand: php artisan schedule:work
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        fromService:
+          name: dono-api
+          type: web
+          envVarKey: APP_KEY
+      - key: APP_URL
+        fromService:
+          name: dono-api
+          type: web
+          envVarKey: APP_URL
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: dono-db
+          property: connectionString
+      - key: DB_SSLMODE
+        value: require
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: FILESYSTEM_DISK
+        value: s3
+      - key: OAUTH_ENABLED
+        value: "false"
+      - key: BACKUP_SCHEDULE_ENABLED
+        value: "false"
+      - key: BACKUP_RETENTION_ENABLED
+        value: "false"
+      - key: BACKUP_RETENTION_DAYS
+        value: "30"
+      - key: BACKUP_DISK
+        value: s3
+      - key: BACKUP_ENCRYPTION_PASSPHRASE
+        sync: false
+      - key: BACKUP_MYSQLDUMP_BINARY
+        value: mysqldump
+      - key: BACKUP_PG_DUMP_BINARY
+        value: pg_dump
+      - key: BACKUP_GPG_BINARY
+        value: gpg
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_DEFAULT_REGION
+        sync: false
+      - key: AWS_BUCKET
+        sync: false
+      - key: AWS_ENDPOINT
+        sync: false
+      - key: AWS_URL
+        sync: false
+      - key: AWS_USE_PATH_STYLE_ENDPOINT
+        value: "false"
 
   - type: cron
     name: dono-subscription-expiry

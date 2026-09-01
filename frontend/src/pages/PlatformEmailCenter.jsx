@@ -12,10 +12,14 @@ function resolveInboxActionUrl(value) {
   if (!value || typeof value !== "string" || typeof window === "undefined") return value || "";
   try {
     const url = new URL(value, window.location.origin);
-    const apiOrigin = new URL(getApiBaseUrl(), window.location.origin).origin;
+    const apiBase = getApiBaseUrl();
+    const apiOrigin = new URL(apiBase, window.location.origin);
     if (["localhost", "127.0.0.1", "0.0.0.0", "::1"].includes(url.hostname)) {
-      url.protocol = new URL(apiOrigin).protocol;
-      url.host = new URL(apiOrigin).host;
+      if (apiBase.startsWith("/")) {
+        return `${url.pathname}${url.search}${url.hash}`;
+      }
+      url.protocol = apiOrigin.protocol;
+      url.host = apiOrigin.host;
     }
     return url.toString();
   } catch {
@@ -25,7 +29,7 @@ function resolveInboxActionUrl(value) {
 
 function rewriteInboxBody(value) {
   if (!value || typeof value !== "string") return value || "";
-  return value.replace(/https?:\/\/(?:localhost|127\\.0\\.0\\.1|0\\.0\\.0\\.0|\[::1\])(?::\\d+)?(\/api\/v1\/[^\s]+)/gi, (_, path) => resolveInboxActionUrl(path));
+  return value.replace(/https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(?::\d+)?(\/api\/v1\/[^\s]+)/gi, (_, path) => resolveInboxActionUrl(path));
 }
 
 export default function PlatformEmailCenter() {

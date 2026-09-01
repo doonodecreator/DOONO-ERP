@@ -5,8 +5,11 @@ RUN apt-get update && apt-get install -y \
     unzip \
     zip \
     libzip-dev \
+    gnupg \
     default-mysql-client \
-    && docker-php-ext-install zip pdo pdo_mysql pdo_pgsql
+    postgresql-client \
+    && docker-php-ext-install zip pdo pdo_mysql pdo_pgsql \
+    && php -m | grep -q '^sodium$'
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 

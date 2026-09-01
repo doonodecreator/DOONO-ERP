@@ -13,7 +13,7 @@ class VisitorController extends Controller
 
     public function index(Request $request)
     {
-        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+        $schoolId = $this->context->currentSchool($request->user())?->id;
 
         return response()->json(
             Visitor::when($schoolId, fn($q) => $q->where('school_id', $schoolId))
@@ -32,7 +32,7 @@ class VisitorController extends Controller
             'check_in_time' => 'nullable|date',
         ]);
 
-        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+        $schoolId = $this->context->currentSchool($request->user())?->id;
         if ($schoolId) {
             $validated['school_id'] = $schoolId;
         }

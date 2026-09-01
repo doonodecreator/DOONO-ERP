@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import DONOGuide from "../components/feedback/DONOGuide";
 import Footer from "../components/layout/Footer";
 import ScrollNavigator from "../components/layout/ScrollNavigator";
+import SchoolOSContextBar from "../components/layout/SchoolOSContextBar";
 import SubscriptionRequiredNotice from "../components/feedback/SubscriptionRequiredNotice";
 import "./DashboardLayout.css";
 
@@ -60,7 +61,8 @@ export default function DashboardLayout({ children, page, setPage }) {
       <Sidebar page={page} setPage={setPage} open={sidebarOpen} closeSidebar={() => setSidebarOpen(false)} />
       <div className="dono-app-column">
         <Navbar onMenuClick={() => setSidebarOpen((open) => !open)} onNavigate={setPage} menuOpen={sidebarOpen} />
-        <main className="dono-dashboard-main">
+                  <main className="dono-dashboard-main">
+            <SchoolOSContextBar onNavigate={setPage} />
             {!online && <div role="status" style={{ marginBottom: "12px", border: "1px solid #fbbf24", background: "#fffbeb", color: "#92400e", borderRadius: "8px", padding: "10px 12px", fontSize: "13px", fontWeight: 600 }}>You are offline. Previously loaded pages remain available; changes will work only after the connection returns.</div>}
 
           {subscriptionNotice && (

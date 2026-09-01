@@ -57,6 +57,10 @@ class TimetableResource extends JsonResource
             'room' => $this->room,
 
             'is_active' => $this->is_active,
+            'workflow_status' => $this->workflow_status ?: ($this->is_active ? 'published' : 'draft'),
+            'submitted_at' => $this->submitted_at,
+            'approved_at' => $this->approved_at,
+            'published_at' => $this->published_at,
 
             'created_at' => $this->created_at,
 

@@ -1,0 +1,481 @@
+=== AUTH CONTROLLER ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Organization;
+use App\Models\Staff;
+use App\Models\User;
+use App\Http\Resources\StaffResource;
+use App\Services\CurrentContextService;
+use App\Services\EmailVerificationService;
+use App\Services\MediaStorageService;
+use App\Services\ActivityLogService;
+use App\Services\MfaService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+
+class AuthController extends Controller
+{
+    public function __construct(
+        private CurrentContextService $context,
+        private EmailVerificationService $verification,
+        private MediaStorageService $media,
+        private MfaService $mfa,
+    ) {
+    }
+
+    private function requiresEmailVerification(): bool
+    {
+        // A disabled flag is honored only in local/testing environments.
+        return (bool) config('app.email_verification_required', true)
+            || ! app()->environment(['local', 'testing']);
+    }
+
+    /**
+     * Register a new proprietor + organization. Logs in automatically.
+     * No school exists yet, so no role is assigned here — the Proprietor
+     * role gets attached, scoped to the school, when the wizard runs
+     * (see SchoolController@store).
+     */
+    public function register(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'nullable|string|max:100',
+            'phone' => 'nullable|string|max:20',
+
+            'admin_name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|confirmed|min:8',
+        ]);
+
+        $validated['email'] = strtolower(trim($validated['email']));
+
+        $requiresVerification = $this->requiresEmailVerification();
+
+        try {
+            $result = DB::transaction(function () use ($validated, $requiresVerification) {
+                $user = User::create([
+                    'name' => $validated['admin_name'],
+                    'email' => $validated['email'],
+                    'password' => $validated['password'],
+                    'email_verified_at' => $requiresVerification ? null : now(),
+                ]);
+
+                $organization = Organization::create([
+                    'owner_id' => $user->id,
+                    'name' => $validated['name'],
+                    'short_name' => $validated['code'] ?? null,
+                    'registration_number' => null,
+                    'email' => $validated['email'],
+                    'phone' => $validated['phone'] ?? null,
+                    'alternative_phone' => null,
+                    'website' => null,
+                    'logo' => null,
+                    'country' => 'Nigeria',
+                    'state' => 'Not Set',
+                    'lga' => 'Not Set',
+                    'address' => null,
+                    'status' => 'active',
+                ]);
+
+                return [$user];
+            });
+
+            [$user] = $result;
+            $verificationSent = $requiresVerification ? $this->verification->send($user) : false;
+
+            return response()->json([
+                'message' => $requiresVerification
+                    ? 'Registration successful. Check your email to verify the account before signing in.'
+                    : 'Registration successful. Local testing verification is disabled; you can sign in now.',
+                'verification_required' => $requiresVerification,
+                'verification_email_sent' => $verificationSent,
+                'email' => $user->email,
+            ], 202);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Registration failed.',
+                'error' => config('app.debug') ? $e->getMessage() : 'Unexpected server error.',
+            ], 500);
+        }
+    }
+
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+
+        $email = strtolower(trim((string) $request->input('email')));
+        $user = User::where('email', $email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'email' => ['Invalid email or password.'],
+            ]);
+        }
+
+        if ($this->requiresEmailVerification() && ! $user->hasVerifiedEmail()) {
+            return response()->json([
+                'message' => 'Verify your email address before signing in.',
+                'code' => 'EMAIL_VERIFICATION_REQUIRED',
+                'email' => $user->email,
+            ], 403);
+        }
+
+        if ($user->mfa_enabled) {
+            return response()->json([
+                'message' => 'Enter the authenticator code to complete sign-in.',
+                'code' => 'MFA_REQUIRED',
+                'challenge_token' => $this->mfa->issueChallenge($user, $request->ip(), $request->userAgent()),
+                'email' => $user->email,
+            ], 202);
+        }
+
+        $user->tokens()->delete();
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Login successful.',
+            'token' => $token,
+            ...$this->context->resolve($user),
+        ]);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8', 'confirmed', 'different:current_password'],
+        ]);
+
+        $user = $request->user();
+        if (! Hash::check($validated['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['The current password is incorrect.'],
+            ]);
+        }
+
+        $user->update([
+            'password' => $validated['password'],
+            'must_change_password' => false,
+            'password_changed_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Password changed successfully.',
+            ...$this->context->resolve($user->fresh()),
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()?->delete();
+
+        return response()->json([
+            'message' => 'Logged out successfully.',
+        ]);
+    }
+
+    /**
+     * GET /api/me/context — the single endpoint the frontend trusts for
+     * "what stage is this user at" and "what can this user do."
+     */
+    public function context(Request $request)
+    {
+        return response()->json($this->context->resolve($request->user()));
+    }
+
+    public function profile(Request $request)
+    {
+        $user = $request->user();
+        $validated = $request->validate([
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'remove_avatar' => ['sometimes', 'boolean'],
+        ]);
+
+        if (array_key_exists('name', $validated)) {
+            $user->name = $validated['name'];
+        }
+
+        if (($validated['remove_avatar'] ?? false) === true) {
+            $this->media->delete($user->avatar);
+            $user->avatar = null;
+        } elseif ($request->hasFile('avatar')) {
+            $user->avatar = $this->media->storeImage(
+                $request->file('avatar'),
+                'users/' . $user->id,
+                $user->avatar,
+            );
+        }
+
+        $user->save();
+
+        ActivityLogService::log(
+            module: 'profile',
+            action: 'updated',
+            description: "User profile updated for {$user->email}.",
+            schoolId: $this->context->currentSchool($user)?->id,
+            properties: ['name_changed' => array_key_exists('name', $validated), 'avatar_changed' => $request->hasFile('avatar') || ($validated['remove_avatar'] ?? false)],
+        );
+
+        return response()->json([
+            'message' => 'Profile updated successfully.',
+            ...$this->context->resolve($user->fresh()),
+        ]);
+    }
+
+    /**
+     * POST /api/me/switch-school — allows an Organization Owner or multi-school
+     * user to explicitly select which school context they are currently managing.
+     */
+    public function staffProfile(Request $request)
+    {
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+        $staff = Staff::where('school_id', $schoolId)->where('user_id', $request->user()->id)->first();
+
+        abort_unless($staff, 404, 'No staff profile is linked to this account in the active school.');
+
+        return new StaffResource($staff->load('school'));
+    }
+
+    public function updateStaffProfile(Request $request)
+    {
+        $validated = $request->validate([
+            'phone' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string'],
+            'date_of_birth' => ['nullable', 'date'],
+            'qualification' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+        $staff = Staff::where('school_id', $schoolId)->where('user_id', $request->user()->id)->first();
+
+        abort_unless($staff, 404, 'No staff profile is linked to this account in the active school.');
+        $staff->update($validated);
+
+        return new StaffResource($staff->fresh()->load('school'));
+    }
+
+    public function switchSchool(Request $request)
+    {
+        $request->validate([
+            'school_id' => ['nullable', 'exists:schools,id'],
+        ]);
+
+        $user = $request->user();
+        $schoolId = $request->school_id;
+
+        if ($schoolId) {
+            // Verify access before allowing the switch
+            $isOwner = DB::table('schools')->where('id', $schoolId)->where('owner_id', $user->id)->exists();
+            $hasRole = $user->roles()->wherePivot('school_id', $schoolId)->exists();
+
+            if (!$isOwner && !$hasRole) {
+                return response()->json([
+                    'message' => 'You do not have access to this school.',
+                ], 403);
+            }
+        }
+
+        $user->update(['current_school_id' => $schoolId]);
+
+        return response()->json([
+            'message' => $schoolId ? 'School context switched.' : 'Switched to organization context.',
+            ...$this->context->resolve($user),
+        ]);
+    }
+}
+=== SUBSCRIPTION MIDDLEWARE ===
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Models\SchoolSubscription;
+use App\Models\SystemSetting;
+use App\Services\CurrentContextService;
+use App\Services\SubscriptionAccessService;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class CheckActiveSubscription
+{
+    public function __construct(
+        private CurrentContextService $context,
+        private SubscriptionAccessService $access,
+    ) {
+    }
+
+    public function handle(Request $request, Closure $next): Response
+    {
+        $enforced = (bool) (SystemSetting::first()?->enforce_subscriptions ?? false);
+
+        if (!$enforced || $request->user()?->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        $user = $request->user();
+        $schoolId = $this->context->currentSchool($user)?->id;
+
+        if (!$schoolId) {
+            return $next($request);
+        }
+
+        $feature = $this->featureForRequest($request);
+
+        // Setup and basic administration remain available so a new school can
+        // become operational before selecting a paid plan.
+        if (!$feature) {
+            return $next($request);
+        }
+
+        $subscription = SchoolSubscription::with('subscriptionPlan.featureModels')
+            ->where('school_id', $schoolId)
+            ->where('is_current', true)
+            ->latest('id')
+            ->first();
+
+        if ($this->access->allows($subscription, $feature, $enforced)) {
+            return $next($request);
+        }
+
+        return response()->json([
+            'success' => false,
+            'requires_subscription' => true,
+            'requested_feature' => $feature,
+            'requested_feature_label' => $this->access->label($feature),
+            'current_plan' => $subscription?->subscriptionPlan?->name,
+            'status' => $subscription?->status ?? 'unsubscribed',
+            'message' => $subscription && $subscription->isActive()
+                ? "Your current plan does not include {$this->access->label($feature)}. Upgrade your plan to continue."
+                : "An active subscription is required for {$this->access->label($feature)}. Core school setup remains available while you choose a plan.",
+            'upgrade_url' => '/dashboard/subscription/upgrade',
+        ], 402);
+    }
+
+    private function featureForRequest(Request $request): ?string
+    {
+        $path = trim($request->path(), '/');
+
+        $groups = [
+            'fees' => ['fees', 'student-fees', 'fee-payments', 'payment-receipts', 'fee-adjustments', 'payments/paystack'],
+            'accounting' => ['expenses', 'financial-reports'],
+            'payroll' => ['payroll'],
+            'results' => ['results', 'result-entry', 'result-submissions', 'examinations', 'exam-scores', 'assessment-structures', 'promotions', 'graduation-records'],
+            'report_cards' => ['report-cards', 'student/report-card', 'parent/report-cards'],
+            'cbt' => ['cbt-questions', 'cbt-assessments', 'cbt-attempts', 'assessment-activities', 'student/cbt-assessments', 'student/cbt-attempts', 'student/cbt-questions'],
+            'library' => ['library', 'books', 'book-loans', 'student/library'],
+            'transport' => ['vehicles', 'transport-routes', 'transport-allocations', 'transport-logs', 'portal/transport-tracking', 'student/transport-tracking'],
+            'hostel' => ['hostels', 'hostel-rooms', 'hostel-allocations'],
+            'clinic' => ['medical-records', 'clinic-visits'],
+            'school_operations' => ['school-events', 'school-facilities', 'visitors', 'gate-passes', 'appointments', 'reception-activities', 'discipline-cases', 'safety-incidents', 'leave-requests', 'student-leave-applications', 'portal/leave-applications', 'student/leave-applications'],
+            'inventory' => ['assets', 'asset-register'],
+            'sms' => ['sms'],
+        ];
+
+        foreach ($groups as $feature => $prefixes) {
+            foreach ($prefixes as $prefix) {
+                if ($path === "api/v1/{$prefix}" || str_starts_with($path, "api/v1/{$prefix}/")) {
+                    return $feature;
+                }
+            }
+        }
+
+        return null;
+    }
+}
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Models\SchoolSubscription;
+use App\Models\SystemSetting;
+use App\Services\CurrentContextService;
+use App\Services\SubscriptionAccessService;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class CheckSubscriptionFeature
+{
+    public function __construct(
+        private CurrentContextService $context,
+        private SubscriptionAccessService $access,
+    ) {
+    }
+
+    public function handle(Request $request, Closure $next, string $feature): Response
+    {
+        $enforced = (bool) (SystemSetting::first()?->enforce_subscriptions ?? false);
+
+        if (!$enforced || $request->user()?->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+        if (!$schoolId) {
+            return $next($request);
+        }
+
+        $subscription = SchoolSubscription::with('subscriptionPlan.featureModels')
+            ->where('school_id', $schoolId)
+            ->where('is_current', true)
+            ->latest('id')
+            ->first();
+
+        if ($this->access->allows($subscription, $feature, $enforced)) {
+            return $next($request);
+        }
+
+        return response()->json([
+            'success' => false,
+            'requires_subscription' => true,
+            'requested_feature' => $feature,
+            'requested_feature_label' => $this->access->label($feature),
+            'current_plan' => $subscription?->subscriptionPlan?->name,
+            'recommended_plan' => $subscription?->subscriptionPlan?->recommendedPlanForFeature($feature)?->name,
+            'message' => "Upgrade your subscription to use {$this->access->label($feature)}.",
+            'upgrade_url' => '/dashboard/subscription/upgrade',
+        ], 402);
+    }
+}
+=== PASSWORD/EMAIL CONFIG ===
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:33:        return (bool) config('app.email_verification_required', true)
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:65:                    'email_verified_at' => $requiresVerification ? null : now(),
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:95:                'verification_required' => $requiresVerification,
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:127:                'code' => 'EMAIL_VERIFICATION_REQUIRED',
+backend/dono-api/app/Http/Controllers/Api/AuthController.php:167:            'must_change_password' => false,
+backend/dono-api/app/Http/Controllers/Api/PaymentController.php:150:        if ($platformSettings && !$platformSettings->enforce_subscriptions) {
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:190:                'email_verified_at' => null,
+backend/dono-api/app/Http/Controllers/Api/RoleInvitationController.php:211:            'verification_required' => true,
+backend/dono-api/app/Http/Controllers/Api/SchoolSubscriptionController.php:385:        $platformFreeAccess = !(bool) (SystemSetting::first()?->enforce_subscriptions ?? false);
+backend/dono-api/app/Http/Controllers/Api/EmailVerificationController.php:69:        return (bool) config('app.email_verification_required', true)
+backend/dono-api/app/Http/Controllers/Api/EmailVerificationController.php:78:                'verification_required' => false,
+backend/dono-api/app/Http/Controllers/Api/PasswordResetController.php:47:                    'must_change_password' => false,
+backend/dono-api/app/Http/Controllers/Api/PasswordResetController.php:49:                    'email_verified_at' => $user->email_verified_at ?: now(),
+backend/dono-api/app/Http/Controllers/Api/PlatformAnnouncementController.php:180:        $query = User::query()->whereNotNull('email')->whereNotNull('email_verified_at');
+backend/dono-api/app/Http/Middleware/CheckActiveSubscription.php:23:        $enforced = (bool) (SystemSetting::first()?->enforce_subscriptions ?? false);
+backend/dono-api/app/Http/Middleware/CheckSubscriptionFeature.php:23:        $enforced = (bool) (SystemSetting::first()?->enforce_subscriptions ?? false);
+backend/dono-api/app/Http/Middleware/EnsurePasswordChanged.php:15:        if ($user?->must_change_password) {
+backend/dono-api/app/Http/Middleware/EnsurePasswordChanged.php:19:                'must_change_password' => true,
+backend/dono-api/app/Http/Requests/UpdateSystemSettingRequest.php:23:            'enforce_subscriptions' => 'sometimes|boolean',
+backend/dono-api/app/Http/Resources/SystemSettingResource.php:25:            'enforce_subscriptions' => $this->enforce_subscriptions,
+backend/dono-api/app/Models/SystemSetting.php:13:        'allow_school_registration', 'maintenance_mode', 'enforce_subscriptions',
+backend/dono-api/app/Models/SystemSetting.php:20:        'enforce_subscriptions' => 'boolean',
+backend/dono-api/app/Models/User.php:24:        'must_change_password',
+backend/dono-api/app/Models/User.php:26:        'email_verified_at',
+backend/dono-api/app/Models/User.php:52:            'email_verified_at' => 'datetime',
+backend/dono-api/app/Models/User.php:54:            'must_change_password' => 'boolean',
+backend/dono-api/app/Services/CurrentContextService.php:73:                'must_change_password' => (bool) $user->must_change_password,
+backend/dono-api/app/Services/PortalAccountService.php:140:            'must_change_password' => true,
+backend/dono-api/app/Services/SubscriptionQuotaService.php:53:        if (! (bool) (SystemSetting::first()?->enforce_subscriptions ?? false)) {
+backend/dono-api/config/app.php:58:    'email_verification_required' => (bool) env('EMAIL_VERIFICATION_REQUIRED', true),

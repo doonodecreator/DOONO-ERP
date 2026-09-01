@@ -199,3 +199,25 @@
     flex: 1 1 110px;
   }
 }
+
+.communication-channel-warning {
+  margin: -4px 0 0;
+  color: #b45309;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.communication-channel-warning::before {
+  content: "Provider setup required: ";
+  font-weight: 700;
+}
+
+.communication-delivery-error {
+  margin: -6px 0 16px;
+  padding: 8px 10px;
+  border-left: 3px solid #f59e0b;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 12px;
+  line-height: 1.45;
+}

@@ -1,0 +1,54 @@
+.api-key-secret-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.api-key-secret-row code {
+  flex: 1 1 320px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+}
+
+.ui-form-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0 0 16px;
+}
+
+.api-key-scope {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+.api-key-scope input {
+  margin-top: 3px;
+}
+
+.api-key-scope span {
+  display: grid;
+  gap: 2px;
+}
+
+.api-key-scope small {
+  color: #64748b;
+}
+
+@media (max-width: 640px) {
+  .api-key-secret-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

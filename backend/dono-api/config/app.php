@@ -54,6 +54,9 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // Email verification can be skipped only in local/testing environments when explicitly disabled.
+    'email_verification_required' => (bool) env('EMAIL_VERIFICATION_REQUIRED', true),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

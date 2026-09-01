@@ -17,7 +17,7 @@ class StoreFeePaymentRequest extends FormRequest
             'student_fee_id' => ['required', 'exists:student_fees,id'],
             'staff_id' => ['nullable', 'exists:staff,id'],
             'receipt_number' => ['nullable', 'string', 'max:255', 'unique:fee_payments,receipt_number'],
-            'amount_paid' => ['required', 'numeric', 'min:0'],
+            'amount_paid' => ['required', 'numeric', 'gt:0'],
             'payment_date' => ['required', 'date'],
             'payment_method' => ['required', 'in:Cash,Bank Transfer,POS,Cheque,Online'],
             'transaction_reference' => ['nullable', 'string', 'max:255'],

@@ -87,7 +87,7 @@ export default function SchoolBranding({ setPage }) {
 
   const previews = useMemo(() => ({
     logo: imagePreview(files.logo, schoolData?.logo_url || schoolData?.logo),
-    report_card_logo: imagePreview(files.report_card_logo, schoolData?.report_card_logo_url || schoolData?.report_card_logo_url),
+    report_card_logo: imagePreview(files.report_card_logo, schoolData?.report_card_logo_url || schoolData?.report_card_logo),
     principal_signature: imagePreview(files.principal_signature, schoolData?.principal_signature_url),
     school_stamp: imagePreview(files.school_stamp, schoolData?.school_stamp_url),
   }), [files, schoolData]);

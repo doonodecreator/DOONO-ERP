@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Book;
 use App\Models\BookLoan;
 use App\Models\Student;
+use App\Models\StudentEnrollment;
 use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
 
@@ -19,7 +20,11 @@ class LibraryController extends Controller
         $books = Book::query()->where('school_id', $schoolId)->orderBy('title')->get();
         $loans = BookLoan::query()->where('school_id', $schoolId)->with(['book', 'student'])->latest('borrowed_date')->get();
         $loanCounts = $loans->groupBy('student_id')->map->count();
-        $members = Student::query()->where('school_id', $schoolId)->whereRaw('LOWER(status) = ?', ['active'])->orderBy('first_name')->get()->map(fn ($student) => [
+        $activeStudentIds = StudentEnrollment::query()
+            ->where('school_id', $schoolId)
+            ->where('status', 'Active')
+            ->pluck('student_id');
+        $members = Student::query()->where('school_id', $schoolId)->whereIn('id', $activeStudentIds)->whereRaw('LOWER(status) = ?', ['active'])->orderBy('first_name')->get()->map(fn ($student) => [
             'id' => $student->id,
             'name' => $student->full_name,
             'admission_number' => $student->admission_number,
@@ -52,8 +57,8 @@ class LibraryController extends Controller
                     'book_titles' => $books->count(),
                     'total_copies' => (int) $books->sum('total_copies'),
                     'available_copies' => (int) $books->sum('available_copies'),
-                    'active_loans' => $loans->where('status', '!=', 'returned')->count(),
-                    'overdue_loans' => $loans->filter(fn ($loan) => $loan->status !== 'returned' && $loan->due_date?->isPast())->count(),
+                    'active_loans' => $loans->filter(fn ($loan) => strtolower((string) $loan->status) === 'borrowed')->count(),
+                    'overdue_loans' => $loans->filter(fn ($loan) => strtolower((string) $loan->status) === 'borrowed' && $loan->due_date?->isPast())->count(),
                     'fines' => (float) $loans->sum(fn ($loan) => (float) $loan->fine_amount),
                 ],
             ],
@@ -69,6 +74,7 @@ class LibraryController extends Controller
             ->first();
 
         abort_unless($student && $schoolId, 404, 'Student library profile not found.');
+        abort_unless(StudentEnrollment::query()->where('school_id', $schoolId)->where('student_id', $student->id)->where('status', 'Active')->exists(), 403, 'Library access is available only for an actively enrolled student.');
 
         $books = Book::query()->where('school_id', $schoolId)->orderBy('title')->get();
         $loans = BookLoan::query()

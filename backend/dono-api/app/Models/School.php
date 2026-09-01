@@ -106,6 +106,11 @@ class School extends Model
         return $this->belongsTo(Country::class);
     }
 
+    public function exchangeSetting()
+    {
+        return $this->hasOne(SchoolExchangeSetting::class);
+    }
+
     public function subscription()
     {
         return $this->hasOne(SchoolSubscription::class)

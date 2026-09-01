@@ -8,12 +8,15 @@
  */
 export const ARCHITECTURE_MODULES = {
   dashboard: { key: "dashboard", label: "Dashboard", page: "dashboard", permission: "view_dashboard" },
+  school_insights: { key: "school_insights", label: "School Insights", page: "school-insights", permission: "view_insights" },
+  support_center: { key: "support_center", label: "Support Centre", page: "support-centre", permission: "authenticated" },
   organizations: { key: "organizations", label: "Organizations", page: "organizations", permission: "manage_organizations", platform: true },
   schools: { key: "schools", label: "Schools", page: "schools", permission: "manage_schools", platform: true },
   subscriptions: { key: "subscriptions", label: "Subscriptions", page: "subscriptions", permission: "manage_subscriptions" },
   plans_features: { key: "plans_features", label: "Plans & Features", page: "subscriptions", permission: "manage_subscriptions", platform: true },
   payments_invoices: { key: "payments_invoices", label: "Payments & Invoices", page: "platform-payments", permission: "view_revenue", platform: true },
   system_settings: { key: "system_settings", label: "System Settings", page: "settings", permission: "manage_system_settings", platform: true },
+  feature_flags: { key: "feature_flags", label: "Feature Flags", page: "feature-flags", permission: "manage_system_settings", platform: true },
   profile: { key: "profile", label: "My Profile", page: "profile", permission: "authenticated" },
   school_branding: { key: "school_branding", label: "School Branding & Report Card Design", page: "school-branding", permission: "manage_school_settings" },
   countries_currency: { key: "countries_currency", label: "Countries / Currency", page: "countries-currency", permission: "manage_system_settings", platform: true },

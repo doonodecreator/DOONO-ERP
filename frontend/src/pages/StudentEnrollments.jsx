@@ -193,10 +193,13 @@ export default function StudentEnrollments() {
     setSubmitError('');
 
     try {
+      const payload = { ...form };
+      delete payload.status;
       if (editingId) {
-        await api.put(`/enrollments/${editingId}`, form);
+        delete payload.student_id;
+        await api.put(`/enrollments/${editingId}`, payload);
       } else {
-        await api.post('/enrollments', form);
+        await api.post('/enrollments', payload);
       }
 
       resetForm();
@@ -361,18 +364,11 @@ export default function StudentEnrollments() {
           errors={errors}
         />
 
-        <label className="block max-w-sm text-sm font-medium text-slate-700">
-          Enrollment Status
-          <select name="status" value={form.status} onChange={handleChange} className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100">
-            <option value="Active">Active</option>
-            <option value="Promoted">Promoted</option>
-            <option value="Repeated">Repeated</option>
-            <option value="Graduated">Graduated</option>
-            <option value="Transferred">Transferred</option>
-            <option value="Withdrawn">Withdrawn</option>
-          </select>
-          <FieldError errors={errors} name="status" />
-        </label>
+        <div className="max-w-sm rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          <p className="font-semibold">Enrollment status</p>
+          <p className="mt-1">New placements start as <strong>Active</strong>. Promotion, repetition, transfer, withdrawal, and graduation are official lifecycle decisions and must be completed from the Promotion / Graduation workflow.</p>
+          {editingId && <p className="mt-1 text-xs text-blue-800">This edit can correct placement details only; it cannot change the lifecycle status.</p>}
+        </div>
 
         <div className="flex justify-end gap-3 border-t border-slate-200 pt-5">
           <button type="button" onClick={resetForm} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Reset</button>

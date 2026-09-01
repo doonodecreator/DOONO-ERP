@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
     ->withMiddleware(function (Middleware $middleware) {
 
+        $middleware->prepend(\App\Http\Middleware\AttachRequestId::class);
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
         $middleware->redirectGuestsTo(function (Request $request) {
 
             if ($request->is('api/*')) {
@@ -35,6 +38,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'staff.active' => \App\Http\Middleware\CheckStaffActive::class,
             'password.changed' => \App\Http\Middleware\EnsurePasswordChanged::class,
             'idempotency' => \App\Http\Middleware\EnsureIdempotency::class,
+            'api.key' => \App\Http\Middleware\AuthenticateSchoolApiKey::class,
+            'oauth.client' => \App\Http\Middleware\AuthenticateOAuthClient::class,
+            'oauth.scope' => \App\Http\Middleware\RequireOAuthScope::class,
         ]);
 
     })

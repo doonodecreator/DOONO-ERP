@@ -22,6 +22,10 @@ class EmailVerificationController extends Controller
         }
 
         $frontendUrl = $this->publicFrontendUrl($request);
+        if ($frontendUrl === '') {
+            return redirect('/email-verified?verified=1');
+        }
+
         return redirect()->away($frontendUrl.'/email-verified?verified=1');
     }
 
@@ -46,7 +50,8 @@ class EmailVerificationController extends Controller
             return $scheme . '://' . $forwardedHost;
         }
 
-        return rtrim((string) env('FRONTEND_URL', config('app.url')), '/');
+        $fallback = rtrim((string) env('FRONTEND_URL', config('app.url')), '/');
+        return $this->isLocalUrl($fallback) ? '' : $fallback;
     }
 
     private function isLocalUrl(string $url): bool
@@ -59,8 +64,21 @@ class EmailVerificationController extends Controller
         return in_array(strtolower($host), ['localhost', '127.0.0.1', '0.0.0.0', '::1'], true);
     }
 
+    private function requiresEmailVerification(): bool
+    {
+        return (bool) config('app.email_verification_required', true)
+            || ! app()->environment(['local', 'testing']);
+    }
+
     public function resend(Request $request)
     {
+        if (! $this->requiresEmailVerification()) {
+            return response()->json([
+                'message' => 'Email verification is disabled in local testing; you can sign in without a verification link.',
+                'verification_required' => false,
+            ]);
+        }
+
         $data = $request->validate(['email' => ['required', 'email']]);
         $email = strtolower(trim($data['email']));
         $user = User::where('email', $email)->first();

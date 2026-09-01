@@ -15,9 +15,7 @@ class StoreParentRequest extends FormRequest
 
     public function rules(): array
     {
-        $user = $this->user();
-        $schoolId = $this->attributes->get('current_school_id')
-            ?? ($user ? app(CurrentContextService::class)->currentSchool($user)?->id : null);
+        $schoolId = app(CurrentContextService::class)->currentSchool($this->user())?->id;
 
         return [
             'father_name' => 'nullable|string|max:255',

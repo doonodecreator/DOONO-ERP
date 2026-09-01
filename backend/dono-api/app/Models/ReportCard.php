@@ -24,6 +24,7 @@ class ReportCard extends Model
         'next_term_begins',
         'promotion_status',
         'is_published',
+        'verification_token',
     ];
 
     protected $casts = [

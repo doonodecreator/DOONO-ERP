@@ -1,0 +1,430 @@
+=== backend/dono-api/app/Http/Controllers/Api/ClassController.php ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
+use App\Http\Requests\StoreClassRequest;
+use App\Http\Requests\UpdateClassRequest;
+use App\Http\Resources\ClassResource;
+use App\Models\ClassModel;
+use App\Models\FormTeacherAssignment;
+use App\Models\Staff;
+use App\Models\Timetable;
+use Illuminate\Http\Request;
+
+class ClassController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $query = ClassModel::with([
+            'division',
+            'streams',
+        ])->orderBy('display_order');
+
+        $schoolId = $this->currentContextSchoolId($request);
+
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
+            $query->whereHas('division', function ($q) use ($schoolId) {
+=== backend/dono-api/app/Http/Controllers/Api/DivisionController.php ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
+use App\Http\Requests\StoreDivisionRequest;
+use App\Http\Requests\UpdateDivisionRequest;
+use App\Http\Resources\DivisionResource;
+use App\Models\Division;
+use Illuminate\Http\Request;
+
+class DivisionController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $query = Division::with('school')
+            ->orderBy('display_order');
+
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
+            $query->where(
+                'school_id',
+                $this->currentContextSchoolId($request)
+            );
+        }
+
+        return DivisionResource::collection(
+            $query->paginate(10)
+=== backend/dono-api/app/Http/Controllers/Api/ExaminationController.php ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
+use App\Http\Requests\StoreExaminationRequest;
+use App\Http\Requests\UpdateExaminationRequest;
+use App\Http\Resources\ExaminationResource;
+use App\Models\Examination;
+use Illuminate\Http\Request;
+
+class ExaminationController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
+    public function index(Request $request)
+    {
+        $query = Examination::with([
+            'school',
+            'academicSession',
+            'term',
+        ]);
+
+        if (! $request->user()->isSuperAdmin()) {
+            $query->where(
+                'school_id',
+                $this->currentContextSchoolId($request)
+            );
+        }
+
+        return ExaminationResource::collection(
+            $query->latest()->paginate(10)
+        );
+    }
+
+=== backend/dono-api/app/Http/Controllers/Api/ParentController.php ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
+use App\Http\Requests\StoreParentRequest;
+use App\Http\Requests\UpdateParentRequest;
+use App\Http\Resources\ParentResource;
+use App\Models\ParentModel;
+use Illuminate\Http\Request;
+
+class ParentController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
+    public function index(Request $request)
+    {
+        $query = ParentModel::with([
+            'school',
+            'students.class',
+            'students.stream',
+            'guardian.user',
+        ]);
+
+        if (! $request->user()->isSuperAdmin()) {
+            $query->where(
+                'school_id',
+                $this->currentContextSchoolId($request)
+            );
+        }
+
+        return ParentResource::collection(
+            $query->latest()->paginate(10)
+        );
+    }
+=== backend/dono-api/app/Http/Controllers/Api/ResultController.php ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreResultRequest;
+use App\Http\Requests\UpdateResultRequest;
+use App\Http\Resources\ResultResource;
+use App\Models\Result;
+use App\Models\ResultSubmission;
+use App\Services\Academic\ResultSubmissionService;
+use App\Services\CurrentContextService;
+use Illuminate\Http\Request;
+
+class ResultController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context,
+        private readonly ResultSubmissionService $submissionService
+    ) {
+    }
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
+
+    public function index(Request $request)
+    {
+        $schoolId = $this->currentContextSchoolId($request);
+        abort_unless($schoolId, 409, 'Select an active school before viewing results.');
+
+        return ResultResource::collection(
+            Result::query()
+                ->where('school_id', $schoolId)
+                ->with(['school', 'studentEnrollment', 'subject', 'academicSession', 'term'])
+                ->latest()
+                ->paginate(15)
+        );
+    }
+
+    public function show(Request $request, Result $result)
+=== backend/dono-api/app/Http/Controllers/Api/StreamController.php ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
+use App\Http\Requests\StoreStreamRequest;
+use App\Http\Requests\UpdateStreamRequest;
+use App\Http\Resources\StreamResource;
+use App\Models\Stream;
+use Illuminate\Http\Request;
+
+class StreamController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $query = Stream::with('class')
+            ->orderBy('display_order');
+
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
+            $query->whereHas('class.division', function ($q) use ($request) {
+                $q->where(
+                    'school_id',
+                    $this->currentContextSchoolId($request)
+                );
+            });
+        }
+
+=== backend/dono-api/app/Http/Controllers/Api/StudentController.php ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
+use App\Http\Requests\StoreStudentRequest;
+use App\Http\Requests\UpdateStudentRequest;
+use App\Http\Resources\StudentResource;
+use App\Models\FormTeacherAssignment;
+use App\Models\Staff;
+use App\Models\Student;
+use App\Models\Timetable;
+use Illuminate\Http\Request;
+
+class StudentController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context,
+        private readonly \App\Services\MediaStorageService $media,
+        private readonly \App\Services\SubscriptionQuotaService $quotas,
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $request->attributes->get('current_school_id')
+            ?? $this->context->currentSchool($request->user())?->id;
+    }
+    public function index(Request $request)
+    {
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:100',
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $query = Student::with([
+            'school',
+            'division',
+            'class',
+            'stream',
+            'academicSession',
+        ]);
+=== backend/dono-api/app/Http/Controllers/Api/StudentEnrollmentController.php ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
+use App\Http\Requests\StoreStudentEnrollmentRequest;
+use App\Http\Requests\UpdateStudentEnrollmentRequest;
+use App\Http\Resources\StudentEnrollmentResource;
+use App\Models\StudentEnrollment;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class StudentEnrollmentController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $request->attributes->get('current_school_id')
+            ?? $this->context->currentSchool($request->user())?->id;
+    }
+    public function index(Request $request)
+    {
+        $validated = $request->validate([
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $query = StudentEnrollment::with([
+            'student',
+            'school',
+            'academicSession',
+            'term',
+            'division',
+            'class',
+            'stream',
+        ]);
+
+        if (! $request->user()->isSuperAdmin()) {
+            $query->where(
+=== backend/dono-api/app/Http/Controllers/Api/StudentPromotionController.php ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
+use App\Http\Requests\StoreStudentPromotionRequest;
+use App\Http\Requests\UpdateStudentPromotionRequest;
+use App\Http\Resources\StudentPromotionResource;
+use App\Models\StudentPromotion;
+use Illuminate\Http\Request;
+
+class StudentPromotionController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
+    public function index(Request $request)
+    {
+        $query = StudentPromotion::with([
+            'school',
+            'student',
+            'fromAcademicSession',
+            'toAcademicSession',
+            'fromDivision',
+            'toDivision',
+            'fromClass',
+            'toClass',
+            'fromStream',
+            'toStream',
+        ]);
+
+        if (! $request->user()->isSuperAdmin()) {
+            $query->where(
+                'school_id',
+                $this->currentContextSchoolId($request)
+            );
+=== backend/dono-api/app/Http/Controllers/Api/SubjectController.php ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
+use App\Http\Requests\StoreSubjectRequest;
+use App\Http\Requests\UpdateSubjectRequest;
+use App\Http\Resources\SubjectResource;
+use App\Models\Subject;
+use Illuminate\Http\Request;
+
+class SubjectController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context
+    ) {}
+
+    private function currentContextSchoolId(Request $request): ?int
+    {
+        return $this->context->currentSchool($request->user())?->id;
+    }
+    public function index(Request $request)
+    {
+        $query = Subject::with([
+            'school',
+            'division',
+            'classes',
+        ]);
+
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
+            $query->where(
+                'school_id',
+                $this->currentContextSchoolId($request)
+            );
+        }
+
+        return SubjectResource::collection(
+            $query->latest()->paginate(10)

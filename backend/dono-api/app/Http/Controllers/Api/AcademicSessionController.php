@@ -9,12 +9,14 @@ use App\Http\Resources\AcademicSessionResource;
 use App\Models\AcademicSession;
 use App\Models\User;
 use App\Services\CurrentContextService;
+use App\Services\StudentLifecycleService;
 use Illuminate\Support\Facades\DB;
 
 class AcademicSessionController extends Controller
 {
     public function __construct(
-        private readonly CurrentContextService $context
+        private readonly CurrentContextService $context,
+        private readonly StudentLifecycleService $lifecycle,
     ) {}
 
     public function index()
@@ -50,6 +52,9 @@ class AcademicSessionController extends Controller
             }
 
             $session = AcademicSession::create($data);
+            if ($session->is_current) {
+                $this->lifecycle->syncCurrentPlacements((int) $session->school_id);
+            }
 
             return (new AcademicSessionResource($session))
                 ->response()
@@ -94,6 +99,9 @@ class AcademicSessionController extends Controller
             }
 
             $academicSession->update($data);
+            if ($academicSession->is_current) {
+                $this->lifecycle->syncCurrentPlacements((int) $academicSession->school_id);
+            }
 
             return new AcademicSessionResource($academicSession->fresh());
         });

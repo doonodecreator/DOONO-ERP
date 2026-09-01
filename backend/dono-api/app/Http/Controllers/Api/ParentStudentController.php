@@ -8,7 +8,9 @@ use App\Http\Requests\UpdateParentStudentRequest;
 use App\Http\Resources\ParentStudentResource;
 use App\Models\ParentStudent;
 use App\Models\Student;
+use App\Services\ActivityLogService;
 use App\Services\CurrentContextService;
+use App\Services\PortalAccountService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +18,8 @@ use Illuminate\Support\Facades\DB;
 class ParentStudentController extends Controller
 {
     public function __construct(
-        private readonly CurrentContextService $context
+        private readonly CurrentContextService $context,
+        private readonly PortalAccountService $portalAccounts,
     ) {}
 
     public function index(Request $request)
@@ -31,6 +34,7 @@ class ParentStudentController extends Controller
         $data = $request->validated();
         $data['is_primary_contact'] = $data['is_primary_contact'] ?? true;
 
+        $schoolId = $this->requireSchool($request);
         $parentStudent = DB::transaction(function () use ($data) {
             Student::whereKey($data['student_id'])->lockForUpdate()->firstOrFail();
 
@@ -41,6 +45,15 @@ class ParentStudentController extends Controller
 
             return ParentStudent::create($data);
         });
+        $this->portalAccounts->syncParentChildren($parentStudent->parent()->firstOrFail(), $schoolId);
+        ActivityLogService::log(
+            module: 'parent_student_links',
+            action: 'created',
+            description: 'A parent-child portal relationship was created or synchronized.',
+            subject: $parentStudent,
+            schoolId: $schoolId,
+            properties: ['parent_id' => $parentStudent->parent_id, 'student_id' => $parentStudent->student_id],
+        );
 
         return new ParentStudentResource(
             $parentStudent->load(['parent', 'student'])
@@ -66,6 +79,8 @@ class ParentStudentController extends Controller
         $data['is_primary_contact'] = $data['is_primary_contact']
             ?? $parentStudent->is_primary_contact;
 
+        $schoolId = $this->requireSchool($request);
+        $oldParentId = $parentStudent->parent_id;
         DB::transaction(function () use ($parentStudent, $data) {
             Student::whereKey($data['student_id'])->lockForUpdate()->firstOrFail();
 
@@ -77,6 +92,19 @@ class ParentStudentController extends Controller
 
             $parentStudent->update($data);
         });
+        $this->portalAccounts->syncParentChildren($parentStudent->parent()->firstOrFail(), $schoolId);
+        if ((int) $oldParentId !== (int) $parentStudent->parent_id) {
+            $oldParent = \App\Models\ParentModel::query()->find($oldParentId);
+            if ($oldParent) $this->portalAccounts->syncParentChildren($oldParent, $schoolId);
+        }
+        ActivityLogService::log(
+            module: 'parent_student_links',
+            action: 'updated',
+            description: 'A parent-child portal relationship was corrected and synchronized.',
+            subject: $parentStudent,
+            schoolId: $schoolId,
+            properties: ['parent_id' => $parentStudent->parent_id, 'student_id' => $parentStudent->student_id],
+        );
 
         return new ParentStudentResource(
             $parentStudent->load(['parent', 'student'])
@@ -86,7 +114,17 @@ class ParentStudentController extends Controller
     public function destroy(Request $request, ParentStudent $parentStudent)
     {
         $this->ensureSchoolScope($request, $parentStudent);
+        $schoolId = $this->requireSchool($request);
+        $parent = $parentStudent->parent()->firstOrFail();
         $parentStudent->delete();
+        $this->portalAccounts->syncParentChildren($parent, $schoolId);
+        ActivityLogService::log(
+            module: 'parent_student_links',
+            action: 'deleted',
+            description: 'A parent-child portal relationship was removed and synchronized.',
+            schoolId: $schoolId,
+            properties: ['parent_id' => $parent->id, 'student_id' => $parentStudent->student_id],
+        );
 
         return response()->json([
             'message' => 'Relationship deleted successfully.',

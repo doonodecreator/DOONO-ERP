@@ -10,6 +10,7 @@ use App\Models\ResultSubmission;
 use App\Models\StudentEnrollment;
 use App\Models\StudentResultSummary;
 use App\Models\Term;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class ResultProcessingService
@@ -319,23 +320,33 @@ class ResultProcessingService
             'published_at' => $allSubjectsPublished ? ($summary->published_at ?: now()) : null,
         ]);
 
-        return ReportCard::updateOrCreate(
-            [
-                'school_id' => $enrollment->school_id,
-                'student_enrollment_id' => $enrollment->id,
-                'academic_session_id' => $sessionId,
-                'term_id' => $termId,
-            ],
-            [
-                'total_score' => $summary->total_score,
-                'average_score' => $summary->student_average,
-                'position' => $summary->position,
-                'overall_grade' => $summary->overall_grade,
-                'overall_remark' => $summary->overall_remark,
-                'promotion_status' => $summary->promotion_status ?: 'Pending',
-                'is_published' => $allSubjectsPublished,
-            ]
-        );
+        $reportCard = ReportCard::firstOrNew([
+            'school_id' => $enrollment->school_id,
+            'student_enrollment_id' => $enrollment->id,
+            'academic_session_id' => $sessionId,
+            'term_id' => $termId,
+        ]);
+
+        $reportCard->fill([
+            'total_score' => $summary->total_score,
+            'average_score' => $summary->student_average,
+            'position' => $summary->position,
+            'overall_grade' => $summary->overall_grade,
+            'overall_remark' => $summary->overall_remark,
+            'promotion_status' => $summary->promotion_status ?: 'Pending',
+            'is_published' => $allSubjectsPublished,
+        ]);
+
+        if ($allSubjectsPublished && !$reportCard->verification_token) {
+            $reportCard->verification_token = Str::random(48);
+        }
+        if (!$allSubjectsPublished) {
+            $reportCard->verification_token = null;
+        }
+
+        $reportCard->save();
+
+        return $reportCard;
     }
 
     private function assertAcademicContext(int $schoolId, int $sessionId, int $termId): void

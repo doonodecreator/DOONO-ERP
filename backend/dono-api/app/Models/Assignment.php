@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Assignment extends Model
 {
+    protected $appends = ['attachment_path'];
+
+    protected $hidden = ['attachment_url'];
+
     protected $fillable = [
         'school_id',
         'teacher_staff_id',
@@ -17,6 +21,7 @@ class Assignment extends Model
         'created_by',
         'title',
         'description',
+        'attachment_url',
         'due_date',
         'status',
     ];
@@ -24,6 +29,11 @@ class Assignment extends Model
     protected $casts = [
         'due_date' => 'date',
     ];
+
+    public function getAttachmentPathAttribute(): ?string
+    {
+        return $this->attachment_url ? '/assignments/' . $this->id . '/attachment' : null;
+    }
 
     public function school(): BelongsTo { return $this->belongsTo(School::class); }
     public function teacher(): BelongsTo { return $this->belongsTo(Staff::class, 'teacher_staff_id'); }

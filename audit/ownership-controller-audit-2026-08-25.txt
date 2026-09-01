@@ -1,0 +1,1042 @@
+=== SCHOOL CONTROLLER ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Country;
+use App\Models\Role;
+use App\Models\School;
+use App\Models\SchoolSubscription;
+use App\Models\SubscriptionPlan;
+use App\Models\SystemSetting;
+use App\Services\ActivityLogService;
+use App\Services\CurrentContextService;
+use App\Services\TenantPartitionService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class SchoolController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context,
+        private readonly TenantPartitionService $tenantPartitions,
+    )
+    {
+    }
+
+    public function index(Request $request)
+    {
+        $user = $request->user();
+
+        $query = School::with(['organization', 'owner', 'country']);
+
+        if (!$user->isSuperAdmin()) {
+            $query->where('owner_id', $user->id);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $query->latest()->get(),
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($user->isSuperAdmin() || $this->context->isOrganizationOwner($user), 403, 'Only the Software Owner or Organization Owner can create a school.');
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'short_name' => 'nullable|string|max:255',
+            'school_code' => 'required|string|max:50|unique:schools,school_code',
+            'school_type' => 'required|string|in:Primary,Secondary,Combined',
+            'country_id' => 'required|exists:countries,id',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:50',
+            'address' => 'nullable|string',
+            'has_primary' => 'boolean',
+            'has_secondary' => 'boolean',
+        ]);
+
+        $organization = $this->context->currentOrganization($user);
+
+        if (!$organization) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No organization found for this account.',
+            ], 422);
+        }
+
+        $school = DB::transaction(function () use ($validated, $user, $organization) {
+            $school = School::create([
+                'organization_id' => $organization->id,
+                'owner_id' => $user->id,
+
+                'country_id' => $validated['country_id'],
+
+                'name' => $validated['name'],
+                'short_name' => $validated['short_name'] ?? $validated['name'],
+
+                'school_code' => $validated['school_code'],
+                'school_type' => $validated['school_type'],
+
+                'has_primary' => $validated['has_primary'] ?? true,
+                'has_secondary' => $validated['has_secondary'] ?? false,
+
+                'email' => $validated['email'] ?? null,
+                'phone' => $validated['phone'] ?? null,
+                'address' => $validated['address'] ?? null,
+
+                'status' => 'active',
+            ]);
+
+            $this->tenantPartitions->assignDefault($school);
+
+            $proprietorRole = Role::where('slug', 'proprietor')->first();
+
+            if ($proprietorRole) {
+                $user->roles()->attach($proprietorRole->id, [
+                    'school_id' => $school->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            $settings = SystemSetting::first();
+            $defaultPlanId = $settings?->default_subscription_plan_id
+                ?: SubscriptionPlan::where('is_active', true)->orderBy('id')->value('id');
+            $defaultPlan = $defaultPlanId ? SubscriptionPlan::find($defaultPlanId) : null;
+            $trialDays = max(0, (int) ($settings?->trial_days ?? 0));
+            $startDate = now()->startOfDay();
+            $trialEnd = $trialDays > 0 ? $startDate->copy()->addDays($trialDays) : null;
+
+            if ($defaultPlan) {
+                SchoolSubscription::create([
+                    'school_id' => $school->id,
+                    'subscription_plan_id' => $defaultPlan->id,
+                    'start_date' => $startDate,
+                    'expiry_date' => $trialEnd ?: $startDate,
+                    'trial_ends_at' => $trialEnd,
+                    'billing_cycle' => 'yearly',
+                    'status' => $trialEnd ? 'trial' : 'expired',
+                    'amount_paid' => 0,
+                    'currency' => strtoupper((string) ($defaultPlan->currency ?: 'NGN')),
+                    'is_current' => true,
+                    'is_exempt' => false,
+                    'auto_renew' => false,
+                ]);
+            }
+
+            return $school;
+        });
+
+        ActivityLogService::log(
+            module: 'school',
+            action: 'created',
+            description: "School \"{$school->name}\" was created",
+            subject: $school,
+            schoolId: $school->id,
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'School created successfully.',
+            'data' => $school->load(['organization', 'owner', 'country']),
+        ], 201);
+    }
+
+    public function show(Request $request, School $school)
+    {
+        if (!$this->userCanAccessSchool($request->user(), $school)) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $school->load(['organization', 'owner', 'country']),
+        ]);
+    }
+
+    public function update(Request $request, School $school)
+    {
+        if (!$this->userCanAccessSchool($request->user(), $school)) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'short_name' => 'nullable|string|max:255',
+            'school_code' => 'sometimes|required|string|max:50|unique:schools,school_code,' . $school->id,
+            'school_type' => 'sometimes|required|string|in:Primary,Secondary,Combined',
+            'country_id' => 'sometimes|required|exists:countries,id',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:50',
+            'address' => 'nullable|string',
+            'status' => 'nullable|string|in:active,inactive',
+            'has_primary' => 'boolean',
+            'has_secondary' => 'boolean',
+        ]);
+
+        $changedFields = array_keys($validated);
+
+        $school->update($validated);
+
+        ActivityLogService::log(
+            module: 'school',
+            action: 'updated',
+            description: 'School settings updated (' . implode(', ', $changedFields) . ')',
+            subject: $school,
+            properties: $validated,
+            schoolId: $school->id,
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'School updated successfully.',
+            'data' => $school->fresh()->load(['organization', 'owner', 'country']),
+        ]);
+    }
+
+    public function destroy(Request $request, School $school)
+    {
+        $user = $request->user();
+        abort_unless($this->userCanDeleteSchool($user, $school), 403, 'Only the Software Owner or owning Organization Owner can delete a school.');
+
+        $deleted = $school->toArray();
+        $school->delete();
+
+        ActivityLogService::log(
+            module: 'school',
+            action: 'deleted',
+            description: "School \"{$deleted['name']}\" was deleted.",
+            schoolId: $school->id,
+            properties: ['deleted_school' => $deleted],
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'School deleted successfully.',
+        ]);
+    }
+
+    public function countries()
+    {
+        return response()->json([
+            'success' => true,
+            'data' => Country::orderBy('name')->get(),
+        ]);
+    }
+
+    public function extendTrial(Request $request, School $school)
+    {
+        if (!$request->user()->isSuperAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
+        $validated = $request->validate([
+            'trial_days' => ['required', 'integer', 'min:1', 'max:3650'],
+        ]);
+
+        $defaultPlanId = SubscriptionPlan::where('is_active', true)->value('id');
+        if (!$defaultPlanId) {
+            return response()->json(['success' => false, 'message' => 'Create at least one active subscription plan before extending a trial.'], 422);
+        }
+
+        $subscription = SchoolSubscription::firstOrCreate(
+            ['school_id' => $school->id, 'is_current' => true],
+            [
+                'subscription_plan_id' => $defaultPlanId,
+                'start_date' => now()->toDateString(),
+                'status' => 'trial',
+                'currency' => 'USD',
+            ]
+        );
+
+        $base = $subscription->trial_ends_at && $subscription->trial_ends_at->isFuture()
+            ? $subscription->trial_ends_at->copy()
+            : now();
+        $trialEndsAt = $base->addDays($validated['trial_days'])->endOfDay();
+
+        $subscription->status = 'trial';
+        $subscription->trial_ends_at = $trialEndsAt;
+        $subscription->expiry_date = $subscription->expiry_date && $subscription->expiry_date->greaterThan($trialEndsAt)
+            ? $subscription->expiry_date
+            : $trialEndsAt->toDateString();
+        $subscription->save();
+
+        ActivityLogService::log(
+            module: 'subscription',
+            action: 'trial_extended',
+            description: "Extended trial for \"{$school->name}\" by {$validated['trial_days']} days.",
+            subject: $school,
+            schoolId: $school->id,
+            properties: ['trial_days' => $validated['trial_days'], 'trial_ends_at' => $trialEndsAt->toDateString()],
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Trial extended successfully.',
+            'data' => $subscription->fresh()->load('subscriptionPlan'),
+        ]);
+    }
+
+    public function updateSubscriptionStatus(Request $request, School $school)
+    {
+        if (!$request->user()->isSuperAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
+        $validated = $request->validate([
+            'status' => ['required', 'in:trial,active,expired,cancelled'],
+            'expiry_date' => ['nullable', 'date', 'after_or_equal:today'],
+        ]);
+
+        $subscription = SchoolSubscription::where('school_id', $school->id)
+            ->where('is_current', true)
+            ->latest('id')
+            ->first();
+
+        if (!$subscription) {
+            $defaultPlanId = SubscriptionPlan::where('is_active', true)->value('id');
+            if (!$defaultPlanId) {
+                return response()->json(['success' => false, 'message' => 'Create at least one active subscription plan before changing subscription status.'], 422);
+            }
+            $subscription = SchoolSubscription::create([
+                'school_id' => $school->id,
+                'subscription_plan_id' => $defaultPlanId,
+                'start_date' => now()->toDateString(),
+                'expiry_date' => $validated['expiry_date'] ?: now()->addMonth()->toDateString(),
+                'currency' => 'USD',
+                'is_current' => true,
+            ]);
+        }
+
+        $subscription->status = $validated['status'];
+        if (!empty($validated['expiry_date'])) {
+            $subscription->expiry_date = $validated['expiry_date'];
+        }
+        if ($validated['status'] === 'cancelled') {
+            $subscription->is_current = false;
+        }
+        $subscription->save();
+
+        ActivityLogService::log(
+            module: 'subscription',
+            action: 'status_updated',
+            description: "Set subscription status to {$validated['status']} for \"{$school->name}\".",
+            subject: $school,
+            schoolId: $school->id,
+            properties: $validated,
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Subscription status updated successfully.',
+            'data' => $subscription->fresh()->load('subscriptionPlan'),
+        ]);
+    }
+
+    /**
+     * Toggle lifetime-free exemption for a school. Records who granted it
+     * and when, so exemptions are auditable, not just a silent flag flip.
+     */
+    public function toggleExemption(Request $request, School $school)
+    {
+        if (!$request->user()->isSuperAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
+        $defaultPlanId = SubscriptionPlan::where('is_active', true)->value('id');
+        if (!$defaultPlanId) {
+            return response()->json(['success' => false, 'message' => 'Create at least one active subscription plan before granting school access overrides.'], 422);
+        }
+
+        $subscription = SchoolSubscription::firstOrCreate(
+            ['school_id' => $school->id, 'is_current' => true],
+            [
+                'subscription_plan_id' => $defaultPlanId,
+                'start_date' => now(),
+                'expiry_date' => now()->addYears(100),
+                'status' => 'active',
+                'currency' => 'USD',
+            ]
+        );
+
+        $subscription->is_exempt = !$subscription->is_exempt;
+
+        if ($subscription->is_exempt) {
+            $subscription->exempted_by = $request->user()->id;
+            $subscription->exempted_at = now();
+        } else {
+            $subscription->exempted_by = null;
+            $subscription->exempted_at = null;
+        }
+
+        $subscription->save();
+
+        ActivityLogService::log(
+            module: 'subscription',
+            action: $subscription->is_exempt ? 'exemption_granted' : 'exemption_revoked',
+            description: ($subscription->is_exempt ? 'Granted' : 'Revoked') . " lifetime-free exemption for \"{$school->name}\"",
+=== ORGANIZATION CONTROLLER ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreOrganizationRequest;
+use App\Http\Requests\UpdateOrganizationRequest;
+use App\Models\ActivityLog;
+use App\Models\Organization;
+use App\Services\CurrentContextService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Throwable;
+
+class OrganizationController extends Controller
+{
+    public function __construct(private readonly CurrentContextService $context)
+    {
+    }
+
+    private function assertCanManage(Request $request, Organization $organization): void
+    {
+        if (! $this->context->canManageOrganization($request->user(), $organization)) {
+            abort(403, 'You may only manage organizations you own.');
+        }
+    }
+    /**
+     * Display a listing of organizations.
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $query = Organization::with(['owner'])
+            ->withCount('schools');
+
+        if (! $request->user()->isSuperAdmin()) {
+            $query->where('owner_id', $request->user()->id);
+        }
+
+        if (request()->filled('search')) {
+            $search = request('search');
+
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('short_name', 'like', "%{$search}%")
+                    ->orWhere('registration_number', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if (request()->filled('status')) {
+            $query->where('status', request('status'));
+        }
+
+        $organizations = $query
+            ->latest()
+            ->paginate(request('per_page', 15));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Organizations retrieved successfully.',
+            'data' => $organizations,
+        ]);
+    }
+
+    /**
+     * Store a newly created organization.
+     */
+    public function store(StoreOrganizationRequest $request): JsonResponse
+    {
+        DB::beginTransaction();
+
+        try {
+
+            $organization = Organization::create([
+                ...$request->validated(),
+                'owner_id' => Auth::id(),
+            ]);
+
+            ActivityLog::create([
+                'school_id' => null,
+                'user_id' => Auth::id(),
+                'is_platform_action' => true,
+                'module' => 'Organization',
+                'action' => 'CREATE',
+                'description' => 'Created organization "' . $organization->name . '".',
+                'subject_type' => Organization::class,
+                'subject_id' => $organization->id,
+                'properties' => [
+                    'organization' => $organization->toArray(),
+                ],
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Organization created successfully.',
+                'data' => $organization->load('owner'),
+            ], 201);
+
+        } catch (Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create organization.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    /**
+     * Display the specified organization.
+     */
+    public function show(Request $request, Organization $organization): JsonResponse
+    {
+        $this->assertCanManage($request, $organization);
+
+        $organization->load([
+            'owner',
+            'schools',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Organization retrieved successfully.',
+            'data' => $organization,
+        ]);
+    }
+
+    /**
+     * Update the specified organization.
+     */
+    public function update(
+        UpdateOrganizationRequest $request,
+        Organization $organization
+    ): JsonResponse {
+        $this->assertCanManage($request, $organization);
+
+        DB::beginTransaction();
+
+        try {
+
+            $oldData = $organization->toArray();
+
+            $organization->update($request->validated());
+
+            ActivityLog::create([
+                'school_id' => null,
+                'user_id' => Auth::id(),
+                'is_platform_action' => true,
+                'module' => 'Organization',
+                'action' => 'UPDATE',
+                'description' => 'Updated organization "' . $organization->name . '".',
+                'subject_type' => Organization::class,
+                'subject_id' => $organization->id,
+                'properties' => [
+                    'before' => $oldData,
+                    'after' => $organization->fresh()->toArray(),
+                ],
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Organization updated successfully.',
+                'data' => $organization->fresh()->load('owner'),
+            ]);
+
+        } catch (Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update organization.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove the specified organization.
+     */
+    public function destroy(Request $request, Organization $organization): JsonResponse
+    {
+        $this->assertCanManage($request, $organization);
+
+        if ($organization->schools()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This organization still owns one or more schools and cannot be deleted.',
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+
+            $deleted = $organization->toArray();
+
+            ActivityLog::create([
+                'school_id' => null,
+                'user_id' => Auth::id(),
+                'is_platform_action' => true,
+                'module' => 'Organization',
+                'action' => 'DELETE',
+                'description' => 'Deleted organization "' . $organization->name . '".',
+                'subject_type' => Organization::class,
+                'subject_id' => $organization->id,
+                'properties' => [
+                    'deleted' => $deleted,
+                ],
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            $organization->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Organization deleted successfully.',
+            ]);
+
+        } catch (Throwable $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete organization.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+}
+=== STAFF CONTROLLER ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateStaffRequest;
+use App\Http\Resources\StaffResource;
+use App\Models\Staff;
+use App\Services\ActivityLogService;
+use App\Services\CurrentContextService;
+use Illuminate\Http\Request;
+
+class StaffController extends Controller
+{
+    public function __construct(
+        private CurrentContextService $context,
+        private \App\Services\MediaStorageService $media,
+    ) {}
+
+
+    public function index(Request $request)
+    {
+        $query = Staff::with(['school', 'user.roles'])->where('school_id', $this->requireSchool($request));
+        return StaffResource::collection($query->latest()->paginate(10));
+    }
+
+    public function store(Request $request)
+    {
+        return response()->json(['message' => 'Direct staff account creation is disabled. Create a school-scoped role invitation instead.', 'workflow' => 'role-invitations'], 410);
+    }
+
+    public function show(Request $request, Staff $staff)
+    {
+        $this->ensureSchool($request, $staff);
+        return new StaffResource($staff->load(['school', 'user.roles']));
+    }
+
+    public function update(UpdateStaffRequest $request, Staff $staff)
+    {
+        $schoolId = $this->ensureSchool($request, $staff);
+        $before = $staff->employment_status;
+        $data = $request->validated();
+        unset($data['school_id']);
+        if ($request->hasFile('photo')) {
+            $data['photo'] = $this->media->storeImage($request->file('photo'), 'schools/' . $schoolId . '/staff', $staff->photo);
+        }
+        $staff->update($data);
+
+        if (array_key_exists('employment_status', $data) && $data['employment_status'] !== $before) {
+            if ($data['employment_status'] === 'Active') {
+                ActivityLogService::log(module: 'staff', action: 'employment_reactivated', description: "Staff {$staff->full_name} was reactivated.", subject: $staff, schoolId: $schoolId);
+            } else {
+                $this->revokeSchoolAccess($staff, $schoolId);
+                ActivityLogService::log(module: 'staff', action: 'employment_status_changed', description: "Staff {$staff->full_name} status changed to {$data['employment_status']} and school access was revoked.", subject: $staff, properties: ['status' => $data['employment_status']], schoolId: $schoolId);
+            }
+        }
+
+        return new StaffResource($staff->fresh()->load(['school', 'user.roles']));
+    }
+
+    public function destroy(Request $request, Staff $staff)
+    {
+        $schoolId = $this->ensureSchool($request, $staff);
+        $this->revokeSchoolAccess($staff, $schoolId);
+        $staff->update(['employment_status' => 'Terminated', 'user_id' => null]);
+
+        ActivityLogService::log(module: 'staff', action: 'terminated', description: "Staff {$staff->full_name} was terminated and school access was revoked.", subject: $staff, schoolId: $schoolId);
+        return response()->json(['message' => 'Staff employment was terminated and school access was revoked. Historical records were preserved.']);
+    }
+
+    private function revokeSchoolAccess(Staff $staff, int $schoolId): void
+    {
+        $user = $staff->user;
+        if (!$user) return;
+        $user->roles()->wherePivot('school_id', $schoolId)->detach();
+        $user->tokens()->delete();
+        if ((int) $user->current_school_id === $schoolId) $user->update(['current_school_id' => null]);
+    }
+
+    private function ensureSchool(Request $request, Staff $staff): int
+    {
+        $schoolId = $this->requireSchool($request);
+        abort_unless((int) $staff->school_id === $schoolId, 403);
+        return $schoolId;
+    }
+}
+=== STUDENT CONTROLLER ===
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\CurrentContextService;
+use App\Http\Requests\StoreStudentRequest;
+use App\Http\Requests\UpdateStudentRequest;
+use App\Http\Resources\StudentResource;
+use App\Models\FormTeacherAssignment;
+use App\Models\Assignment;
+use App\Models\Attendance;
+use App\Models\StudentEnrollment;
+use App\Models\StudentFee;
+use App\Models\StudentResultSummary;
+use App\Models\Staff;
+use App\Models\Student;
+use App\Models\Timetable;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Services\StudentAdmissionNumberService;
+
+class StudentController extends Controller
+{
+    public function __construct(
+        private readonly CurrentContextService $context,
+        private readonly \App\Services\MediaStorageService $media,
+        private readonly \App\Services\SubscriptionQuotaService $quotas,
+        private readonly StudentAdmissionNumberService $admissionNumbers,
+    ) {}
+
+
+    public function index(Request $request)
+    {
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:100',
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $query = Student::with([
+            'school',
+            'division',
+            'class',
+            'stream',
+            'academicSession',
+        ]);
+
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
+            $query->where('school_id', $schoolId);
+            $assignedClassIds = $this->assignedClassIds($request, $schoolId);
+            if ($assignedClassIds !== null) {
+                $query->whereIn('class_id', $assignedClassIds);
+            }
+        }
+
+        $search = trim((string) ($validated['search'] ?? ''));
+
+        if ($search !== '') {
+            $query->where(function ($studentQuery) use ($search) {
+                $studentQuery
+                    ->where('admission_number', 'like', "%{$search}%")
+                    ->orWhere('first_name', 'like', "%{$search}%")
+                    ->orWhere('middle_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%");
+            });
+        }
+
+        return StudentResource::collection(
+            $query
+                ->orderBy('admission_number')
+                ->paginate($validated['per_page'] ?? 10)
+        );
+    }
+
+    /**
+     * Students for Result Entry
+     */
+    public function resultEntryStudents(Request $request)
+    {
+        $request->validate([
+            'class_id' => ['required', 'integer'],
+        ]);
+
+        $students = Student::with('class')
+            ->where('class_id', $request->class_id);
+
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
+            $students->where(
+                'school_id',
+                $this->context->currentSchool($request->user())?->id
+            );
+        }
+
+        $students = $students
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+
+        return response()->json([
+            'students' => $students,
+        ]);
+    }
+
+    public function store(StoreStudentRequest $request)
+    {
+        $data = $request->validated();
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+
+        abort_unless($schoolId, 422, 'A school context is required to register a student.');
+
+        $data = array_diff_key($data, ['admission_number' => true, 'school_id' => true]);
+
+        if ($request->hasFile('photo')) {
+            $data['photo'] = $this->media->storeImage($request->file('photo'), 'schools/' . $schoolId . '/students');
+        }
+
+        $student = DB::transaction(function () use ($data, $schoolId) {
+            $this->quotas->assertCanAddStudent((int) $schoolId);
+
+            $data['school_id'] = (int) $schoolId;
+            $data['admission_number'] = $this->admissionNumbers->allocate((int) $schoolId);
+
+            return Student::create($data);
+        });
+
+        return (new StudentResource(
+            $student->load([
+                'school',
+                'division',
+                'class',
+                'stream',
+                'academicSession',
+            ])
+        ))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    public function student360(Request $request, Student $student)
+    {
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+        if (! $request->user()->isSuperAdmin()) {
+            abort_unless($schoolId && (int) $student->school_id === (int) $schoolId, 403, 'Unauthorized.');
+            $assignedClassIds = $this->assignedClassIds($request, $schoolId);
+            if ($assignedClassIds !== null) {
+                abort_unless(in_array((int) $student->class_id, $assignedClassIds, true), 403, 'You may only view students in your assigned classes.');
+            }
+        }
+
+        $enrollments = StudentEnrollment::query()
+            ->where('student_id', $student->id)
+            ->where('school_id', $student->school_id)
+            ->with(['academicSession:id,name', 'term:id,name', 'class:id,name', 'stream:id,name'])
+            ->latest('id')
+            ->get();
+
+        $attendance = Attendance::query()
+            ->where('school_id', $student->school_id)
+            ->whereHas('studentEnrollment', fn ($query) => $query->where('student_id', $student->id))
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $results = StudentResultSummary::query()
+            ->where('school_id', $student->school_id)
+            ->where('is_published', true)
+            ->whereHas('studentEnrollment', fn ($query) => $query->where('student_id', $student->id))
+            ->with(['academicSession:id,name', 'term:id,name'])
+            ->latest('published_at')
+            ->limit(8)
+            ->get();
+
+        $fees = StudentFee::query()
+            ->whereHas('studentEnrollment', fn ($query) => $query->where('student_id', $student->id)->where('school_id', $student->school_id))
+            ->with(['feeCategory:id,name', 'academicSession:id,name', 'term:id,name'])
+            ->latest('id')
+            ->limit(20)
+            ->get()
+            ->map(fn ($fee) => [
+                'id' => $fee->id,
+                'category' => $fee->feeCategory?->name,
+                'session' => $fee->academicSession?->name,
+                'term' => $fee->term?->name,
+                'amount_due' => $fee->amount_due,
+                'total_paid' => $fee->total_paid,
+                'balance' => $fee->balance,
+            ])->values();
+
+        $assignments = Assignment::query()
+            ->where('school_id', $student->school_id)
+            ->where('class_id', $student->class_id)
+            ->where('status', 'Published')
+            ->when($student->stream_id, fn ($query) => $query->where(fn ($inner) => $inner->whereNull('stream_id')->orWhere('stream_id', $student->stream_id)))
+            ->latest('id')
+            ->limit(10)
+            ->get(['id', 'title', 'subject_id', 'due_date', 'status']);
+
+        return response()->json([
+            'data' => [
+                'student' => new StudentResource($student->load(['school', 'division', 'class', 'stream', 'academicSession', 'guardians'])),
+                'enrollments' => $enrollments,
+                'attendance' => $attendance->map(fn ($total, $status) => ['status' => $status, 'total' => (int) $total])->values(),
+                'published_results' => $results,
+                'fees' => $fees,
+                'recent_assignments' => $assignments,
+            ],
+        ]);
+    }
+
+    public function show(Request $request, Student $student)
+    {
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
+            abort_unless((int) $student->school_id === (int) $schoolId, 403, 'Unauthorized.');
+            $assignedClassIds = $this->assignedClassIds($request, $schoolId);
+            if ($assignedClassIds !== null) {
+                abort_unless(in_array((int) $student->class_id, $assignedClassIds, true), 403, 'You may only view students in your assigned classes.');
+            }
+        }
+
+        return new StudentResource(
+            $student->load([
+                'school',
+                'division',
+                'class',
+                'stream',
+                'academicSession',
+            ])
+        );
+    }
+
+    private function assignedClassIds(Request $request, ?int $schoolId): ?array
+    {
+        if (! $schoolId) {
+            return [];
+        }
+
+        $user = $request->user();
+        if (! $user->hasRole('teacher', $schoolId) && ! $user->hasRole('form_teacher', $schoolId)) {
+            return null;
+        }
+
+        $staffId = Staff::query()
+            ->where('school_id', $schoolId)
+            ->where('user_id', $user->id)
+            ->value('id');
+
+        if (! $staffId) {
+            return [];
+        }
+
+        $query = $user->hasRole('teacher', $schoolId)
+            ? Timetable::query()->where('school_id', $schoolId)->where('staff_id', $staffId)->where('entry_type', 'lesson')
+            : FormTeacherAssignment::query()->where('school_id', $schoolId)->where('staff_id', $staffId)->where('is_active', true);
+
+        return $query->pluck('class_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
+    }
+
+    public function update(
+        UpdateStudentRequest $request,
+        Student $student
+    ) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $student->school_id !== $this->context->currentSchool($request->user())?->id
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $data = $request->validated();
+        unset($data['admission_number']);
+
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin()
+        ) {
+            $data['school_id'] = $student->school_id;
+        }
+
+        if ($request->hasFile('photo')) {
+            $data['photo'] = $this->media->storeImage($request->file('photo'), 'schools/' . $student->school_id . '/students', $student->photo);
+        }
+
+        $student->update($data);
+
+        return new StudentResource(
+            $student->load([
+                'school',
+                'division',
+                'class',
+                'stream',
+                'academicSession',
+            ])
+        );
+    }
+
+    public function destroy(
+        Request $request,
+        Student $student
+    ) {
+        if (
+            method_exists($request->user(), 'isSuperAdmin') &&
+            ! $request->user()->isSuperAdmin() &&
+            $student->school_id !== $this->context->currentSchool($request->user())?->id
+        ) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $student->delete();
+
+        return response()->json([
+            'message' => 'Student deleted successfully.',
+        ]);
+    }
+}

@@ -8,6 +8,7 @@ use App\Models\StudentEnrollment;
 use App\Models\StudentResultSummary;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use App\Services\ActivityLogService;
 
 class ResultSubmissionService
 {
@@ -21,15 +22,19 @@ class ResultSubmissionService
      */
     public function create(array $data): ResultSubmission
     {
-        return ResultSubmission::create([
-            'school_id' => $data['school_id'],
-            'class_id' => $data['class_id'],
-            'subject_id' => $data['subject_id'],
-            'academic_session_id' => $data['academic_session_id'],
-            'term_id' => $data['term_id'],
-            'created_by' => $data['created_by'],
-            'status' => 'draft',
-        ]);
+        return ResultSubmission::firstOrCreate(
+            [
+                'school_id' => $data['school_id'],
+                'class_id' => $data['class_id'],
+                'subject_id' => $data['subject_id'],
+                'academic_session_id' => $data['academic_session_id'],
+                'term_id' => $data['term_id'],
+            ],
+            [
+                'created_by' => $data['created_by'],
+                'status' => 'draft',
+            ],
+        );
     }
 
     /**
@@ -66,7 +71,7 @@ class ResultSubmissionService
             );
         }
 
-        return Result::with('studentEnrollment.student')
+        return Result::with(['studentEnrollment.student', 'components'])
             ->where('result_submission_id', $submission->id)
             ->orderBy('student_enrollment_id')
             ->get();
@@ -164,14 +169,25 @@ class ResultSubmissionService
     /**
      * Reopen for correction (unlocks records).
      */
-    public function reopen(ResultSubmission $submission): ResultSubmission
+    public function reopen(ResultSubmission $submission, string $reason, ?int $reopenedBy = null): ResultSubmission
     {
-        return DB::transaction(function () use ($submission) {
+        return DB::transaction(function () use ($submission, $reason, $reopenedBy) {
+            $before = [
+                'status' => $submission->status,
+                'approved_by' => $submission->approved_by,
+                'approved_at' => $submission->approved_at?->toIso8601String(),
+                'published_at' => $submission->published_at?->toIso8601String(),
+                'result_status_counts' => Result::where('result_submission_id', $submission->id)->selectRaw('status, COUNT(*) as total')->groupBy('status')->pluck('total', 'status')->all(),
+            ];
+            $now = now();
             $submission->update([
                 'status' => 'draft',
                 'approved_by' => null,
                 'approved_at' => null,
                 'published_at' => null,
+                'reopen_reason' => $reason,
+                'reopened_by' => $reopenedBy,
+                'reopened_at' => $now,
             ]);
 
             Result::where('result_submission_id', $submission->id)
@@ -186,6 +202,27 @@ class ResultSubmissionService
 
             $this->summaryQuery($submission)->update(['is_published' => false, 'published_at' => null, 'approved_by' => null, 'approved_at' => null]);
             $this->processingService->syncReportCardsForSubmission($submission);
+
+            ActivityLogService::log(
+                module: 'results',
+                action: 'reopened',
+                description: 'A result submission was reopened for controlled correction.',
+                subject: $submission,
+                properties: [
+                    'reason' => $reason,
+                    'before' => $before,
+                    'after' => [
+                        'status' => 'draft',
+                        'approved_by' => null,
+                        'approved_at' => null,
+                        'published_at' => null,
+                        'reopened_by' => $reopenedBy,
+                        'reopened_at' => $now->toIso8601String(),
+                        'result_status' => 'draft',
+                    ],
+                ],
+                schoolId: $submission->school_id,
+            );
 
             return $submission;
         });

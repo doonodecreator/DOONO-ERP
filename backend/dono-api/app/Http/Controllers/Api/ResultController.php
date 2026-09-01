@@ -20,14 +20,11 @@ class ResultController extends Controller
     ) {
     }
 
-    private function currentContextSchoolId(Request $request): ?int
-    {
-        return $this->context->currentSchool($request->user())?->id;
-    }
+
 
     public function index(Request $request)
     {
-        $schoolId = $this->currentContextSchoolId($request);
+        $schoolId = $this->context->currentSchool($request->user())?->id;
         abort_unless($schoolId, 409, 'Select an active school before viewing results.');
 
         return ResultResource::collection(
@@ -41,7 +38,7 @@ class ResultController extends Controller
 
     public function show(Request $request, Result $result)
     {
-        abort_unless((int) $result->school_id === (int) $this->currentContextSchoolId($request), 404, 'Result not found.');
+        abort_unless((int) $result->school_id === (int) $this->context->currentSchool($request->user())?->id, 404, 'Result not found.');
 
         return new ResultResource($result->load([
             'school',
@@ -82,7 +79,7 @@ class ResultController extends Controller
      */
     public function publish(Request $request, Result $result)
     {
-        abort_unless((int) $result->school_id === (int) $this->currentContextSchoolId($request), 404, 'Result not found.');
+        abort_unless((int) $result->school_id === (int) $this->context->currentSchool($request->user())?->id, 404, 'Result not found.');
         abort_unless($result->result_submission_id, 422, 'This result is not attached to an official submission. Publish the complete result submission instead.');
 
         $submission = ResultSubmission::query()

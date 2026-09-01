@@ -14,10 +14,17 @@ class ClinicVisit extends Model
         'treatment_given',
         'nurse_notes',
         'treated_by',
+        'referral_status',
+        'referral_destination',
+        'follow_up_date',
+        'emergency_flag',
+        'updated_by',
     ];
 
     protected $casts = [
         'visit_date' => 'datetime',
+        'follow_up_date' => 'date',
+        'emergency_flag' => 'boolean',
     ];
 
     public function school()
@@ -33,5 +40,10 @@ class ClinicVisit extends Model
     public function treatedBy()
     {
         return $this->belongsTo(User::class, 'treated_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

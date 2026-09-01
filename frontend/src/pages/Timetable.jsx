@@ -63,6 +63,7 @@ function scheduleDateLabel(item) {
 export default function Timetable() {
   const { permissions } = useAuth();
   const canManageTimetable = Array.isArray(permissions) && permissions.includes('manage_timetable');
+  const canApproveTimetable = Array.isArray(permissions) && permissions.includes('approve_timetable');
   const [timetables, setTimetables] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [terms, setTerms] = useState([]);
@@ -73,12 +74,15 @@ export default function Timetable() {
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [actionId, setActionId] = useState(null);
+  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [selectedSession, setSelectedSession] = useState('');
   const [selectedTerm, setSelectedTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedEntryType, setSelectedEntryType] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
@@ -139,7 +143,26 @@ export default function Timetable() {
 
   function openCreateModal() {
     setError('');
+    setEditingId(null);
     setForm({ ...emptyForm });
+    setShowModal(true);
+  }
+
+  function openEditModal(item) {
+    setError('');
+    setEditingId(item.id);
+    setForm({
+      ...emptyForm,
+      ...item,
+      academic_session_id: item.academic_session_id ? String(item.academic_session_id) : '',
+      term_id: item.term_id ? String(item.term_id) : '',
+      division_id: item.division_id ? String(item.division_id) : '',
+      class_id: item.class_id ? String(item.class_id) : '',
+      stream_id: item.stream_id ? String(item.stream_id) : '',
+      subject_id: item.subject_id ? String(item.subject_id) : '',
+      staff_id: item.staff_id ? String(item.staff_id) : '',
+      is_active: Boolean(item.is_active),
+    });
     setShowModal(true);
   }
 
@@ -173,10 +196,11 @@ export default function Timetable() {
     });
   }
 
-  async function handleCreate(event) {
+  async function handleSave(event) {
     event.preventDefault();
     setSaving(true);
     setError('');
+    setMessage('');
     const payload = {
       ...form,
       academic_session_id: Number(form.academic_session_id),
@@ -205,8 +229,14 @@ export default function Timetable() {
     }
 
     try {
-      await api.post('/timetables', payload);
+      if (editingId) {
+        await api.put(`/timetables/${editingId}`, payload);
+      } else {
+        await api.post('/timetables', payload);
+      }
       setShowModal(false);
+      setEditingId(null);
+      setMessage(editingId ? 'Timetable entry saved as a draft and must be submitted again for approval.' : 'Timetable entry saved as a draft. Submit it when the schedule is ready for approval.');
       setForm({ ...emptyForm });
       await loadInitialData();
     } catch (err) {
@@ -216,14 +246,34 @@ export default function Timetable() {
     }
   }
 
+  async function workflowAction(id, action, successMessage) {
+    setError('');
+    setMessage('');
+    setActionId(`${id}-${action}`);
+    try {
+      await api.post(`/timetables/${id}/${action}`);
+      setMessage(successMessage);
+      await loadInitialData();
+    } catch (err) {
+      setError(apiErrorMessage(err, `Unable to ${action} timetable entry.`));
+    } finally {
+      setActionId(null);
+    }
+  }
+
   async function deleteEntry(id) {
     if (!window.confirm('Delete this timetable entry?')) return;
     setError('');
+    setMessage('');
+    setActionId(`${id}-delete`);
     try {
       await api.delete(`/timetables/${id}`);
+      setMessage('Timetable entry deleted.');
       await loadInitialData();
     } catch (err) {
       setError(apiErrorMessage(err, 'Failed to delete timetable entry.'));
+    } finally {
+      setActionId(null);
     }
   }
 
@@ -236,6 +286,7 @@ export default function Timetable() {
 
       {canManageTimetable && <div className="mb-6 flex justify-start"><button type="button" onClick={openCreateModal} className="min-h-11 rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm hover:bg-blue-700">Add Schedule Entry</button></div>}
 
+      {message && <div role="status" className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{message}</div>}
       {error && <div className="mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span>{error}</span><button type="button" onClick={loadInitialData} className="font-semibold underline">Retry</button></div>}
 
       <div className="mb-6 grid grid-cols-1 gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-sm md:grid-cols-4">
@@ -253,7 +304,8 @@ export default function Timetable() {
             { key: 'entry', label: 'Schedule Entry', render: (item) => <div><p className="font-semibold">{item.title || item.subject?.name || labelForEntryType(item.entry_type)}</p><p className="text-xs text-slate-500">{labelForEntryType(item.entry_type)}{item.description ? ` · ${item.description}` : ''}</p></div> },
             { key: 'class', label: 'Class / Stream', render: (item) => item.target_type === 'school' ? 'Whole School' : item.target_type === 'division' ? (item.division?.name || 'Division') : `${item.class?.name || 'Class'}${item.stream?.name ? ` · ${item.stream.name}` : ''}` },
             { key: 'subject', label: 'Subject / Teacher', render: (item) => item.entry_type === 'lesson' ? <div><p>{item.subject?.name || 'Subject'}</p><p className="text-xs text-slate-500">{item.staff?.full_name || 'Teacher not assigned'}</p></div> : (item.room || '—') },
-            ...(canManageTimetable ? [{ key: 'actions', label: 'Actions', render: (item) => <button type="button" onClick={() => deleteEntry(item.id)} className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700">Delete</button> }] : []),
+            { key: 'status', label: 'Status', render: (item) => <span className={`rounded-full px-2 py-1 text-xs font-semibold ${item.workflow_status === 'published' ? 'bg-emerald-50 text-emerald-700' : item.workflow_status === 'approved' ? 'bg-blue-50 text-blue-700' : item.workflow_status === 'submitted' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{item.workflow_status || 'draft'}</span> },
+            ...((canManageTimetable || canApproveTimetable) ? [{ key: 'actions', label: 'Actions', render: (item) => <div className="flex flex-wrap gap-2">{canManageTimetable && item.workflow_status !== 'published' && <><button type="button" onClick={() => openEditModal(item)} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700">Edit</button>{item.workflow_status === 'draft' && <button type="button" onClick={() => workflowAction(item.id, 'submit', 'Timetable entry submitted for approval.')} disabled={Boolean(actionId)} className="rounded-lg border border-amber-200 px-3 py-1.5 text-xs font-semibold text-amber-700">Submit</button>}</>}{canApproveTimetable && item.workflow_status === 'submitted' && <button type="button" onClick={() => workflowAction(item.id, 'approve', 'Timetable entry approved.')} disabled={Boolean(actionId)} className="rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-semibold text-blue-700">Approve</button>}{canApproveTimetable && item.workflow_status === 'approved' && <button type="button" onClick={() => workflowAction(item.id, 'publish', 'Timetable entry published for its authorized audience.')} disabled={Boolean(actionId)} className="rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-700">Publish</button>}{canManageTimetable && <button type="button" onClick={() => deleteEntry(item.id)} disabled={Boolean(actionId)} className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700">Delete</button>}</div> }] : []),
           ]}
           data={Array.isArray(filteredTimetable) ? filteredTimetable : []}
           emptyMessage="No timetable entries recorded."
@@ -263,9 +315,9 @@ export default function Timetable() {
       {showModal && (
         <div role="dialog" aria-modal="true" aria-labelledby="add-schedule-title" style={{ position: 'fixed', inset: 0, zIndex: 9999 }} className="flex items-start justify-center overflow-y-auto bg-black/50 p-4 sm:items-center">
           <div className="my-4 max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
-            <h3 id="add-schedule-title" className="mb-1 text-lg font-bold text-gray-900">Add Schedule Entry</h3>
+            <h3 id="add-schedule-title" className="mb-1 text-lg font-bold text-gray-900">{editingId ? 'Edit Schedule Entry' : 'Add Schedule Entry'}</h3>
             <p className="mb-4 text-xs text-slate-500">A lesson belongs to a class and subject. A break, assembly, holiday, or event may target a class, division, or the whole school.</p>
-            <form onSubmit={handleCreate} className="space-y-4">
+            <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <SelectField label="Entry Type" value={form.entry_type} onChange={(value) => updateForm('entry_type', value)} options={ENTRY_TYPES} placeholder="Select entry type" required labelKey="label" valueKey="value" />
                 <SelectField label="Schedule Mode" value={form.schedule_mode} onChange={(value) => updateForm('schedule_mode', value)} options={[{ value: 'weekly', label: 'Weekly throughout the term' }, { value: 'single_date', label: 'One date' }, { value: 'date_range', label: 'Date range / term event' }]} placeholder="Select schedule mode" required labelKey="label" valueKey="value" />
@@ -288,7 +340,7 @@ export default function Timetable() {
               {form.schedule_mode === 'single_date' && <div className="grid grid-cols-1 gap-4 sm:grid-cols-3"><DateField label="Date" value={form.event_date} onChange={(value) => updateForm('event_date', value)} /><TimeField label="Start time" value={form.start_time} onChange={(value) => updateForm('start_time', value)} /><TimeField label="End time" value={form.end_time} onChange={(value) => updateForm('end_time', value)} /></div>}
               {form.schedule_mode === 'date_range' && <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><DateField label="Effective from" value={form.effective_from} onChange={(value) => updateForm('effective_from', value)} /><DateField label="Effective until" value={form.effective_until} onChange={(value) => updateForm('effective_until', value)} /></div>}
               <label className="text-xs font-semibold text-gray-600">Room / Location (optional)<input value={form.room} onChange={(event) => updateForm('room', event.target.value)} className="mt-1 min-h-11 w-full rounded-lg border border-gray-300 px-3 text-sm" /></label>
-              <div className="sticky bottom-0 flex justify-end gap-3 border-t border-slate-100 bg-white pt-3"><button type="button" onClick={() => setShowModal(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700">Cancel</button><button type="submit" disabled={saving} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">{saving ? 'Saving...' : 'Save Schedule Entry'}</button></div>
+              <div className="sticky bottom-0 flex justify-end gap-3 border-t border-slate-100 bg-white pt-3"><button type="button" onClick={() => setShowModal(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700">Cancel</button><button type="submit" disabled={saving} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">{saving ? 'Saving...' : editingId ? 'Save Changes' : 'Save Schedule Entry'}</button></div>
             </form>
           </div>
         </div>

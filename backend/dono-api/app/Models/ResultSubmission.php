@@ -21,12 +21,16 @@ class ResultSubmission extends Model
         'approved_at',
         'published_at',
         'approval_note',
+        'reopen_reason',
+        'reopened_by',
+        'reopened_at',
     ];
 
     protected $casts = [
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',
         'published_at' => 'datetime',
+        'reopened_at' => 'datetime',
     ];
 
     /**
@@ -83,6 +87,11 @@ class ResultSubmission extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function reopener(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reopened_by');
     }
 
     /**

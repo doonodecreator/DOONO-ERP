@@ -11,15 +11,18 @@ import PortalAccountModal from "../components/modals/PortalAccountModal";
 import Alert from "../components/feedback/Alert";
 
 export default function Students({ setPage, setSelectedStudent }) {
-  const { roles, isPlatformAdmin, isOrganizationOwner, school } = useAuth();
+  const { roles, permissions = [], isPlatformAdmin, isOrganizationOwner, school } = useAuth();
   const roleSlug = getPrimaryRoleSlug({ roles, isPlatformAdmin, isOrganizationOwner, school });
   const canManageAdmissions = ["super_admin", "proprietor", "principal", "vice_principal_admin"].includes(roleSlug);
+  const canIssueStudentIdCards = isPlatformAdmin || permissions.includes("issue_student_id_cards");
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [portalStudent, setPortalStudent] = useState(null);
+  const [exporting, setExporting] = useState(false);
+  const [documentLoading, setDocumentLoading] = useState(null);
 
   const loadStudents = async () => {
     try {
@@ -36,6 +39,40 @@ export default function Students({ setPage, setSelectedStudent }) {
   };
 
   useEffect(() => { loadStudents(); }, []);
+
+  const handleExport = async () => {
+    setExporting(true);
+    setError(null);
+    try {
+      const response = await api.get("/exports/students.csv", { responseType: "blob" });
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "students.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+      setError(err.response?.data?.message || "Student export could not be generated.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const downloadStudentDocument = async (student, documentType) => {
+    const path = documentType === "transcript" ? `/students/${student.id}/documents/transcript` : `/students/${student.id}/documents/id-card`;
+    try {
+      setDocumentLoading(`${documentType}:${student.id}`); setError(null);
+      const response = await api.get(path, { responseType: "blob" });
+      const url = URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = documentType === "id-card" ? `student-id-card-${student.admission_number || student.id}.pdf` : `${documentType}-${student.admission_number || student.id}.pdf`;
+      document.body.appendChild(link); link.click(); link.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (err) { setError(err.response?.data?.message || `Unable to generate the student ${documentType}.`); }
+    finally { setDocumentLoading(null); }
+  };
 
   const handleDelete = async (event, id, name) => {
     event.stopPropagation();
@@ -71,17 +108,17 @@ export default function Students({ setPage, setSelectedStudent }) {
     { key: "status", label: "Status", render: (student) => <span className={`status-badge ${(student.status || "active").toLowerCase() === "active" ? "status-badge-success" : "status-badge-muted"}`}>{student.status || "Active"}</span> },
   ];
 
-  if (canManageAdmissions) {
+  if (canManageAdmissions || permissions.includes("view_students")) {
     columns.push({
       key: "actions",
       label: "Actions",
       align: "right",
-      render: (student) => <div className="table-actions"><Button size="sm" variant="ghost" onClick={(event) => handleEdit(event, student)}>Edit</Button>{student.portal_account?.linked ? <span className="status-badge status-badge-success">Portal linked</span> : <Button size="sm" variant="ghost" onClick={(event) => { event.stopPropagation(); setPortalStudent(student); }}>Portal account</Button>}<Button size="sm" variant="danger" onClick={(event) => handleDelete(event, student.id, `${student.first_name || ""} ${student.last_name || ""}`)}>Delete</Button></div>,
+      render: (student) => <div className="table-actions">{canManageAdmissions && <><Button size="sm" variant="ghost" onClick={(event) => handleEdit(event, student)}>Edit</Button>{student.portal_account?.linked ? <span className="status-badge status-badge-success">Portal linked</span> : <Button size="sm" variant="ghost" onClick={(event) => { event.stopPropagation(); setPortalStudent(student); }}>Portal account</Button>}<Button size="sm" variant="danger" onClick={(event) => handleDelete(event, student.id, `${student.first_name || ""} ${student.last_name || ""}`)}>Delete</Button></>}{permissions.includes("view_results") && <Button size="sm" variant="secondary" loading={documentLoading === `transcript:${student.id}`} onClick={() => downloadStudentDocument(student, "transcript")}>Transcript</Button>}{canIssueStudentIdCards && <Button size="sm" variant="secondary" loading={documentLoading === `id-card:${student.id}`} onClick={() => downloadStudentDocument(student, "id-card")}>ID card</Button>}</div>,
     });
   }
 
   return <PageContainer>
-    <PageHeader title="Students Directory" subtitle="Manage enrolled student profiles, class assignments, and academic status." action={canManageAdmissions ? <Button onClick={() => setPage("admissions")}>New admission</Button> : null} />
+    <PageHeader title="Students Directory" subtitle="Manage enrolled student profiles, class assignments, and academic status." action={<div className="flex flex-wrap gap-2">{permissions.includes("view_students") && <Button variant="secondary" onClick={handleExport} loading={exporting}>Export CSV</Button>}{canManageAdmissions && <Button onClick={() => setPage("admissions")}>New admission</Button>}</div>} />
     {error && <Alert variant="error" action={<button type="button" onClick={loadStudents}>Retry</button>}>{error}</Alert>}
     <SectionCard title="Find students" subtitle={`${filteredStudents.length} of ${students.length} records`}>
       <div className="ui-form-grid">

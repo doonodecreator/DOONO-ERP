@@ -11,9 +11,12 @@ use App\Models\ReportCard;
 use App\Models\AcademicSession;
 use App\Models\StudentEnrollment;
 use App\Models\StudentFee;
+use App\Models\StudentResultSummary;
 use App\Models\Timetable;
 use App\Models\Assignment;
+use App\Http\Resources\StudentResource;
 use App\Services\Academic\ReportCardService;
+use App\Services\ActivityLogService;
 use App\Services\CurrentContextService;
 use Illuminate\Http\Request;
 
@@ -27,7 +30,8 @@ class StudentPortalController extends Controller
     public function dashboard(Request $request)
     {
         $user = $request->user();
-        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($user)?->id;
+        $schoolId = $this->context->currentSchool($user)?->id;
+        abort_unless($schoolId, 403, 'Select an active school before opening the student portal.');
 
         $student = Student::where('user_id', $user->id)
             ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
@@ -49,6 +53,14 @@ class StudentPortalController extends Controller
             ]);
         }
 
+        if ($student->status !== 'Active') {
+            return response()->json([
+                'message' => 'This student portal is inactive because the student is no longer actively enrolled. Historical records remain available to authorized school staff and linked parents.',
+                'code' => 'STUDENT_PORTAL_INACTIVE',
+                'student_status' => $student->status,
+            ], 403);
+        }
+
         $recentNotices = Communication::query()
             ->where('school_id', $student->school_id)
             ->where(function ($query) use ($user) {
@@ -60,7 +72,9 @@ class StudentPortalController extends Controller
             ->take(5)
             ->get(['id', 'subject', 'body', 'audience', 'published_at', 'read_at']);
 
-        $enrollmentIds = $student->enrollments()->pluck('id');
+        $enrollmentIds = $student->enrollments()
+            ->where('school_id', $student->school_id)
+            ->pluck('id');
 
         $fees = StudentFee::query()
             ->whereIn('student_enrollment_id', $enrollmentIds)
@@ -120,6 +134,9 @@ class StudentPortalController extends Controller
             ->where('academic_session_id', $currentSession?->id ?? 0)
             ->where('term_id', $currentTerm?->id ?? 0)
             ->where('is_active', true)
+            ->where(function ($statusQuery) {
+                $statusQuery->where('workflow_status', 'published')->orWhereNull('workflow_status');
+            })
             ->where(function ($query) use ($classId, $streamId, $divisionId) {
                 $query->where('target_type', 'school')
                     ->orWhere(function ($divisionQuery) use ($divisionId) {
@@ -160,11 +177,16 @@ class StudentPortalController extends Controller
                 'room' => $item->room,
             ])->values();
 
-        $classIds = $student->enrollments()->pluck('class_id')->push($student->class_id)->filter()->unique();
         $upcomingAssignments = Assignment::where('school_id', $student->school_id)
-            ->whereIn('class_id', $classIds)
+            ->where('class_id', $classId)
             ->where('status', 'Published')
-            ->with(['class', 'subject'])
+            ->where(function ($query) use ($streamId) {
+                $query->whereNull('stream_id');
+                if ($streamId) {
+                    $query->orWhere('stream_id', $streamId);
+                }
+            })
+            ->with(['class', 'stream', 'subject'])
             ->latest('due_date')
             ->take(10)
             ->get()
@@ -173,11 +195,13 @@ class StudentPortalController extends Controller
                 'title' => $assignment->title,
                 'subject' => $assignment->subject?->name,
                 'class' => $assignment->class?->name,
+                'stream' => $assignment->stream?->name,
+                'attachment_link' => $assignment->attachment_link,
                 'due_date' => $assignment->due_date?->toDateString(),
             ]);
 
         return response()->json([
-            'student_profile' => $student,
+            'student_profile' => (new StudentResource($student))->resolve($request),
             'upcoming_assignments' => $upcomingAssignments,
             'recent_results' => $recentResults,
             'timetable' => $timetable,
@@ -199,12 +223,14 @@ class StudentPortalController extends Controller
 
     public function downloadLatestReportCard(Request $request)
     {
-        $schoolId = $request->attributes->get('current_school_id') ?? $this->context->currentSchool($request->user())?->id;
+        $schoolId = $this->context->currentSchool($request->user())?->id;
+        abort_unless($schoolId, 403, 'Select an active school before downloading a report card.');
         $student = Student::where('user_id', $request->user()->id)
             ->when($schoolId, fn ($query) => $query->where('school_id', $schoolId))
             ->first();
 
         abort_unless($student, 404, 'Student profile is not linked to this account.');
+        abort_unless($student->status === 'Active', 403, 'The student portal is inactive for this student status.');
 
         $reportCard = ReportCard::where('school_id', $student->school_id)
             ->whereHas('studentEnrollment', fn ($query) => $query->where('student_id', $student->id))
@@ -213,6 +239,20 @@ class StudentPortalController extends Controller
             ->first();
 
         abort_unless($reportCard, 404, 'No published report card is available yet.');
+        $summaryPublished = StudentResultSummary::query()
+            ->where('student_enrollment_id', $reportCard->student_enrollment_id)
+            ->where('academic_session_id', $reportCard->academic_session_id)
+            ->where('term_id', $reportCard->term_id)
+            ->where('is_published', true)
+            ->exists();
+        abort_unless($summaryPublished, 404, 'The final academic result has not been published yet.');
+        abort_unless(Result::query()
+            ->where('student_enrollment_id', $reportCard->student_enrollment_id)
+            ->where('academic_session_id', $reportCard->academic_session_id)
+            ->where('term_id', $reportCard->term_id)
+            ->where('is_published', true)
+            ->exists(), 404, 'The final subject results have not been published yet.');
+        ActivityLogService::log('report_cards', 'student_downloaded', 'A student downloaded a published report card.', $reportCard, ['student_id' => $student->id], $student->school_id);
 
         return $this->reportCardService->downloadPdf(
             $reportCard->studentEnrollment,
